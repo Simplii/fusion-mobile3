@@ -1,0 +1,4 @@
+
+class FusionModel {
+  String getId() {}
+}

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class CallActionButton extends StatefulWidget {
   CallActionButton(
-      {Key? key,
-      required this.onPressed,
-      required this.title,
-      required this.icon})
+      {Key key,
+       this.onPressed,
+       this.title,
+       this.icon})
       : super(key: key);
 
   final VoidCallback onPressed;

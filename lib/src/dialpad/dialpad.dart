@@ -5,7 +5,7 @@ import '../styles.dart';
 import 'dialpadKey.dart';
 
 class DialPad extends StatefulWidget {
-  DialPad({Key? key}) : super(key: key);
+  DialPad({Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _DialPadState();

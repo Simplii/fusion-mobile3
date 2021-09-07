@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/callpop/callactionbutton.dart';
 
 class CallView extends StatefulWidget {
-  CallView({Key? key}) : super(key: key);
+  CallView({Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _CallViewState();
