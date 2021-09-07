@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 class DialPadKey extends StatefulWidget {
-  DialPadKey({Key? key, required this.onPressed, required this.digit})
+  DialPadKey({Key key,  this.onPressed, this.digit})
       : super(key: key);
 
   final VoidCallback onPressed;
