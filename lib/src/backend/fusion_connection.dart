@@ -11,10 +11,10 @@ import 'package:websocket_manager/websocket_manager.dart';
 
 
 class FusionConnection {
-  String _extension = '9812';
-  String _username = '9812@Simplii1';
-  String _password = '***REMOVED***';
-  String _domain = 'Simplii1';
+  String _extension = '';
+  String _username = '';
+  String _password = '';
+  String _domain = '';
   CrmContactsStore crmContacts;
   ContactsStore contacts;
   CallpopInfoStore callpopInfos;
@@ -54,8 +54,10 @@ class FusionConnection {
   apiV1Call(String method, String route, Map<String, dynamic> data, {Function callback}) async {
     var client = http.Client();
     try {
-      data['username'] = _username;
-      data['password'] = _password;
+      if (!data.containsKey('username')) {
+        data['username'] = _username;
+        data['password'] = _password;
+      }
 
       Function fn = {
         'post': client.post,
@@ -89,6 +91,25 @@ class FusionConnection {
     } finally {
       client.close();
     }
+  }
+
+  login(String username, String password, Function(bool) callback) {
+    apiV1Call(
+        "get",
+        "/clients/lookup_options",
+        {"username": username,
+          "password": password},
+        callback: (Map<String, dynamic> response) {
+          if (response.containsKey("access_key")) {
+            _username = username;
+            _password = password;
+            _domain = username.split('@')[1];
+            _extension = username.split('@')[0];
+            callback(true);
+          } else {
+            callback(false);
+          }
+        });
   }
 
   setupSocket() {
