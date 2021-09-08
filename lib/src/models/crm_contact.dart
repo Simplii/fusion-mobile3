@@ -23,8 +23,17 @@ class CrmContact extends FusionModel{
     String company;
 
     CrmContact(Map<String, dynamic> contactObject) {
-      this.additions = contactObject['additions'].cast<Map<String, String>>();
-      this.contact = Contact(contactObject['contact']);
+      if (contactObject['additions'] != null) {
+        this.additions = contactObject['additions'].cast<Map<String, String>>();
+      }
+      else {
+        this.additions = [];
+      }
+
+      if (contactObject['contact'] != null) {
+        this.contact = Contact(contactObject['contact']);
+      }
+
       this.crm = contactObject['crm'];
       this.emails = contactObject['emails'].cast<String>();
       this.icon = contactObject['icon'];
