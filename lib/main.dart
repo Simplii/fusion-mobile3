@@ -18,6 +18,8 @@ import 'src/callpop/callview.dart';
 import 'src/dialpad/dialpad.dart';
 import 'package:platform/platform.dart';
 
+import 'src/messages/messages_list.dart';
+
 
 FlutterCallkeep __callKeep = FlutterCallkeep();
 bool __callKeepInited = false;
@@ -231,11 +233,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
   int _currentIndex = 1;
-  final List<Widget> _children = [
-    Text('people page'),
-    CallView(),
-    Text('messages page'),
-  ];
+
 
   void onTabTapped(int index) {
     setState(() {
@@ -263,30 +261,47 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    return Scaffold(
-      body: SafeArea(
-        child: _children[_currentIndex],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openDialPad,
-        child: Icon(Icons.dialpad),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: onTabTapped,
-        currentIndex: _currentIndex,
-        items: [
-          BottomNavigationBarItem(
-            icon: new Icon(CupertinoIcons.person_2),
-            label: "People",
+    Widget child = (
+        _currentIndex == 0
+            ? Text('people page')
+            : (
+            _currentIndex == 1
+                ? CallView()
+                : MessagesTab(fusionConnection)));
+
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage("assets/background.png"),
+          fit: BoxFit.cover)
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            child: child,
           ),
-          BottomNavigationBarItem(
-            icon: new Icon(CupertinoIcons.phone_solid),
-            label: "Call TEST",
+          floatingActionButton: FloatingActionButton(
+            onPressed: _openDialPad,
+            child: Icon(Icons.dialpad),
           ),
-          BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.chat_bubble), label: 'Messages')
-        ],
-      ),
+          bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: Colors.transparent,
+            onTap: onTabTapped,
+            currentIndex: _currentIndex,
+            items: [
+              BottomNavigationBarItem(
+                icon: new Icon(CupertinoIcons.person_2),
+                label: "People",
+              ),
+              BottomNavigationBarItem(
+                icon: new Icon(CupertinoIcons.phone_solid),
+                label: "Call TEST",
+              ),
+              BottomNavigationBarItem(
+                  icon: Icon(CupertinoIcons.chat_bubble), label: 'Messages')
+            ],
+          ),
+        )
     );
   }
 }

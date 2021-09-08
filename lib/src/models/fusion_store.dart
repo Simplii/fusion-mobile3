@@ -5,7 +5,7 @@ import 'fusion_model.dart';
 
 class FusionStore<T extends FusionModel> {
   FusionConnection _fusionConnection;
-  Map<String, T> _records;
+  Map<String, T> _records = {};
   String _id_field = 'id';
 
   FusionStore(this._fusionConnection);
@@ -13,6 +13,9 @@ class FusionStore<T extends FusionModel> {
   FusionConnection get fusionConnection => _fusionConnection;
 
   storeRecord(T record) {
+    if (_records == null) {
+      _records = {};
+    }
     _records[record.getId()] = record;
   }
 

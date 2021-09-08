@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
@@ -19,11 +20,13 @@ class FusionConnection {
   ContactsStore contacts;
   CallpopInfoStore callpopInfos;
   WebsocketManager _socket;
+  SMSConversationsStore conversations;
 
   FusionConnection() {
     crmContacts = CrmContactsStore(this);
     contacts = ContactsStore(this);
     callpopInfos = CallpopInfoStore(this);
+    conversations = SMSConversationsStore(this);
   }
 
   final channel = WebSocketChannel.connect(
