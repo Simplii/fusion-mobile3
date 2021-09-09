@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 
-import 'src/login.dart';
-import 'package:android_intent_plus/android_intent.dart';
 import 'package:callkeep/callkeep.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -12,14 +10,13 @@ import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:uuid/uuid.dart';
+
 import 'src/backend/fusion_connection.dart';
 import 'src/backend/softphone.dart';
 import 'src/callpop/callview.dart';
 import 'src/dialpad/dialpad.dart';
-import 'package:platform/platform.dart';
-
+import 'src/login.dart';
 import 'src/messages/messages_list.dart';
-
 
 FlutterCallkeep __callKeep = FlutterCallkeep();
 bool __callKeepInited = false;
@@ -28,12 +25,10 @@ class NavigationService {
   static final navigatorKey = GlobalKey<NavigatorState>();
 
   static Future<void> pushVideoView() {
-    return navigatorKey.currentState.push(MaterialPageRoute(
-      builder: (context) => MyHomePage()
-    ));
+    return navigatorKey.currentState
+        .push(MaterialPageRoute(builder: (context) => MyHomePage()));
   }
 }
-
 
 Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
   print('backgroundMessage: message => ${message.toString()}');
@@ -47,25 +42,23 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
     print("callkeep");
     print(__callKeep);
     __callKeep.on(CallKeepPerformAnswerCallAction(),
-            (CallKeepPerformAnswerCallAction event) {
-              print(
-                  'backgroundMessage: CallKeepPerformAnswerCallAction ${event
-                      .callUUID}');
-              __callKeep.startCall(event.callUUID, callerName, callerName);
+        (CallKeepPerformAnswerCallAction event) {
+      print(
+          'backgroundMessage: CallKeepPerformAnswerCallAction ${event.callUUID}');
+      __callKeep.startCall(event.callUUID, callerName, callerName);
 
-              Timer(const Duration(seconds: 1), () {
-                print(
-                    '[setCurrentCallActive] $callUUID, callerName: $callerName');
-                __callKeep.setCurrentCallActive(callUUID);
-              });
-              //_callKeep.endCall(event.callUUID);
-            });
+      Timer(const Duration(seconds: 1), () {
+        print('[setCurrentCallActive] $callUUID, callerName: $callerName');
+        __callKeep.setCurrentCallActive(callUUID);
+      });
+      //_callKeep.endCall(event.callUUID);
+    });
 
     __callKeep.on(CallKeepPerformEndCallAction(),
-            (CallKeepPerformEndCallAction event) {
-              print('backgroundMessage: CallKeepPerformEndCallAction ${event
-                  .callUUID}');
-            });
+        (CallKeepPerformEndCallAction event) {
+      print(
+          'backgroundMessage: CallKeepPerformEndCallAction ${event.callUUID}');
+    });
 
     if (!__callKeepInited) {
       final callSetup = <String, dynamic>{
@@ -75,7 +68,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
         'android': {
           'alertTitle': 'Permissions required',
           'alertDescription':
-          'This application needs to access your phone accounts',
+              'This application needs to access your phone accounts',
           'cancelButton': 'Cancel',
           'okButton': 'ok',
           'foregroundService': {
@@ -101,10 +94,8 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
 
     // NavigationService.pushVideoView();
 
-
   }
 }
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -162,7 +153,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.grey,
       ),
-      home: MyHomePage(title: 'Fusion Revamped',
+      home: MyHomePage(
+          title: 'Fusion Revamped',
           softphone: _softphone,
           fusionConnection: _fusionConnection),
     );
@@ -170,7 +162,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key,  this.title,  this.softphone, this.fusionConnection}) : super(key: key);
+  MyHomePage({Key key, this.title, this.softphone, this.fusionConnection})
+      : super(key: key);
   final Softphone softphone;
   final FusionConnection fusionConnection;
   final String title;
@@ -181,6 +174,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Softphone get softphone => widget.softphone;
+
   FusionConnection get fusionConnection => widget.fusionConnection;
   String _sub_login = "";
   String _auth_key = "";
@@ -193,47 +187,37 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   initState() {
-     super.initState();
-     receivedMsg = "";
-     softphone.onUpdate(() {
-         print("_call_ updated");
-         print(softphone.calls);
-         setState(() {});
-     });
-     _register();
+    super.initState();
+    receivedMsg = "";
+    softphone.onUpdate(() {
+      print("_call_ updated");
+      print(softphone.calls);
+      setState(() {});
+    });
+    _register();
   }
 
   Future<void> _register() async {
     if (_sub_login != "") {
-      softphone.register(
-        _sub_login,
-        _auth_key,
-        _aor.replaceAll('sip:', ''));
-    }
-    else {
-      fusionConnection.nsApiCall(
-        'device',
-        'read',
-        {'domain': 'Simplii1',
-          'device': 'sip:9812fm@Simplii1',
-          'user': '9812'},
-        callback: (Map<String, dynamic> response) {
-          Map<String, dynamic> device = response['device'];
-          _sub_login = device['sub_login'];
-          _auth_key = device['authentication_key'];
-          _aor = device['aor'];
+      softphone.register(_sub_login, _auth_key, _aor.replaceAll('sip:', ''));
+    } else {
+      fusionConnection.nsApiCall('device', 'read', {
+        'domain': 'Simplii1',
+        'device': 'sip:9812fm@Simplii1',
+        'user': '9812'
+      }, callback: (Map<String, dynamic> response) {
+        Map<String, dynamic> device = response['device'];
+        _sub_login = device['sub_login'];
+        _auth_key = device['authentication_key'];
+        _aor = device['aor'];
 
-          softphone.register(
-            device['sub_login'],
-            device['authentication_key'],
+        softphone.register(device['sub_login'], device['authentication_key'],
             device['aor'].replaceAll('sip:', ''));
       });
     }
   }
 
-
   int _currentIndex = 1;
-
 
   void onTabTapped(int index) {
     setState(() {
@@ -255,26 +239,17 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     if (!_logged_in) {
       return Scaffold(
-        body: SafeArea(
-          child: LoginView(_loginSuccess, fusionConnection)
-        )
-      );
+          body: SafeArea(child: LoginView(_loginSuccess, fusionConnection)));
     }
 
-    Widget child = (
-        _currentIndex == 0
-            ? Text('people page')
-            : (
-            _currentIndex == 1
-                ? CallView()
-                : MessagesTab(fusionConnection)));
+    Widget child = (_currentIndex == 0
+        ? Text('people page')
+        : (_currentIndex == 1 ? CallView() : MessagesTab(fusionConnection)));
 
     return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/background.png"),
-          fit: BoxFit.cover)
-        ),
+        decoration: BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
@@ -301,7 +276,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   icon: Icon(CupertinoIcons.chat_bubble), label: 'Messages')
             ],
           ),
-        )
-    );
+        ));
   }
 }
