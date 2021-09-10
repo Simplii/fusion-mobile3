@@ -8,6 +8,7 @@ MERGED from C:\cygwin64\home\david\projects\fusion_mobile_revamped\android\app\s
 MERGED from [:firebase_messaging] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_messaging\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-46:12
 MERGED from [:websocket_manager] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\websocket_manager\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:android_intent_plus] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\android_intent_plus\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
+MERGED from [:flutter_keyboard_visibility] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_keyboard_visibility\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:flutter_webrtc] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_webrtc\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:path_provider] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\path_provider\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:firebase_core] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_core\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-15:12
@@ -344,6 +345,8 @@ MERGED from [:websocket_manager] C:\cygwin64\home\david\projects\fusion_mobile_r
 MERGED from [:websocket_manager] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\websocket_manager\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:android_intent_plus] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\android_intent_plus\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:android_intent_plus] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\android_intent_plus\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:flutter_keyboard_visibility] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_keyboard_visibility\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:flutter_keyboard_visibility] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_keyboard_visibility\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:flutter_webrtc] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_webrtc\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:flutter_webrtc] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_webrtc\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:path_provider] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\path_provider\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44

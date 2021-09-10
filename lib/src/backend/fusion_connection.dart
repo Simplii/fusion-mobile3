@@ -9,6 +9,7 @@ import 'package:web_socket_channel/status.dart' as status;
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'dart:io';
+import '../utils.dart';
 import 'package:websocket_manager/websocket_manager.dart';
 
 
@@ -17,6 +18,7 @@ class FusionConnection {
   String _username = '';
   String _password = '';
   String _domain = '';
+  Map<String, bool> _heartbeats = {};
   CrmContactsStore crmContacts;
   ContactsStore contacts;
   CallpopInfoStore callpopInfos;
@@ -118,6 +120,7 @@ class FusionConnection {
             _password = password;
             _domain = username.split('@')[1];
             _extension = username.split('@')[0];
+            setupSocket();
             callback(true);
           } else {
             callback(false);
@@ -125,16 +128,8 @@ class FusionConnection {
         });
   }
 
-  setupSocket() {
-    int messageNum = 0;
-    _socket = WebsocketManager("wss://fusioncomm.net:8443/");
-    _socket.onClose((dynamic message) {
-      print('close');
-    });
-    _socket.onMessage((dynamic message) {
-    });
-    _socket.connect()
-        .then((val) {
+  _reconnectSocket() {
+    _socket.connect().then((val) {
       _socket.send(convert.jsonEncode({
         "simplii_identification": [
           _extension,
@@ -143,5 +138,43 @@ class FusionConnection {
         "pwd": _password
       }));
     });
+  }
+
+  _sendHeartbeat() {
+    String beat = randomString(30);
+    _sendToSocket({'heartbeat': beat});
+    Future.delayed(const Duration(seconds: 15), () {
+      if (!_heartbeats[beat]) {
+        _socket.close();
+        setupSocket();
+      }
+      _heartbeats.remove(beat);
+      _sendHeartbeat();
+    });
+  }
+
+  _sendToSocket(Map<String, dynamic> payload) {
+    _socket.send(convert.jsonEncode(payload));
+  }
+
+  setupSocket() {
+    int messageNum = 0;
+    _socket = WebsocketManager("wss://fusioncomm.net:8443/");
+    _socket.onClose((dynamic message) {
+      print('close');
+    });
+    _socket.onMessage((dynamic messageData) {
+      Map<String, dynamic> message = convert.jsonDecode(messageData);
+      print("gotmessage " + messageData.toString());
+      if (message.containsKey('heartbeat')) {
+        _heartbeats[message['heartbeat']] = true;
+      }
+      else if (message.containsKey('sms_received')) {
+        print("gotIM" + messageData.toString());
+        messages.storeRecord(SMSMessage(message['message_object']));
+      }
+    });
+    _reconnectSocket();
+    _sendHeartbeat();
   }
 }
