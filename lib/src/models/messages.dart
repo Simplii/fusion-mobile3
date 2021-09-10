@@ -30,7 +30,7 @@ class SMSMessage extends FusionModel {
 
   SMSMessage(Map<String, dynamic> map) {
     this.convertedMms = map.containsKey('converted_mms') ? true : false;
-    this.domain = map['domain'];
+    this.domain = map['domain'].runtimeType == String ? map['domain'] : null;
     this.from = map['from'];
     this.fromMe = map['from_me'];
     this.id = map['id'].toString();
@@ -50,7 +50,7 @@ class SMSMessage extends FusionModel {
     this.to = map['to'];
     this.type = map['type'];
     this.unixtime = map['unixtime'];
-    this.user = map['user'];
+    this.user = map['user'].runtimeType == String ? map['user'] : null;
   }
 }
 
