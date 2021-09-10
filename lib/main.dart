@@ -235,6 +235,8 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  bool callIsActive = true;
+
   @override
   Widget build(BuildContext context) {
     if (!_logged_in) {
@@ -250,7 +252,14 @@ class _MyHomePageState extends State<MyHomePage> {
         decoration: BoxDecoration(
             image: DecorationImage(
                 image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
-        child: Scaffold(
+        child: callIsActive ? Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            bottom: false,
+            child: CallView(),
+          ),
+          resizeToAvoidBottomInset: false,
+        ) : Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
             child: child,
@@ -276,6 +285,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   icon: Icon(CupertinoIcons.chat_bubble), label: 'Messages')
             ],
           ),
-        ));
+        )
+    );
   }
 }

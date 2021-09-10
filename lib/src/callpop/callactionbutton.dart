@@ -5,7 +5,7 @@ class CallActionButton extends StatefulWidget {
       : super(key: key);
 
   final VoidCallback onPressed;
-  final title;
+  final String title;
   final icon;
 
   @override
@@ -18,7 +18,12 @@ class _CallActionButtonState extends State<CallActionButton> {
     return TextButton(
       onPressed: widget.onPressed,
       child: Column(
-        children: [Icon(widget.icon), Text(widget.title)],
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(widget.icon, color: Colors.white),
+          Text(widget.title.toUpperCase(),
+              style: TextStyle(color: Color.fromARGB(127, 0, 0, 0)))
+        ],
       ),
     );
   }
