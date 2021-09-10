@@ -17,8 +17,8 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   Function(String username, String password) get _onLogin => widget._onLogin;
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController.fromValue(TextEditingValue(text: "9812@Simplii1"));
+  final _passwordController = TextEditingController.fromValue(TextEditingValue(text: "***REMOVED***"));
   bool _wasSuccessful = null;
 
   _usernameInput() {

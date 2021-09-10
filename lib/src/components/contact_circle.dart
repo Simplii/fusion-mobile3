@@ -7,8 +7,10 @@ import 'package:flutter_gravatar/flutter_gravatar.dart';
 class ContactCircle extends StatefulWidget {
   final List<Contact> _contacts;
   final List<CrmContact> _crmContacts;
+  double _diameter = 60;
 
   ContactCircle(this._contacts, this._crmContacts, {Key key}) : super(key: key);
+  ContactCircle.withDiameter(this._contacts, this._crmContacts, this._diameter, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ContactCircleState();
@@ -17,6 +19,7 @@ class ContactCircle extends StatefulWidget {
 class _ContactCircleState extends State<ContactCircle> {
   List<Contact> get _contacts => widget._contacts;
   List<CrmContact> get _crmContacts => widget._crmContacts;
+  double get _diameter => widget._diameter;
 
   _gravatarUrl(String email) {
     print(email);
@@ -50,30 +53,33 @@ class _ContactCircleState extends State<ContactCircle> {
     }
 
     Widget contactImage = ClipRRect(
-      borderRadius: BorderRadius.circular(27),
+      borderRadius: BorderRadius.circular((_diameter - 4) / 2),
       child: (imageUrl != null
-        ? Image.network(imageUrl, height: 56, width: 56)
-        : Image.asset("assets/blank_avatar.png", height: 56, width: 56)));
+        ? Image.network(imageUrl, height: _diameter - 4, width: _diameter - 4)
+        : Image.asset(
+          "assets/blank_avatar.png",
+          height: _diameter - 4,
+          width: _diameter - 4)));
 
     Color borderColor = Colors.red;
-print("contact stuff " + contactImage.toString());
+
     return Container(
-      margin: EdgeInsets.only(right: 18),
+      margin: EdgeInsets.only(right: _diameter / 3),
       decoration: BoxDecoration(
               border: Border.all(
                   color: borderColor,
                   width:2),
-              borderRadius: BorderRadius.all(Radius.circular(30))),
-      width: 60,
-      height: 60,
+              borderRadius: BorderRadius.all(Radius.circular(_diameter / 2))),
+      width: _diameter,
+      height: _diameter,
       child: Container(
           decoration: BoxDecoration(
               border: Border.all(
                   color: Colors.white,
                   width:2),
-              borderRadius: BorderRadius.all(Radius.circular(27))),
-          width: 56,
-          height: 56,
+              borderRadius: BorderRadius.all(Radius.circular((_diameter - 4) / 2))),
+          width: _diameter - 4,
+          height: _diameter - 4,
           child: contactImage
       )
     );

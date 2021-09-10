@@ -3,6 +3,7 @@ import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
+import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'package:http/http.dart' as http;
@@ -21,12 +22,14 @@ class FusionConnection {
   CallpopInfoStore callpopInfos;
   WebsocketManager _socket;
   SMSConversationsStore conversations;
+  SMSMessagesStore messages;
 
   FusionConnection() {
     crmContacts = CrmContactsStore(this);
     contacts = ContactsStore(this);
     callpopInfos = CallpopInfoStore(this);
     conversations = SMSConversationsStore(this);
+    messages = SMSMessagesStore(this);
   }
 
   final channel = WebSocketChannel.connect(
@@ -79,10 +82,13 @@ class FusionConnection {
         }
       }
       else {
-        args[#body] = data;
+        args[#body] = convert.jsonEncode(data);
+        args[#headers] = {"Content-Type": "application/json"};
       }
 
       Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
+      print(url);
+      print(args);
       var uriResponse = await Function.apply(fn, [url], args);
 
       print(url);
@@ -94,6 +100,10 @@ class FusionConnection {
     } finally {
       client.close();
     }
+  }
+
+  myAvatarUrl() {
+    return null;
   }
 
   login(String username, String password, Function(bool) callback) {
