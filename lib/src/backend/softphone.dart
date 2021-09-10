@@ -1,18 +1,15 @@
-import 'dart:async';
 import 'dart:io';
 
-import 'package:firebase_core/firebase_core.dart';
+import 'package:callkeep/callkeep.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:sip_ua/sip_ua.dart';
-import 'package:callkeep/callkeep.dart';
 import 'package:uuid/uuid.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'fusion_connection.dart';
-
 
 class Softphone implements SipUaHelperListener {
   String outputDevice = "Phone";
@@ -60,10 +57,12 @@ class Softphone implements SipUaHelperListener {
     settings.dtmfMode = DtmfMode.RFC2833;
     settings.iceServers = [
       {'url': 'stun:stun.l.google.com:19302'},
-      {'urls':       "turn:143.110.144.174",
-        'username':   "fuser",
-        'credential': "fwebphoneuser"}
-        ];
+      {
+        'urls': "turn:143.110.144.174",
+        'username': "fuser",
+        'credential': "fwebphoneuser"
+      }
+    ];
 
     helper.start(settings);
     helper.addSipUaHelperListener(this);
@@ -84,12 +83,15 @@ class Softphone implements SipUaHelperListener {
   }
 
   setupCallKeep() {
-    _callKeep.on(CallKeepDidDisplayIncomingCall(), _callKeepDidDisplayIncomingCall);
+    _callKeep.on(
+        CallKeepDidDisplayIncomingCall(), _callKeepDidDisplayIncomingCall);
     _callKeep.on(CallKeepPerformAnswerCallAction(), _callKeepAnswerCall);
     _callKeep.on(CallKeepDidPerformDTMFAction(), _callKeepDTMFPerformed);
-    _callKeep.on(CallKeepDidReceiveStartCallAction(), _callKeepDidReceiveStartCall);
+    _callKeep.on(
+        CallKeepDidReceiveStartCallAction(), _callKeepDidReceiveStartCall);
     _callKeep.on(CallKeepDidToggleHoldAction(), _callKeepDidToggleHold);
-    _callKeep.on(CallKeepDidPerformSetMutedCallAction(), _callKeepDidPerformSetMuted);
+    _callKeep.on(
+        CallKeepDidPerformSetMutedCallAction(), _callKeepDidPerformSetMuted);
     _callKeep.on(CallKeepPerformEndCallAction(), _callKeepPerformEndCall);
     _callKeep.on(CallKeepPushKitToken(), _callKeepPushkitToken);
 
@@ -100,7 +102,7 @@ class Softphone implements SipUaHelperListener {
       'android': {
         'alertTitle': 'Permissions required',
         'alertDescription':
-        'This application needs to access your phone accounts',
+            'This application needs to access your phone accounts',
         'cancelButton': 'Cancel',
         'okButton': 'ok',
         'foregroundService': {
@@ -175,17 +177,14 @@ class Softphone implements SipUaHelperListener {
   }
 
   setSpeaker(bool useSpeaker) {
-    _localStream
-        .getAudioTracks()[0]
-        .enableSpeakerphone(useSpeaker);
+    _localStream.getAudioTracks()[0].enableSpeakerphone(useSpeaker);
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
   }
 
   setHold(Call call, bool setOnHold) {
     if (setOnHold) {
       call.hold();
-    }
-    else {
+    } else {
       call.unhold();
     }
   }
@@ -193,8 +192,7 @@ class Softphone implements SipUaHelperListener {
   setMute(Call call, bool setMute) {
     if (setMute) {
       call.mute();
-    }
-    else {
+    } else {
       call.unmute();
     }
   }
@@ -204,13 +202,13 @@ class Softphone implements SipUaHelperListener {
   }
 
   isConnected(Call call) {
-    return call.state == CallStateEnum.ACCEPTED
-        || call.state == CallStateEnum.CONFIRMED
-        || call.state == CallStateEnum.STREAM
-        || call.state == CallStateEnum.HOLD
-        || call.state == CallStateEnum.UNHOLD
-        || call.state == CallStateEnum.MUTED
-        || call.state == CallStateEnum.UNMUTED;
+    return call.state == CallStateEnum.ACCEPTED ||
+        call.state == CallStateEnum.CONFIRMED ||
+        call.state == CallStateEnum.STREAM ||
+        call.state == CallStateEnum.HOLD ||
+        call.state == CallStateEnum.UNHOLD ||
+        call.state == CallStateEnum.MUTED ||
+        call.state == CallStateEnum.UNMUTED;
   }
 
   transfer(Call call, String destination) {
@@ -220,9 +218,8 @@ class Softphone implements SipUaHelperListener {
 
   hangUp(Call call) {
     try {
-      call.hangup(); }
-    catch (e) {
-    }
+      call.hangup();
+    } catch (e) {}
     _removeCall(call);
   }
 
@@ -314,9 +311,8 @@ class Softphone implements SipUaHelperListener {
   _callKeepPushkitToken(CallKeepPushKitToken event) {
     print("callkeep pushkit");
     print(event);
-    
   }
-  
+
   _getCallByUuid(String uuid) {
     for (String id in callData.keys) {
       if (callData[id]['uuid'] == uuid) {
@@ -355,19 +351,15 @@ class Softphone implements SipUaHelperListener {
     Map<String, dynamic> data = _getCallDataById(call.id);
     if (data.containsKey('uuid')) {
       return data['uuid'];
-    }
-    else {
+    } else {
       String uuid = Uuid().v4();
 
       if (_awaitingCall != "none") {
         uuid = _awaitingCall;
         _awaitingCall = "none";
-      }
-      else {
+      } else {
         print("_call setting temp uuid " + uuid);
-        _tempUUIDs[uuid] = DateTime
-            .now()
-            .millisecondsSinceEpoch;
+        _tempUUIDs[uuid] = DateTime.now().millisecondsSinceEpoch;
       }
       data['uuid'] = uuid;
       return uuid;
@@ -381,8 +373,7 @@ class Softphone implements SipUaHelperListener {
   _getCallDataById(String id) {
     if (callData.containsKey(id)) {
       return callData[id];
-    }
-    else {
+    } else {
       callData[id] = Map<String, dynamic>();
       return callData[id];
     }
@@ -418,7 +409,7 @@ class Softphone implements SipUaHelperListener {
         await _callKeep.hasDefaultPhoneAccount(_context, <String, dynamic>{
           'alertTitle': 'Permissions required',
           'alertDescription':
-          'This application needs to access your phone accounts',
+              'This application needs to access your phone accounts',
           'cancelButton': 'Cancel',
           'okButton': 'ok',
           'foregroundService': {
@@ -430,15 +421,18 @@ class Softphone implements SipUaHelperListener {
         });
       }
       print("getting callpop info " + call.remote_identity);
-      _fusionConnection.callpopInfos.lookupPhone(call.remote_identity, (CallpopInfo data) {
-        _callKeep.updateDisplay(_uuidFor(call), displayName: data.getName(defaul: call.remote_display_name), handle: call.remote_identity);
+      _fusionConnection.callpopInfos.lookupPhone(call.remote_identity,
+          (CallpopInfo data) {
+        _callKeep.updateDisplay(_uuidFor(call),
+            displayName: data.getName(defaul: call.remote_display_name),
+            handle: call.remote_identity);
         _getCallDataById(call.id)['callPopInfo'] = data;
         print("got callpop info");
         print(data);
       });
 
-  //    _callKeep.displayIncomingCall(_uuidFor(call), call.remote_identity,
-  //        handleType: 'number', hasVideo: false);
+      //    _callKeep.displayIncomingCall(_uuidFor(call), call.remote_identity,
+      //        handleType: 'number', hasVideo: false);
     }
   }
 
@@ -467,10 +461,14 @@ class Softphone implements SipUaHelperListener {
       return;
     }
 
-    if (callState.state != CallStateEnum.STREAM) {
-    }
+    if (callState.state != CallStateEnum.STREAM) {}
 
-    print("event- _call_ -" + call.direction + " - " + callState.state.toString() + " + " + call.id);
+    print("event- _call_ -" +
+        call.direction +
+        " - " +
+        callState.state.toString() +
+        " + " +
+        call.id);
     switch (callState.state) {
       case CallStateEnum.STREAM:
         _handleStreams(callState);
@@ -495,8 +493,7 @@ class Softphone implements SipUaHelperListener {
         if (!isIncoming(call)) {
           print("_call connecting out going" + _uuidFor(call));
           _callKeep.reportConnectedOutgoingCallWithUUID(_uuidFor(call));
-        }
-        else {
+        } else {
           print("_call connecting incoming " + _uuidFor(call));
           _callKeep.answerIncomingCall(_uuidFor(call));
         }
@@ -506,7 +503,7 @@ class Softphone implements SipUaHelperListener {
         break;
       case CallStateEnum.UNHOLD:
         _callKeep.setOnHold(_uuidFor(call), false);
-                break;
+        break;
       case CallStateEnum.NONE:
         break;
       case CallStateEnum.CALL_INITIATION:

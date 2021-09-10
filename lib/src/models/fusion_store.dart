@@ -1,4 +1,3 @@
-
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 
 import 'fusion_model.dart';

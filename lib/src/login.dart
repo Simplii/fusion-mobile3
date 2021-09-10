@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fusion_mobile_revamped/src/callpop/callactionbutton.dart';
 
 import 'backend/fusion_connection.dart';
 
@@ -16,6 +15,7 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Function(String username, String password) get _onLogin => widget._onLogin;
   final _usernameController = TextEditingController.fromValue(TextEditingValue(text: "9812@Simplii1"));
   final _passwordController = TextEditingController.fromValue(TextEditingValue(text: "***REMOVED***"));
@@ -23,57 +23,46 @@ class _LoginViewState extends State<LoginView> {
 
   _usernameInput() {
     return Flexible(
-        child: TextField (
+        child: TextField(
             decoration: const InputDecoration(
-                border: UnderlineInputBorder(borderSide: BorderSide(
-                    width: 1.0,
-                    style: BorderStyle.solid
-                )),
+                border: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(width: 1.0, style: BorderStyle.solid)),
                 hintText: "Username"),
-            controller: _usernameController
-        )
-    );
+            controller: _usernameController));
   }
 
   _passwordInput() {
     return Flexible(
-        child: TextField (
-          obscureText: true,
+        child: TextField(
+            obscureText: true,
             decoration: const InputDecoration(
-                border: UnderlineInputBorder(borderSide: BorderSide(
-                    width: 1.0,
-                    style: BorderStyle.solid
-                )),
+                border: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(width: 1.0, style: BorderStyle.solid)),
                 hintText: "Password"),
-            controller: _passwordController
-        )
-    );
+            controller: _passwordController));
   }
 
   _loginButton() {
     return ElevatedButton(
-      onPressed: _login,
-      child: Text("Login", style: TextStyle(color: Colors.white))
-    );
+        onPressed: _login,
+        child: Text("Login", style: TextStyle(color: Colors.white)));
   }
 
   _login() {
-    _fusionConnection.login(
-        _usernameController.value.text,
-        _passwordController.value.text,
+    _fusionConnection
+        .login(_usernameController.value.text, _passwordController.value.text,
             (bool success) {
-              if (success) {
-                _wasSuccessful = true;
-                _onLogin(
-                    _usernameController.value.text,
-                    _passwordController.value.text);
-              }
-              else {
-                _wasSuccessful = false;
-              }
-              this.setState(() {});
-            }
-    );
+      if (success) {
+        _wasSuccessful = true;
+        _onLogin(
+            _usernameController.value.text, _passwordController.value.text);
+      } else {
+        _wasSuccessful = false;
+      }
+      this.setState(() {});
+    });
   }
 
   @override
@@ -82,13 +71,13 @@ class _LoginViewState extends State<LoginView> {
       Row(children: [
         Expanded(
             child: Container(
-                margin: EdgeInsets.only(top:8, bottom: 18),
+                margin: EdgeInsets.only(top: 8, bottom: 18),
                 child: Center(
                     child: Text("Sign in to your account",
-                        style: TextStyle(fontSize:18)))))
+                        style: TextStyle(fontSize: 18)))))
       ]),
-      Row(children:[ _usernameInput() ]),
-      Row(children:[ _passwordInput() ])
+      Row(children: [_usernameInput()]),
+      Row(children: [_passwordInput()])
     ];
 
     if (_wasSuccessful == false) {
@@ -102,42 +91,41 @@ class _LoginViewState extends State<LoginView> {
       ]));
     }
 
-    children.add(
-        Row(children:[
-          Expanded(
-              child: Container(
-                  margin: EdgeInsets.only(top:18),
-                  alignment: Alignment.centerRight,
-                  child: _loginButton() ))])
-    );
+    children.add(Row(children: [
+      Expanded(
+          child: Container(
+              margin: EdgeInsets.only(top: 18),
+              alignment: Alignment.centerRight,
+              child: _loginButton()))
+    ]));
 
     return Container(
-      decoration: BoxDecoration(color: Color.fromARGB(255, 242,241,241)),
-            child: Column(
-              children: [
-                Row(children: [
-                  Expanded( child: Center(
-                    child: Container(
-                      margin: EdgeInsets.only(top: 96, bottom: 8),
-                        child: Text("Fusion Mobile",
-                        style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)))))
-                ]),
-                Row(children: [
-                  Expanded(child:
-                  Container(
+        decoration: BoxDecoration(color: Color.fromARGB(255, 242, 241, 241)),
+        child: Column(
+          children: [
+            Row(children: [
+              Expanded(
+                  child: Center(
+                      child: Container(
+                          margin: EdgeInsets.only(top: 96, bottom: 8),
+                          child: Text("Fusion Mobile",
+                              style: TextStyle(
+                                  fontSize: 24.0,
+                                  fontWeight: FontWeight.bold)))))
+            ]),
+            Row(children: [
+              Expanded(
+                  child: Container(
                       padding: EdgeInsets.all(18),
-                      decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(4)),
-                          color: Color.fromARGB(255,255,255,255)),
-                      margin: EdgeInsets.only(left:32.0,right:32.0,top:24.0),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(4)),
+                          color: Color.fromARGB(255, 255, 255, 255)),
+                      margin:
+                          EdgeInsets.only(left: 32.0, right: 32.0, top: 24.0),
                       width: 100,
-                      child: Column(
-                          children: children
-                      )
-                  )
-                  )
-                ])
-              ],
-            )
-    );
+                      child: Column(children: children)))
+            ])
+          ],
+        ));
   }
 }

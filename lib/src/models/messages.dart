@@ -1,9 +1,6 @@
-import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'carbon_date.dart';
 import 'conversations.dart';
 import 'fusion_model.dart';
-import 'crm_contact.dart';
-import 'contact.dart';
 import '../backend/fusion_connection.dart';
 import 'fusion_store.dart';
 import '../utils.dart';
@@ -54,8 +51,6 @@ class SMSMessage extends FusionModel {
   }
 }
 
-//&group_id=-1&limit=200&offset=0&is_group=false&username=9812%40Simplii1&returning_hash=
-
 class SMSMessageSubscription {
   final SMSConversation _conversation;
   final Function(List<SMSMessage>) _callback;
@@ -63,9 +58,18 @@ class SMSMessageSubscription {
   SMSMessageSubscription(this._conversation, this._callback);
 
   testMatches(SMSMessage message) {
-    print("subscription test" + message.from + " " + message.to + " / " + _conversation.number + " " + _conversation.myNumber);
-    return ((message.from == _conversation.number && message.to == _conversation.myNumber)
-        || (message.to == _conversation.number && message.from == _conversation.myNumber));
+    print("subscription test" +
+        message.from +
+        " " +
+        message.to +
+        " / " +
+        _conversation.number +
+        " " +
+        _conversation.myNumber);
+    return ((message.from == _conversation.number &&
+            message.to == _conversation.myNumber) ||
+        (message.to == _conversation.number &&
+            message.from == _conversation.myNumber));
   }
 
   sendMatching(List<SMSMessage> items) {

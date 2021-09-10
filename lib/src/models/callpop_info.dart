@@ -1,9 +1,9 @@
-
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
-import 'fusion_model.dart';
-import 'crm_contact.dart';
-import 'contact.dart';
+
 import '../backend/fusion_connection.dart';
+import 'contact.dart';
+import 'crm_contact.dart';
+import 'fusion_model.dart';
 import 'fusion_store.dart';
 
 class CallpopInfo extends FusionModel {
@@ -13,7 +13,7 @@ class CallpopInfo extends FusionModel {
   List<dynamic> dispositionGroups;
   String _id = 'phoneNumber';
 
-  CallpopInfo(Map<String, dynamic> map){
+  CallpopInfo(Map<String, dynamic> map) {
     this.phoneNumber = map['phone_number'];
     this.crmContacts = map['crm_contacts'];
     this.contacts = map['contacts'];
@@ -37,14 +37,12 @@ class CallpopInfo extends FusionModel {
   }
 }
 
-
-
-
 class CallpopInfoStore extends FusionStore<CallpopInfo> {
-  Map<String, CallpopInfo>_records = {};
+  Map<String, CallpopInfo> _records = {};
   String _id_field = 'phone_number';
 
-  CallpopInfoStore(FusionConnection _fusionConnection) : super(_fusionConnection);
+  CallpopInfoStore(FusionConnection _fusionConnection)
+      : super(_fusionConnection);
 
   lookupPhone(String phoneNumber, Function(CallpopInfo callpopInfo) callback) {
     if (hasRecord(phoneNumber)) {
@@ -52,33 +50,28 @@ class CallpopInfoStore extends FusionStore<CallpopInfo> {
     }
 
     fusionConnection.apiV1Call(
-        "get",
-        "/callpop_info",
-        {'phone_number': phoneNumber,
-        'group_id': -1},
+        "get", "/callpop_info", {'phone_number': phoneNumber, 'group_id': -1},
         callback: (Map<String, dynamic> data) {
-          List<CrmContact> leads = [];
-          List<Contact> contacts = [];
+      List<CrmContact> leads = [];
+      List<Contact> contacts = [];
 
-          for (Map<String, dynamic> obj in data['contacts']) {
-            contacts.add(Contact(obj));
-          }
+      for (Map<String, dynamic> obj in data['contacts']) {
+        contacts.add(Contact(obj));
+      }
 
-          for (Map<String, dynamic> obj in data['leads']) {
-            leads.add(CrmContact(obj));
-          }
+      for (Map<String, dynamic> obj in data['leads']) {
+        leads.add(CrmContact(obj));
+      }
 
-          CallpopInfo info = CallpopInfo(
-              {
-                'phone_number': phoneNumber,
-                'crm_contacts': leads,
-                'contacts': contacts,
-                'dispositions': []
-              }
-          );
+      CallpopInfo info = CallpopInfo({
+        'phone_number': phoneNumber,
+        'crm_contacts': leads,
+        'contacts': contacts,
+        'dispositions': []
+      });
 
-          storeRecord(info);
-          callback(info);
-        });
+      storeRecord(info);
+      callback(info);
+    });
   }
 }

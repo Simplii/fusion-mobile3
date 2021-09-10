@@ -1,4 +1,3 @@
-
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 
 import 'carbon_date.dart';
@@ -58,7 +57,8 @@ class Contact extends FusionModel {
     this.socials = contactObject['socials'];
     this.type = contactObject['type'];
     if (contactObject['uid'].runtimeType == String) {
-      this.uid = contactObject['uid']; }
+      this.uid = contactObject['uid'];
+    }
     this.updated_at = CarbonDate(contactObject['updated_at']);
     this.crm_url = contactObject['crm_url'];
     this.crm_name = contactObject['crm_name'];
@@ -66,9 +66,8 @@ class Contact extends FusionModel {
   }
 }
 
-class ContactsStore extends FusionStore<Contact>{
+class ContactsStore extends FusionStore<Contact> {
   Map<String, Contact> _records = {};
 
   ContactsStore(FusionConnection fusionConnection) : super(fusionConnection);
 }
-
