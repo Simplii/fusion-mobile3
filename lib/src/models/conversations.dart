@@ -1,10 +1,11 @@
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
-import 'fusion_model.dart';
-import 'messages.dart';
-import 'crm_contact.dart';
-import 'contact.dart';
+
 import '../backend/fusion_connection.dart';
+import 'contact.dart';
+import 'crm_contact.dart';
+import 'fusion_model.dart';
 import 'fusion_store.dart';
+import 'messages.dart';
 
 class SMSConversation extends FusionModel {
   List<CrmContact> crmContacts;
@@ -20,7 +21,10 @@ class SMSConversation extends FusionModel {
   int unread;
 
   String contactName() {
-    print("contact name" + this.contacts.toString() + ":" + this.crmContacts.toString());
+    print("contact name" +
+        this.contacts.toString() +
+        ":" +
+        this.crmContacts.toString());
     String name = "Unknown";
     if (contacts != null) {
       for (Contact contact in contacts) {
@@ -45,7 +49,7 @@ class SMSConversation extends FusionModel {
     this.lastContactTime = map['last_contact_time'];
     this.myNumber = map['my_number'];
     this.number = map['number'];
-    this.members = [];//map['members'];
+    this.members = []; //map['members'];
     this.message = map['message'];
     this.unread = int.parse(map['unread'].toString());
     this.crmContacts = map['crm_contacts'];
@@ -54,52 +58,50 @@ class SMSConversation extends FusionModel {
   }
 
   String getId() => this.hash;
-
 }
-
 
 class SMSConversationsStore extends FusionStore<SMSConversation> {
   String _id_field = 'hash';
 
-  SMSConversationsStore(FusionConnection _fusionConnection) : super(_fusionConnection);
+  SMSConversationsStore(FusionConnection _fusionConnection)
+      : super(_fusionConnection);
 
-  getConversations(int groupId, Function(List<SMSConversation> conversations) callback) {
-    List<String> numbers = ["8014569811","8014569812","2088000011"];
+  getConversations(
+      int groupId, Function(List<SMSConversation> conversations) callback) {
+    List<String> numbers = ["8014569811", "8014569812", "2088000011"];
 
-    fusionConnection.apiV1Call(
-        "get",
-        "/chat/conversations_with/with_message",
-        {'numbers': numbers.join(","),
-          'limit': 100,
-          'group_id': groupId},
-        callback: (Map<String, dynamic> data) {
-          List<SMSConversation> convos = [];
-          print(data);
-          for (Map<String, dynamic> item in data['items']) {
-            List<CrmContact> leads = [];
-            List<Contact> contacts = [];
-            print('parsing data' + item.toString());
-            if (item.containsKey('contacts') && item['contacts'] != null) {
-              for (Map<String, dynamic> obj in item['contacts']) {
-                contacts.add(Contact(obj));
-              }
-            }
-
-            if (item.containsKey('leads') && item['leads'] != null) {
-              for (Map<String, dynamic> obj in item['leads']) {
-                leads.add(CrmContact(obj));
-              }
-            }
-
-            item['contacts'] = contacts;
-            item['crm_contacts'] = leads;
-            item['message'] = SMSMessage(item['message']);
-
-            SMSConversation convo = SMSConversation(item);
-            storeRecord(convo);
-            convos.add(convo);
+    fusionConnection.apiV1Call("get", "/chat/conversations_with/with_message", {
+      'numbers': numbers.join(","),
+      'limit': 100,
+      'group_id': groupId
+    }, callback: (Map<String, dynamic> data) {
+      List<SMSConversation> convos = [];
+      print(data);
+      for (Map<String, dynamic> item in data['items']) {
+        List<CrmContact> leads = [];
+        List<Contact> contacts = [];
+        print('parsing data' + item.toString());
+        if (item.containsKey('contacts') && item['contacts'] != null) {
+          for (Map<String, dynamic> obj in item['contacts']) {
+            contacts.add(Contact(obj));
           }
-          callback(convos);
-        });
+        }
+
+        if (item.containsKey('leads') && item['leads'] != null) {
+          for (Map<String, dynamic> obj in item['leads']) {
+            leads.add(CrmContact(obj));
+          }
+        }
+
+        item['contacts'] = contacts;
+        item['crm_contacts'] = leads;
+        item['message'] = SMSMessage(item['message']);
+
+        SMSConversation convo = SMSConversation(item);
+        storeRecord(convo);
+        convos.add(convo);
+      }
+      callback(convos);
+    });
   }
 }

@@ -1,17 +1,13 @@
-import 'package:flutter/foundation.dart';
+import 'dart:convert' as convert;
+import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
+import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
-import 'package:fusion_mobile_revamped/src/models/contact.dart';
-import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/status.dart' as status;
 import 'package:http/http.dart' as http;
-import 'dart:convert' as convert;
-import 'dart:io';
 import '../utils.dart';
 import 'package:websocket_manager/websocket_manager.dart';
-
 
 class FusionConnection {
   String _extension = '';
@@ -38,7 +34,8 @@ class FusionConnection {
     Uri.parse('wss://fusioncomm.net:8443'),
   );
 
-  nsApiCall(String object, String action, Map<String, dynamic> data, {Function callback}) async {
+  nsApiCall(String object, String action, Map<String, dynamic> data,
+      {Function callback}) async {
     var client = http.Client();
     try {
       data['action'] = action;
@@ -51,7 +48,7 @@ class FusionConnection {
           body: data);
 
       var jsonResponse =
-        convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
+          convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
 
       callback(jsonResponse);
     } finally {
@@ -59,7 +56,8 @@ class FusionConnection {
     }
   }
 
-  apiV1Call(String method, String route, Map<String, dynamic> data, {Function callback}) async {
+  apiV1Call(String method, String route, Map<String, dynamic> data,
+      {Function callback}) async {
     var client = http.Client();
     try {
       if (!data.containsKey('username')) {
@@ -82,8 +80,7 @@ class FusionConnection {
         for (String key in data.keys) {
           urlParams += key + "=" + data[key].toString() + '&';
         }
-      }
-      else {
+      } else {
         args[#body] = convert.jsonEncode(data);
         args[#headers] = {"Content-Type": "application/json"};
       }
@@ -96,7 +93,7 @@ class FusionConnection {
       print(url);
 
       var jsonResponse =
-        convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
+          convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
 
       callback(jsonResponse);
     } finally {
@@ -109,32 +106,27 @@ class FusionConnection {
   }
 
   login(String username, String password, Function(bool) callback) {
-    apiV1Call(
-        "get",
-        "/clients/lookup_options",
-        {"username": username,
-          "password": password},
-        callback: (Map<String, dynamic> response) {
-          if (response.containsKey("access_key")) {
-            _username = username;
-            _password = password;
-            _domain = username.split('@')[1];
-            _extension = username.split('@')[0];
-            setupSocket();
-            callback(true);
-          } else {
-            callback(false);
-          }
-        });
+    apiV1Call("get", "/clients/lookup_options", {
+      "username": username,
+      "password": password
+    }, callback: (Map<String, dynamic> response) {
+      if (response.containsKey("access_key")) {
+        _username = username;
+        _password = password;
+        _domain = username.split('@')[1];
+        _extension = username.split('@')[0];
+        setupSocket();
+        callback(true);
+      } else {
+        callback(false);
+      }
+    });
   }
 
   _reconnectSocket() {
     _socket.connect().then((val) {
       _socket.send(convert.jsonEncode({
-        "simplii_identification": [
-          _extension,
-          _domain
-        ],
+        "simplii_identification": [_extension, _domain],
         "pwd": _password
       }));
     });
@@ -168,8 +160,7 @@ class FusionConnection {
       print("gotmessage " + messageData.toString());
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
-      }
-      else if (message.containsKey('sms_received')) {
+      } else if (message.containsKey('sms_received')) {
         print("gotIM" + messageData.toString());
         messages.storeRecord(SMSMessage(message['message_object']));
       }

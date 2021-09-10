@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gravatar/flutter_gravatar.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
-import 'package:flutter_gravatar/flutter_gravatar.dart';
 
 class ContactCircle extends StatefulWidget {
   final List<Contact> _contacts;
@@ -18,6 +18,7 @@ class ContactCircle extends StatefulWidget {
 
 class _ContactCircleState extends State<ContactCircle> {
   List<Contact> get _contacts => widget._contacts;
+
   List<CrmContact> get _crmContacts => widget._crmContacts;
   double get _diameter => widget._diameter;
 
@@ -85,4 +86,3 @@ class _ContactCircleState extends State<ContactCircle> {
     );
   }
 }
-
