@@ -4,9 +4,13 @@ import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import '../backend/fusion_connection.dart';
 import 'package:flutter_gravatar/flutter_gravatar.dart';
 import 'package:intl/intl.dart';
+
+import '../styles.dart';
+import 'sms_conversation_view.dart';
 
 class MessagesTab extends StatefulWidget {
   final FusionConnection _fusionConnection;
@@ -19,13 +23,22 @@ class MessagesTab extends StatefulWidget {
 
 class _MessagesTabState extends State<MessagesTab> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+  SMSConversation openConversation = null;
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> children = [
-      SearchMessagesView(_fusionConnection),
-      MessagesList(_fusionConnection)
-    ];
+    List<Widget> children;
+    //if (openConversation == null) {
+      children = [
+        SearchMessagesView(_fusionConnection),
+        MessagesList(_fusionConnection)
+      ];
+    /*}
+    else {
+      children = [
+        SMSConversationView(_fusionConnection, openConversation)
+      ];
+    }*/
 
     return Container(
         child: Column(
@@ -53,8 +66,8 @@ class _MessagesListState extends State<MessagesList> {
   _lookupMessages() {
     lookupState = 1;
     _fusionConnection.conversations.getConversations(
-      -2,
-        (List<SMSConversation> convos) {
+        -2,
+            (List<SMSConversation> convos) {
           this.setState(() {
             lookupState = 2;
             _convos = convos;
@@ -80,7 +93,7 @@ class _MessagesListState extends State<MessagesList> {
         decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.all(Radius.circular(16))),
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
           child: Column(
               children: [
                 Container(
@@ -89,9 +102,7 @@ class _MessagesListState extends State<MessagesList> {
                         alignment: Alignment.topLeft,
                         child: Text(
                             "ALL MESSAGES",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color.fromARGB(255, 51,45,46)))
+                            style: headerTextStyle)
                     )
                 ),
                 Expanded(
@@ -127,47 +138,57 @@ class _SMSConversationSummaryViewState extends State<SMSConversationSummaryView>
   SMSConversation get _convo => widget._convo;
   final _searchInputController = TextEditingController();
 
+  _openConversation() {
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => SMSConversationView(_fusionConnection, _convo));
+  }
+
   @override
   Widget build(BuildContext context) {
     DateTime date = DateTime.fromMillisecondsSinceEpoch(_convo.message.unixtime * 1000);
 
-    return Align(
-      alignment: Alignment.centerLeft,
-        child: Container(
+    return Container(
         margin: EdgeInsets.only(bottom: 18),
         child: Row(
             children: [
               ContactCircle(_convo.contacts, _convo.crmContacts),
               Expanded(
-                  child: Column(
-                      children: [
-                        Align(
-                            alignment: Alignment.topLeft,
-                            child: Text(_convo.contactName(),
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16))),
-                        Align(
-                            alignment: Alignment.topLeft,
-                            child: Container(
-                                decoration: BoxDecoration(
-                                  color: Color.fromARGB(255, 243,242,242),
-                                  borderRadius: BorderRadius.all(Radius.circular(4)),
-                                ),
-                                padding: EdgeInsets.only(left: 6, right: 6, top: 2, bottom: 2),
-                                child: Text(
-                                  DateFormat("MMM d").format(date) + " \u2014 " +
-                                    _convo.message.message,
-                                    style: TextStyle(fontSize: 12, height: 1.4),
-                                    maxLines: 2,
-                                    softWrap: true,
-                                    overflow: TextOverflow.ellipsis))
-                        )
-                      ]
+                  child: GestureDetector(
+                      onTap: () {
+                        _openConversation();
+                      },
+                      child: Column(
+                          children: [
+                            Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(_convo.contactName(),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16))),
+                            Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Color.fromARGB(255, 243,242,242),
+                                      borderRadius: BorderRadius.all(Radius.circular(4)),
+                                    ),
+                                    padding: EdgeInsets.only(left: 6, right: 6, top: 2, bottom: 2),
+                                    child: Text(
+                                        DateFormat("MMM d").format(date) + " \u2014 " +
+                                            _convo.message.message,
+                                        style: smallTextStyle,
+                                        maxLines: 2,
+                                        softWrap: true,
+                                        overflow: TextOverflow.ellipsis))
+                            )
+                          ]
+                      )
                   )
               )
             ]
-        )
         )
     );
   }
