@@ -43,7 +43,12 @@ class SMSConversation extends FusionModel {
     return name;
   }
 
-  SMSConversation.build({this.myNumber, this.number, this.message, this.contacts, this.crmContacts}) {
+  SMSConversation.build(
+      {this.myNumber,
+      this.number,
+      this.message,
+      this.contacts,
+      this.crmContacts}) {
     this.hash = this.myNumber + ":" + this.number;
     this.unread = 0;
     if (this.message != null) {

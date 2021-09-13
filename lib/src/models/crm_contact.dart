@@ -20,7 +20,7 @@ class CrmContact extends FusionModel {
   String company;
 
   CrmContact.fromExpanded(Map<String, dynamic> contactObject) {
-        if (contactObject['contact'] != null) {
+    if (contactObject['contact'] != null) {
       this.contact = Contact(contactObject['contact']);
     }
 
@@ -29,7 +29,8 @@ class CrmContact extends FusionModel {
     if (contactObject['email'] != null && contactObject['email'].trim() != '') {
       this.emails.add(contactObject['email']);
     }
-    if (contactObject['email2'] != null && contactObject['email2'].trim() != '') {
+    if (contactObject['email2'] != null &&
+        contactObject['email2'].trim() != '') {
       this.emails.add(contactObject['email2']);
     }
 
@@ -38,24 +39,26 @@ class CrmContact extends FusionModel {
     }
 
     this.id = contactObject['network_id'].toString();
-    this.nid = contactObject['network'].toString() + ":" + contactObject['network_id'].toString();
+    this.nid = contactObject['network'].toString() +
+        ":" +
+        contactObject['network_id'].toString();
     this.label = contactObject['name'];
     this.module = contactObject['module'];
     this.name = contactObject['name'];
     this.url = contactObject['url'];
-    if (contactObject['phone_number'] != null
-        && contactObject['phone_number'].trim() != '0'
-        && contactObject['phone_number'].trim() != '') {
+    if (contactObject['phone_number'] != null &&
+        contactObject['phone_number'].trim() != '0' &&
+        contactObject['phone_number'].trim() != '') {
       this.phone_number = contactObject['phone_number'];
     }
-    if (contactObject['office_number'] != null
-        && contactObject['office_number'].trim() != '0'
-        && contactObject['office_number'].trim() != '') {
+    if (contactObject['office_number'] != null &&
+        contactObject['office_number'].trim() != '0' &&
+        contactObject['office_number'].trim() != '') {
       this.phone_number = contactObject['office_number'];
     }
-    if (contactObject['mobile_number'] != null
-        && contactObject['mobile_number'].trim() != '0'
-        && contactObject['mobile_number'].trim() != '') {
+    if (contactObject['mobile_number'] != null &&
+        contactObject['mobile_number'].trim() != '0' &&
+        contactObject['mobile_number'].trim() != '') {
       this.phone_number = contactObject['mobile_number'];
     }
     this.company = contactObject['company'];

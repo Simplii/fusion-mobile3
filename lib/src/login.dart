@@ -18,8 +18,10 @@ class _LoginViewState extends State<LoginView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Function(String username, String password) get _onLogin => widget._onLogin;
-  final _usernameController = TextEditingController.fromValue(TextEditingValue(text: "9812@Simplii1"));
-  final _passwordController = TextEditingController.fromValue(TextEditingValue(text: "***REMOVED***"));
+  final _usernameController =
+      TextEditingController.fromValue(TextEditingValue(text: "9812@Simplii1"));
+  final _passwordController =
+      TextEditingController.fromValue(TextEditingValue(text: "***REMOVED***"));
   bool _wasSuccessful = null;
 
   _usernameInput() {
@@ -49,11 +51,10 @@ class _LoginViewState extends State<LoginView> {
     return ElevatedButton(
         style: ButtonStyle(
             backgroundColor: MaterialStateColor.resolveWith((state) {
-              return crimsonLight;
-            }),
-            foregroundColor: MaterialStateColor.resolveWith((state) {
-              return Colors.white;
-            })),
+          return crimsonLight;
+        }), foregroundColor: MaterialStateColor.resolveWith((state) {
+          return Colors.white;
+        })),
         onPressed: _login,
         child: Text("Login", style: TextStyle(color: Colors.white)));
   }
