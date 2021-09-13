@@ -17,6 +17,8 @@ import 'src/callpop/callview.dart';
 import 'src/dialpad/dialpad.dart';
 import 'src/login.dart';
 import 'src/messages/messages_list.dart';
+import 'src/messages/new_message_popup.dart';
+import 'src/styles.dart';
 
 FlutterCallkeep __callKeep = FlutterCallkeep();
 bool __callKeepInited = false;
@@ -229,10 +231,45 @@ class _MyHomePageState extends State<MyHomePage> {
     showBarModalBottomSheet(context: context, builder: (context) => DialPad());
   }
 
+  _openNewMessage () {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => NewMessagePopup(fusionConnection)
+    );
+  }
+
   void _loginSuccess(String username, String password) {
     this.setState(() {
       _logged_in = true;
     });
+  }
+
+  _getFloatingButton() {
+    if (_currentIndex <= 1) {
+      return FloatingActionButton(
+        onPressed: _openDialPad,
+        child: Icon(Icons.dialpad),
+      );
+    }
+    else if (_currentIndex == 2) {
+      return FloatingActionButton(
+        backgroundColor: crimsonLight,
+        foregroundColor: Colors.white,
+        onPressed: _openNewMessage,
+        child: Icon(Icons.add),
+      );
+    }
+    else {
+      return null;
+    }
+  }
+
+  _getTabWidget() {
+    return (_currentIndex == 0
+        ? Text('people page')
+        : (_currentIndex == 1 ? CallView() : MessagesTab(fusionConnection)));
   }
 
   @override
@@ -242,10 +279,6 @@ class _MyHomePageState extends State<MyHomePage> {
           body: SafeArea(child: LoginView(_loginSuccess, fusionConnection)));
     }
 
-    Widget child = (_currentIndex == 0
-        ? Text('people page')
-        : (_currentIndex == 1 ? CallView() : MessagesTab(fusionConnection)));
-
     return Container(
         decoration: BoxDecoration(
             image: DecorationImage(
@@ -253,12 +286,9 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
-            child: child,
+            child: _getTabWidget(),
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: _openDialPad,
-            child: Icon(Icons.dialpad),
-          ),
+          floatingActionButton: _getFloatingButton(),
           bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Colors.transparent,
             onTap: onTabTapped,

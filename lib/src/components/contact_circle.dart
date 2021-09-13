@@ -8,10 +8,11 @@ class ContactCircle extends StatefulWidget {
   final List<Contact> _contacts;
   final List<CrmContact> _crmContacts;
   double _diameter = 60;
+  double _margin = null;
 
   ContactCircle(this._contacts, this._crmContacts, {Key key}) : super(key: key);
   ContactCircle.withDiameter(this._contacts, this._crmContacts, this._diameter, {Key key}) : super(key: key);
-
+  ContactCircle.withDiameterAndMargin(this._contacts, this._crmContacts, this._diameter, this._margin, {Key key}) : super(key: key);
   @override
   State<StatefulWidget> createState() => _ContactCircleState();
 }
@@ -21,6 +22,7 @@ class _ContactCircleState extends State<ContactCircle> {
 
   List<CrmContact> get _crmContacts => widget._crmContacts;
   double get _diameter => widget._diameter;
+  double get _margin => widget._margin;
 
   _gravatarUrl(String email) {
     print(email);
@@ -65,7 +67,7 @@ class _ContactCircleState extends State<ContactCircle> {
     Color borderColor = Colors.red;
 
     return Container(
-      margin: EdgeInsets.only(right: _diameter / 3),
+      margin: EdgeInsets.only(right: this._margin != null ? this._margin : _diameter / 3),
       decoration: BoxDecoration(
               border: Border.all(
                   color: borderColor,
