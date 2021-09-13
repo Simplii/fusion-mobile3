@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'backend/fusion_connection.dart';
+import 'styles.dart';
 
 class LoginView extends StatefulWidget {
   final FusionConnection _fusionConnection;
@@ -17,8 +18,8 @@ class _LoginViewState extends State<LoginView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Function(String username, String password) get _onLogin => widget._onLogin;
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController.fromValue(TextEditingValue(text: "9812@Simplii1"));
+  final _passwordController = TextEditingController.fromValue(TextEditingValue(text: "***REMOVED***"));
   bool _wasSuccessful = null;
 
   _usernameInput() {
@@ -46,6 +47,13 @@ class _LoginViewState extends State<LoginView> {
 
   _loginButton() {
     return ElevatedButton(
+        style: ButtonStyle(
+            backgroundColor: MaterialStateColor.resolveWith((state) {
+              return crimsonLight;
+            }),
+            foregroundColor: MaterialStateColor.resolveWith((state) {
+              return Colors.white;
+            })),
         onPressed: _login,
         child: Text("Login", style: TextStyle(color: Colors.white)));
   }
