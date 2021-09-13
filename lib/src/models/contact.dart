@@ -22,7 +22,7 @@ class Contact extends FusionModel {
   String name;
   String owner;
   String parent_id;
-  List<dynamic> phone_number;
+  List<dynamic> phone_numbers;
   List<dynamic> pictures;
   List<dynamic> socials;
   String type;
@@ -52,7 +52,7 @@ class Contact extends FusionModel {
     this.name = contactObject['name'];
     this.owner = contactObject['owner'];
     this.parent_id = contactObject['parent_id'];
-    this.phone_number = contactObject['phone_number'];
+    this.phone_numbers = contactObject['phone_number'];
     this.pictures = contactObject['pictures'];
     this.socials = contactObject['socials'];
     this.type = contactObject['type'];
