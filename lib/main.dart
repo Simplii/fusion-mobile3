@@ -7,13 +7,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/callpop/callview.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:uuid/uuid.dart';
 
 import 'src/backend/fusion_connection.dart';
 import 'src/backend/softphone.dart';
-import 'src/callpop/callview.dart';
 import 'src/dialpad/dialpad.dart';
 import 'src/login.dart';
 import 'src/messages/messages_list.dart';
@@ -184,6 +184,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Call> calls;
   Call activeCall;
   bool _logged_in = false;
+  bool _callInProgress = false;
 
   @override
   initState() {
@@ -220,7 +221,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 1;
 
   void onTabTapped(int index) {
-    setState(() {
+    this.setState(() {
       _currentIndex = index;
     });
   }
@@ -229,13 +230,17 @@ class _MyHomePageState extends State<MyHomePage> {
     showBarModalBottomSheet(context: context, builder: (context) => DialPad());
   }
 
+  void _openCallView() {
+    setState(() {
+      _callInProgress = !_callInProgress;
+    });
+  }
+
   void _loginSuccess(String username, String password) {
     this.setState(() {
       _logged_in = true;
     });
   }
-
-  bool callIsActive = true;
 
   @override
   Widget build(BuildContext context) {
@@ -244,22 +249,28 @@ class _MyHomePageState extends State<MyHomePage> {
           body: SafeArea(child: LoginView(_loginSuccess, fusionConnection)));
     }
 
+    if (_callInProgress == true) {
+      return Container(
+        decoration: BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
+        child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: SafeArea(bottom: false, child: CallView(closeView: _openCallView))),
+      );
+    }
+
     Widget child = (_currentIndex == 0
         ? Text('people page')
-        : (_currentIndex == 1 ? CallView() : MessagesTab(fusionConnection)));
+        : (_currentIndex == 1
+            ? TextButton(onPressed: _openCallView, child: Text('open call'))
+            : MessagesTab(fusionConnection)));
 
     return Container(
         decoration: BoxDecoration(
             image: DecorationImage(
                 image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
-        child: callIsActive ? Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            bottom: false,
-            child: CallView(),
-          ),
-          resizeToAvoidBottomInset: false,
-        ) : Scaffold(
+        child: Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
             child: child,
@@ -285,7 +296,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   icon: Icon(CupertinoIcons.chat_bubble), label: 'Messages')
             ],
           ),
-        )
-    );
+        ));
   }
 }

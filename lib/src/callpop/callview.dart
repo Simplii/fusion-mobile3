@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/callpop/callactionbutton.dart';
 
 class CallView extends StatefulWidget {
-  CallView({Key key}) : super(key: key);
+  CallView({Key key, this.closeView}) : super(key: key);
+
+  final VoidCallback closeView;
 
   @override
   State<StatefulWidget> createState() => _CallViewState();
@@ -33,8 +35,6 @@ class _CallViewState extends State<CallView> {
   onTextBtnPress() {}
 
   onAudioBtnPress() {}
-
-  onHangupBtnPress() {}
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +75,7 @@ class _CallViewState extends State<CallView> {
           ),
           Spacer(),
           Container(
-            padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
             decoration: BoxDecoration(
                 color: Colors.white10, borderRadius: BorderRadius.circular(10)),
             child: ClipRect(
@@ -114,7 +114,7 @@ class _CallViewState extends State<CallView> {
                               title: 'Video',
                               icon: CupertinoIcons.video_camera_solid),
                           RawMaterialButton(
-                            onPressed: onHangupBtnPress,
+                            onPressed: widget.closeView,
                             elevation: 2.0,
                             fillColor: Colors.redAccent,
                             child: Icon(
@@ -122,7 +122,6 @@ class _CallViewState extends State<CallView> {
                               color: Colors.white,
                               size: 35.0,
                             ),
-                            padding: EdgeInsets.all(15.0),
                             shape: CircleBorder(),
                           ),
                           CallActionButton(
@@ -139,7 +138,7 @@ class _CallViewState extends State<CallView> {
             color: Colors.white,
             padding: EdgeInsets.fromLTRB(15, 15, 15, 40),
             child: Row(
-              children: [Text('crms and disposition button')],
+              children: [Text('crms & disposition button')],
             ),
           )
         ],
