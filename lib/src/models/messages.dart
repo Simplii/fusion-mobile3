@@ -1,5 +1,7 @@
 import 'carbon_date.dart';
+import 'contact.dart';
 import 'conversations.dart';
+import 'crm_contact.dart';
 import 'fusion_model.dart';
 import '../backend/fusion_connection.dart';
 import 'fusion_store.dart';
@@ -129,6 +131,80 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
       SMSMessage message = SMSMessage(data);
       storeRecord(message);
     });
+  }
+
+  search(
+      String query,
+      Function(
+          List<SMSConversation> conversations,
+          List<CrmContact> crmContacts,
+          List<Contact> Contacts) callback) {
+    if (query.trim().length == 0) {
+      return;
+    }
+
+    fusionConnection.apiV1Call(
+        "get",
+        "/chat/search/flat", {
+        'query': query,
+        'my_numbers': "8014569812",
+        },
+        callback: (Map<String, dynamic> data)
+        {
+          print(data);
+          Map<String, Contact> contacts = {};
+          Map<String, CrmContact> crmContacts = {};
+          Map<String, SMSMessage> messages = {};
+          Map<String, SMSConversation> conversations = {};
+
+          for (Map<String, dynamic> item in data['agg']['contacts']) {
+            contacts[item['id']] = Contact(item);
+          }
+
+          for (Map<String, dynamic> item in data['agg']['leads']) {
+            crmContacts[item['id'].toString()] = CrmContact.fromExpanded(item);
+          }
+
+          Map<String, dynamic> convoslist = {};
+
+          if (data['agg']['conversations'].runtimeType != List) {
+            convoslist = data['agg']['conversations'];
+          }
+
+          for (String key in convoslist.keys) {
+            List<Contact> contactsList = (convoslist[key]['contacts'] as List<dynamic>)
+                .sublist(0, 10)
+                .map((dynamic i) {
+                  return contacts[i.toString()];
+            }).toList();
+            List<CrmContact> leadsList = (convoslist[key]['leads'] as List<dynamic>)
+                .sublist(0, 10)
+                .map((dynamic i) {
+                  return crmContacts[i.toString()];
+            }).toList();
+            Map<String, dynamic> item = convoslist[key];
+            item['leads'] = leadsList;
+            item['contacts'] = contactsList;
+            item['number'] = item['their_number'];
+            SMSConversation convo = SMSConversation(item);
+            conversations[key] = convo;
+          }
+
+          List<SMSConversation> fullConversations = [];
+          for (Map<String, dynamic> item in data['items']) {
+            SMSMessage message = SMSMessage(item);
+            SMSConversation convo = conversations[item['conversation_id']];
+            SMSConversation newConvo = SMSConversation.copy(convo);
+            newConvo.message = message;
+            fullConversations.add(newConvo);
+          }
+
+          print("calling callback " + fullConversations.toString());
+          callback(
+            fullConversations,
+            crmContacts.values.toList(),
+            contacts.values.toList());
+        });
   }
 
   getMessages(SMSConversation convo, int groupId, int limit, int offset,

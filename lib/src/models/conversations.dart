@@ -43,6 +43,28 @@ class SMSConversation extends FusionModel {
     return name;
   }
 
+  SMSConversation.build({this.myNumber, this.number, this.message, this.contacts, this.crmContacts}) {
+    this.hash = this.myNumber + ":" + this.number;
+    this.unread = 0;
+    if (this.message != null) {
+      this.lastContactTime = message.time.date;
+    }
+  }
+
+  SMSConversation.copy(SMSConversation c) {
+    this.groupName = c.groupName;
+    this.isGroup = c.isGroup;
+    this.lastContactTime = c.lastContactTime;
+    this.myNumber = c.myNumber;
+    this.number = c.number;
+    this.members = c.members;
+    this.message = c.message;
+    this.unread = c.unread;
+    this.crmContacts = c.crmContacts;
+    this.contacts = c.contacts;
+    this.hash = c.hash;
+  }
+
   SMSConversation(Map<String, dynamic> map) {
     this.groupName = map['group_name'];
     this.isGroup = map['is_group'];
