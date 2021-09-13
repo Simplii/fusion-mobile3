@@ -233,18 +233,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _openCallView() {
-    setState(() {
+    this.setState(() {
       _callInProgress = !_callInProgress;
     });
   }
 
-  _openNewMessage () {
+  _openNewMessage() {
     showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => NewMessagePopup(fusionConnection)
-    );
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => NewMessagePopup(fusionConnection));
   }
 
   void _loginSuccess(String username, String password) {
@@ -259,16 +258,14 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _openDialPad,
         child: Icon(Icons.dialpad),
       );
-    }
-    else if (_currentIndex == 2) {
+    } else if (_currentIndex == 2) {
       return FloatingActionButton(
         backgroundColor: crimsonLight,
         foregroundColor: Colors.white,
         onPressed: _openNewMessage,
         child: Icon(Icons.add),
       );
-    }
-    else {
+    } else {
       return null;
     }
   }
@@ -293,7 +290,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
         child: Scaffold(
             backgroundColor: Colors.transparent,
-            body: SafeArea(bottom: false, child: CallView(closeView: _openCallView))),
+            body: SafeArea(
+                bottom: false, child: CallView(closeView: _openCallView))),
       );
     }
 
