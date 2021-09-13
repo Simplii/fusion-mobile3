@@ -36,14 +36,14 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   _search() {
     if (willSearch == 0) {
       willSearch = 1;
-      Future.delayed(const Duration(seconds: 2))
+      Future.delayed(const Duration(seconds: 1))
           .then((dynamic x) {
         String query = _searchTextController.value.text;
-        print("gotdelayed" + query);
+
         _fusionConnection.messages.search(query, (List<SMSConversation> convos,
             List<CrmContact> crmContacts, List<Contact> contacts) {
           willSearch = 0;
-          print("got results"+ mounted.toString());
+
           if (mounted) {
             this.setState(() {
               _convos = convos;
