@@ -11,10 +11,12 @@ class FusionDropdown extends StatefulWidget {
   final String value;
   final TextStyle style;
   final Function(String value) onChange;
+  final Widget button;
 
   FusionDropdown(
       {Key key,
       this.onChange,
+      this.button,
       this.children,
       this.label,
       this.value,
@@ -38,6 +40,8 @@ class _FusionDropdownState extends State<FusionDropdown> {
   String get _value => widget.value;
 
   Function(String value) get _onChange => widget.onChange;
+
+  Widget get _button => widget.button;
 
   _openPopup() {
     showModalBottomSheet(
@@ -75,14 +79,16 @@ class _FusionDropdownState extends State<FusionDropdown> {
   Widget build(BuildContext context) {
     return GestureDetector(
         onTap: _openPopup,
-        child: Row(children: [
-          Text(this._value,
-              style: _style != null ? _style : subHeaderTextStyle),
-          IconButton(
-              onPressed: _openPopup,
-              padding: EdgeInsets.all(0),
-              icon: Image.asset("assets/icons/down_arrow.png",
-                  height: 5, width: 10)),
-        ]));
+        child: this._button != null
+            ? this._button
+            : Row(children: [
+                Text(this._value,
+                    style: _style != null ? _style : subHeaderTextStyle),
+                IconButton(
+                    onPressed: _openPopup,
+                    padding: EdgeInsets.all(0),
+                    icon: Image.asset("assets/icons/down_arrow.png",
+                        height: 5, width: 10)),
+              ]));
   }
 }

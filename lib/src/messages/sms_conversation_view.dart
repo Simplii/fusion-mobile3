@@ -286,7 +286,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
         }
       });
     });
-    _fusionConnection.messages.getMessages(_conversation, -2, 200, 0,
+    _fusionConnection.messages.getMessages(_conversation, 200, 0,
         (List<SMSMessage> messages) {
       this.setState(() {
         lookupState = 2;
