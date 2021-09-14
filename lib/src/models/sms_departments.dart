@@ -62,7 +62,7 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
 
           storeRecord(SMSDepartment({
                                       'id': '-2',
-                                      'group_name': 'All',
+                                      'group_name': 'All Messages',
                                       'numbers': allNumbers,
                                       'mms_numbers': allMMSNumbers,
                                       'unread': allUnread,
