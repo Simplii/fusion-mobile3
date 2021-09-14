@@ -40,7 +40,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
   _openConvo(List<Contact> contacts, List<CrmContact> crmContacts) {
     String theirNumber = null;
     for (Contact c in contacts) {
-      for (Map<String, dynamic> phone in c.phone_numbers) {
+      for (Map<String, dynamic> phone in c.phoneNumbers) {
         theirNumber = phone['number'];
       }
     }
@@ -76,7 +76,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
                 ContactCircle.withDiameterAndMargin([c], [], 60, 0),
                 Align(
                     alignment: Alignment.center,
-                    child: Text(c.first_name,
+                    child: Text(c.firstName,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                             color: coal,
@@ -84,7 +84,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
                             fontWeight: FontWeight.w700))),
                 Align(
                     alignment: Alignment.center,
-                    child: Text(c.last_name,
+                    child: Text(c.lastName,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                             color: coal,

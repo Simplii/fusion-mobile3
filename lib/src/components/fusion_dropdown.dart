@@ -44,14 +44,27 @@ class _FusionDropdownState extends State<FusionDropdown> {
   Widget get _button => widget.button;
 
   _openPopup() {
+    double maxHeight = MediaQuery.of(context).size.height * 0.5;
+    double contentHeight = _options.length * 60.0;
+    if (contentHeight < maxHeight)
+      maxHeight = contentHeight;
+
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (contact) => PopupMenu(
             label: _label,
-            bottomChild: Column(
-                children: _options.map((List<String> option) {
+            bottomChild: Container(
+              constraints: BoxConstraints(
+                minHeight: 24,
+                minWidth: 90,
+                maxWidth: MediaQuery.of(context).size.width - 136,
+                maxHeight: maxHeight
+                ),
+              child: ListView(
+              padding: EdgeInsets.all(8),
+            children: _options.map((List<String> option) {
               return GestureDetector(
                   onTap: () {
                     _onChange(option[1]);
@@ -72,17 +85,24 @@ class _FusionDropdownState extends State<FusionDropdown> {
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.w700))));
-            }).toList())));
+            }).toList()))));
   }
 
   @override
   Widget build(BuildContext context) {
+    String selected = this._value;
+    for (List<String> opt in _options) {
+      if (opt[1] == this._value) {
+        selected = opt[0];
+      }
+    }
+
     return GestureDetector(
         onTap: _openPopup,
         child: this._button != null
             ? this._button
             : Row(children: [
-                Text(this._value,
+                Text(selected,
                     style: _style != null ? _style : subHeaderTextStyle),
                 IconButton(
                     onPressed: _openPopup,

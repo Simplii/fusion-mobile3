@@ -37,7 +37,7 @@ class UserSettings {
   }
 
   String avatarForUser(String uid) {
-    if (options['avatars'][uid.toLowerCase()]) {
+    if (options['avatars'].containsKey(uid.toLowerCase())) {
       return _fusionConnection.serverRoot + options['avatars'][uid
           .toLowerCase()];
     }

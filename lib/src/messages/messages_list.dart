@@ -30,6 +30,16 @@ class _MessagesTabState extends State<MessagesTab> {
   List<CrmContact> _crmContacts = [];
   List<Contact> _contacts = [];
   String _myNumber = "8014569812";
+  bool _loaded = false;
+
+  initState() {
+    if (_fusionConnection.smsDepartments.lookupRecord("-2") != null) {
+      _loaded = true;
+    }
+    _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
+      this.setState(() { _loaded = true; });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +69,7 @@ class _MessagesTabState extends State<MessagesTab> {
                       EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
                   child: MessageSearchResults(_myNumber, _convos, _contacts,
                       _crmContacts, _fusionConnection)))
-          : MessagesList(_fusionConnection)
+          : _loaded ? MessagesList(_fusionConnection) : Container()
     ];
     /*}
     else {
@@ -110,6 +120,13 @@ class _MessagesListState extends State<MessagesList> {
     _lookupMessages();
   }
 
+  _selectedDepartmentName() {
+    return _fusionConnection
+        .smsDepartments
+        .getDepartment(_selectedGroupId)
+        .groupName;
+  }
+
   _groupOptions() {
     List<SMSDepartment> departments = _fusionConnection.smsDepartments.allDepartments();
     List<List<String>> options = [];
@@ -142,7 +159,7 @@ class _MessagesListState extends State<MessagesList> {
                         Expanded(
                             child: Align(
                                 alignment: Alignment.topLeft,
-                                child: Text("ALL MESSAGES", style: headerTextStyle))),
+                                child: Text(_selectedDepartmentName(), style: headerTextStyle))),
                         FusionDropdown(
                             onChange: _changeGroup,
                             value: _selectedGroupId,
