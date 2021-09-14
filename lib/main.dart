@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 
 import 'src/backend/fusion_connection.dart';
 import 'src/backend/softphone.dart';
+import 'src/contacts/recent_contacts.dart';
 import 'src/dialpad/dialpad.dart';
 import 'src/login.dart';
 import 'src/messages/messages_list.dart';
@@ -256,6 +257,8 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_currentIndex <= 1) {
       return FloatingActionButton(
         onPressed: _openDialPad,
+        backgroundColor: crimsonLight,
+        foregroundColor: Colors.white,
         child: Icon(Icons.dialpad),
       );
     } else if (_currentIndex == 2) {
@@ -272,7 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _getTabWidget() {
     return (_currentIndex == 0
-        ? Text('people page')
+        ? RecentContactsTab(fusionConnection)
         : (_currentIndex == 1 ? CallView() : MessagesTab(fusionConnection)));
   }
 
@@ -296,7 +299,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     Widget child = (_currentIndex == 0
-        ? Text('people page')
+        ? RecentContactsTab(fusionConnection)
         : (_currentIndex == 1
             ? TextButton(onPressed: _openCallView, child: Text('open call'))
             : MessagesTab(fusionConnection)));

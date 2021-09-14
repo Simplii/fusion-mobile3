@@ -1,5 +1,6 @@
 import 'dart:convert' as convert;
 
+import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
@@ -27,6 +28,7 @@ class FusionConnection {
   SMSMessagesStore messages;
   UserSettings settings;
   SMSDepartmentsStore smsDepartments;
+  CallHistoryStore callHistory;
 
   String serverRoot = "https://fusioncomm.net";
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
@@ -39,6 +41,7 @@ class FusionConnection {
     messages = SMSMessagesStore(this);
     settings = UserSettings(this);
     smsDepartments = SMSDepartmentsStore(this);
+    callHistory = CallHistoryStore(this);
   }
 
   final channel = WebSocketChannel.connect(
