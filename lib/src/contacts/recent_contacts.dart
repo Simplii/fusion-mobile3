@@ -173,17 +173,20 @@ class _ContactsListState extends State<ContactsList> {
             decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(16))),
-            padding: EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
+            padding: EdgeInsets.only(top: 16, left: 12, right: 12, bottom: 0),
             child: Column(children: [
               Container(
-                  margin: EdgeInsets.only(bottom: 24),
+                  margin: EdgeInsets.only(
+                    bottom: 24,
+                    left: 4,
+                  ),
                   child: Align(
                       alignment: Alignment.topLeft,
                       child:
                           Text(_label.toUpperCase(), style: headerTextStyle))),
               Expanded(
                   child: CustomScrollView(slivers: [
-                    SliverList(delegate: SliverChildListDelegate(_historyList()))
+                SliverList(delegate: SliverChildListDelegate(_historyList()))
               ]))
             ])));
   }
@@ -209,8 +212,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   List<Contact> _contacts() {
     if (_historyItem.contact != null) {
       return [_historyItem.contact];
-    }
-    else {
+    } else {
       return [];
     }
   }
@@ -218,15 +220,14 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   List<CrmContact> _crmContacts() {
     if (_historyItem.crmContact != null) {
       return [_historyItem.crmContact];
-    }
-    else {
+    } else {
       return [];
     }
   }
 
   _expand() {
     this.setState(() {
-      _expanded = true;
+      _expanded = !_expanded;
     });
   }
 
@@ -254,45 +255,110 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     }
   }
 
+  _actionButton(
+      String label, String icon, double width, double height, Function onTap) {
+    return Expanded(
+        child: GestureDetector(
+            onTap: onTap,
+                child: Opacity(
+        opacity: 0.66,
+        child: Container(
+
+            margin: EdgeInsets.only(left:12),
+                    child: Row(children: [
+                      Container(
+
+                          width: width, height: height,
+                          child: Image.asset("assets/icons/" + icon + ".png",
+                                   width: width, height: height)),
+                      Text(" " + label,
+                               style: TextStyle(
+                                   color: coal,
+                                   fontSize: 14,
+                                   fontWeight: FontWeight.w800))
+                ])))));
+  }
+
   @override
   Widget build(BuildContext context) {
+    List<Widget> children = [_topPart()];
+
+    if (_expanded) {
+      children.add(Container(child: horizontalLine(0),
+                             margin: EdgeInsets.only(top:4, bottom:4)));
+      children.add(Container(
+          height:28,
+          margin: EdgeInsets.only(top: 12, bottom: 12),
+          child: Row(children: [
+            _actionButton("Profile", "user_dark", 18, 18, () {}),
+            _actionButton("Call", "phone_dark", 18, 18, () {}),
+            _actionButton("Message", "message_dark", 18, 18, () {}),
+           // _actionButton("Video", "video_dark", 18, 18, () {}),
+      ])));
+    }
+
     return Container(
-        margin: EdgeInsets.only(bottom: 18),
-        child: Row(children: [
-          ContactCircle(_contacts(), _crmContacts()),
-          Expanded(
-              child: GestureDetector(
-                  onTap: () {
-                    _expand();
-                  },
-                  child: Column(children: [
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(_name(),
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16))),
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                            decoration: BoxDecoration(
-                              color: Color.fromARGB(255, 243, 242, 242),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(4)),
-                            ),
-                            padding: EdgeInsets.only(
-                                left: 6, right: 6, top: 2, bottom: 2),
-                            child: Row(
-                              children: [
-                                Image.asset(_icon(), width: 12, height: 12),
-                                Text(
-                                " " + mDash + " " + DateFormat.jm().format(_historyItem.startTime),
+        height: _expanded ? 132: 76,
+        padding: EdgeInsets.all(4),
+        margin: EdgeInsets.only(bottom: 12),
+        decoration: _expanded
+            ? BoxDecoration(
+                color: particle,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(36),
+                  topRight: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                ))
+            : null,
+        child: Column(children: children));
+  }
+
+  _topPart() {
+    return Row(children: [
+      ContactCircle(_contacts(), _crmContacts()),
+      Expanded(
+          child: GestureDetector(
+              onTap: () {
+                _expand();
+              },
+              child: Column(children: [
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(_name(),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16))),
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: Row(children: [
+                      Container(
+                          margin: EdgeInsets.only(top: 4),
+                          decoration: BoxDecoration(
+                            color: _expanded
+                                ? Colors.white
+                                : Color.fromARGB(255, 243, 242, 242),
+                            borderRadius: BorderRadius.all(Radius.circular(4)),
+                          ),
+                          padding: EdgeInsets.only(
+                              left: 6, right: 6, top: 2, bottom: 2),
+                          child: Row(children: [
+                            Image.asset(_icon(), width: 12, height: 12),
+                            Text(
+                                " " +
+                                    mDash +
+                                    " " +
+                                    DateFormat.jm()
+                                        .format(_historyItem.startTime),
                                 style: TextStyle(
-                                  color: _isMissed() ? crimsonLight: coal,
-                                  fontSize: 12,
-                                  height: 1.4,
-                                  fontWeight: FontWeight.w400))])))
-                  ])))
-        ]));
+                                    color: _isMissed() ? crimsonLight : coal,
+                                    fontSize: 12,
+                                    height: 1.4,
+                                    fontWeight: FontWeight.w400))
+                          ])),
+                      Expanded(child: Container())
+                    ]))
+              ])))
+    ]);
   }
 }
 
