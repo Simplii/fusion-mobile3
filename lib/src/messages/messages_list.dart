@@ -234,7 +234,7 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
       willSearch = 1;
       Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
         String query = _searchInputController.value.text;
-
+        willSearch = 0;
         _fusionConnection.messages.search(query, (List<SMSConversation> convos,
             List<CrmContact> crmContacts, List<Contact> contacts) {
           willSearch = 0;

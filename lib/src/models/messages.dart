@@ -173,12 +173,10 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
 
           for (String key in convoslist.keys) {
             List<Contact> contactsList = (convoslist[key]['contacts'] as List<dynamic>)
-                .sublist(0, 10)
                 .map((dynamic i) {
                   return contacts[i.toString()];
             }).toList();
             List<CrmContact> leadsList = (convoslist[key]['leads'] as List<dynamic>)
-                .sublist(0, 10)
                 .map((dynamic i) {
                   return crmContacts[i.toString()];
             }).toList();
