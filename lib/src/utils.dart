@@ -10,6 +10,10 @@ extension PhoneNumbers on String {
         "-" +
         this.substring(6, 10);
   }
+
+  String onlyNumbers() {
+    return this.replaceAll(r'[^0-9]+', '');
+  }
 }
 
 randomString(int len) {
