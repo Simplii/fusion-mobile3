@@ -4,8 +4,9 @@ import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
-import '../backend/fusion_connection.dart';
 import 'package:intl/intl.dart';
+
+import '../backend/fusion_connection.dart';
 import '../styles.dart';
 import 'message_search_results.dart';
 import 'sms_conversation_view.dart';
