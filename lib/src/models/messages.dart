@@ -198,14 +198,15 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     });
   }
 
-  getMessages(SMSConversation convo, int groupId, int limit, int offset,
+  getMessages(SMSConversation convo, int limit, int offset,
       Function(List<SMSMessage> messages) callback) {
+
     fusionConnection.apiV1Call("get", "/chat/conversation/messages", {
       'my_numbers': convo.myNumber,
       'their_numbers': convo.number,
       'limit': limit,
       'offset': offset,
-      'group_id': groupId
+      'group_id': -2
     }, callback: (Map<String, dynamic> data) {
       List<SMSMessage> messages = [];
       print(data);
