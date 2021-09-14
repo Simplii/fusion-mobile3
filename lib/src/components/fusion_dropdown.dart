@@ -46,8 +46,7 @@ class _FusionDropdownState extends State<FusionDropdown> {
   _openPopup() {
     double maxHeight = MediaQuery.of(context).size.height * 0.5;
     double contentHeight = _options.length * 60.0;
-    if (contentHeight < maxHeight)
-      maxHeight = contentHeight;
+    if (contentHeight < maxHeight) maxHeight = contentHeight;
 
     showModalBottomSheet(
         context: context,
@@ -56,36 +55,35 @@ class _FusionDropdownState extends State<FusionDropdown> {
         builder: (contact) => PopupMenu(
             label: _label,
             bottomChild: Container(
-              constraints: BoxConstraints(
-                minHeight: 24,
-                minWidth: 90,
-                maxWidth: MediaQuery.of(context).size.width - 136,
-                maxHeight: maxHeight
-                ),
-              child: ListView(
-              padding: EdgeInsets.all(8),
-            children: _options.map((List<String> option) {
-              return GestureDetector(
-                  onTap: () {
-                    _onChange(option[1]);
-                    Navigator.pop(context);
-                  },
-                  child: Container(
-                      padding: EdgeInsets.only(
-                          top: 12, bottom: 12, left: 18, right: 18),
-                      decoration: BoxDecoration(
-                          color: option[1] == _value
-                              ? lightHighlight
-                              : Colors.transparent,
-                          border: Border(
-                              bottom:
-                                  BorderSide(color: lightDivider, width: 1.0))),
-                      child: Text(option[0],
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700))));
-            }).toList()))));
+                constraints: BoxConstraints(
+                    minHeight: 24,
+                    minWidth: 90,
+                    maxWidth: MediaQuery.of(context).size.width - 136,
+                    maxHeight: maxHeight),
+                child: ListView(
+                    padding: EdgeInsets.all(8),
+                    children: _options.map((List<String> option) {
+                      return GestureDetector(
+                          onTap: () {
+                            _onChange(option[1]);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                              padding: EdgeInsets.only(
+                                  top: 12, bottom: 12, left: 18, right: 18),
+                              decoration: BoxDecoration(
+                                  color: option[1] == _value
+                                      ? lightHighlight
+                                      : Colors.transparent,
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: lightDivider, width: 1.0))),
+                              child: Text(option[0],
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700))));
+                    }).toList()))));
   }
 
   @override

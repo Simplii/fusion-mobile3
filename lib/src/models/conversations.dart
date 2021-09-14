@@ -96,10 +96,9 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
 
   getConversations(
       String groupId, Function(List<SMSConversation> conversations) callback) {
-    SMSDepartment department = fusionConnection.smsDepartments.getDepartment(groupId);
+    SMSDepartment department =
+        fusionConnection.smsDepartments.getDepartment(groupId);
     List<String> numbers = department.numbers;
-
-
 
     fusionConnection.apiV1Call("get", "/chat/conversations_with/with_message", {
       'numbers': numbers.join(","),

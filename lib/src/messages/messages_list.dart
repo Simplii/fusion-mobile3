@@ -37,7 +37,9 @@ class _MessagesTabState extends State<MessagesTab> {
       _loaded = true;
     }
     _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
-      this.setState(() { _loaded = true; });
+      this.setState(() {
+        _loaded = true;
+      });
     });
   }
 
@@ -69,7 +71,9 @@ class _MessagesTabState extends State<MessagesTab> {
                       EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
                   child: MessageSearchResults(_myNumber, _convos, _contacts,
                       _crmContacts, _fusionConnection)))
-          : _loaded ? MessagesList(_fusionConnection) : Container()
+          : _loaded
+              ? MessagesList(_fusionConnection)
+              : Container()
     ];
     /*}
     else {
@@ -99,14 +103,13 @@ class _MessagesListState extends State<MessagesList> {
 
   _lookupMessages() {
     lookupState = 1;
-    _fusionConnection.conversations.getConversations(
-        _selectedGroupId,
-            (List<SMSConversation> convos) {
-              this.setState(() {
-                lookupState = 2;
-                _convos = convos;
-              });
-            });
+    _fusionConnection.conversations.getConversations(_selectedGroupId,
+        (List<SMSConversation> convos) {
+      this.setState(() {
+        lookupState = 2;
+        _convos = convos;
+      });
+    });
   }
 
   _messagesList() {
@@ -121,14 +124,14 @@ class _MessagesListState extends State<MessagesList> {
   }
 
   _selectedDepartmentName() {
-    return _fusionConnection
-        .smsDepartments
+    return _fusionConnection.smsDepartments
         .getDepartment(_selectedGroupId)
         .groupName;
   }
 
   _groupOptions() {
-    List<SMSDepartment> departments = _fusionConnection.smsDepartments.allDepartments();
+    List<SMSDepartment> departments =
+        _fusionConnection.smsDepartments.allDepartments();
     List<List<String>> options = [];
 
     departments.sort((a, b) => a.groupName.compareTo(b.groupName));
@@ -154,38 +157,36 @@ class _MessagesListState extends State<MessagesList> {
             child: Column(children: [
               Container(
                   margin: EdgeInsets.only(bottom: 24),
-                  child: Row(
-                      children: [
-                        Expanded(
-                            child: Align(
-                                alignment: Alignment.topLeft,
-                                child: Text(_selectedDepartmentName(), style: headerTextStyle))),
-                        FusionDropdown(
-                            onChange: _changeGroup,
-                            value: _selectedGroupId,
-                            options: _groupOptions(),
-                            label: "Select a Department",
-                            button: Container(
+                  child: Row(children: [
+                    Expanded(
+                        child: Align(
+                            alignment: Alignment.topLeft,
+                            child: Text(_selectedDepartmentName().toUpperCase(),
+                                style: headerTextStyle))),
+                    FusionDropdown(
+                        onChange: _changeGroup,
+                        value: _selectedGroupId,
+                        options: _groupOptions(),
+                        label: "Select a Department",
+                        button: Container(
                           decoration: BoxDecoration(
-                            color: translucentSmoke,
-                            borderRadius: BorderRadius.all(Radius.circular(16))
-                          ),
-                          padding: EdgeInsets.all(8),
+                              color: translucentSmoke,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(16))),
+                          padding: EdgeInsets.only(
+                              top: 10, bottom: 8, right: 9, left: 9),
                           width: 32,
                           height: 32,
-                          child: IconButton(
-                              iconSize: 12,
-                              icon: Image.asset(
-                                "assets/icons/down_chevron.png",
-                                width: 12,
-                                height: 6,
-                                ),
-                              onPressed: () {}),
+                          child: Image.asset(
+                            "assets/icons/down_chevron.png",
+                            width: 12,
+                            height: 6,
+                          ),
                         ))
-                      ])),
+                  ])),
               Expanded(
                   child: CustomScrollView(slivers: [
-                    SliverList(delegate: SliverChildListDelegate(_messagesList()))
+                SliverList(delegate: SliverChildListDelegate(_messagesList()))
               ]))
             ])));
   }
