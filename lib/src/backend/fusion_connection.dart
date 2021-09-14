@@ -1,13 +1,15 @@
 import 'dart:convert' as convert;
+
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:http/http.dart' as http;
-import '../utils.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:websocket_manager/websocket_manager.dart';
+
+import '../utils.dart';
 
 class FusionConnection {
   String _extension = '';

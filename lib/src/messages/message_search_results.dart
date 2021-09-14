@@ -1,16 +1,12 @@
-import 'package:fusion_mobile_revamped/src/models/contact.dart';
-import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
-import 'package:keyboard_attachable/keyboard_attachable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
+import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
-import 'package:fusion_mobile_revamped/src/models/messages.dart';
+import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+
 import '../backend/fusion_connection.dart';
-import '../utils.dart';
 import '../styles.dart';
-import 'package:intl/intl.dart';
-import '../components/fusion_dropdown.dart';
 import 'messages_list.dart';
 import 'sms_conversation_view.dart';
 
@@ -140,7 +136,9 @@ class _MessageSearchResults extends State<MessageSearchResults> {
               alignment: Alignment.centerLeft,
               child: Text("Messages",
                   style: TextStyle(
-                  color: coal, fontSize: 24, fontWeight: FontWeight.w700)))),
+                      color: coal,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700)))),
       Expanded(child: ListView(children: _messagesList()))
     ]);
   }

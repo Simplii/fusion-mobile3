@@ -11,8 +11,16 @@ class ContactCircle extends StatefulWidget {
   double _margin = null;
 
   ContactCircle(this._contacts, this._crmContacts, {Key key}) : super(key: key);
-  ContactCircle.withDiameter(this._contacts, this._crmContacts, this._diameter, {Key key}) : super(key: key);
-  ContactCircle.withDiameterAndMargin(this._contacts, this._crmContacts, this._diameter, this._margin, {Key key}) : super(key: key);
+
+  ContactCircle.withDiameter(this._contacts, this._crmContacts, this._diameter,
+      {Key key})
+      : super(key: key);
+
+  ContactCircle.withDiameterAndMargin(
+      this._contacts, this._crmContacts, this._diameter, this._margin,
+      {Key key})
+      : super(key: key);
+
   @override
   State<StatefulWidget> createState() => _ContactCircleState();
 }
@@ -21,7 +29,9 @@ class _ContactCircleState extends State<ContactCircle> {
   List<Contact> get _contacts => widget._contacts;
 
   List<CrmContact> get _crmContacts => widget._crmContacts;
+
   double get _diameter => widget._diameter;
+
   double get _margin => widget._margin;
 
   _gravatarUrl(String email) {
@@ -56,35 +66,30 @@ class _ContactCircleState extends State<ContactCircle> {
     }
 
     Widget contactImage = ClipRRect(
-      borderRadius: BorderRadius.circular((_diameter - 4) / 2),
-      child: (imageUrl != null
-        ? Image.network(imageUrl, height: _diameter - 4, width: _diameter - 4)
-        : Image.asset(
-          "assets/blank_avatar.png",
-          height: _diameter - 4,
-          width: _diameter - 4)));
+        borderRadius: BorderRadius.circular((_diameter - 4) / 2),
+        child: (imageUrl != null
+            ? Image.network(imageUrl,
+                height: _diameter - 4, width: _diameter - 4)
+            : Image.asset("assets/blank_avatar.png",
+                height: _diameter - 4, width: _diameter - 4)));
 
     Color borderColor = Colors.red;
 
     return Container(
-      margin: EdgeInsets.only(right: this._margin != null ? this._margin : _diameter / 3),
-      decoration: BoxDecoration(
-              border: Border.all(
-                  color: borderColor,
-                  width:2),
-              borderRadius: BorderRadius.all(Radius.circular(_diameter / 2))),
-      width: _diameter,
-      height: _diameter,
-      child: Container(
-          decoration: BoxDecoration(
-              border: Border.all(
-                  color: Colors.white,
-                  width:2),
-              borderRadius: BorderRadius.all(Radius.circular((_diameter - 4) / 2))),
-          width: _diameter - 4,
-          height: _diameter - 4,
-          child: contactImage
-      )
-    );
+        margin: EdgeInsets.only(
+            right: this._margin != null ? this._margin : _diameter / 3),
+        decoration: BoxDecoration(
+            border: Border.all(color: borderColor, width: 2),
+            borderRadius: BorderRadius.all(Radius.circular(_diameter / 2))),
+        width: _diameter,
+        height: _diameter,
+        child: Container(
+            decoration: BoxDecoration(
+                border: Border.all(color: Colors.white, width: 2),
+                borderRadius:
+                    BorderRadius.all(Radius.circular((_diameter - 4) / 2))),
+            width: _diameter - 4,
+            height: _diameter - 4,
+            child: contactImage));
   }
 }
