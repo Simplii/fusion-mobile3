@@ -1,10 +1,13 @@
 import 'dart:convert' as convert;
 
+import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
+import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:websocket_manager/websocket_manager.dart';
@@ -23,6 +26,12 @@ class FusionConnection {
   WebsocketManager _socket;
   SMSConversationsStore conversations;
   SMSMessagesStore messages;
+  UserSettings settings;
+  SMSDepartmentsStore smsDepartments;
+  CallHistoryStore callHistory;
+
+  String serverRoot = "https://fusioncomm.net";
+  String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
 
   FusionConnection() {
     crmContacts = CrmContactsStore(this);
@@ -30,6 +39,9 @@ class FusionConnection {
     callpopInfos = CallpopInfoStore(this);
     conversations = SMSConversationsStore(this);
     messages = SMSMessagesStore(this);
+    settings = UserSettings(this);
+    smsDepartments = SMSDepartmentsStore(this);
+    callHistory = CallHistoryStore(this);
   }
 
   final channel = WebSocketChannel.connect(
@@ -95,7 +107,7 @@ class FusionConnection {
       print(url);
 
       var jsonResponse =
-          convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
+          convert.jsonDecode(uriResponse.body);
 
       callback(jsonResponse);
     } finally {
@@ -104,7 +116,15 @@ class FusionConnection {
   }
 
   myAvatarUrl() {
-    return null;
+    return settings.myAvatar();
+  }
+
+  getUid() {
+    return _username;
+  }
+
+  getDomain() {
+    return _domain;
   }
 
   login(String username, String password, Function(bool) callback) {
@@ -117,8 +137,12 @@ class FusionConnection {
         _password = password;
         _domain = username.split('@')[1];
         _extension = username.split('@')[0];
+        settings.setOptions(response);
+        settings.lookupSubscriber();
         setupSocket();
         callback(true);
+
+        smsDepartments.getDepartments((List<SMSDepartment> lis) {});
       } else {
         callback(false);
       }

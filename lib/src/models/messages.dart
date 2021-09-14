@@ -146,7 +146,6 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
       'query': query,
       'my_numbers': "8014569812",
     }, callback: (Map<String, dynamic> data) {
-      print(data);
       Map<String, Contact> contacts = {};
       Map<String, CrmContact> crmContacts = {};
       Map<String, SMSMessage> messages = {};
@@ -168,16 +167,14 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
 
       for (String key in convoslist.keys) {
         List<Contact> contactsList =
-            (convoslist[key]['contacts'] as List<dynamic>)
-                .sublist(0, 10)
-                .map((dynamic i) {
+            (convoslist[key]['contacts'] as List<dynamic>).map((dynamic i) {
           return contacts[i.toString()];
         }).toList();
-        List<CrmContact> leadsList = (convoslist[key]['leads'] as List<dynamic>)
-            .sublist(0, 10)
-            .map((dynamic i) {
+        List<CrmContact> leadsList =
+            (convoslist[key]['leads'] as List<dynamic>).map((dynamic i) {
           return crmContacts[i.toString()];
         }).toList();
+
         Map<String, dynamic> item = convoslist[key];
         item['leads'] = leadsList;
         item['contacts'] = contactsList;
@@ -201,14 +198,15 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     });
   }
 
-  getMessages(SMSConversation convo, int groupId, int limit, int offset,
+  getMessages(SMSConversation convo, int limit, int offset,
       Function(List<SMSMessage> messages) callback) {
+
     fusionConnection.apiV1Call("get", "/chat/conversation/messages", {
       'my_numbers': convo.myNumber,
       'their_numbers': convo.number,
       'limit': limit,
       'offset': offset,
-      'group_id': groupId
+      'group_id': -2
     }, callback: (Map<String, dynamic> data) {
       List<SMSMessage> messages = [];
       print(data);

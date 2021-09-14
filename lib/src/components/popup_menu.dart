@@ -44,17 +44,19 @@ class _PopupMenuState extends State<PopupMenu> {
               decoration: BoxDecoration(
                   border: Border(
                       bottom: BorderSide(color: lightDivider, width: 1.0))),
-              child: Text(this._label,
+              child: Text(this._label.toUpperCase(),
                   style: TextStyle(
                       color: smoke,
-                      fontSize: 16,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700))),
           Stack(alignment: Alignment.bottomCenter, children: [
             Container(
-                padding: EdgeInsets.only(left: 47.5, right: 47.5, bottom: 67.5),
+                padding: EdgeInsets.only(left: 47.5, right: 47.5, bottom: 97.5),
                 child: _bottomChild),
             Container(
-                margin: EdgeInsets.only(bottom: 8),
+                margin: EdgeInsets.only(bottom: 30),
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                     color: offBlack,
                     borderRadius: BorderRadius.all(Radius.circular(44)),

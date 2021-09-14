@@ -1,8 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
+import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
+import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
+import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
@@ -25,6 +29,18 @@ class _SMSConversationViewState extends State<SMSConversationView> {
 
   SMSConversation get _conversation => widget._smsConversation;
   TextEditingController _messageInputController = TextEditingController();
+  bool _loaded = false;
+
+  initState() {
+    if (_fusionConnection.smsDepartments.lookupRecord("-2") != null) {
+      _loaded = true;
+    }
+    _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
+      this.setState(() {
+        _loaded = true;
+      });
+    });
+  }
 
   _header() {
     String myImageUrl = _fusionConnection.myAvatarUrl();
@@ -67,7 +83,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       ]),
       Row(children: [horizontalLine(16)]),
       Row(children: [
-        Expanded(
+        Expanded(child: Container()),
+        Container(
           child: Align(
               alignment: Alignment.centerRight, child: _myNumberDropdown()),
         ),
@@ -76,64 +93,90 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             alignment: Alignment.centerRight,
             child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: (myImageUrl != null
-                    ? Image.network(myImageUrl, height: 32, width: 32)
-                    : Image.asset("assets/blank_avatar.png",
-                        height: 32, width: 32))))
+                child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            fit: BoxFit.fill,
+                            image: (myImageUrl != null
+                                ? NetworkImage(myImageUrl)
+                                : Image.asset("assets/blank_avatar.png",
+                                    height: 32, width: 32)))))))
       ])
     ]);
+  }
+
+  _allMyNumbers() {
+    SMSDepartment dept = _fusionConnection.smsDepartments.lookupRecord("-2");
+    List<List<String>> opts = [];
+
+    for (String number in dept.numbers) {
+      opts.add([number.formatPhone(), number.onlyNumbers()]);
+    }
+
+    return opts;
+  }
+
+  _allTheirNumbers() {
+    List<List<String>> opts = [];
+    Map<String, String> numbers = {
+      _conversation.number.onlyNumbers(): _conversation.number.onlyNumbers()
+    };
+
+    for (Contact c in _conversation.contacts) {
+      if (c.phoneNumbers != null) {
+        for (Map<String, dynamic> number in c.phoneNumbers) {
+          numbers[number['number'].onlyNumbers()] = number['number'];
+        }
+      }
+    }
+
+    for (CrmContact c in _conversation.crmContacts) {
+      if (c.phone_number != null) {
+        numbers[c.phone_number.onlyNumbers()] = c.phone_number;
+      }
+    }
+
+    for (String number in numbers.keys) {
+      opts.add([number.formatPhone(), number.onlyNumbers()]);
+    }
+
+    return opts;
   }
 
   _myNumberDropdown() {
     return Container(
         decoration: dropdownDecoration,
-        margin: EdgeInsets.only(right: 12),
-        padding: EdgeInsets.only(top: 0, bottom: 0, right: 8, left: 8),
-        child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-          value: _conversation.myNumber,
-          icon: const Icon(Icons.arrow_downward),
-          iconSize: 24,
-          elevation: 16,
-          style: dropdownTextStyle,
-          dropdownColor: translucentSmoke,
-          onChanged: (String newValue) {
-            setState(() {});
-          },
-          items: <String>['Myself', _conversation.myNumber]
-              .map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
-        )));
+        margin: EdgeInsets.only(right: 8),
+        padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
+        height: 36,
+        child: FusionDropdown(
+            value: _conversation.myNumber,
+            options: _allMyNumbers(),
+            onChange: (String newNumber) {
+              this.setState(() {
+                _conversation.myNumber = newNumber;
+              });
+            },
+            label: "Your phone number"));
   }
 
   _theirNumberDropdown() {
     return Container(
         decoration: dropdownDecoration,
-        margin: EdgeInsets.only(right: 12),
-        padding: EdgeInsets.only(top: 0, bottom: 0, right: 8, left: 8),
-        child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-          value: _conversation.number,
-          icon: const Icon(Icons.arrow_downward),
-          iconSize: 24,
-          elevation: 16,
-          style: dropdownTextStyle,
-          dropdownColor: translucentSmoke,
-          onChanged: (String newValue) {
-            setState(() {});
-          },
-          items: <String>['Their Number', _conversation.number]
-              .map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
-        )));
+        margin: EdgeInsets.only(right: 8),
+        padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
+        height: 36,
+        child: FusionDropdown(
+            value: _conversation.number,
+            options: _allTheirNumbers(),
+            onChange: (String newNumber) {
+              this.setState(() {
+                _conversation.number = newNumber;
+              });
+            },
+            label: "Their phone number"));
   }
 
   _sendMessageInput() {
@@ -217,8 +260,10 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                             padding: EdgeInsets.only(left: 14, right: 14),
                             child: Row(children: [
                               Expanded(
-                                  child: ConvoMessagesList(
-                                      _fusionConnection, _conversation))
+                                  child: _loaded
+                                      ? ConvoMessagesList(
+                                          _fusionConnection, _conversation)
+                                      : Container())
                             ]))),
                   ]))),
           _sendMessageInput()
@@ -246,6 +291,9 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSMessage> _messages = [];
   String _subscriptionKey;
+
+  String _lookedupNumber = "";
+  String _lookedupMyNumber = "";
 
   @override
   dispose() {
@@ -286,7 +334,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
         }
       });
     });
-    _fusionConnection.messages.getMessages(_conversation, -2, 200, 0,
+    _fusionConnection.messages.getMessages(_conversation, 200, 0,
         (List<SMSMessage> messages) {
       this.setState(() {
         lookupState = 2;
@@ -336,7 +384,22 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
 
   @override
   Widget build(BuildContext context) {
+    print("building here " +
+        lookupState.toString() +
+        ":" +
+        _lookedupNumber.toString() +
+        ":" +
+        _lookedupMyNumber.toString());
+    if (lookupState != 0 &&
+        (_conversation.number != _lookedupNumber ||
+            _conversation.myNumber != _lookedupMyNumber)) {
+      lookupState = 0;
+      _messages = [];
+    }
+
     if (lookupState == 0) {
+      _lookedupNumber = _conversation.number;
+      _lookedupMyNumber = _conversation.myNumber;
       _lookupMessages();
     }
 

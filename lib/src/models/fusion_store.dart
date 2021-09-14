@@ -27,4 +27,12 @@ class FusionStore<T extends FusionModel> {
       callback(_records[id]);
     }
   }
+
+  lookupRecord(String id) {
+    return _records[id];
+  }
+
+  getRecords() {
+    return _records.values.toList();
+  }
 }

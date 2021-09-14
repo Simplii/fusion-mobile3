@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
+import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
@@ -28,6 +30,18 @@ class _MessagesTabState extends State<MessagesTab> {
   List<CrmContact> _crmContacts = [];
   List<Contact> _contacts = [];
   String _myNumber = "8014569812";
+  bool _loaded = false;
+
+  initState() {
+    if (_fusionConnection.smsDepartments.lookupRecord("-2") != null) {
+      _loaded = true;
+    }
+    _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
+      this.setState(() {
+        _loaded = true;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +71,9 @@ class _MessagesTabState extends State<MessagesTab> {
                       EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
                   child: MessageSearchResults(_myNumber, _convos, _contacts,
                       _crmContacts, _fusionConnection)))
-          : MessagesList(_fusionConnection)
+          : _loaded
+              ? MessagesList(_fusionConnection)
+              : Container()
     ];
     /*}
     else {
@@ -83,10 +99,11 @@ class _MessagesListState extends State<MessagesList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
+  String _selectedGroupId = "-2";
 
   _lookupMessages() {
     lookupState = 1;
-    _fusionConnection.conversations.getConversations(-2,
+    _fusionConnection.conversations.getConversations(_selectedGroupId,
         (List<SMSConversation> convos) {
       this.setState(() {
         lookupState = 2;
@@ -99,6 +116,30 @@ class _MessagesListState extends State<MessagesList> {
     return _convos.map((convo) {
       return SMSConversationSummaryView(_fusionConnection, convo);
     }).toList();
+  }
+
+  _changeGroup(String newGroupId) {
+    _selectedGroupId = newGroupId;
+    _lookupMessages();
+  }
+
+  _selectedDepartmentName() {
+    return _fusionConnection.smsDepartments
+        .getDepartment(_selectedGroupId)
+        .groupName;
+  }
+
+  _groupOptions() {
+    List<SMSDepartment> departments =
+        _fusionConnection.smsDepartments.allDepartments();
+    List<List<String>> options = [];
+
+    departments.sort((a, b) => a.groupName.compareTo(b.groupName));
+
+    for (SMSDepartment d in departments) {
+      options.add([d.groupName, d.id]);
+    }
+    return options;
   }
 
   @override
@@ -116,9 +157,33 @@ class _MessagesListState extends State<MessagesList> {
             child: Column(children: [
               Container(
                   margin: EdgeInsets.only(bottom: 24),
-                  child: Align(
-                      alignment: Alignment.topLeft,
-                      child: Text("ALL MESSAGES", style: headerTextStyle))),
+                  child: Row(children: [
+                    Expanded(
+                        child: Align(
+                            alignment: Alignment.topLeft,
+                            child: Text(_selectedDepartmentName().toUpperCase(),
+                                style: headerTextStyle))),
+                    FusionDropdown(
+                        onChange: _changeGroup,
+                        value: _selectedGroupId,
+                        options: _groupOptions(),
+                        label: "Select a Department",
+                        button: Container(
+                          decoration: BoxDecoration(
+                              color: translucentSmoke,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(16))),
+                          padding: EdgeInsets.only(
+                              top: 10, bottom: 8, right: 9, left: 9),
+                          width: 32,
+                          height: 32,
+                          child: Image.asset(
+                            "assets/icons/down_chevron.png",
+                            width: 12,
+                            height: 6,
+                          ),
+                        ))
+                  ])),
               Expanded(
                   child: CustomScrollView(slivers: [
                 SliverList(delegate: SliverChildListDelegate(_messagesList()))
@@ -235,7 +300,7 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
       willSearch = 1;
       Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
         String query = _searchInputController.value.text;
-
+        willSearch = 0;
         _fusionConnection.messages.search(query, (List<SMSConversation> convos,
             List<CrmContact> crmContacts, List<Contact> contacts) {
           willSearch = 0;

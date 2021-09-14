@@ -6,6 +6,7 @@ import 'crm_contact.dart';
 import 'fusion_model.dart';
 import 'fusion_store.dart';
 import 'messages.dart';
+import 'sms_departments.dart';
 
 class SMSConversation extends FusionModel {
   List<CrmContact> crmContacts;
@@ -94,8 +95,10 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       : super(_fusionConnection);
 
   getConversations(
-      int groupId, Function(List<SMSConversation> conversations) callback) {
-    List<String> numbers = ["8014569811", "8014569812", "2088000011"];
+      String groupId, Function(List<SMSConversation> conversations) callback) {
+    SMSDepartment department =
+        fusionConnection.smsDepartments.getDepartment(groupId);
+    List<String> numbers = department.numbers;
 
     fusionConnection.apiV1Call("get", "/chat/conversations_with/with_message", {
       'numbers': numbers.join(","),
