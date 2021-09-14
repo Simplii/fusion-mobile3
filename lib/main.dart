@@ -273,7 +273,9 @@ class _MyHomePageState extends State<MyHomePage> {
   _getTabWidget() {
     return (_currentIndex == 0
         ? Text('people page')
-        : (_currentIndex == 1 ? CallView() : MessagesTab(fusionConnection)));
+        : (_currentIndex == 1
+            ? TextButton(onPressed: _openCallView, child: Text('open call'))
+            : MessagesTab(fusionConnection)));
   }
 
   @override
@@ -285,21 +287,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (_callInProgress == true) {
       return Container(
-        decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
-        child: Scaffold(
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage("assets/background.png"),
+                  fit: BoxFit.cover)),
+          child: Scaffold(
             backgroundColor: Colors.transparent,
             body: SafeArea(
-                bottom: false, child: CallView(closeView: _openCallView))),
-      );
+                bottom: false, child: CallView(closeView: _openCallView)),
+          ));
     }
-
-    Widget child = (_currentIndex == 0
-        ? Text('people page')
-        : (_currentIndex == 1
-            ? TextButton(onPressed: _openCallView, child: Text('open call'))
-            : MessagesTab(fusionConnection)));
 
     return Container(
         decoration: BoxDecoration(
