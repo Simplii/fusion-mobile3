@@ -36,7 +36,9 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       _loaded = true;
     }
     _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
-      this.setState(() { _loaded = true; });
+      this.setState(() {
+        _loaded = true;
+      });
     });
   }
 
@@ -81,8 +83,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       ]),
       Row(children: [horizontalLine(16)]),
       Row(children: [
-        Expanded(
-          child: Container()),
+        Expanded(child: Container()),
         Container(
           child: Align(
               alignment: Alignment.centerRight, child: _myNumberDropdown()),
@@ -93,15 +94,15 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  width: 32,
+                    width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                    image: DecorationImage(
-                    fit: BoxFit.fill,
-                        image: (myImageUrl != null
+                        image: DecorationImage(
+                            fit: BoxFit.fill,
+                            image: (myImageUrl != null
                                 ? NetworkImage(myImageUrl)
                                 : Image.asset("assets/blank_avatar.png",
-                                                  height: 32, width: 32)))))))
+                                    height: 32, width: 32)))))))
       ])
     ]);
   }
@@ -120,7 +121,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _allTheirNumbers() {
     List<List<String>> opts = [];
     Map<String, String> numbers = {
-      _conversation.number.onlyNumbers() : _conversation.number.onlyNumbers()};
+      _conversation.number.onlyNumbers(): _conversation.number.onlyNumbers()
+    };
 
     for (Contact c in _conversation.contacts) {
       if (c.phoneNumbers != null) {
@@ -154,7 +156,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             options: _allMyNumbers(),
             onChange: (String newNumber) {
               this.setState(() {
-                _conversation.myNumber = newNumber; });
+                _conversation.myNumber = newNumber;
+              });
             },
             label: "Your phone number"));
   }
@@ -166,15 +169,14 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
         height: 36,
         child: FusionDropdown(
-          value: _conversation.number,
-          options: _allTheirNumbers(),
-          onChange: (String newNumber) {
-            this.setState(() {
-              _conversation.number = newNumber;
-            });
-          },
-          label: "Their phone number"
-        ));
+            value: _conversation.number,
+            options: _allTheirNumbers(),
+            onChange: (String newNumber) {
+              this.setState(() {
+                _conversation.number = newNumber;
+              });
+            },
+            label: "Their phone number"));
   }
 
   _sendMessageInput() {
@@ -259,9 +261,9 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                             child: Row(children: [
                               Expanded(
                                   child: _loaded
-                                         ? ConvoMessagesList(
-                                      _fusionConnection, _conversation)
-                                         : Container())
+                                      ? ConvoMessagesList(
+                                          _fusionConnection, _conversation)
+                                      : Container())
                             ]))),
                   ]))),
           _sendMessageInput()
@@ -284,6 +286,7 @@ class ConvoMessagesList extends StatefulWidget {
 
 class _ConvoMessagesListState extends State<ConvoMessagesList> {
   SMSConversation get _conversation => widget._conversation;
+
   FusionConnection get _fusionConnection => widget._fusionConnection;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSMessage> _messages = [];
@@ -381,10 +384,15 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
 
   @override
   Widget build(BuildContext context) {
-    print("building here " + lookupState.toString() + ":" + _lookedupNumber.toString() + ":" + _lookedupMyNumber.toString());
-    if (lookupState != 0
-        && (_conversation.number != _lookedupNumber
-            || _conversation.myNumber != _lookedupMyNumber)) {
+    print("building here " +
+        lookupState.toString() +
+        ":" +
+        _lookedupNumber.toString() +
+        ":" +
+        _lookedupMyNumber.toString());
+    if (lookupState != 0 &&
+        (_conversation.number != _lookedupNumber ||
+            _conversation.myNumber != _lookedupMyNumber)) {
       lookupState = 0;
       _messages = [];
     }
@@ -394,7 +402,6 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
       _lookedupMyNumber = _conversation.myNumber;
       _lookupMessages();
     }
-
 
     return ListView(children: _messagesList(), reverse: true);
   }
