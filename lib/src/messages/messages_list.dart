@@ -241,6 +241,7 @@ class _SMSConversationSummaryViewState
                     Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
+                          margin: EdgeInsets.only(top: 4),
                             decoration: BoxDecoration(
                               color: Color.fromARGB(255, 243, 242, 242),
                               borderRadius:
