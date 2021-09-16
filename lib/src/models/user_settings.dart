@@ -1,4 +1,5 @@
 import '../backend/fusion_connection.dart';
+import 'contact.dart';
 
 class UserSettings {
   Map<String, dynamic> options = {};
@@ -6,6 +7,38 @@ class UserSettings {
   final FusionConnection _fusionConnection;
 
   UserSettings(this._fusionConnection);
+
+  myContact() {
+    return Contact({
+      'addresses': [],
+      'company': options['domain'],
+      'contacts': [],
+      'deleted': false,
+      'domain': options['domain'],
+      'emails': subscriber['email'].runtimeType == String
+          ? [{'email': subscriber['email'], 'type': 'Work'}]
+          : [],
+      'first_contact_diate': '',
+      'first_name': subscriber['first_name'],
+      'last_name': subscriber['last_name'],
+      'groups': [],
+      'id': '-1',
+      'job_title': '',
+      'lead_creation_date': '',
+      'name': subscriber['first_name'] + ' ' + subscriber['last_name'],
+      'owner': '',
+      'parent_id': '',
+      'phone_numbers': [],
+      'pictures': [],
+      'socials': [],
+      'type': '',
+      'updated_at': {'date': '', 'timezone': '', 'timezone_type': 1},
+      'created_at': {'date': '', 'timezone': '', 'timezone_type': 1},
+      'crm_url': '',
+      'crm_name': 'Fusion',
+      'crm_id': ''
+    });
+  }
 
   setOptions(Map<String, dynamic> opts) {
     options = opts;
@@ -29,6 +62,11 @@ class UserSettings {
 
   String userScope() {
     return subscriber['scope'];
+  }
+
+  bool hasFusionPlus() {
+    return options['registration'] != null
+        && options['registration']['domain_package_id'].toString() == "8";
   }
 
   bool hasManagerPermissions() {

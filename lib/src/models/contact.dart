@@ -52,7 +52,7 @@ class Contact extends FusionModel {
     this.name = contactObject['name'];
     this.owner = contactObject['owner'];
     this.parentId = contactObject['parent_id'];
-    this.phoneNumbers = contactObject['phone_number'];
+    this.phoneNumbers = contactObject['phone_numbers'];
     this.pictures = contactObject['pictures'];
     this.socials = contactObject['socials'];
     this.type = contactObject['type'];
@@ -67,7 +67,27 @@ class Contact extends FusionModel {
 }
 
 class ContactsStore extends FusionStore<Contact> {
-  Map<String, Contact> _records = {};
-
   ContactsStore(FusionConnection fusionConnection) : super(fusionConnection);
+
+  search(String query, int limit, int offset, Function(List<Contact>) callback) {
+        fusionConnection.apiV1Call(
+        "get",
+        "/clients/filtered_contacts",
+        {'length': offset + limit,
+        'search_query': query,
+        'sort_by': 'last_name',
+        'group_type_filter': 'any',
+        'enterprise': false,
+        },
+        callback: (List<dynamic> datas) {
+          print("gotinfo" + datas.toString());
+          List<Contact> response = [];
+
+          datas.forEach((dynamic c) {
+            response.add(Contact(c as Map<String, dynamic>));
+          });
+
+          callback(response);
+        });
+  }
 }

@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 
 import 'src/backend/fusion_connection.dart';
 import 'src/backend/softphone.dart';
+import 'src/components/menu.dart';
 import 'src/contacts/recent_contacts.dart';
 import 'src/dialpad/dialpad.dart';
 import 'src/login.dart';
@@ -189,10 +190,19 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _logged_in = false;
   bool _callInProgress = false;
 
+  _logOut() {
+    print("logging out");
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    this.setState(() {
+      _logged_in = false;
+    });
+  }
+
   @override
   initState() {
     super.initState();
     receivedMsg = "";
+    fusionConnection.onLogOut(_logOut);
     softphone.onUpdate(() {
       print("_call_ updated");
       print(softphone.calls);
@@ -284,8 +294,15 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     if (!_logged_in) {
-      return Scaffold(
-          body: SafeArea(child: LoginView(_loginSuccess, fusionConnection)));
+      return Container(
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage("assets/fill.jpg"),
+                  fit: BoxFit.cover)),
+          child: Scaffold(
+            backgroundColor: bgBlend,
+              body:
+                  SafeArea(child: LoginView(_loginSuccess, fusionConnection))));
     }
 
     if (_callInProgress == true) {
@@ -304,9 +321,10 @@ class _MyHomePageState extends State<MyHomePage> {
     return Container(
         decoration: BoxDecoration(
             image: DecorationImage(
-                image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
+                image: AssetImage("assets/fill.jpg"), fit: BoxFit.cover)),
         child: Scaffold(
-          backgroundColor: Colors.transparent,
+          drawer: Menu(fusionConnection),
+          backgroundColor: bgBlend,
           body: SafeArea(
             child: _getTabWidget(),
           ),
