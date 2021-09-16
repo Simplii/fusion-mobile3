@@ -4,6 +4,7 @@ import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
+import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
@@ -29,6 +30,7 @@ class FusionConnection {
   UserSettings settings;
   SMSDepartmentsStore smsDepartments;
   CallHistoryStore callHistory;
+  CoworkerStore coworkers;
 
   Function _onLogOut = () {};
 
@@ -44,6 +46,7 @@ class FusionConnection {
     settings = UserSettings(this);
     smsDepartments = SMSDepartmentsStore(this);
     callHistory = CallHistoryStore(this);
+    coworkers = CoworkerStore(this);
   }
 
   final channel = WebSocketChannel.connect(
@@ -150,6 +153,7 @@ class FusionConnection {
         _extension = username.split('@')[0];
         settings.setOptions(response);
         settings.lookupSubscriber();
+        coworkers.getCoworkers((data) {});
         setupSocket();
         callback(true);
 
