@@ -85,7 +85,7 @@ class _ContactCircleState extends State<ContactCircle> {
         height: _diameter,
         child: Container(
             decoration: BoxDecoration(
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(color: Colors.transparent, width: 2),
                 borderRadius:
                     BorderRadius.all(Radius.circular((_diameter - 4) / 2))),
             width: _diameter - 4,

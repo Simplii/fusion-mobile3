@@ -15,9 +15,14 @@ Color lightDivider = Color.fromARGB(255, 102, 94, 96);
 Color offWhite = Color.fromARGB(255, 229, 227, 228);
 Color offBlack = Color.fromARGB(255, 27, 24, 24);
 Color ash = Color.fromARGB(255, 229, 227, 227);
+Color halfGray = Color.fromARGB(255,112,112,122);
 
 Color translucentBlack(double amount) {
   return Color.fromARGB((255 * amount).round(), 0, 0, 0);
+}
+
+Color translucentWhite(double amount) {
+  return Color.fromARGB((255 * amount).round(), 255, 255, 255);
 }
 
 List<BoxShadow> tripleShadow() {
