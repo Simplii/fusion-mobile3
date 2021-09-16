@@ -282,8 +282,15 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     if (!_logged_in) {
-      return Scaffold(
-          body: SafeArea(child: LoginView(_loginSuccess, fusionConnection)));
+      return Container(
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage("assets/fill.jpg"),
+                  fit: BoxFit.cover)),
+          child: Scaffold(
+            backgroundColor: bgBlend,
+              body:
+                  SafeArea(child: LoginView(_loginSuccess, fusionConnection))));
     }
 
     if (_callInProgress == true) {
@@ -307,9 +314,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return Container(
         decoration: BoxDecoration(
             image: DecorationImage(
-                image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
+                image: AssetImage("assets/fill.jpg"), fit: BoxFit.cover)),
         child: Scaffold(
-          backgroundColor: Colors.transparent,
+          backgroundColor: bgBlend,
           body: SafeArea(
             child: _getTabWidget(),
           ),
