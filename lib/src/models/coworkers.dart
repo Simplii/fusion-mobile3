@@ -1,5 +1,6 @@
 import 'package:flutter_gravatar/flutter_gravatar.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import '../utils.dart';
 import 'contact.dart';
 import 'crm_contact.dart';
 import 'fusion_model.dart';
@@ -66,9 +67,56 @@ class Coworker extends FusionModel {
   String getId() => this.uid.toLowerCase();
 }
 
+
+class CoworkerSubscription {
+  final List<String> _uids;
+  final Function(List<Coworker>) _callback;
+
+  CoworkerSubscription(this._uids, this._callback);
+
+  testMatches(Coworker message) {
+    return _uids == null || _uids.contains(message.uid);
+  }
+
+  sendMatching(List<Coworker> items) {
+    List<Coworker> list = [];
+    print("send matching" + items.toString());
+    for (Coworker item in items) {
+      if (testMatches(item)) {
+        list.add(item);
+      }
+    }
+
+    this._callback(list);
+  }
+}
+
+
 class CoworkerStore extends FusionStore<Coworker> {
   String id_field = "uid";
+  Map<String, CoworkerSubscription> subscriptions = {};
   CoworkerStore(FusionConnection fusionConnection) : super(fusionConnection);
+
+  subscribe(List<String> uids, Function(List<Coworker>) callback) {
+    String name = randomString(20);
+    subscriptions[name] = CoworkerSubscription(uids, callback);
+    return name;
+  }
+
+  clearSubscription(name) {
+    if (subscriptions.containsKey(name)) {
+      subscriptions.remove(name);
+    }
+  }
+
+  @override
+  storeRecord(Coworker item) {
+    super.storeRecord(item);
+
+    for (CoworkerSubscription subscription in subscriptions.values) {
+      subscription.sendMatching(getRecords());
+    }
+  }
 
   Coworker lookupCoworker(String uid) {
     return lookupRecord(uid.toLowerCase());
@@ -84,6 +132,15 @@ class CoworkerStore extends FusionStore<Coworker> {
       }
     } else {
       return url;
+    }
+  }
+
+  storePresence(String uid, String status, String message) {
+    Coworker record = lookupCoworker(uid);
+    if (record != null) {
+      record.presence = status;
+      record.statusMessage = message;
+      storeRecord(record);
     }
   }
 

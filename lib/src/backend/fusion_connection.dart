@@ -204,6 +204,11 @@ class FusionConnection {
       } else if (message.containsKey('sms_received')) {
         print("gotIM" + messageData.toString());
         messages.storeRecord(SMSMessage(message['message_object']));
+      } else if (message.containsKey('new_status')) {
+        coworkers.storePresence(
+            message['user'] + '@' + message['domain'].toString().toLowerCase(),
+            message['new_status'],
+            message['message']);
       }
     });
     _reconnectSocket();
