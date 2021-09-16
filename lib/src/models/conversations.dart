@@ -7,6 +7,7 @@ import 'fusion_model.dart';
 import 'fusion_store.dart';
 import 'messages.dart';
 import 'sms_departments.dart';
+import '../utils.dart';
 
 class SMSConversation extends FusionModel {
   List<CrmContact> crmContacts;

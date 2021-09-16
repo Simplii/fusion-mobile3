@@ -27,10 +27,24 @@ class _LoginViewState extends State<LoginView> {
   _usernameInput() {
     return Flexible(
         child: TextField(
-            decoration: const InputDecoration(
-                border: UnderlineInputBorder(
+          style: TextStyle( color: Colors.white),
+            decoration:  InputDecoration(
+                filled: true,
+                fillColor: translucentBlack(0.5),
+                contentPadding: EdgeInsets.only(left: 8, top: 0, right: 8, bottom: 0),
+                hintStyle: TextStyle(color: ash),
+                focusedBorder: OutlineInputBorder(
                     borderSide:
-                        BorderSide(width: 1.0, style: BorderStyle.solid)),
+                        BorderSide(
+                            color: translucentBlack(0.5),
+                            width: 2.0,
+                            style: BorderStyle.solid)),
+                border: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(
+                            color: translucentBlack(1),
+                            width: 1.0,
+                            style: BorderStyle.solid)),
                 hintText: "Username"),
             controller: _usernameController));
   }
@@ -39,10 +53,25 @@ class _LoginViewState extends State<LoginView> {
     return Flexible(
         child: TextField(
             obscureText: true,
-            decoration: const InputDecoration(
-                border: UnderlineInputBorder(
+            style: TextStyle( color: Colors.white),
+            decoration:  InputDecoration(
+                filled: true,
+                fillColor: translucentBlack(0.5),
+                focusColor: translucentBlack(0.3),
+                contentPadding: EdgeInsets.only(left: 8, top: 0, right: 8, bottom: 0),
+                hintStyle: TextStyle(color: ash),
+                focusedBorder: OutlineInputBorder(
                     borderSide:
-                        BorderSide(width: 1.0, style: BorderStyle.solid)),
+                        BorderSide(
+                            color: translucentBlack(0.5),
+                            width: 2.0,
+                            style: BorderStyle.solid)),
+                border: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(
+                            color: translucentBlack(1),
+                            width: 1.0,
+                            style: BorderStyle.solid)),
                 hintText: "Password"),
             controller: _passwordController));
   }
@@ -56,7 +85,9 @@ class _LoginViewState extends State<LoginView> {
           return Colors.white;
         })),
         onPressed: _login,
-        child: Text("Login", style: TextStyle(color: Colors.white)));
+        child: Text("Log in", style: TextStyle(
+            fontSize: 16,
+            color: Colors.white)));
   }
 
   _login() {
@@ -77,16 +108,32 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     List<Widget> children = [
-      Row(children: [
+      /*Row(children: [
         Expanded(
             child: Container(
                 margin: EdgeInsets.only(top: 8, bottom: 18),
-                child: Center(
-                    child: Text("Sign in to your account",
-                        style: TextStyle(fontSize: 18)))))
-      ]),
+                child: Text("Sign in to your account",
+                    style: TextStyle(
+                        color: ash,
+                        fontSize: 14))))
+      ]),*/
+      Container(margin: EdgeInsets.only(top:12, bottom: 6),
+        alignment: Alignment.centerLeft,
+        child: Text(
+            "Username",
+            textAlign: TextAlign.left,
+            style: TextStyle(color: ash, fontSize: 14)),
+      ),
       Row(children: [_usernameInput()]),
-      Row(children: [_passwordInput()])
+      Container(margin: EdgeInsets.only(top:12, bottom: 6),
+        alignment: Alignment.centerLeft,
+        child: Text(
+            "Password",
+            textAlign: TextAlign.left,
+            style: TextStyle(color: ash, fontSize: 14)),
+      ),
+      Row(children: [_passwordInput()]),
+      Container(height: 20)
     ];
 
     if (_wasSuccessful == false) {
@@ -96,42 +143,44 @@ class _LoginViewState extends State<LoginView> {
                 margin: EdgeInsets.only(top: 16, bottom: 0),
                 child: Center(
                     child: Text("Incorrect username or password",
-                        style: TextStyle(color: Colors.red)))))
+                        style: TextStyle(color: crimsonLight)))))
       ]));
     }
 
     children.add(Row(children: [
       Expanded(
-          child: Container(
-              margin: EdgeInsets.only(top: 18),
-              alignment: Alignment.centerRight,
-              child: _loginButton()))
+          child: _loginButton())
     ]));
 
     return Container(
-        decoration: BoxDecoration(color: Color.fromARGB(255, 242, 241, 241)),
+        decoration: BoxDecoration(color: Colors.transparent),
         child: Column(
           children: [
             Row(children: [
               Expanded(
                   child: Center(
                       child: Container(
-                          margin: EdgeInsets.only(top: 96, bottom: 8),
-                          child: Text("Fusion Mobile",
-                              style: TextStyle(
-                                  fontSize: 24.0,
-                                  fontWeight: FontWeight.bold)))))
+                          margin: EdgeInsets.only(top: 48, bottom: 8, left: 56, right: 56),
+                          child: Image.asset("assets/simplii_logo.png")))),
+            ]),
+            Row(children: [
+              Expanded(
+                  child: Center(
+                      child: Container(
+                          margin: EdgeInsets.only(top: 8, bottom: 8, left: 96, right: 96),
+                          child: Image.asset("assets/fusion.png")))),
             ]),
             Row(children: [
               Expanded(
                   child: Container(
-                      padding: EdgeInsets.all(18),
+                      padding: EdgeInsets.only(top:24, left: 32, right: 32, bottom: 36),
                       decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(4)),
-                          color: Color.fromARGB(255, 255, 255, 255)),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          boxShadow: tripleShadow(),
+                          border: Border.all(color: translucentBlack(0.16), width: 1.0),
+                          color: coal),//Color.fromARGB(255, 255, 255, 255)),
                       margin:
                           EdgeInsets.only(left: 32.0, right: 32.0, top: 24.0),
-                      width: 100,
                       child: Column(children: children)))
             ])
           ],

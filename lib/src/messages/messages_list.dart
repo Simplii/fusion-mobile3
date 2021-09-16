@@ -241,6 +241,7 @@ class _SMSConversationSummaryViewState
                     Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
+                          margin: EdgeInsets.only(top: 4),
                             decoration: BoxDecoration(
                               color: Color.fromARGB(255, 243, 242, 242),
                               borderRadius:
@@ -280,7 +281,9 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   final _searchInputController = TextEditingController();
 
-  _openMenu() {}
+  _openMenu() {
+    Scaffold.of(context).openDrawer();
+  }
 
   String groupId = "-1";
   String myPhoneNumber = "8014569812";

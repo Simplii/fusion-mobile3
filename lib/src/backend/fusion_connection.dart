@@ -30,6 +30,8 @@ class FusionConnection {
   SMSDepartmentsStore smsDepartments;
   CallHistoryStore callHistory;
 
+  Function _onLogOut = () {};
+
   String serverRoot = "https://fusioncomm.net";
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
 
@@ -47,6 +49,15 @@ class FusionConnection {
   final channel = WebSocketChannel.connect(
     Uri.parse('wss://fusioncomm.net:8443'),
   );
+
+  onLogOut(Function callback) {
+    _onLogOut = callback;
+  }
+
+  logOut() {
+    _onLogOut();
+    apiV1Call("get", "/log_out", {}, callback: (data) {});
+  }
 
   nsApiCall(String object, String action, Map<String, dynamic> data,
       {Function callback}) async {
