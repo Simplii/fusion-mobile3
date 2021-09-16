@@ -281,7 +281,9 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   final _searchInputController = TextEditingController();
 
-  _openMenu() {}
+  _openMenu() {
+    Scaffold.of(context).openDrawer();
+  }
 
   String groupId = "-1";
   String myPhoneNumber = "8014569812";

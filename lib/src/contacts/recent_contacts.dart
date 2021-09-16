@@ -539,7 +539,9 @@ class _SearchContactsBarState extends State<SearchContactsBar> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   final _searchInputController = TextEditingController();
 
-  _openMenu() {}
+  _openMenu() {
+    Scaffold.of(context).openDrawer();
+  }
   String _query = "";
   int willSearch = 0;
 

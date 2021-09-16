@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 
 import 'src/backend/fusion_connection.dart';
 import 'src/backend/softphone.dart';
+import 'src/components/menu.dart';
 import 'src/contacts/recent_contacts.dart';
 import 'src/dialpad/dialpad.dart';
 import 'src/login.dart';
@@ -189,10 +190,19 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _logged_in = false;
   bool _callInProgress = false;
 
+  _logOut() {
+    print("logging out");
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    this.setState(() {
+      _logged_in = false;
+    });
+  }
+
   @override
   initState() {
     super.initState();
     receivedMsg = "";
+    fusionConnection.onLogOut(_logOut);
     softphone.onUpdate(() {
       print("_call_ updated");
       print(softphone.calls);
@@ -316,6 +326,7 @@ class _MyHomePageState extends State<MyHomePage> {
             image: DecorationImage(
                 image: AssetImage("assets/fill.jpg"), fit: BoxFit.cover)),
         child: Scaffold(
+          drawer: Menu(fusionConnection),
           backgroundColor: bgBlend,
           body: SafeArea(
             child: _getTabWidget(),
