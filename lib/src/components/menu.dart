@@ -39,7 +39,11 @@ class _MenuState extends State<Menu> {
         children: [
           Container(
               alignment: Alignment.centerLeft,
-              child: ContactCircle.withDiameter([settings.myContact()], [], 70)),
+              child: ContactCircle.withCoworkerAndDiameter(
+                  [settings.myContact()],
+                  [],
+                  _fusionConnection.coworkers.lookupCoworker(_fusionConnection.getUid()),
+                  70)),
           Container(
             alignment: Alignment.centerLeft,
             margin: EdgeInsets.only(top: 18, bottom: 6),
