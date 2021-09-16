@@ -1,5 +1,6 @@
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'contact.dart';
+import 'coworkers.dart';
 import 'crm_contact.dart';
 import 'fusion_model.dart';
 import 'fusion_store.dart';
@@ -13,6 +14,7 @@ class CallHistory extends FusionModel {
   String from;
   int duration;
   String recordingUrl;
+  Coworker coworker;
   Contact contact;
   CrmContact crmContact;
   bool missed;
@@ -58,6 +60,7 @@ class CallHistoryStore extends FusionStore<CallHistory> {
 
           for (Map<String, dynamic> item in datas) {
             CallHistory obj = CallHistory(item);
+            obj.coworker = fusionConnection.coworkers.lookupCoworker(obj.to);
             storeRecord(obj);
             response.add(obj);
           }

@@ -1,4 +1,5 @@
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 
 import 'carbon_date.dart';
 import 'fusion_model.dart';
@@ -13,6 +14,7 @@ class Contact extends FusionModel {
   String domain;
   List<dynamic> emails;
   String firstContactDate;
+  Coworker coworker;
   String firstName;
   List<String> groups;
   String id;
