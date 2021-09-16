@@ -322,19 +322,45 @@ class _ContactsListState extends State<ContactsList> {
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<CallHistory> _history = [];
   String _lookedUpTab;
+  String _subscriptionKey;
+  Map<String, Coworker> _coworkers = {};
 
   initState() {
     super.initState();
   }
 
+  @override
+  dispose() {
+    super.dispose();
+      if (_subscriptionKey != null) {
+      _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
+    }
+  }
+
+
   _lookupHistory() {
     lookupState = 1;
     _lookedUpTab = _selectedTab;
+
+    if (_subscriptionKey != null) {
+      _fusionConnection.coworkers.clearSubscription(_subscriptionKey); }
+
+    _subscriptionKey = _fusionConnection.coworkers.subscribe(
+        null,
+        (List<Coworker> coworkers) {
+          this.setState(() {
+            for (Coworker c in coworkers) {
+              _coworkers[c.uid] = c;
+            }
+          });
+        });
+
     _fusionConnection.callHistory.getRecentHistory(0, 300,
         (List<CallHistory> history) {
       this.setState(() {
         lookupState = 2;
         _history = history;
+
       });
     });
   }
@@ -353,6 +379,9 @@ class _ContactsListState extends State<ContactsList> {
         return false;
       }
     }).map((item) {
+      if (item.coworker != null && _coworkers[item.coworker.uid] != null) {
+        item.coworker = _coworkers[item.coworker.uid];
+      }
       return CallHistorySummaryView(_fusionConnection, item);
     }).toList();
   }
