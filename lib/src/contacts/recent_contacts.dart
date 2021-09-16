@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
+import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
@@ -11,6 +12,7 @@ import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
 import '../styles.dart';
+import 'contact_profile_view.dart';
 
 class RecentContactsTab extends StatefulWidget {
   final FusionConnection _fusionConnection;
@@ -64,15 +66,7 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
                               ".png",
                           width: width,
                           height: height)),
-                  Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: _selectedTab == name
-                              ? crimsonLight
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(2),
-                              topLeft: Radius.circular(2))))
+                  bottomRedBar(_selectedTab != name),
                 ]))));
   }
 
@@ -404,27 +398,40 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     }
   }
 
-  _actionButton(
-      String label, String icon, double width, double height, Function onTap) {
-    return Expanded(
-        child: GestureDetector(
-            onTap: onTap,
-            child: Opacity(
-                opacity: 0.66,
-                child: Container(
-                    margin: EdgeInsets.only(left: 12),
-                    child: Row(children: [
-                      Container(
-                          width: width,
-                          height: height,
-                          child: Image.asset("assets/icons/" + icon + ".png",
-                              width: width, height: height)),
-                      Text(" " + label,
-                          style: TextStyle(
-                              color: coal,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800))
-                    ])))));
+
+
+  _openMessage() {
+    print("tappedmessage");
+    String number = _fusionConnection.smsDepartments
+        .getDepartment("-2")
+        .numbers[0];
+    print("tapped number"+number);
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => SMSConversationView(
+                _fusionConnection,
+                SMSConversation.build(
+                    contacts: _historyItem.contact != null ? [_historyItem.contact] : [],
+                    crmContacts: _historyItem.crmContact != null ? [_historyItem.crmContact] : [],
+                    myNumber: number,
+                    number: _historyItem.direction == "outbound"
+                        ? _historyItem.toDid
+                        : _historyItem.fromDid
+                )
+            ));
+  }
+
+  _openProfile() {
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => ContactProfileView(
+                _fusionConnection,
+                _historyItem.contact
+            ));
   }
 
   @override
@@ -439,9 +446,9 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           height: 28,
           margin: EdgeInsets.only(top: 12, bottom: 12),
           child: Row(children: [
-            _actionButton("Profile", "user_dark", 18, 18, () {}),
-            _actionButton("Call", "phone_dark", 18, 18, () {}),
-            _actionButton("Message", "message_dark", 18, 18, () {}),
+            actionButton("Profile", "user_dark", 18, 18, _openProfile),
+            actionButton("Call", "phone_dark", 18, 18, () {}),
+            actionButton("Message", "message_dark", 18, 18, _openMessage)
             // _actionButton("Video", "video_dark", 18, 18, () {}),
           ])));
     }

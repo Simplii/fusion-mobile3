@@ -31,12 +31,12 @@ BoxDecoration dropdownDecoration = BoxDecoration(
     color: translucentSmoke,
     borderRadius: BorderRadius.all(Radius.circular(4)));
 
-horizontalLine(double margin) {
+horizontalLine(double margin, {Color color}) {
   return Expanded(
       child: Container(
           margin: EdgeInsets.only(top: margin, bottom: margin),
           decoration: BoxDecoration(
-            color: halfSmoke,
+            color: color == null ? halfSmoke : color,
           ),
           height: 1));
 }
@@ -47,4 +47,37 @@ popupHandle() {
           color: halfSmoke, borderRadius: BorderRadius.all(Radius.circular(3))),
       width: 36,
       height: 5);
+}
+
+bottomRedBar(bool clear) {
+  return Container(
+      height: 4,
+      decoration: BoxDecoration(
+          color: !clear ? crimsonLight : Colors.transparent,
+          borderRadius: BorderRadius.only(
+              topRight: Radius.circular(2), topLeft: Radius.circular(2))));
+}
+
+actionButton(
+    String label, String icon, double width, double height, Function onTap) {
+  return Expanded(
+      child: GestureDetector(
+          onTap: onTap,
+          child: Opacity(
+              opacity: 0.66,
+              child: Container(
+                  decoration: BoxDecoration(color: Colors.transparent),
+                  margin: EdgeInsets.only(left: 12),
+                  child: Row(children: [
+                    Container(
+                        width: width,
+                        height: height,
+                        child: Image.asset("assets/icons/" + icon + ".png",
+                            width: width, height: height)),
+                    Text(" " + label,
+                        style: TextStyle(
+                            color: coal,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800))
+                  ])))));
 }
