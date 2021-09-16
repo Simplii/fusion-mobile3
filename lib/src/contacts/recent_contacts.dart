@@ -7,6 +7,7 @@ import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
+import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:intl/intl.dart';
 
@@ -133,6 +134,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   String _lookedUpQuery;
   String get _defaultTab => widget._defaultTab;
   String _typeFilter = "Fusion Contacts";
+  String _subscriptionKey;
 
   initState() {
     super.initState();
@@ -144,6 +146,22 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       _typeFilter = 'Integrated Contacts';
     else if (_defaultTab == 'fusion')
       _typeFilter = 'Fusion Contacts';
+  }
+
+  _subscribeCoworkers(List<String> uids, Function(List<Coworker>) callback) {
+    if (_subscriptionKey != null) {
+      _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
+    }
+
+    _subscriptionKey = _fusionConnection.coworkers.subscribe(uids, callback);
+  }
+
+  @override
+  dispose() {
+    super.dispose();
+      if (_subscriptionKey != null) {
+      _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
+    }
   }
 
   _lookupQuery() {
@@ -169,6 +187,18 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                   lookupState = 2;
                   _contacts = contacts;
                 });
+                _subscribeCoworkers(
+                    contacts.map((Contact c) {
+                      return c.coworker.uid;
+                    }).toList().cast<String>(),
+                    (List<Coworker> coworkers) {
+                      this.setState(() {
+                          _contacts = coworkers
+                              .map((Coworker c) { return c.toContact(); })
+                              .toList()
+                              .cast<Contact>();
+                          });
+                    });
           });
 
     }
