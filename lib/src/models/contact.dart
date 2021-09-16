@@ -52,7 +52,7 @@ class Contact extends FusionModel {
     this.name = contactObject['name'];
     this.owner = contactObject['owner'];
     this.parentId = contactObject['parent_id'];
-    this.phoneNumbers = contactObject['phone_number'];
+    this.phoneNumbers = contactObject['phone_numbers'];
     this.pictures = contactObject['pictures'];
     this.socials = contactObject['socials'];
     this.type = contactObject['type'];

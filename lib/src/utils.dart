@@ -3,12 +3,17 @@ import 'dart:math';
 
 extension PhoneNumbers on String {
   String formatPhone() {
-    return '(' +
-        this.substring(0, 3) +
-        ") " +
-        this.substring(3, 6) +
-        "-" +
-        this.substring(6, 10);
+    if (this.contains("@"))
+      return this;
+    else if (this.length < 10)
+      return this;
+    else
+      return '(' +
+          this.substring(0, 3) +
+          ") " +
+          this.substring(3, 6) +
+          "-" +
+          this.substring(6, 10);
   }
 
   String onlyNumbers() {
