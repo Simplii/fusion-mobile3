@@ -93,8 +93,7 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
             print("searching now " + query);
             _showingResults = true;
             _query = query;
-          }
-          else {
+          } else {
             _showingResults = false;
           }
         });
@@ -117,8 +116,8 @@ class ContactsSearchList extends StatefulWidget {
   final String _query;
   final String _defaultTab;
 
-
-  ContactsSearchList(this._fusionConnection, this._query, this._defaultTab, {Key key})
+  ContactsSearchList(this._fusionConnection, this._query, this._defaultTab,
+      {Key key})
       : super(key: key);
 
   @override
@@ -132,6 +131,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<Contact> _contacts = [];
   String _lookedUpQuery;
+
   String get _defaultTab => widget._defaultTab;
   String _typeFilter = "Fusion Contacts";
   String _subscriptionKey;
@@ -144,8 +144,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       _typeFilter = 'Fusion Contacts';
     else if (_defaultTab == 'integrated')
       _typeFilter = 'Integrated Contacts';
-    else if (_defaultTab == 'fusion')
-      _typeFilter = 'Fusion Contacts';
+    else if (_defaultTab == 'fusion') _typeFilter = 'Fusion Contacts';
   }
 
   _subscribeCoworkers(List<String> uids, Function(List<Coworker>) callback) {
@@ -159,7 +158,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   @override
   dispose() {
     super.dispose();
-      if (_subscriptionKey != null) {
+    if (_subscriptionKey != null) {
       _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
     }
   }
@@ -170,68 +169,92 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     _lookedUpQuery = _query;
 
     if (_typeFilter == 'Fusion Contacts') {
-      _fusionConnection.contacts.search(
-          _query, 100, 0, (List<Contact> contacts) {
+      _fusionConnection.contacts.search(_query, 100, 0,
+          (List<Contact> contacts) {
         print("gotresult" + contacts.toString());
         this.setState(() {
           lookupState = 2;
           _contacts = contacts;
         });
       });
-    }
-    else if (_typeFilter == 'Coworkers') {
-      _fusionConnection.coworkers.search(
-          _query,
-              (List<Contact> contacts) {
-                this.setState(() {
-                  lookupState = 2;
-                  _contacts = contacts;
-                });
-                _subscribeCoworkers(
-                    contacts.map((Contact c) {
-                      return c.coworker.uid;
-                    }).toList().cast<String>(),
-                    (List<Coworker> coworkers) {
-                      this.setState(() {
-                          _contacts = coworkers
-                              .map((Coworker c) { return c.toContact(); })
-                              .toList()
-                              .cast<Contact>();
-                          });
-                    });
+    } else if (_typeFilter == 'Coworkers') {
+      _fusionConnection.coworkers.search(_query, (List<Contact> contacts) {
+        this.setState(() {
+          lookupState = 2;
+          _contacts = contacts;
+        });
+        _subscribeCoworkers(
+            contacts
+                .map((Contact c) {
+                  return c.coworker.uid;
+                })
+                .toList()
+                .cast<String>(), (List<Coworker> coworkers) {
+          this.setState(() {
+            _contacts = coworkers
+                .map((Coworker c) {
+                  return c.toContact();
+                })
+                .toList()
+                .cast<Contact>();
           });
-
+        });
+      });
     }
   }
 
+  _openProfile(Contact contact) {
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) =>
+            ContactProfileView(_fusionConnection, contact));
+  }
+
   _resultRow(String letter, Contact contact) {
-    return Row(
-      children: [
-        Container(
-            width: 32,
-            height: 50,
-            child: Align(
-                alignment: Alignment.centerLeft,
-                child: letter.length > 0
-                    ? Text(letter.toUpperCase(),
-                        style: TextStyle(
-                            color: smoke,
-                            fontSize: 16,
-                            height: 1,
-                            fontWeight: FontWeight.w500))
-                    : Container())),
-        ContactCircle.withDiameter([contact], [], 36),
-        Expanded(
-            child: Column(children: [
-          Align(
-              alignment: Alignment.centerLeft,
-              child: Text(contact.name,
-                  style: TextStyle(
-                      color:
-                      coal, fontSize: 14, fontWeight: FontWeight.w700)))
-        ]))
-      ],
-    );
+    return GestureDetector(
+        onTap: () { _openProfile(contact); },
+        child: Container(
+            decoration: BoxDecoration(color: Colors.transparent),
+            child: Row(
+              children: [
+                Container(
+                    width: 32,
+                    height: 50,
+                    child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: letter.length > 0
+                            ? Text(letter.toUpperCase(),
+                                style: TextStyle(
+                                    color: smoke,
+                                    fontSize: 16,
+                                    height: 1,
+                                    fontWeight: FontWeight.w500))
+                            : Container())),
+                ContactCircle.withDiameter([contact], [], 36),
+                Expanded(
+                    child: Column(children: [
+                  Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(contact.name,
+                          style: TextStyle(
+                              color: coal,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700))),
+                  Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                          contact.coworker != null
+                              ? contact.coworker.statusMessage
+                              : '',
+                          style: TextStyle(
+                              color: smoke,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400)))
+                ]))
+              ],
+            )));
   }
 
   _searchList() {
@@ -332,35 +355,33 @@ class _ContactsListState extends State<ContactsList> {
   @override
   dispose() {
     super.dispose();
-      if (_subscriptionKey != null) {
+    if (_subscriptionKey != null) {
       _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
     }
   }
-
 
   _lookupHistory() {
     lookupState = 1;
     _lookedUpTab = _selectedTab;
 
     if (_subscriptionKey != null) {
-      _fusionConnection.coworkers.clearSubscription(_subscriptionKey); }
+      _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
+    }
 
-    _subscriptionKey = _fusionConnection.coworkers.subscribe(
-        null,
-        (List<Coworker> coworkers) {
-          this.setState(() {
-            for (Coworker c in coworkers) {
-              _coworkers[c.uid] = c;
-            }
-          });
-        });
+    _subscriptionKey =
+        _fusionConnection.coworkers.subscribe(null, (List<Coworker> coworkers) {
+      this.setState(() {
+        for (Coworker c in coworkers) {
+          _coworkers[c.uid] = c;
+        }
+      });
+    });
 
     _fusionConnection.callHistory.getRecentHistory(0, 300,
         (List<CallHistory> history) {
       this.setState(() {
         lookupState = 2;
         _history = history;
-
       });
     });
   }
@@ -464,7 +485,9 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     } else if (_historyItem.crmContact != null) {
       return _historyItem.crmContact.name;
     } else if (_historyItem.coworker != null) {
-      return _historyItem.coworker.firstName + ' ' + _historyItem.coworker.lastName;
+      return _historyItem.coworker.firstName +
+          ' ' +
+          _historyItem.coworker.lastName;
     } else {
       return _historyItem.toDid;
     }
@@ -484,29 +507,27 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     }
   }
 
-
-
   _openMessage() {
     print("tappedmessage");
-    String number = _fusionConnection.smsDepartments
-        .getDepartment("-2")
-        .numbers[0];
-    print("tapped number"+number);
+    String number =
+        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
+    print("tapped number" + number);
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) => SMSConversationView(
-                _fusionConnection,
-                SMSConversation.build(
-                    contacts: _historyItem.contact != null ? [_historyItem.contact] : [],
-                    crmContacts: _historyItem.crmContact != null ? [_historyItem.crmContact] : [],
-                    myNumber: number,
-                    number: _historyItem.direction == "outbound"
-                        ? _historyItem.toDid
-                        : _historyItem.fromDid
-                )
-            ));
+            _fusionConnection,
+            SMSConversation.build(
+                contacts:
+                    _historyItem.contact != null ? [_historyItem.contact] : [],
+                crmContacts: _historyItem.crmContact != null
+                    ? [_historyItem.crmContact]
+                    : [],
+                myNumber: number,
+                number: _historyItem.direction == "outbound"
+                    ? _historyItem.toDid
+                    : _historyItem.fromDid)));
   }
 
   _openProfile() {
@@ -514,10 +535,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => ContactProfileView(
-                _fusionConnection,
-                _historyItem.contact
-            ));
+        builder: (context) =>
+            ContactProfileView(_fusionConnection, _historyItem.contact));
   }
 
   @override
@@ -542,7 +561,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     return Container(
         height: _expanded ? 132 : 76,
         padding: EdgeInsets.all(4),
-        margin: EdgeInsets.only(bottom: 12),
+        margin: EdgeInsets.only(bottom: 0),
         decoration: _expanded
             ? BoxDecoration(
                 color: particle,
@@ -562,7 +581,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           _expand();
         },
         child: Row(children: [
-          ContactCircle.withCoworker(_contacts(), _crmContacts(), _historyItem.coworker),
+          ContactCircle.withCoworker(
+              _contacts(), _crmContacts(), _historyItem.coworker),
           Expanded(
               child: Container(
                   decoration: BoxDecoration(color: Colors.transparent),
@@ -629,6 +649,7 @@ class _SearchContactsBarState extends State<SearchContactsBar> {
   _openMenu() {
     Scaffold.of(context).openDrawer();
   }
+
   String _query = "";
   int willSearch = 0;
 
