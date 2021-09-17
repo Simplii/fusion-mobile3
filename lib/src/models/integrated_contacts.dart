@@ -17,7 +17,7 @@ class IntegratedContactsStore extends FusionStore<Contact> {
           'page_size': limit,
           'sort_dir': 'asc',
           'search_query': query,
-          'sort_by': 'name',
+          'sort_by': 'name_text',
         },
         callback: (Map<String, dynamic> datas) {
           print("gotinfo" + datas.toString());
