@@ -1,4 +1,5 @@
 import 'dart:convert' as convert;
+import 'package:path/path.dart' as p;
 
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
@@ -11,6 +12,7 @@ import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
 import 'package:http/http.dart' as http;
+import 'package:sqflite/sqflite.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:websocket_manager/websocket_manager.dart';
 
@@ -33,6 +35,7 @@ class FusionConnection {
   CallHistoryStore callHistory;
   CoworkerStore coworkers;
   IntegratedContactsStore integratedContacts;
+  Database db;
 
   Function _onLogOut = () {};
 
@@ -50,6 +53,7 @@ class FusionConnection {
     smsDepartments = SMSDepartmentsStore(this);
     callHistory = CallHistoryStore(this);
     coworkers = CoworkerStore(this);
+    getDatabase();
   }
 
   final channel = WebSocketChannel.connect(
@@ -63,6 +67,63 @@ class FusionConnection {
   logOut() {
     _onLogOut();
     apiV1Call("get", "/log_out", {}, callback: (data) {});
+  }
+
+  getDatabase() {
+    print("gettingdatabase");
+    getDatabasesPath()
+    .then((String path) {
+      openDatabase(
+          p.join(path, "fusion.db"),
+          version: 1,
+          onCreate: (db, version) {
+            return db.execute(
+                '''
+          CREATE TABLE sms_conversation(
+          id TEXT PRIMARY key,
+          groupName TEXT,
+          isGroup int,
+          lastContactTime int,
+          searchString TEXT,
+          number TEXT,
+          myNumber TEXT,
+          unread int,
+          raw BLOB
+          );
+          
+          CREATE TABLE sms_message(
+          id TEXT PRIMARY key,
+          from TEXT,
+          fromMe int,
+          media int,
+          message TEXT,
+          mime TEXT,
+          read int,
+          time int,
+          to STRING,
+          user STRING,
+          raw BLOB
+          );
+          
+          CREATE TABLE contacts(
+          id TEXT PRIMARY key,
+          company TEXT,
+          deleted int,
+          searchString TEXT,
+          firstName TEXT,
+          lastName TEXT,
+          raw BLOB
+          );
+          ''');
+          }
+      )
+          .then((Database db) {
+        print("gotdatabase" + db.toString());
+        this.db = db;
+      }).catchError((error) {
+        print("databasegettingerror" + error.toString());
+      });
+    });
   }
 
   nsApiCall(String object, String action, Map<String, dynamic> data,
