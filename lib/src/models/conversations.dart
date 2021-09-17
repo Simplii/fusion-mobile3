@@ -23,10 +23,6 @@ class SMSConversation extends FusionModel {
   int unread;
 
   String contactName() {
-    print("contact name" +
-        this.contacts.toString() +
-        ":" +
-        this.crmContacts.toString());
     String name = "Unknown";
     if (contacts != null) {
       for (Contact contact in contacts) {
@@ -86,6 +82,7 @@ class SMSConversation extends FusionModel {
     this.hash = map['my_number'] + ':' + map['number'];
   }
 
+  @override
   String getId() => this.hash;
 }
 
@@ -96,16 +93,24 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       : super(_fusionConnection);
 
   getConversations(
-      String groupId, Function(List<SMSConversation> conversations) callback) {
+      String groupId, int limit, int offset, Function(List<SMSConversation> conversations, bool fromServer) callback) {
     SMSDepartment department =
         fusionConnection.smsDepartments.getDepartment(groupId);
     List<String> numbers = department.numbers;
 
-    callback(getRecords());
+    SMSDepartment group = fusionConnection.smsDepartments.lookupRecord(groupId);
+    if (group != null) {
+      var future = new Future.delayed(const Duration(milliseconds: 10), () {
+        callback(getRecords().where((SMSConversation c) {
+          return group.numbers.contains(c.myNumber);
+        }).toList().cast<SMSConversation>(), false);
+      });
+    }
 
     fusionConnection.apiV1Call("get", "/chat/conversations_with/with_message", {
       'numbers': numbers.join(","),
-      'limit': 100,
+      'limit': limit,
+      'offset': offset,
       'group_id': groupId
     }, callback: (Map<String, dynamic> data) {
       List<SMSConversation> convos = [];
@@ -113,7 +118,6 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       for (Map<String, dynamic> item in data['items']) {
         List<CrmContact> leads = [];
         List<Contact> contacts = [];
-        print('parsing data' + item.toString());
         if (item.containsKey('contacts') && item['contacts'] != null) {
           for (Map<String, dynamic> obj in item['contacts']) {
             contacts.add(Contact(obj));
@@ -134,7 +138,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
         storeRecord(convo);
         convos.add(convo);
       }
-      callback(convos);
+      callback(convos, true);
     });
   }
 }

@@ -100,14 +100,35 @@ class _MessagesListState extends State<MessagesList> {
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
   String _selectedGroupId = "-2";
+  int _page = 0;
+
+  _loadMore() {
+    if (_page >= 0) {
+      _page += 1;
+      _lookupMessages();
+    }
+  }
 
   _lookupMessages() {
     lookupState = 1;
-    _fusionConnection.conversations.getConversations(_selectedGroupId,
-        (List<SMSConversation> convos) {
+    _fusionConnection.conversations.getConversations(
+        _selectedGroupId,
+        100, _page * 100,
+        (List<SMSConversation> convos, bool fromServer) {
       this.setState(() {
         lookupState = 2;
-        _convos = convos;
+        if (_page == 0) {
+          _convos = convos;
+        } else {
+          Map<String, SMSConversation> allconvos = {};
+          for (SMSConversation s in _convos) allconvos[s.getId()] = s;
+          for (SMSConversation s in convos) allconvos[s.getId()] = s;
+          _convos = allconvos.values.toList().cast<SMSConversation>();
+        }
+
+        if (convos.length < 100 && fromServer) {
+          _page = -1;
+        }
       });
     });
   }
@@ -147,7 +168,7 @@ class _MessagesListState extends State<MessagesList> {
     if (lookupState == 0) {
       _lookupMessages();
     }
-    print("lookupstate : " + lookupState.toString());
+
     return Expanded(
         child: Container(
             decoration: BoxDecoration(
@@ -185,9 +206,16 @@ class _MessagesListState extends State<MessagesList> {
                         ))
                   ])),
               Expanded(
-                  child: CustomScrollView(slivers: [
-                SliverList(delegate: SliverChildListDelegate(_messagesList()))
-              ]))
+                  child: ListView.builder(
+                      itemCount: _page == -1 ? _convos.length :_convos.length + 1,
+                      itemBuilder: (BuildContext context, int index) {
+                        if (index >= _convos.length && lookupState != 1) {
+                          _loadMore();
+                          return Container();
+                        }
+                        return SMSConversationSummaryView(_fusionConnection, _convos[index]);
+                      })
+              )
             ])));
   }
 }
