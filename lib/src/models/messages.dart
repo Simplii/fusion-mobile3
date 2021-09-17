@@ -6,6 +6,7 @@ import 'conversations.dart';
 import 'crm_contact.dart';
 import 'fusion_model.dart';
 import 'fusion_store.dart';
+import 'dart:convert' as convert;
 
 class SMSMessage extends FusionModel {
   bool convertedMms;
@@ -50,6 +51,53 @@ class SMSMessage extends FusionModel {
     this.type = map['type'];
     this.unixtime = map['unixtime'];
     this.user = map['user'].runtimeType == String ? map['user'] : null;
+  }
+
+  serialize() {
+    return convert.jsonEncode({
+      'convertedMms': convertedMms,
+      'domain': domain,
+      'from': from,
+      'fromMe': fromMe,
+      'id': id,
+      'isGroup': isGroup,
+      'media': media,
+      'message': message,
+      'messageStatus': messageStatus,
+      'mime': mime,
+      'read': read,
+      'scheduledAt': scheduledAt != null ? scheduledAt.serialize() : null,
+      'smsWebhookId': smsWebhookId,
+      'time': time.serialize(),
+      'to': to,
+      'type': type,
+      'unixtime': unixtime,
+      'user': user,
+    });
+  }
+
+  SMSMessage.unserialize(String data) {
+    Map<String, dynamic> obj = convert.jsonDecode(data);
+    this.convertedMms = obj['convertedMms'];
+    this.domain = obj['domain'];
+    this.from = obj['from'];
+    this.fromMe = obj['fromMe'];
+    this.id = obj['id'];
+    this.isGroup = obj['isGroup'];
+    this.media = obj['media'];
+    this.message = obj['message'];
+    this.messageStatus = obj['messageStatus'];
+    this.mime = obj['mime'];
+    this.read = obj['read'];
+    if (obj['scheduledAt'] != null)
+      this.scheduledAt = CarbonDate.unserialize(obj['scheduledAt']);
+    this.smsWebhookId = obj['smsWebhookId'];
+    if (obj['time'] != null)
+      this.time = CarbonDate.unserialize(obj['time']);
+    this.to = obj['to'];
+    this.type = obj['type'];
+    this.unixtime = obj['unixtime'];
+    this.user = obj['user'];
   }
 
   @override

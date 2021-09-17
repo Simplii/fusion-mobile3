@@ -103,7 +103,7 @@ class _MessagesListState extends State<MessagesList> {
   int _page = 0;
 
   _loadMore() {
-    if (_page >= 0) {
+    if (_page >= 0 && lookupState != 1) {
       _page += 1;
       _lookupMessages();
     }
@@ -116,7 +116,10 @@ class _MessagesListState extends State<MessagesList> {
         100, _page * 100,
         (List<SMSConversation> convos, bool fromServer) {
       this.setState(() {
-        lookupState = 2;
+        if (fromServer) {
+          lookupState = 2;
+        }
+
         if (_page == 0) {
           _convos = convos;
         } else {
@@ -213,7 +216,12 @@ class _MessagesListState extends State<MessagesList> {
                           _loadMore();
                           return Container();
                         }
-                        return SMSConversationSummaryView(_fusionConnection, _convos[index]);
+                        else if (_convos.length > index) {
+                          return SMSConversationSummaryView(
+                              _fusionConnection, _convos[index]);
+                        } else {
+                          return Container();
+                        }
                       })
               )
             ])));
