@@ -62,23 +62,26 @@ class _CallDialPadState extends State<CallDialPad> {
                 child: Icon(CupertinoIcons.delete_left_fill))
           ],
         ),
-        GridView.count(
-          childAspectRatio: 1.7,
-          shrinkWrap: true,
-          crossAxisCount: 3,
-          children: digits
-              .asMap()
-              .map((index, digit) => MapEntry(
-                  index,
-                  DialPadKey(
-                    onPressed: () {
-                      handleDialPadKeyPress(digit);
-                    },
-                    digit: digit,
-                    alphas: digitAlphas[index],
-                  )))
-              .values
-              .toList(),
+        ConstrainedBox(
+          constraints: BoxConstraints.tightFor(height: 350),
+          child: GridView.count(
+            physics: NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            crossAxisCount: 3,
+            children: digits
+                .asMap()
+                .map((index, digit) => MapEntry(
+                    index,
+                    DialPadKey(
+                      onPressed: () {
+                        handleDialPadKeyPress(digit);
+                      },
+                      digit: digit,
+                      alphas: digitAlphas[index],
+                    )))
+                .values
+                .toList(),
+          ),
         )
       ],
     ));

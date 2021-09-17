@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../styles.dart';
 import 'dialpad_key.dart';
@@ -68,22 +69,26 @@ class _DialPadState extends State<DialPad> {
                     child: Icon(CupertinoIcons.delete_left_fill))
               ],
             ),
-            GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 3,
-              children: digits
-                  .asMap()
-                  .map((index, digit) => MapEntry(
-                      index,
-                      DialPadKey(
-                        onPressed: () {
-                          handleDialPadKeyPress(digit);
-                        },
-                        digit: digit,
-                        alphas: digitAlphas[index],
-                      )))
-                  .values
-                  .toList(),
+            ConstrainedBox(
+              constraints: BoxConstraints.tightFor(width: 350),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                crossAxisCount: 3,
+                children: digits
+                    .asMap()
+                    .map((index, digit) => MapEntry(
+                        index,
+                        DialPadKey(
+                          onPressed: () {
+                            handleDialPadKeyPress(digit);
+                          },
+                          digit: digit,
+                          alphas: digitAlphas[index],
+                        )))
+                    .values
+                    .toList(),
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
