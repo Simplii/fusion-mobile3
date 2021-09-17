@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../styles.dart';
-import 'dialpadKey.dart';
+import 'dialpad_key.dart';
 
 class DialPad extends StatefulWidget {
   DialPad({Key key}) : super(key: key);
@@ -72,11 +72,17 @@ class _DialPadState extends State<DialPad> {
               shrinkWrap: true,
               crossAxisCount: 3,
               children: digits
-                  .map((digit) => DialPadKey(
-                      onPressed: () {
-                        handleDialPadKeyPress(digit);
-                      },
-                      digit: digit))
+                  .asMap()
+                  .map((index, digit) => MapEntry(
+                      index,
+                      DialPadKey(
+                        onPressed: () {
+                          handleDialPadKeyPress(digit);
+                        },
+                        digit: digit,
+                        alphas: digitAlphas[index],
+                      )))
+                  .values
                   .toList(),
             ),
             Row(

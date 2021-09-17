@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 class DialPadKey extends StatefulWidget {
-  DialPadKey({Key key, this.onPressed, this.digit}) : super(key: key);
+  DialPadKey({Key key, this.onPressed, this.digit, this.alphas}) : super(key: key);
 
   final VoidCallback onPressed;
   final digit;
+  final alphas;
 
   @override
   State<StatefulWidget> createState() => _DialPadKeyState();
@@ -17,6 +18,6 @@ class _DialPadKeyState extends State<DialPadKey> {
   Widget build(BuildContext context) {
     return TextButton(
         onPressed: widget.onPressed,
-        child: Center(child: Text(widget.digit, style: digitStyling)));
+        child: Column(children: [ Text(widget.digit, style: digitStyling), Text(widget.alphas)]));
   }
 }
