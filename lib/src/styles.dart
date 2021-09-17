@@ -16,6 +16,7 @@ Color offWhite = Color.fromARGB(255, 229, 227, 228);
 Color offBlack = Color.fromARGB(255, 27, 24, 24);
 Color ash = Color.fromARGB(255, 229, 227, 227);
 Color halfGray = Color.fromARGB(255,112,112,122);
+Color informationBlue = Color.fromARGB(255,0,170,255);
 
 Color translucentBlack(double amount) {
   return Color.fromARGB((255 * amount).round(), 0, 0, 0);

@@ -1,4 +1,5 @@
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 
 import 'carbon_date.dart';
 import 'fusion_model.dart';
@@ -13,6 +14,7 @@ class Contact extends FusionModel {
   String domain;
   List<dynamic> emails;
   String firstContactDate;
+  Coworker coworker;
   String firstName;
   List<String> groups;
   String id;
@@ -25,16 +27,20 @@ class Contact extends FusionModel {
   List<dynamic> phoneNumbers;
   List<dynamic> pictures;
   List<dynamic> socials;
+  Map<String, dynamic> lastCommunication;
   String type;
   String uid;
   CarbonDate updatedAt;
   String crmUrl;
   String crmName;
   String crmId;
+  int unread = 0;
 
+  @override
   String getId() => this.id;
 
   Contact(Map<String, dynamic> contactObject) {
+    print('building ' + contactObject.toString());
     this.addresses = contactObject['addresses'];
     this.company = contactObject['company'];
     this.contacts = contactObject['contacts'];
@@ -69,25 +75,39 @@ class Contact extends FusionModel {
 class ContactsStore extends FusionStore<Contact> {
   ContactsStore(FusionConnection fusionConnection) : super(fusionConnection);
 
-  search(String query, int limit, int offset, Function(List<Contact>) callback) {
-        fusionConnection.apiV1Call(
-        "get",
-        "/clients/filtered_contacts",
-        {'length': offset + limit,
-        'search_query': query,
-        'sort_by': 'last_name',
-        'group_type_filter': 'any',
-        'enterprise': false,
-        },
-        callback: (List<dynamic> datas) {
-          print("gotinfo" + datas.toString());
-          List<Contact> response = [];
+  search(
+      String query, int limit, int offset, Function(List<Contact>, bool) callback) {
+    query = query.toLowerCase();
+    List<Contact> matched = getRecords()
+        .where((Contact c) {
+          return (c.name + " " + c.company).toLowerCase().contains(query);
+        })
+        .toList()
+        .cast<Contact>();
 
-          datas.forEach((dynamic c) {
-            response.add(Contact(c as Map<String, dynamic>));
-          });
+    if (matched.length > 0) {
+      var future = new Future.delayed(const Duration(milliseconds: 10), () {
+        callback(matched, false);
+      });
+    }
 
-          callback(response);
-        });
+    fusionConnection.apiV1Call("get", "/clients/filtered_contacts", {
+      'length': offset + limit,
+      'search_query': query,
+      'sort_by': 'last_name',
+      'group_type_filter': 'any',
+      'enterprise': false,
+    }, callback: (List<dynamic> datas) {
+      print("gotinfo" + datas.toString());
+      List<Contact> response = [];
+
+      datas.forEach((dynamic c) {
+        Contact contact = Contact(c as Map<String, dynamic>);
+        response.add(contact);
+        storeRecord(contact);
+      });
+
+      callback(response, true);
+    });
   }
 }
