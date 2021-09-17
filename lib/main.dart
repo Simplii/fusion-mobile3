@@ -7,7 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fusion_mobile_revamped/src/callpop/callview.dart';
+import 'package:fusion_mobile_revamped/src/callpop/call_view.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:uuid/uuid.dart';
@@ -286,7 +286,9 @@ class _MyHomePageState extends State<MyHomePage> {
   _getTabWidget() {
     return (_currentIndex == 0
         ? RecentContactsTab(fusionConnection)
-        : (_currentIndex == 1 ? CallView() : MessagesTab(fusionConnection)));
+        : (_currentIndex == 1
+            ? TextButton(onPressed: _openCallView, child: Text('open call'))
+            : MessagesTab(fusionConnection)));
   }
 
   @override
@@ -305,21 +307,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (_callInProgress == true) {
       return Container(
-        decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
-        child: Scaffold(
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage("assets/background.png"),
+                  fit: BoxFit.cover)),
+          child: Scaffold(
             backgroundColor: Colors.transparent,
             body: SafeArea(
-                bottom: false, child: CallView(closeView: _openCallView))),
-      );
+                bottom: false, child: CallView(closeView: _openCallView)),
+          ));
     }
-
-    Widget child = (_currentIndex == 0
-        ? RecentContactsTab(fusionConnection)
-        : (_currentIndex == 1
-            ? TextButton(onPressed: _openCallView, child: Text('open call'))
-            : MessagesTab(fusionConnection)));
 
     return Container(
         decoration: BoxDecoration(
