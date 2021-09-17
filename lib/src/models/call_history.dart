@@ -42,6 +42,7 @@ class CallHistory extends FusionModel {
     missed = obj['abandoned'] == "1";
   }
 
+  @override
   String getId() => this.id;
 }
 
@@ -51,6 +52,7 @@ class CallHistoryStore extends FusionStore<CallHistory> {
 
   getRecentHistory(int limit, int offset,
                    Function(List<CallHistory>) callback) {
+    callback(getRecords());
     fusionConnection.apiV1Call(
         "get",
         "/calls/recent",
