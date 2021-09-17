@@ -135,6 +135,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   String get _defaultTab => widget._defaultTab;
   String _typeFilter = "Fusion Contacts";
   String _subscriptionKey;
+  int _page = 0;
 
   initState() {
     super.initState();
@@ -163,30 +164,46 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     }
   }
 
+  _loadMore() {
+    _page += 1;
+    _lookupQuery();
+  }
+
   _lookupQuery() {
     print("contactssearch looking up " + _query);
     lookupState = 1;
     _lookedUpQuery = _query;
 
     if (_typeFilter == 'Fusion Contacts') {
-      _fusionConnection.contacts.search(_query, 100, 0,
+      _fusionConnection.contacts.search(_query, 100, _page * 100,
               (List<Contact> contacts) {
             print("gotresult" + contacts.toString());
             this.setState(() {
               lookupState = 2;
-
-              _contacts = contacts;
+              if (_page == 0) {
+                _contacts = contacts;
+              }
+              else {
+                _contacts.addAll(contacts);
+              }
+              _sortList(_contacts);
             });
           });
     } else if (_typeFilter == 'Integrated Contacts') {
       _fusionConnection.integratedContacts.search(
-          _query, 100, 0,
+          _query, 100, _page * 100,
               (List<Contact> contacts) {
                 print("gotresult" + contacts.toString());
                 this.setState(() {
                   lookupState = 2;
 
-                  _contacts = contacts;
+                  if (_page == 0) {
+                    _contacts = contacts;
+                  }
+                  else {
+                    _contacts.addAll(contacts);
+                  }
+                  _sortList(_contacts);
                 });
               });
     } else if (_typeFilter == 'Coworkers') {
@@ -209,6 +226,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                 })
                 .toList()
                 .cast<Contact>();
+            _sortList(_contacts);
           });
         });
       });
@@ -269,13 +287,16 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             )));
   }
 
-  _searchList() {
+  _sortList(List<Contact> list) {
     _contacts.sort((a, b) {
       return (a.firstName + a.lastName)
           .trim()
           .toLowerCase()
           .compareTo((b.firstName + b.lastName).trim().toLowerCase());
     });
+  }
+
+  _searchList() {
     String usingLetter = '';
     List<Widget> rows = [];
     _contacts.forEach((item) {
@@ -291,9 +312,14 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     return rows;
   }
 
+  _letterFor(Contact item) {
+    return (item.firstName + item.lastName).trim()[0].toLowerCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_lookedUpQuery != _query) {
+      _page = 0;
       lookupState = 0;
     }
     if (lookupState == 0) {
@@ -313,6 +339,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                       onChange: (String value) {
                         this.setState(() {
                           _typeFilter = value;
+                          _page = 0;
                           lookupState = 0;
                         });
                       },
@@ -328,9 +355,23 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                           fontWeight: FontWeight.w700,
                           color: coal))),
               Expanded(
-                  child: ListView(
-                      padding: EdgeInsets.only(left: 12, right: 12),
-                      children: _searchList())),
+                  child: ListView.builder(
+                      itemCount: _contacts.length + 1,
+                      itemBuilder: (BuildContext context, int index) {
+                        if (index >= _contacts.length) {
+                          _loadMore();
+                          return Container();
+                        }
+                        else {
+                          String letter = _letterFor(_contacts[index]);
+                          if (index != 0 && _letterFor(
+                              _contacts[index - 1]) == letter) {
+                            letter = "";
+                          }
+                          return _resultRow(letter, _contacts[index]);
+                        }
+                      },
+                      padding: EdgeInsets.only(left: 12, right: 12)))
             ])));
   }
 }
