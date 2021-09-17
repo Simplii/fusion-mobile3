@@ -2,10 +2,10 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fusion_mobile_revamped/src/callpop/callactionbuttons.dart';
-import 'package:fusion_mobile_revamped/src/callpop/calldialpad.dart';
-import 'package:fusion_mobile_revamped/src/callpop/callfooterdetails.dart';
-import 'package:fusion_mobile_revamped/src/callpop/callheaderdetails.dart';
+import 'package:fusion_mobile_revamped/src/callpop/call_action_buttons.dart';
+import 'package:fusion_mobile_revamped/src/callpop/call_dialpad.dart';
+import 'package:fusion_mobile_revamped/src/callpop/call_footer_details.dart';
+import 'package:fusion_mobile_revamped/src/callpop/call_header_details.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad.dart';
 
 class CallView extends StatefulWidget {

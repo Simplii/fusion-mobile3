@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../styles.dart';
-import 'dialpadKey.dart';
+import 'dialpad_key.dart';
 
 class DialPad extends StatefulWidget {
   DialPad({Key key}) : super(key: key);

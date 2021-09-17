@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fusion_mobile_revamped/src/dialpad/dialpadKey.dart';
+import 'package:fusion_mobile_revamped/src/dialpad/dialpad_key.dart';
 
 class CallDialPad extends StatefulWidget {
   CallDialPad({Key key}) : super(key: key);
