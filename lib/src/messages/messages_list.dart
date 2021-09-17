@@ -177,9 +177,39 @@ class _MessagesListState extends State<MessagesList> {
             decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(16))),
-            padding: EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
-            child: Column(children: [
-              Container(
+            padding: EdgeInsets.all(0),//EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
+            child: Stack(
+    children: [
+              Column(children: [Expanded(
+                  child: ListView.builder(
+                      itemCount: _page == -1 ? _convos.length :_convos.length + 2,
+                      itemBuilder: (BuildContext context, int index) {
+                        if (index == 0) {
+                          return Container(height: 60);
+                        }else if (index >= _convos.length && lookupState != 1) {
+                          _loadMore();
+                          return Container(height: 30);
+                        }
+                        else if (_convos.length > index + 1) {
+                          return SMSConversationSummaryView(
+                              _fusionConnection, _convos[index + 1]);
+                        } else {
+                          return Container();
+                        }
+                      })
+              )]),
+      Container(
+      height: 80,
+
+      padding: EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
+      decoration: BoxDecoration(
+        boxShadow: [],
+        color:Colors.green,
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+          gradient:LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
+              stops: [0.5, 1.0],
+              colors: [Colors.white, translucentWhite(0.0)])
+      ),
                   margin: EdgeInsets.only(bottom: 24),
                   child: Row(children: [
                     Expanded(
@@ -208,22 +238,6 @@ class _MessagesListState extends State<MessagesList> {
                           ),
                         ))
                   ])),
-              Expanded(
-                  child: ListView.builder(
-                      itemCount: _page == -1 ? _convos.length :_convos.length + 1,
-                      itemBuilder: (BuildContext context, int index) {
-                        if (index >= _convos.length && lookupState != 1) {
-                          _loadMore();
-                          return Container();
-                        }
-                        else if (_convos.length > index) {
-                          return SMSConversationSummaryView(
-                              _fusionConnection, _convos[index]);
-                        } else {
-                          return Container();
-                        }
-                      })
-              )
             ])));
   }
 }
@@ -260,7 +274,7 @@ class _SMSConversationSummaryViewState
         DateTime.fromMillisecondsSinceEpoch(_convo.message.unixtime * 1000);
 
     return Container(
-        margin: EdgeInsets.only(bottom: 18),
+        margin: EdgeInsets.only(bottom: 18, left: 16, right: 16),
         child: Row(children: [
           ContactCircle(_convo.contacts, _convo.crmContacts),
           Expanded(

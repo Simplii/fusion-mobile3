@@ -80,7 +80,11 @@ class _PopupMenuState extends State<PopupMenu> {
         child: Column(children: [
       Expanded(
           child: Container(
-              decoration: BoxDecoration(color: Colors.transparent),
+              decoration: BoxDecoration(color: Colors.transparent,
+              boxShadow: [BoxShadow(
+                  color: translucentBlack(0.28),
+                  offset: Offset.zero,
+                  blurRadius: 36)]),
               padding: EdgeInsets.only(top: 80, bottom: 0),
               child: Column(children: children)))
     ]));
