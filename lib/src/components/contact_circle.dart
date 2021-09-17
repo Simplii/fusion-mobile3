@@ -2,15 +2,24 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gravatar/flutter_gravatar.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
+import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+
+import '../styles.dart';
 
 class ContactCircle extends StatefulWidget {
   final List<Contact> _contacts;
   final List<CrmContact> _crmContacts;
+  Coworker _coworker;
   double _diameter = 60;
   double _margin = null;
 
   ContactCircle(this._contacts, this._crmContacts, {Key key}) : super(key: key);
+  ContactCircle.withCoworker(this._contacts, this._crmContacts, this._coworker,
+      {Key key}) : super(key: key);
+
+  ContactCircle.withCoworkerAndDiameter(this._contacts, this._crmContacts, this._coworker, this._diameter,
+      {Key key}) : super(key: key);
 
   ContactCircle.withDiameter(this._contacts, this._crmContacts, this._diameter,
       {Key key})
@@ -27,11 +36,9 @@ class ContactCircle extends StatefulWidget {
 
 class _ContactCircleState extends State<ContactCircle> {
   List<Contact> get _contacts => widget._contacts;
-
   List<CrmContact> get _crmContacts => widget._crmContacts;
-
+  Coworker get _coworker => widget._coworker;
   double get _diameter => widget._diameter;
-
   double get _margin => widget._margin;
 
   _gravatarUrl(String email) {
@@ -42,8 +49,13 @@ class _ContactCircleState extends State<ContactCircle> {
   @override
   Widget build(BuildContext context) {
     String imageUrl = null;
+    Coworker coworker = _coworker;
+
     if (_contacts != null) {
       for (Contact contact in _contacts) {
+        if (contact.coworker != null && coworker == null) {
+          coworker = contact.coworker;
+        }
         if (contact.emails != null) {
           for (Map<String, dynamic> email in contact.emails) {
             try {
@@ -65,15 +77,33 @@ class _ContactCircleState extends State<ContactCircle> {
       }
     }
 
+    String presence = null;
+    if (coworker != null) {
+      imageUrl = coworker.url;
+      presence = coworker.presence;
+    }
+
     Widget contactImage = ClipRRect(
         borderRadius: BorderRadius.circular((_diameter - 4) / 2),
-        child: (imageUrl != null
-            ? Image.network(imageUrl,
-                height: _diameter - 4, width: _diameter - 4)
-            : Image.asset("assets/blank_avatar.png",
-                height: _diameter - 4, width: _diameter - 4)));
+        child: Container(
+            width: _diameter - 4,
+            height: _diameter - 4,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  fit: BoxFit.fill,
+                  image: (imageUrl != null
+                      ? NetworkImage(imageUrl)
+                      : AssetImage("assets/blank_avatar.png"))))));
 
-    Color borderColor = Colors.red;
+
+    Color borderColor = Colors.transparent;
+    if (presence == "open") borderColor = Color.fromARGB(255, 0, 204, 136);
+    else if (presence == 'inactive') borderColor = smoke;
+    else if (presence == 'ringing'
+        || presence == 'alerting'
+        || presence == 'progressing') borderColor = informationBlue;
+    else if (presence == 'inuse'
+        || presence == 'held') borderColor = crimsonLight;
 
     return Container(
         margin: EdgeInsets.only(

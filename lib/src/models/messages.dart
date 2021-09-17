@@ -51,6 +51,9 @@ class SMSMessage extends FusionModel {
     this.unixtime = map['unixtime'];
     this.user = map['user'].runtimeType == String ? map['user'] : null;
   }
+
+  @override
+  String getId() => this.id.toLowerCase();
 }
 
 class SMSMessageSubscription {
@@ -200,6 +203,17 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
 
   getMessages(SMSConversation convo, int limit, int offset,
       Function(List<SMSMessage> messages) callback) {
+
+    List<SMSMessage> messages = getRecords();
+    print("savedmessages " + messages.length.toString());
+    messages = messages.where((SMSMessage m) {
+      return (m.to == convo.myNumber && m.from == convo.number)
+          || (m.from == convo.myNumber && m.to == convo.number);
+    }).toList().cast<SMSMessage>();
+print("matched savedmessages " + messages.length.toString());
+    if (messages.length > 0) {
+      callback(messages);
+    }
 
     fusionConnection.apiV1Call("get", "/chat/conversation/messages", {
       'my_numbers': convo.myNumber,

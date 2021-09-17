@@ -4,7 +4,9 @@ import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
+import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/models/integrated_contacts.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
@@ -29,6 +31,8 @@ class FusionConnection {
   UserSettings settings;
   SMSDepartmentsStore smsDepartments;
   CallHistoryStore callHistory;
+  CoworkerStore coworkers;
+  IntegratedContactsStore integratedContacts;
 
   Function _onLogOut = () {};
 
@@ -37,6 +41,7 @@ class FusionConnection {
 
   FusionConnection() {
     crmContacts = CrmContactsStore(this);
+    integratedContacts = IntegratedContactsStore(this);
     contacts = ContactsStore(this);
     callpopInfos = CallpopInfoStore(this);
     conversations = SMSConversationsStore(this);
@@ -44,6 +49,7 @@ class FusionConnection {
     settings = UserSettings(this);
     smsDepartments = SMSDepartmentsStore(this);
     callHistory = CallHistoryStore(this);
+    coworkers = CoworkerStore(this);
   }
 
   final channel = WebSocketChannel.connect(
@@ -150,6 +156,7 @@ class FusionConnection {
         _extension = username.split('@')[0];
         settings.setOptions(response);
         settings.lookupSubscriber();
+        coworkers.getCoworkers((data) {});
         setupSocket();
         callback(true);
 
@@ -200,6 +207,11 @@ class FusionConnection {
       } else if (message.containsKey('sms_received')) {
         print("gotIM" + messageData.toString());
         messages.storeRecord(SMSMessage(message['message_object']));
+      } else if (message.containsKey('new_status')) {
+        coworkers.storePresence(
+            message['user'] + '@' + message['domain'].toString().toLowerCase(),
+            message['new_status'],
+            message['message']);
       }
     });
     _reconnectSocket();
