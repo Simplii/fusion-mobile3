@@ -27,16 +27,19 @@ class Contact extends FusionModel {
   List<dynamic> phoneNumbers;
   List<dynamic> pictures;
   List<dynamic> socials;
+  Map<String, dynamic> lastCommunication;
   String type;
   String uid;
   CarbonDate updatedAt;
   String crmUrl;
   String crmName;
   String crmId;
+  int unread = 0;
 
   String getId() => this.id;
 
   Contact(Map<String, dynamic> contactObject) {
+    print('building ' + contactObject.toString());
     this.addresses = contactObject['addresses'];
     this.company = contactObject['company'];
     this.contacts = contactObject['contacts'];
