@@ -60,6 +60,7 @@ flutter:
 
   assets:
     - assets/
+    - assets/crm_icons/
     - assets/icons/
     - assets/icons/hamburger.png
     - assets/icons/down_chevron.png
