@@ -241,7 +241,7 @@ class FusionConnection {
     String beat = randomString(30);
     _sendToSocket({'heartbeat': beat});
     Future.delayed(const Duration(seconds: 15), () {
-      if (!_heartbeats[beat]) {
+      if (_heartbeats[beat] != null && !_heartbeats[beat]) {
         _socket.close();
         setupSocket();
       }
