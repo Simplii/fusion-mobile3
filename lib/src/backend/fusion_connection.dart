@@ -6,6 +6,7 @@ import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/models/integrated_contacts.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
@@ -31,6 +32,7 @@ class FusionConnection {
   SMSDepartmentsStore smsDepartments;
   CallHistoryStore callHistory;
   CoworkerStore coworkers;
+  IntegratedContactsStore integratedContacts;
 
   Function _onLogOut = () {};
 
@@ -39,6 +41,7 @@ class FusionConnection {
 
   FusionConnection() {
     crmContacts = CrmContactsStore(this);
+    integratedContacts = IntegratedContactsStore(this);
     contacts = ContactsStore(this);
     callpopInfos = CallpopInfoStore(this);
     conversations = SMSConversationsStore(this);

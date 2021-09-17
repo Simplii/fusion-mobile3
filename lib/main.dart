@@ -330,59 +330,59 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           floatingActionButton: _getFloatingButton(),
           bottomNavigationBar: Container(height:60, margin: EdgeInsets.only(top: 0, left: 16, right: 16),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: Container(height: 4, decoration: BoxDecoration(
-                      color: _currentIndex == 0 ? crimsonLight: Colors.transparent,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(2),
-                        bottomRight: Radius.circular(2),
-                      )
-                    ))),
-                    Expanded(child: Container(height: 4, decoration: BoxDecoration(
-                      color: _currentIndex == 1 ? crimsonLight: Colors.transparent,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(2),
-                        bottomRight: Radius.circular(2),
-                      )
-                    ))),
-                    Expanded(child: Container(height: 4, decoration: BoxDecoration(
-                      color: _currentIndex == 2 ? crimsonLight: Colors.transparent,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(2),
-                        bottomRight: Radius.circular(2),
-                      )
-                    ))),
-                  ]
-                ),
-                BottomNavigationBar(
-            backgroundColor: Colors.transparent,
-            selectedItemColor: Colors.white,
-            unselectedItemColor: smoke,
-            onTap: onTabTapped,
-            currentIndex: _currentIndex,
-            iconSize: 20,
-            selectedLabelStyle: TextStyle(height:1.8, fontSize: 10, fontWeight: FontWeight.w800),
-            unselectedLabelStyle: TextStyle(height:1.8, fontSize: 10, fontWeight: FontWeight.w800),
-            items: [
-              BottomNavigationBarItem(
-                icon: Image.asset("assets/icons/phone_btmbar.png", width: 18, height: 18),
-                activeIcon: Image.asset("assets/icons/phone_filled_white.png", width: 18, height: 18),
-                label: "Calls",
-              ),
-              BottomNavigationBarItem(
-                icon: Image.asset("assets/icons/phone_btmbar.png", width: 18, height: 18),
-                activeIcon: Image.asset("assets/icons/phone_filled_white.png", width: 18, height: 18),
-                label: "Call TEST",
-              ),
-              BottomNavigationBarItem(
-                  icon: Image.asset("assets/icons/message_btmbar.png", width: 18, height: 18),
-                  activeIcon: Image.asset("assets/icons/message_filled_white.png", width: 18, height: 18),
-                  label: 'Messages')
-            ],
-          )],
-        ))));
+              child: Column(
+                children: [
+                  Row(
+                      children: [
+                        Expanded(child: Container(height: 4, decoration: BoxDecoration(
+                            color: _currentIndex == 0 ? crimsonLight: Colors.transparent,
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(2),
+                              bottomRight: Radius.circular(2),
+                            )
+                        ))),
+                        Expanded(child: Container(height: 4, decoration: BoxDecoration(
+                            color: _currentIndex == 1 ? crimsonLight: Colors.transparent,
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(2),
+                              bottomRight: Radius.circular(2),
+                            )
+                        ))),
+                        Expanded(child: Container(height: 4, decoration: BoxDecoration(
+                            color: _currentIndex == 2 ? crimsonLight: Colors.transparent,
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(2),
+                              bottomRight: Radius.circular(2),
+                            )
+                        ))),
+                      ]
+                  ),
+                  BottomNavigationBar(
+                    backgroundColor: Colors.transparent,
+                    selectedItemColor: Colors.white,
+                    unselectedItemColor: smoke,
+                    onTap: onTabTapped,
+                    currentIndex: _currentIndex,
+                    iconSize: 20,
+                    selectedLabelStyle: TextStyle(height:1.8, fontSize: 10, fontWeight: FontWeight.w800),
+                    unselectedLabelStyle: TextStyle(height:1.8, fontSize: 10, fontWeight: FontWeight.w800),
+                    items: [
+                      BottomNavigationBarItem(
+                        icon: Image.asset("assets/icons/phone_btmbar.png", width: 18, height: 18),
+                        activeIcon: Image.asset("assets/icons/phone_filled_white.png", width: 18, height: 18),
+                        label: "Calls",
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Image.asset("assets/icons/phone_btmbar.png", width: 18, height: 18),
+                        activeIcon: Image.asset("assets/icons/phone_filled_white.png", width: 18, height: 18),
+                        label: "Call TEST",
+                      ),
+                      BottomNavigationBarItem(
+                          icon: Image.asset("assets/icons/message_btmbar.png", width: 18, height: 18),
+                          activeIcon: Image.asset("assets/icons/message_filled_white.png", width: 18, height: 18),
+                          label: 'Messages')
+                    ],
+                  )],
+              ))));
   }
 }

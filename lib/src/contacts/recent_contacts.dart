@@ -170,13 +170,25 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
     if (_typeFilter == 'Fusion Contacts') {
       _fusionConnection.contacts.search(_query, 100, 0,
-          (List<Contact> contacts) {
-        print("gotresult" + contacts.toString());
-        this.setState(() {
-          lookupState = 2;
-          _contacts = contacts;
-        });
-      });
+              (List<Contact> contacts) {
+            print("gotresult" + contacts.toString());
+            this.setState(() {
+              lookupState = 2;
+
+              _contacts = contacts;
+            });
+          });
+    } else if (_typeFilter == 'Integrated Contacts') {
+      _fusionConnection.integratedContacts.search(
+          _query, 100, 0,
+              (List<Contact> contacts) {
+                print("gotresult" + contacts.toString());
+                this.setState(() {
+                  lookupState = 2;
+
+                  _contacts = contacts;
+                });
+              });
     } else if (_typeFilter == 'Coworkers') {
       _fusionConnection.coworkers.search(_query, (List<Contact> contacts) {
         this.setState(() {
@@ -259,15 +271,15 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
   _searchList() {
     _contacts.sort((a, b) {
-      return (a.lastName + a.firstName)
+      return (a.firstName + a.lastName)
           .trim()
           .toLowerCase()
-          .compareTo((b.lastName + b.firstName).trim().toLowerCase());
+          .compareTo((b.firstName + b.lastName).trim().toLowerCase());
     });
     String usingLetter = '';
     List<Widget> rows = [];
     _contacts.forEach((item) {
-      String letter = (item.lastName + item.firstName).trim()[0].toLowerCase();
+      String letter = (item.firstName + item.lastName).trim()[0].toLowerCase();
       if (usingLetter != letter) {
         usingLetter = letter;
       } else {
