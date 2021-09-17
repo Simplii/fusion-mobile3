@@ -7,30 +7,44 @@ import 'fusion_model.dart';
 import 'fusion_store.dart';
 
 class IntegratedContactsStore extends FusionStore<Contact> {
-  IntegratedContactsStore(FusionConnection fusionConnection) : super(fusionConnection);
+  IntegratedContactsStore(FusionConnection fusionConnection)
+      : super(fusionConnection);
 
-  search(String query, int limit, int offset, Function(List<Contact>) callback) {
-        fusionConnection.apiV1Call(
-        "post",
-        "/clients/filtered_crm_contacts",
-        {'page': (offset / limit).round(),
-          'page_size': limit,
-          'sort_dir': 'asc',
-          'search_query': query,
-          'sort_by': 'name_text',
-        },
-        callback: (Map<String, dynamic> datas) {
-          print("gotinfo" + datas.toString());
-          List<Contact> response = [];
+  search(
+      String query, int limit, int offset, Function(List<Contact>, bool) callback) {
+    query = query.toLowerCase();
+    List<Contact> matched = getRecords()
+        .where((Contact c) {
+          return (c.name + " " + c.company).toLowerCase().contains(query);
+        })
+        .toList()
+        .cast<Contact>();
 
-          datas['items'].forEach((dynamic c) {
-            Contact contact = Contact(c['contact'] as Map<String, dynamic>);
-            contact.lastCommunication = c['last_communication'];
-            contact.unread = int.parse(c['unread'].toString());
-            response.add(contact);
-          });
+    if (matched.length > 0) {
+      var future = new Future.delayed(const Duration(milliseconds: 10), () {
+        callback(matched, false);
+      });
+    }
 
-          callback(response);
-        });
+    fusionConnection.apiV1Call("post", "/clients/filtered_crm_contacts", {
+      'page': (offset / limit).round(),
+      'page_size': limit,
+      'sort_dir': 'asc',
+      'search_query': query,
+      'sort_by': 'name',
+    }, callback: (Map<String, dynamic> datas) {
+      print("gotinfo" + datas.toString());
+      List<Contact> response = [];
+
+      datas['items'].forEach((dynamic c) {
+        Contact contact = Contact(c['contact'] as Map<String, dynamic>);
+        contact.lastCommunication = c['last_communication'];
+        contact.unread = int.parse(c['unread'].toString());
+        response.add(contact);
+        storeRecord(contact);
+      });
+
+      callback(response, true);
+    });
   }
 }

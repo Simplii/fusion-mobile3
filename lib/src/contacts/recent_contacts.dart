@@ -176,7 +176,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
     if (_typeFilter == 'Fusion Contacts') {
       _fusionConnection.contacts.search(_query, 100, _page * 100,
-              (List<Contact> contacts) {
+              (List<Contact> contacts, bool fromServer) {
             print("gotresult" + contacts.toString());
             this.setState(() {
               lookupState = 2;
@@ -184,7 +184,13 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                 _contacts = contacts;
               }
               else {
-                _contacts.addAll(contacts);
+                Map<String, Contact> list = {};
+                _contacts.forEach((Contact c) { list[c.id] = c; });
+                contacts.forEach((Contact c) { list[c.id] = c; });
+                _contacts = list.values.toList().cast<Contact>();
+              }
+              if (_contacts.length < 100 && fromServer) {
+                _page = -1;
               }
               _sortList(_contacts);
             });
@@ -192,7 +198,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     } else if (_typeFilter == 'Integrated Contacts') {
       _fusionConnection.integratedContacts.search(
           _query, 100, _page * 100,
-              (List<Contact> contacts) {
+              (List<Contact> contacts, bool fromServer) {
                 print("gotresult" + contacts.toString());
                 this.setState(() {
                   lookupState = 2;
@@ -201,7 +207,13 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                     _contacts = contacts;
                   }
                   else {
-                    _contacts.addAll(contacts);
+                    Map<String, Contact> list = {};
+                    _contacts.forEach((Contact c) { list[c.id] = c; });
+                    contacts.forEach((Contact c) { list[c.id] = c; });
+                    _contacts = list.values.toList().cast<Contact>();
+                  }
+                  if (contacts.length < 100 && fromServer) {
+                    _page = -1;
                   }
                   _sortList(_contacts);
                 });
@@ -356,7 +368,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                           color: coal))),
               Expanded(
                   child: ListView.builder(
-                      itemCount: _contacts.length + 1,
+                      itemCount: _page == -1 ? _contacts.length : _contacts.length + 1,
                       itemBuilder: (BuildContext context, int index) {
                         if (index >= _contacts.length) {
                           _loadMore();

@@ -64,6 +64,7 @@ class Coworker extends FusionModel {
     return c;
   }
 
+  @override
   String getId() => this.uid.toLowerCase();
 }
 
