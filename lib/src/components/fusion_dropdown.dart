@@ -102,10 +102,10 @@ class _FusionDropdownState extends State<FusionDropdown> {
             : Row(children: [
                 Text(selected,
                     style: _style != null ? _style : subHeaderTextStyle),
-                IconButton(
-                    onPressed: _openPopup,
-                    padding: EdgeInsets.all(0),
-                    icon: Image.asset("assets/icons/down_arrow.png",
+                Container(
+                    margin: EdgeInsets.only(left: 6, right: 12),
+                    width: 10, height: 5,
+                    child: Image.asset("assets/icons/down_arrow.png",
                         height: 5, width: 10)),
               ]));
   }

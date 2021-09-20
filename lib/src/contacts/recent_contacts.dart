@@ -170,16 +170,20 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   }
 
   _lookupQuery() {
-    print("contactssearch looking up " + _query);
+    print("contactssearch looking up " + _query + " " + lookupState.toString() + " " + _page.toString());
+    if (lookupState == 1) return;
     lookupState = 1;
     _lookedUpQuery = _query;
 
     if (_typeFilter == 'Fusion Contacts') {
+      if (_page == -1) return;
       _fusionConnection.contacts.search(_query, 100, _page * 100,
               (List<Contact> contacts, bool fromServer) {
             print("gotresult" + contacts.toString());
             this.setState(() {
-              lookupState = 2;
+              if (fromServer) {
+                lookupState = 2;
+              }
               if (_page == 0) {
                 _contacts = contacts;
               }
@@ -196,12 +200,15 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             });
           });
     } else if (_typeFilter == 'Integrated Contacts') {
+      if (_page == -1) return;
       _fusionConnection.integratedContacts.search(
           _query, 100, _page * 100,
               (List<Contact> contacts, bool fromServer) {
                 print("gotresult" + contacts.toString());
                 this.setState(() {
-                  lookupState = 2;
+                  if (fromServer) {
+                    lookupState = 2;
+                  }
 
                   if (_page == 0) {
                     _contacts = contacts;
@@ -320,7 +327,6 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       }
       rows.add(_resultRow(letter, item));
     });
-    print("rows" + rows.toString());
     return rows;
   }
 
@@ -346,7 +352,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
             child: Column(children: [
               Container(
-                  padding: EdgeInsets.only(left: 12),
+                  padding: EdgeInsets.only(left: 12, top: 12, bottom: 4),
                   child: FusionDropdown(
                       onChange: (String value) {
                         this.setState(() {

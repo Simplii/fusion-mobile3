@@ -42,17 +42,16 @@ class Contact extends FusionModel {
 
   searchString() {
     List<String> list = [company, firstName, lastName];
-    for (Map<String, String> number in phoneNumbers) {
-      list.add(number['number']);
+    for (Map<String, dynamic> number in phoneNumbers) {
+      list.add(number['number'].toString());
     }
-    for (Map<String, String> email in emails) {
-      list.add(email['email']);
+    for (Map<String, dynamic> email in emails) {
+      list.add(email['email'].toString());
     }
     return list.join(' ');
   }
 
   Contact(Map<String, dynamic> contactObject) {
-    print('building ' + contactObject.toString());
     this.addresses = contactObject['addresses'];
     this.company = contactObject['company'];
     this.contacts = contactObject['contacts'];
@@ -153,6 +152,12 @@ class Contact extends FusionModel {
 class ContactsStore extends FusionStore<Contact> {
   ContactsStore(FusionConnection fusionConnection) : super(fusionConnection);
 
+  @override
+  storeRecord(Contact record) {
+    super.storeRecord(record);
+    persist(record);
+  }
+
   persist(Contact record) {
     fusionConnection.db.delete('contacts', where: 'id = ?', whereArgs: [record.id]);
     fusionConnection.db.insert(
@@ -165,12 +170,42 @@ class ContactsStore extends FusionStore<Contact> {
       'lastName': record.lastName,
       'raw': record.serialize()}
     );
+    print("persisting -- " + {'id': record.id,
+      'company': record.company,
+      'deleted': record.deleted ? 1 : 0,
+      'searchString': record.searchString(),
+      'firstName': record.firstName,
+      'lastName': record.lastName,
+      'raw': record.serialize()}.toString());
+  }
+
+  searchPersisted(
+      String query, int limit, int offset, Function(List<Contact>, bool) callback) {
+    fusionConnection.db.query(
+        'contacts',
+        limit: limit,
+        offset: offset,
+        where: 'searchString Like ?',
+        orderBy: "lastName asc, firstName asc",
+        whereArgs: ["%" + query + "%"])
+        .then((List<Map<String, dynamic>> results) {
+      List<Contact> list = [];
+      print("persisted contacts match " + query + " " + results.toString());
+      for (Map<String, dynamic> result in results) {
+        print("persisted contact match " + query + " " + result.toString());
+        list.add(Contact.unserialize(result['raw']));
+      }
+      callback(list, false);
+    });
   }
 
   search(
       String query, int limit, int offset, Function(List<Contact>, bool) callback) {
     query = query.toLowerCase();
-    List<Contact> matched = getRecords()
+
+
+    searchPersisted(query, limit, offset, callback);
+  /*  List<Contact> matched = getRecords()
         .where((Contact c) {
           return (c.name + " " + c.company).toLowerCase().contains(query);
         })
@@ -179,9 +214,10 @@ class ContactsStore extends FusionStore<Contact> {
 
     if (matched.length > 0) {
       var future = new Future.delayed(const Duration(milliseconds: 10), () {
+
         callback(matched, false);
       });
-    }
+    }*/
 
     fusionConnection.apiV1Call("get", "/clients/filtered_contacts", {
       'length': offset + limit,
@@ -190,7 +226,6 @@ class ContactsStore extends FusionStore<Contact> {
       'group_type_filter': 'any',
       'enterprise': false,
     }, callback: (List<dynamic> datas) {
-      print("gotinfo" + datas.toString());
       List<Contact> response = [];
 
       datas.forEach((dynamic c) {

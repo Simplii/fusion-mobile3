@@ -146,6 +146,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     fusionConnection.db
         .delete('sms_conversation', where: 'id = ?', whereArgs: [record.getId()]);
     fusionConnection.db.insert('sms_conversation', {
+
       'id': record.getId(),
       'groupName': record.groupName,
       'isGroup': record.isGroup ? 1 : 0,
@@ -158,8 +159,8 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       'raw': record.serialize()
     });
   }
-  
-  searchPersisted(String groupId, int limit, int offset, Function(List<SMSConversation> conversations, bool fromServer) callback) {
+
+  getPersisted(String groupId, int limit, int offset, Function(List<SMSConversation> conversations, bool fromServer) callback) {
     SMSDepartment group = fusionConnection.smsDepartments.lookupRecord(groupId);
     if (group != null) {
       fusionConnection.db.query(
@@ -177,13 +178,32 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     }
   }
 
+  searchPersisted(String query, String groupId, int limit, int offset, Function(List<SMSConversation> conversations, bool fromServer) callback) {
+    SMSDepartment group = fusionConnection.smsDepartments.lookupRecord(groupId);
+    if (group != null) {
+      fusionConnection.db.query(
+          'sms_conversation',
+          limit: limit,
+          offset: offset,
+          where: 'myNumber in ("' + group.numbers.join('","') + '") AND searchString Like ?',
+          whereArgs: ["%" + query + "%"])
+          .then((List<Map<String, dynamic>> results) {
+        List<SMSConversation> list = [];
+        for (Map<String, dynamic> result in results) {
+          list.add(SMSConversation.unserialize(result['raw']));
+        }
+        callback(list, false);
+      });
+    }
+  }
+
   getConversations(String groupId, int limit, int offset,
       Function(List<SMSConversation> conversations, bool fromServer) callback) {
     SMSDepartment department =
         fusionConnection.smsDepartments.getDepartment(groupId);
     List<String> numbers = department.numbers;
 
-    searchPersisted(groupId, limit, offset, callback);
+    getPersisted(groupId, limit, offset, callback);
 
     fusionConnection.apiV1Call("get", "/chat/conversations_with/with_message", {
       'numbers': numbers.join(","),

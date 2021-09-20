@@ -329,7 +329,8 @@ class _MyHomePageState extends State<MyHomePage> {
             child: _getTabWidget(),
           ),
           floatingActionButton: _getFloatingButton(),
-          bottomNavigationBar: Container(height:60, margin: EdgeInsets.only(top: 0, left: 16, right: 16),
+          bottomNavigationBar: Container(
+              height:60, margin: EdgeInsets.only(top: 0, left: 16, right: 16),
               child: Column(
                 children: [
                   Row(
@@ -358,6 +359,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ]
                   ),
                   BottomNavigationBar(
+                    elevation:0,
                     backgroundColor: Colors.transparent,
                     selectedItemColor: Colors.white,
                     unselectedItemColor: smoke,

@@ -29,6 +29,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   String groupId = "-1";
   String myPhoneNumber = "8014569812";
   String _query = "";
+  String _searchingFor = "";
 
   _search() {
     if (willSearch == 0) {
@@ -36,18 +37,23 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
       Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
         String query = _searchTextController.value.text;
         willSearch = 0;
-        _fusionConnection.messages.search(query, (List<SMSConversation> convos,
-            List<CrmContact> crmContacts, List<Contact> contacts) {
-          willSearch = 0;
-
-          if (mounted) {
-            this.setState(() {
-              _convos = convos;
-              _crmContacts = crmContacts;
-              _contacts = contacts;
-            });
-          }
-        });
+        if (query != _searchingFor) {
+          print("searching for " + query);
+          _searchingFor = query;
+          _fusionConnection.messages.search(
+              query, (List<SMSConversation> convos,
+              List<CrmContact> crmContacts, List<Contact> contacts) {
+                print("got result" + query);
+            if (mounted) {
+              this.setState(() {
+                print("setting state" + query + _contacts.toString());
+                _convos = convos;
+                _crmContacts = crmContacts;
+                _contacts = contacts;
+              });
+            }
+          });
+        }
       });
     }
   }
@@ -56,7 +62,10 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
     String myImageUrl = _fusionConnection.myAvatarUrl();
 
     return Column(children: [
-      Center(child: popupHandle()),
+      Container(
+          alignment: Alignment.center,
+          margin: EdgeInsets.only(bottom: 12),
+          child: popupHandle()),
       Row(children: [
         Text("FROM " + mDash + " ", style: subHeaderTextStyle),
         FusionDropdown(
@@ -67,11 +76,10 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
             },
             label: "Who are you representing?",
             value: groupId,
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
             options: [
               ["MYSELF", "-1"]
-            ])
-      ]),
-      Row(children: [
+            ]),
         Text("USING " + mDash + " ", style: subHeaderTextStyle),
         FusionDropdown(
             onChange: (String value) {
@@ -81,6 +89,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
             },
             label: "From which phone number?",
             value: myPhoneNumber,
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
             options: [
               ["8014569812".formatPhone(), "8014569812"]
             ])
@@ -88,7 +97,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
       Row(children: [
         Expanded(
             child: Container(
-                margin: EdgeInsets.only(top: 12),
+                margin: EdgeInsets.only(top: 16),
                 height: 40,
                 child: TextField(
                     controller: _searchTextController,
@@ -112,8 +121,9 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   Widget build(BuildContext context) {
     List<Widget> children = [];
     List<SMSConversation> convoResults = [];
-    String query =
-        _searchTextController.value.text.replaceAll(RegExp(r'[^0-9]+'), '');
+    String query = "" + _searchTextController.value.text;
+    query = query.replaceAll(RegExp(r'[^0-9]+'), '');
+
     if (query.length >= 10) {
       convoResults
           .add(SMSConversation.build(myNumber: myPhoneNumber, number: query));
