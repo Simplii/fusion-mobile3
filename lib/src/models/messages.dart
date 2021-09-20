@@ -252,7 +252,7 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
 
       Map<String, dynamic> convoslist = {};
 
-      if (data['agg']['conversations'].runtimeType != List) {
+      if (data['agg']['conversations'] is List<dynamic>) {
         convoslist = data['agg']['conversations'];
       }
 
