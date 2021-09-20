@@ -76,10 +76,11 @@ class FusionConnection {
       openDatabase(
           p.join(path, "fusion.db"),
           version: 1,
-          onCreate: (db, version) {
-            return db.execute(
+          onOpen: (db) {
+            print("executing");
+            print(db.execute(
                 '''
-          CREATE TABLE sms_conversation(
+          CREATE TABLE IF NOT EXISTS sms_conversation(
           id TEXT PRIMARY key,
           groupName TEXT,
           isGroup int,
@@ -89,23 +90,25 @@ class FusionConnection {
           myNumber TEXT,
           unread int,
           raw BLOB
-          );
-          
-          CREATE TABLE sms_message(
+          );'''));
+
+            print(db.execute('''
+          CREATE TABLE IF NOT EXISTS sms_message(
           id TEXT PRIMARY key,
-          from TEXT,
+          `from` TEXT,
           fromMe int,
           media int,
           message TEXT,
           mime TEXT,
           read int,
           time int,
-          to STRING,
+          `to` STRING,
           user STRING,
           raw BLOB
-          );
-          
-          CREATE TABLE contacts(
+          );'''));
+
+            print(db.execute('''
+          CREATE TABLE IF NOT EXISTS contacts(
           id TEXT PRIMARY key,
           company TEXT,
           deleted int,
@@ -114,7 +117,7 @@ class FusionConnection {
           lastName TEXT,
           raw BLOB
           );
-          ''');
+          '''));
           }
       )
           .then((Database db) {

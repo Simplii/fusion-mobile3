@@ -146,18 +146,25 @@ class CoworkerStore extends FusionStore<Coworker> {
   }
 
   search(String query, Function(List<Contact>) callback) {
-    List<Contact> list = [];
-    for (Coworker c in getRecords()) {
-      if ((c.firstName + " " + c.lastName
-          + " " + c.email + " " + c.uid).contains(query)) {
-        list.add(c.toContact());
+    var future = new Future.delayed(const Duration(milliseconds: 10), ()
+    {
+      List<Contact> list = [];
+      for (Coworker c in getRecords()) {
+        if ((c.firstName + " " + c.lastName
+            + " " + c.email + " " + c.uid).contains(query)) {
+          list.add(c.toContact());
+        }
       }
-    }
-    callback(list);
+      callback(list);
+    });
   }
 
   getCoworkers(Function(List<Coworker>) callback) {
-    callback(getRecords());
+    var future = new Future.delayed(const Duration(milliseconds: 10), () {
+      callback(getRecords());
+    });
+
+
     fusionConnection.apiV1Call(
         "get",
         "/clients/subscribers",

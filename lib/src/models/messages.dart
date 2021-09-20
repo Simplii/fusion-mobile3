@@ -151,6 +151,25 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     return name;
   }
 
+  persist(SMSMessage record) {
+    fusionConnection.db
+        .delete('sms_message', where: 'id = ?', whereArgs: [record.getId()]);
+    fusionConnection.db.insert('sms_message', {
+      'id': record.getId(),
+      'from': record.from,
+      'fromMe': record.fromMe != null && record.fromMe ? 1 : 0,
+      'media': record.media != null && record.media ? 1 : 0,
+      'message': record.message,
+      'mime': record.mime,
+      'read': record.read != null && record.read ? 1 : 0,
+      'time': record.unixtime,
+      'to': record.to,
+      'user': record.user,
+      'raw': record.serialize()
+    });
+  }
+
+
   clearSubscription(name) {
     if (subscriptions.containsKey(name)) {
       subscriptions.remove(name);
@@ -164,6 +183,8 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     for (SMSMessageSubscription subscription in subscriptions.values) {
       subscription.sendMatching([message]);
     }
+
+    persist(message);
   }
 
   sendMessage(String text, SMSConversation conversation) {
@@ -192,6 +213,25 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     if (query.trim().length == 0) {
       return;
     }
+
+    List<SMSConversation> matchedConversations = [];
+    List<CrmContact> matchedCrmContacts = [];
+    List<Contact> matchedContacts = [];
+
+    Function() _sendFromPersisted = () {
+      print("sending persisted" + matchedConversations.toString() + " " + matchedContacts.toString());
+      callback(matchedConversations, matchedCrmContacts, matchedContacts);
+    };
+
+    fusionConnection.conversations.searchPersisted(query, "-2", 100, 0, (List<SMSConversation> convos, fromHttp) {
+      matchedConversations = convos;
+      _sendFromPersisted();
+    });
+
+    fusionConnection.contacts.searchPersisted(query, 100, 0, (List<Contact> contacts, bool fromServer) {
+      matchedContacts = contacts;
+      _sendFromPersisted();
+    });
 
     fusionConnection.apiV1Call("get", "/chat/search/flat", {
       'query': query,
@@ -249,20 +289,28 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     });
   }
 
+  getPersisted(
+      SMSConversation convo , int limit, int offset, Function(List<SMSMessage>, bool) callback) {
+    fusionConnection.db.query(
+        'sms_message',
+        limit: limit,
+        offset: offset,
+        where: '(`to` = ? and `from` = ?) or (`from` = ? and `to` = ?)',
+        orderBy: "id desc",
+        whereArgs: [convo.myNumber, convo.number, convo.myNumber, convo.number])
+        .then((List<Map<String, dynamic>> results) {
+      List<SMSMessage> list = [];
+      for (Map<String, dynamic> result in results) {
+        list.add(SMSMessage.unserialize(result['raw']));
+      }
+      callback(list, false);
+    });
+  }
+
   getMessages(SMSConversation convo, int limit, int offset,
-      Function(List<SMSMessage> messages) callback) {
+      Function(List<SMSMessage> messages, bool fromServer) callback) {
 
-    List<SMSMessage> messages = getRecords();
-    print("savedmessages " + messages.length.toString());
-    messages = messages.where((SMSMessage m) {
-      return (m.to == convo.myNumber && m.from == convo.number)
-          || (m.from == convo.myNumber && m.to == convo.number);
-    }).toList().cast<SMSMessage>();
-print("matched savedmessages " + messages.length.toString());
-    if (messages.length > 0) {
-      callback(messages);
-    }
-
+    getPersisted(convo, limit, offset, callback);
     fusionConnection.apiV1Call("get", "/chat/conversation/messages", {
       'my_numbers': convo.myNumber,
       'their_numbers': convo.number,
@@ -277,7 +325,7 @@ print("matched savedmessages " + messages.length.toString());
         storeRecord(message);
         messages.add(message);
       }
-      callback(messages);
+      callback(messages, true);
     });
   }
 }

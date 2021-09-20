@@ -144,6 +144,7 @@ class _MessagesListState extends State<MessagesList> {
 
   _changeGroup(String newGroupId) {
     _selectedGroupId = newGroupId;
+    _page = 0;
     _lookupMessages();
   }
 
