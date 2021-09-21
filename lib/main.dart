@@ -369,6 +369,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   )))),
                     ]),
                     BottomNavigationBar(
+                      elevation: 0,
                       backgroundColor: Colors.transparent,
                       selectedItemColor: Colors.white,
                       unselectedItemColor: smoke,

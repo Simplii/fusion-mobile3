@@ -257,7 +257,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                     Expanded(
                         child: Container(
                             decoration: BoxDecoration(color: Colors.white),
-                            padding: EdgeInsets.only(left: 14, right: 14),
                             child: Row(children: [
                               Expanded(
                                   child: _loaded
@@ -335,12 +334,31 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
       });
     });
     _fusionConnection.messages.getMessages(_conversation, 200, 0,
-        (List<SMSMessage> messages) {
+        (List<SMSMessage> messages, fromServer) {
       this.setState(() {
         lookupState = 2;
         _messages = messages;
       });
     });
+  }
+
+  _newConvoMessage() {
+    return [
+      Container(
+            alignment: Alignment.center,
+            padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
+            //constraints: BoxConstraints(maxWidth: 170),
+            child: Text(
+                "This is the beginning of your text history with " + _conversation.contactName(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: smoke,
+                    fontSize: 14,
+                    height: 1.4,
+                    fontWeight: FontWeight.w400,
+                    fontStyle: FontStyle.italic))
+          )
+    ];
   }
 
   _messagesList() {
@@ -403,7 +421,10 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
       _lookupMessages();
     }
 
-    return ListView(children: _messagesList(), reverse: true);
+    return ListView(children: _messages.length == 0
+        ? _newConvoMessage()
+        : _messagesList(),
+        reverse: true);
   }
 }
 
@@ -496,6 +517,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
     return Container(
         decoration: BoxDecoration(color: Colors.white),
         margin: EdgeInsets.only(bottom: 18),
+        padding: EdgeInsets.only(left: 16, right: 16),
         child: Row(children: children));
   }
 }

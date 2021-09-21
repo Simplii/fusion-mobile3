@@ -170,54 +170,73 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   }
 
   _lookupQuery() {
-    print("contactssearch looking up " + _query);
+    print("contactssearch looking up " +
+        _query +
+        " " +
+        lookupState.toString() +
+        " " +
+        _page.toString());
+    if (lookupState == 1) return;
     lookupState = 1;
     _lookedUpQuery = _query;
 
     if (_typeFilter == 'Fusion Contacts') {
+      if (_page == -1) return;
       _fusionConnection.contacts.search(_query, 100, _page * 100,
-              (List<Contact> contacts, bool fromServer) {
-            print("gotresult" + contacts.toString());
-            this.setState(() {
-              lookupState = 2;
-              if (_page == 0) {
-                _contacts = contacts;
-              }
-              else {
-                Map<String, Contact> list = {};
-                _contacts.forEach((Contact c) { list[c.id] = c; });
-                contacts.forEach((Contact c) { list[c.id] = c; });
-                _contacts = list.values.toList().cast<Contact>();
-              }
-              if (_contacts.length < 100 && fromServer) {
-                _page = -1;
-              }
-              _sortList(_contacts);
+          (List<Contact> contacts, bool fromServer) {
+        print("gotresult" + contacts.toString());
+        this.setState(() {
+          if (fromServer) {
+            lookupState = 2;
+          }
+          if (_page == 0) {
+            _contacts = contacts;
+          } else {
+            Map<String, Contact> list = {};
+            _contacts.forEach((Contact c) {
+              list[c.id] = c;
             });
-          });
+            contacts.forEach((Contact c) {
+              list[c.id] = c;
+            });
+            _contacts = list.values.toList().cast<Contact>();
+          }
+          if (_contacts.length < 100 && fromServer) {
+            _page = -1;
+          }
+          _sortList(_contacts);
+        });
+      });
     } else if (_typeFilter == 'Integrated Contacts') {
-      _fusionConnection.integratedContacts.search(
-          _query, 100, _page * 100,
-              (List<Contact> contacts, bool fromServer) {
-                print("gotresult" + contacts.toString());
-                this.setState(() {
-                  lookupState = 2;
+      if (_page == -1) return;
+      _fusionConnection.integratedContacts.search(_query, 100, _page * 100,
+          (List<Contact> contacts, bool fromServer) {
+        print("gotresult" + contacts.toString());
+        this.setState(() {
+          if (fromServer) {
+            lookupState = 2;
+          }
 
-                  if (_page == 0) {
-                    _contacts = contacts;
-                  }
-                  else {
-                    Map<String, Contact> list = {};
-                    _contacts.forEach((Contact c) { list[c.id] = c; });
-                    contacts.forEach((Contact c) { list[c.id] = c; });
-                    _contacts = list.values.toList().cast<Contact>();
-                  }
-                  if (contacts.length < 100 && fromServer) {
-                    _page = -1;
-                  }
-                  _sortList(_contacts);
-                });
-              });
+          if (_page == 0) {
+            _contacts = contacts;
+          } else {
+            Map<String, Contact> list = {};
+            _contacts.forEach((Contact c) {
+              list[c.id] = c;
+            });
+            contacts.forEach((Contact c) {
+              list[c.id] = c;
+            });
+            _contacts = list.values.toList().cast<Contact>();
+          }
+
+          if (contacts.length < 100 && fromServer) {
+            _page = -1;
+          }
+
+          _sortList(_contacts);
+        });
+      });
     } else if (_typeFilter == 'Coworkers') {
       _fusionConnection.coworkers.search(_query, (List<Contact> contacts) {
         this.setState(() {
@@ -250,13 +269,14 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) =>
-            ContactProfileView(_fusionConnection, contact));
+        builder: (context) => ContactProfileView(_fusionConnection, contact));
   }
 
   _resultRow(String letter, Contact contact) {
     return GestureDetector(
-        onTap: () { _openProfile(contact); },
+        onTap: () {
+          _openProfile(contact);
+        },
         child: Container(
             decoration: BoxDecoration(color: Colors.transparent),
             child: Row(
@@ -320,7 +340,6 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       }
       rows.add(_resultRow(letter, item));
     });
-    print("rows" + rows.toString());
     return rows;
   }
 
@@ -344,9 +363,36 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(16))),
             padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
-            child: Column(children: [
+            child: Stack(children: [
+              Expanded(
+                  child: ListView.builder(
+                      itemCount:
+                          _page == -1 ? _contacts.length : _contacts.length + 1,
+                      itemBuilder: (BuildContext context, int index) {
+                        if (index >= _contacts.length) {
+                          _loadMore();
+                          return Container();
+                        } else {
+                          String letter = _letterFor(_contacts[index]);
+                          if (index != 0 &&
+                              _letterFor(_contacts[index - 1]) == letter) {
+                            letter = "";
+                          }
+                          return _resultRow(letter, _contacts[index]);
+                        }
+                      },
+                      padding: EdgeInsets.only(left: 12, right: 12, top: 40))),
               Container(
-                  padding: EdgeInsets.only(left: 12),
+                  decoration: BoxDecoration(
+                    boxShadow: [],
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: [0.5, 1.0],
+                        colors: [Colors.white, translucentWhite(0.0)]),
+                  ),
+                  padding: EdgeInsets.only(left: 12, top: 12, bottom: 32),
                   child: FusionDropdown(
                       onChange: (String value) {
                         this.setState(() {
@@ -365,25 +411,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: coal))),
-              Expanded(
-                  child: ListView.builder(
-                      itemCount: _page == -1 ? _contacts.length : _contacts.length + 1,
-                      itemBuilder: (BuildContext context, int index) {
-                        if (index >= _contacts.length) {
-                          _loadMore();
-                          return Container();
-                        }
-                        else {
-                          String letter = _letterFor(_contacts[index]);
-                          if (index != 0 && _letterFor(
-                              _contacts[index - 1]) == letter) {
-                            letter = "";
-                          }
-                          return _resultRow(letter, _contacts[index]);
-                        }
-                      },
-                      padding: EdgeInsets.only(left: 12, right: 12)))
+                          color: coal)))
             ])));
   }
 }
@@ -452,7 +480,8 @@ class _ContactsListState extends State<ContactsList> {
   }
 
   _historyList() {
-    return _history.where((item) {
+    List<Widget> response = [Container(height: 50)];
+    response.addAll(_history.where((item) {
       if (_selectedTab == 'all') {
         return true;
       } else if (_selectedTab == 'integrated') {
@@ -469,7 +498,8 @@ class _ContactsListState extends State<ContactsList> {
         item.coworker = _coworkers[item.coworker.uid];
       }
       return CallHistorySummaryView(_fusionConnection, item);
-    }).toList();
+    }).toList());
+    return response;
   }
 
   @override
@@ -486,21 +516,35 @@ class _ContactsListState extends State<ContactsList> {
             decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(16))),
-            padding: EdgeInsets.only(top: 16, left: 12, right: 12, bottom: 0),
-            child: Column(children: [
+            padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
+            child: Stack(children: [
+              Expanded(
+                  child: Container(
+                      padding: EdgeInsets.only(top: 00),
+                      child: CustomScrollView(
+                          slivers: [
+                            SliverList(delegate: SliverChildListDelegate(_historyList()))
+                          ]))),
               Container(
-                  margin: EdgeInsets.only(
+                  decoration: BoxDecoration(
+                      boxShadow: [],
+                       borderRadius: BorderRadius.all(Radius.circular(16)),
+                      gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: [0.5, 1.0],
+                          colors: [Colors.white, translucentWhite(0.0)])
+                  ),
+                  height: 60,
+                  padding: EdgeInsets.only(
                     bottom: 24,
-                    left: 4,
+                    top:12,
+                    left: 16,
                   ),
                   child: Align(
                       alignment: Alignment.topLeft,
                       child:
                           Text(_label.toUpperCase(), style: headerTextStyle))),
-              Expanded(
-                  child: CustomScrollView(slivers: [
-                SliverList(delegate: SliverChildListDelegate(_historyList()))
-              ]))
             ])));
   }
 }
