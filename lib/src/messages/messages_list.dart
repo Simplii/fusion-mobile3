@@ -100,14 +100,37 @@ class _MessagesListState extends State<MessagesList> {
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
   String _selectedGroupId = "-2";
+  int _page = 0;
+
+  _loadMore() {
+    if (_page >= 0 && lookupState != 1) {
+      _page += 1;
+      _lookupMessages();
+    }
+  }
 
   _lookupMessages() {
     lookupState = 1;
-    _fusionConnection.conversations.getConversations(_selectedGroupId,
-        (List<SMSConversation> convos) {
+    _fusionConnection.conversations
+        .getConversations(_selectedGroupId, 100, _page * 100,
+            (List<SMSConversation> convos, bool fromServer) {
       this.setState(() {
-        lookupState = 2;
-        _convos = convos;
+        if (fromServer) {
+          lookupState = 2;
+        }
+
+        if (_page == 0) {
+          _convos = convos;
+        } else {
+          Map<String, SMSConversation> allconvos = {};
+          for (SMSConversation s in _convos) allconvos[s.getId()] = s;
+          for (SMSConversation s in convos) allconvos[s.getId()] = s;
+          _convos = allconvos.values.toList().cast<SMSConversation>();
+        }
+
+        if (convos.length < 100 && fromServer) {
+          _page = -1;
+        }
       });
     });
   }
@@ -120,6 +143,7 @@ class _MessagesListState extends State<MessagesList> {
 
   _changeGroup(String newGroupId) {
     _selectedGroupId = newGroupId;
+    _page = 0;
     _lookupMessages();
   }
 
@@ -147,15 +171,47 @@ class _MessagesListState extends State<MessagesList> {
     if (lookupState == 0) {
       _lookupMessages();
     }
-    print("lookupstate : " + lookupState.toString());
+
     return Expanded(
         child: Container(
             decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(16))),
-            padding: EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
-            child: Column(children: [
+            padding: EdgeInsets.all(0),
+            //EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
+            child: Stack(children: [
+              Column(children: [
+                Expanded(
+                    child: ListView.builder(
+                        itemCount:
+                            _page == -1 ? _convos.length : _convos.length + 2,
+                        itemBuilder: (BuildContext context, int index) {
+                          if (index == 0) {
+                            return Container(height: 60);
+                          } else if (index >= _convos.length &&
+                              lookupState != 1) {
+                            _loadMore();
+                            return Container(height: 30);
+                          } else if (_convos.length > index + 1) {
+                            return SMSConversationSummaryView(
+                                _fusionConnection, _convos[index + 1]);
+                          } else {
+                            return Container();
+                          }
+                        }))
+              ]),
               Container(
+                  height: 80,
+                  padding:
+                      EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
+                  decoration: BoxDecoration(
+                      boxShadow: [],
+                       borderRadius: BorderRadius.all(Radius.circular(16)),
+                      gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: [0.5, 1.0],
+                          colors: [Colors.white, translucentWhite(0.0)])),
                   margin: EdgeInsets.only(bottom: 24),
                   child: Row(children: [
                     Expanded(
@@ -184,10 +240,6 @@ class _MessagesListState extends State<MessagesList> {
                           ),
                         ))
                   ])),
-              Expanded(
-                  child: CustomScrollView(slivers: [
-                SliverList(delegate: SliverChildListDelegate(_messagesList()))
-              ]))
             ])));
   }
 }
@@ -224,7 +276,7 @@ class _SMSConversationSummaryViewState
         DateTime.fromMillisecondsSinceEpoch(_convo.message.unixtime * 1000);
 
     return Container(
-        margin: EdgeInsets.only(bottom: 18),
+        margin: EdgeInsets.only(bottom: 18, left: 16, right: 16),
         child: Row(children: [
           ContactCircle(_convo.contacts, _convo.crmContacts),
           Expanded(
@@ -241,7 +293,7 @@ class _SMSConversationSummaryViewState
                     Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
-                          margin: EdgeInsets.only(top: 4),
+                            margin: EdgeInsets.only(top: 4),
                             decoration: BoxDecoration(
                               color: Color.fromARGB(255, 243, 242, 242),
                               borderRadius:

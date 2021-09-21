@@ -1,4 +1,5 @@
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'dart:convert' as convert;
 
 import 'contact.dart';
 import 'fusion_model.dart';
@@ -18,6 +19,44 @@ class CrmContact extends FusionModel {
   String url;
   String phone_number;
   String company;
+
+  String serialize() {
+    return convert.jsonEncode({
+    'additions': this.additions,
+      // skipping to avoid loops
+    //'contact': this.contact != null ? this.contact.serialize() : null,
+    'crm': this.crm,
+    'emails': this.emails,
+    'icon': this.icon,
+    'id': this.id,
+    'nid': this.nid,
+    'label': this.label,
+    'module': this.module,
+    'name': this.name,
+    'url': this.url,
+    'phone_number': this.phone_number,
+    'company': this.company,
+    });
+  }
+
+  CrmContact.unserialize(String data) {
+    Map<String, dynamic> obj = convert.jsonDecode(data);
+    this.additions = obj['additions'].cast<Map<String, String>>();
+    if (obj['contact'] != null)
+      this.contact = Contact.unserialize(obj['contact']);
+    this.crm = obj['crm'];
+    this.emails = obj['emails'].cast<String>();
+    this.icon = obj['icon'];
+    this.id = obj['id'];
+    this.nid = obj['nid'];
+    this.label = obj['label'];
+    this.module = obj['module'];
+    this.name = obj['name'];
+    this.url = obj['url'];
+    this.phone_number = obj['phone_number'];
+    this.company = obj['company'];
+
+  }
 
   CrmContact.fromExpanded(Map<String, dynamic> contactObject) {
     if (contactObject['contact'] != null) {
