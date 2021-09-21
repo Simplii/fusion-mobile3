@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
@@ -347,6 +348,18 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     return (item.firstName + item.lastName).trim()[0].toLowerCase();
   }
 
+  _spinner() {
+    return
+      Container(
+          alignment: Alignment.center,
+          padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
+          child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
+  }
+
+  _isSpinning() {
+    return lookupState < 2 && _contacts.length == 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_lookedUpQuery != _query) {
@@ -364,8 +377,10 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                 borderRadius: BorderRadius.all(Radius.circular(16))),
             padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
             child: Stack(children: [
-              Expanded(
-                  child: ListView.builder(
+              Container(
+                  child: _isSpinning()
+                      ? _spinner()
+                      : ListView.builder(
                       itemCount:
                           _page == -1 ? _contacts.length : _contacts.length + 1,
                       itemBuilder: (BuildContext context, int index) {
@@ -502,6 +517,18 @@ class _ContactsListState extends State<ContactsList> {
     return response;
   }
 
+  _spinner() {
+    return
+      Container(
+          alignment: Alignment.center,
+          padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
+          child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
+  }
+
+  _isSpinning() {
+    return lookupState < 2 && _history.length == 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_lookedUpTab != _selectedTab) {
@@ -518,8 +545,10 @@ class _ContactsListState extends State<ContactsList> {
                 borderRadius: BorderRadius.all(Radius.circular(16))),
             padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
             child: Stack(children: [
-              Expanded(
-                  child: Container(
+              Container(
+                  child: _isSpinning()
+                      ? _spinner()
+                      : Container(
                       padding: EdgeInsets.only(top: 00),
                       child: CustomScrollView(
                           slivers: [
@@ -670,7 +699,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     return Container(
         height: _expanded ? 132 : 76,
         padding: EdgeInsets.all(4),
-        margin: EdgeInsets.only(bottom: 0),
+        margin: EdgeInsets.only(bottom: 0, left: 12, right: 12),
         decoration: _expanded
             ? BoxDecoration(
                 color: particle,
