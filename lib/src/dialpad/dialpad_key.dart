@@ -4,7 +4,7 @@ class DialPadKey extends StatefulWidget {
   DialPadKey({Key key, this.onPressed, this.digit, this.alphas})
       : super(key: key);
 
-  final VoidCallback onPressed;
+  final Function(String) onPressed;
   final digit;
   final alphas;
 
@@ -17,13 +17,17 @@ class _DialPadKeyState extends State<DialPadKey> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: TextButton(
-          onPressed: widget.onPressed,
-          child: Column(children: [
-            Text(widget.digit, style: digitStyling),
-            Text(widget.alphas)
-          ]))
-    );
+    return Expanded(
+        child: RawMaterialButton(
+            shape: CircleBorder(),
+            onPressed: () {
+              widget.onPressed(widget.digit);
+            },
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(widget.digit, style: digitStyling),
+                  Text(widget.alphas)
+                ])));
   }
 }

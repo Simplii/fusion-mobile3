@@ -15,16 +15,21 @@ class CallActionButton extends StatefulWidget {
 class _CallActionButtonState extends State<CallActionButton> {
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: widget.onPressed,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(widget.icon, color: Colors.white),
-          Text(widget.title.toUpperCase(),
-              style: TextStyle(color: Color.fromARGB(127, 0, 0, 0)))
-        ],
+    return Expanded(
+        child: GestureDetector(
+      onTap: widget.onPressed,
+      child: Container(
+        width: 64,
+        height: 64,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(widget.icon, color: Colors.white),
+            Text(widget.title.toUpperCase(),
+                style: TextStyle(color: Color.fromARGB(127, 0, 0, 0)))
+          ],
+        ),
       ),
-    );
+    ));
   }
 }
