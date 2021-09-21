@@ -39,6 +39,7 @@ dependencies:
   modal_bottom_sheet: ^2.0.0
   sqflite:
   path:
+  flutter_spinkit: ^5.1.0
 
 dev_dependencies:
   flutter_test:

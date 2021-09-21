@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
@@ -336,7 +337,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     _fusionConnection.messages.getMessages(_conversation, 200, 0,
         (List<SMSMessage> messages, fromServer) {
       this.setState(() {
-        lookupState = 2;
+        if (fromServer) lookupState = 2;
         _messages = messages;
       });
     });
@@ -348,7 +349,9 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
             alignment: Alignment.center,
             padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
             //constraints: BoxConstraints(maxWidth: 170),
-            child: Text(
+            child: this.lookupState < 2
+                ? Center(child: SpinKitThreeBounce(color: smoke, size: 50))
+                : Text(
                 "This is the beginning of your text history with " + _conversation.contactName(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
