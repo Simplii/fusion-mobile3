@@ -204,6 +204,10 @@ class FusionConnection {
     return _username;
   }
 
+  getExtension() {
+    return _extension;
+  }
+
   getDomain() {
     return _domain;
   }
