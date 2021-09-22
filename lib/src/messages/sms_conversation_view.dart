@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
@@ -8,7 +11,9 @@ import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../backend/fusion_connection.dart';
 import '../styles.dart';
@@ -31,6 +36,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   SMSConversation get _conversation => widget._smsConversation;
   TextEditingController _messageInputController = TextEditingController();
   bool _loaded = false;
+  List<XFile> _mediaToSend = [];
 
   initState() {
     if (_fusionConnection.smsDepartments.lookupRecord("-2") != null) {
@@ -180,52 +186,162 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             label: "Their phone number"));
   }
 
+  _attachImage(String source) {
+    final ImagePicker _picker = ImagePicker();
+    if (source == "camera") {
+      _picker.pickImage(source: ImageSource.camera).then((XFile file) {
+        this.setState(() {
+          _mediaToSend.add(file);
+        });
+      });
+    } else {
+      _picker.pickMultiImage().then((List<XFile> images) {
+        this.setState(() {
+          _mediaToSend = images;
+        });
+      });
+    }
+  }
+
+  _mediaToSendViews() {
+    return _mediaToSend
+        .map((XFile media) {
+          return Container(
+              margin: EdgeInsets.only(right: 8),
+              child: Stack(alignment: Alignment.topRight, children: [
+                ClipRRect(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(4),
+                        topRight: Radius.circular(4),
+                        bottomLeft: Radius.circular(4),
+                        bottomRight: Radius.circular(4)),
+                    child: Image.file(File(media.path), height: 100)),
+                GestureDetector(
+                    onTap: () {
+                      this.setState(() {
+                        _mediaToSend.remove(media);
+                      });
+                    },
+                    child: Container(
+                        alignment: Alignment.center,
+                        margin: EdgeInsets.only(top: 8, right: 8),
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                            color: char,
+                            borderRadius: BorderRadius.all(Radius.circular(11)),
+                            border: Border.all(color: Colors.white, width: 2)),
+                        child: Icon(CupertinoIcons.xmark,
+                            color: Colors.white, size: 12)))
+              ]));
+        })
+        .toList()
+        .cast<Widget>();
+  }
+
   _sendMessageInput() {
     return Container(
-        height: 64,
         decoration: BoxDecoration(color: particle),
         padding: EdgeInsets.only(top: 12, left: 8, bottom: 12, right: 8),
         child: Row(children: [
+          FusionDropdown(
+              onChange: (String value) {
+                _attachImage(value);
+              },
+              value: "",
+              options: [
+                ["Camera", "camera"],
+                ["Photos", "photos"]
+              ],
+              label: "From which source?",
+              button: Container(
+                  height: 18,
+                  width: 22,
+                  margin: EdgeInsets.only(right: 12, left: 4, top: 0),
+                  child: IconButton(
+                      padding: EdgeInsets.all(0),
+                      icon: Image.asset("assets/icons/camera.png",
+                          height: 18, width: 22)))),
           Expanded(
-              child: Container(
-                  height: 40,
+              child: Stack(children: [
+            if (_mediaToSend.length > 0)
+              Container(
+                  height: 120,
+                  padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border.all(
                           color: Color.fromARGB(255, 229, 227, 227), width: 1),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        bottomLeft: Radius.circular(8),
-                        bottomRight: Radius.circular(8),
-                      )),
-                  child: TextField(
-                    controller: _messageInputController,
-                    decoration: const InputDecoration(
-                        contentPadding:
-                            EdgeInsets.only(left: 14, right: 14, top: -10),
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(
-                            fontSize: 14,
-                            color: Color.fromARGB(255, 153, 148, 149)),
-                        hintText: "Message"),
-                  ))),
+                      borderRadius:
+                          BorderRadius.only(topLeft: Radius.circular(8))),
+                  child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: _mediaToSendViews())),
+            Container(
+                padding: EdgeInsets.only(left: 14, right: 14, top: 0),
+                margin: EdgeInsets.only(top: _mediaToSend.length > 0 ? 119 : 0),
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(
+                        color: Color.fromARGB(255, 229, 227, 227), width: 1),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(_mediaToSend.length > 0 ? 0 : 8),
+                      bottomLeft: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
+                    )),
+                child: TextField(
+                  controller: _messageInputController,
+                  maxLines: 10,
+                  minLines: 1,
+                  onChanged: (String changedTo) {
+                    setState(() {});
+                  },
+                  decoration: const InputDecoration(
+                      contentPadding:
+                          EdgeInsets.only(left: 0, right: 0, top: 2, bottom: 2),
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: Color.fromARGB(255, 153, 148, 149)),
+                      hintText: "Message"),
+                ))
+          ])),
           Container(
               height: 40,
               width: 40,
               margin: EdgeInsets.only(left: 8),
               child: IconButton(
                 padding: EdgeInsets.all(0),
-                icon:
-                    Image.asset("assets/icons/send.png", height: 40, width: 40),
+                icon: Image.asset(
+                    _hasEnteredMessage()
+                        ? "assets/icons/send_active.png"
+                        : "assets/icons/send.png",
+                    height: 40,
+                    width: 40),
                 onPressed: _sendMessage,
               ))
         ]));
   }
 
+  _hasEnteredMessage() {
+    return _mediaToSend.length > 0 ||
+        _messageInputController.value.text.trim().length > 0;
+  }
+
   _sendMessage() {
-    _fusionConnection.messages
-        .sendMessage(_messageInputController.value.text, _conversation);
-    _messageInputController.text = "";
+    setState(() {
+      if (_messageInputController.value.text.trim().length > 0) {
+        _fusionConnection.messages
+            .sendMessage(_messageInputController.value.text, _conversation);
+        _messageInputController.text = "";
+      }
+      if (_mediaToSend.length > 0) {
+        for (XFile file in _mediaToSend) {
+          _fusionConnection.messages.sendMediaMessage(file, _conversation);
+          _mediaToSend.remove(file);
+        }
+      }
+    });
   }
 
   @override
@@ -346,21 +462,21 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   _newConvoMessage() {
     return [
       Container(
-            alignment: Alignment.center,
-            padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
-            //constraints: BoxConstraints(maxWidth: 170),
-            child: this.lookupState < 2
-                ? Center(child: SpinKitThreeBounce(color: smoke, size: 50))
-                : Text(
-                "This is the beginning of your text history with " + _conversation.contactName(),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: smoke,
-                    fontSize: 14,
-                    height: 1.4,
-                    fontWeight: FontWeight.w400,
-                    fontStyle: FontStyle.italic))
-          )
+          alignment: Alignment.center,
+          padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
+          //constraints: BoxConstraints(maxWidth: 170),
+          child: this.lookupState < 2
+              ? Center(child: SpinKitThreeBounce(color: smoke, size: 50))
+              : Text(
+                  "This is the beginning of your text history with " +
+                      _conversation.contactName(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: smoke,
+                      fontSize: 14,
+                      height: 1.4,
+                      fontWeight: FontWeight.w400,
+                      fontStyle: FontStyle.italic)))
     ];
   }
 
@@ -424,9 +540,8 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
       _lookupMessages();
     }
 
-    return ListView(children: _messages.length == 0
-        ? _newConvoMessage()
-        : _messagesList(),
+    return ListView(
+        children: _messages.length == 0 ? _newConvoMessage() : _messagesList(),
         reverse: true);
   }
 }
@@ -452,6 +567,87 @@ class _SMSMessageViewState extends State<SMSMessageView> {
   SMSMessage get _message => widget._message;
   final _searchInputController = TextEditingController();
 
+  _messageText(String message, TextStyle style) {
+    final urlRegExp = new RegExp(
+        r"((https?:www\.)|(https?:\/\/)|(www\.))[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,6}(\/[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)?");
+    final urlMatches = urlRegExp.allMatches(message).toList();
+
+    int start = 0;
+    List<TextSpan> texts = [];
+    print("urlmatches"+ urlMatches.toString());
+
+    for (RegExpMatch urlMatch in urlMatches) {
+          print("urlmatch" + urlMatch.toString() + ":" + urlMatch.start.toString() + ":" + urlMatch.end.toString());
+          if (urlMatch.start > start) {
+            texts.add(TextSpan(text: message.substring(start, urlMatch.start),
+                style: style));
+          }
+          TapGestureRecognizer recognizer = new TapGestureRecognizer();
+          recognizer.onTap = () {
+            print("launching :" + message.substring(urlMatch.start, urlMatch.end));
+            launch(message.substring(urlMatch.start, urlMatch.end));
+          };
+          texts.add(TextSpan(
+              text: message.substring(urlMatch.start, urlMatch.end),
+              style: TextStyle(color: crimsonLight),
+            recognizer: recognizer
+          ));
+          start = urlMatch.end;
+        }
+
+    texts.add(TextSpan(
+        text: message.substring(start),
+        style: style));
+
+    return new RichText(
+      text: TextSpan(
+        children: texts
+      )
+    );
+  }
+
+  _renderMessage() {
+    bool isFromMe = _message.from == _conversation.myNumber;
+    double maxWidth =
+        (MediaQuery.of(context).size.width - (isFromMe ? 0 : 40)) * 0.8;
+    return Align(
+        alignment: isFromMe ? Alignment.centerRight : Alignment.centerLeft,
+        child:
+            _message.mime != null && _message.mime.toString().contains('image')
+                ? ClipRRect(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(isFromMe ? 8 : 0),
+                        topRight: Radius.circular(isFromMe ? 0 : 8),
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8)),
+                    child: Container(
+                        constraints: BoxConstraints(
+                            minHeight: 100, maxWidth: maxWidth, maxHeight: 200),
+                        decoration: BoxDecoration(
+                            image: DecorationImage(
+                                fit: BoxFit.fill,
+                                image: NetworkImage(_message.message)))))
+                : Container(
+                    constraints: BoxConstraints(maxWidth: maxWidth),
+                    margin: EdgeInsets.only(top: 2),
+                    padding:
+                        EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
+                    decoration: BoxDecoration(
+                        color: isFromMe ? particle : coal,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(isFromMe ? 8 : 0),
+                          topRight: Radius.circular(isFromMe ? 0 : 8),
+                          bottomLeft: Radius.circular(8),
+                          bottomRight: Radius.circular(8),
+                        )),
+                    child: _messageText(_message.message,
+                         TextStyle(
+                            fontSize: 14,
+                            height: 1.4,
+                            fontWeight: FontWeight.w400,
+                            color: isFromMe ? coal : Colors.white))));
+  }
+
   @override
   Widget build(BuildContext context) {
     DateTime date =
@@ -469,24 +665,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
             child: Text(DateFormat.jm().format(date),
                 style: TextStyle(
                     fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
-        Align(
-            alignment: Alignment.centerLeft,
-            child: Container(
-                padding:
-                    EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
-                decoration: BoxDecoration(
-                    color: coal,
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    )),
-                child: Text(_message.message,
-                    style: TextStyle(
-                        fontSize: 14,
-                        height: 1.4,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white))))
+        _renderMessage()
       ])));
     } else {
       children.add(Expanded(
@@ -496,24 +675,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
             child: Text(DateFormat.jm().format(date),
                 style: TextStyle(
                     fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
-        Align(
-            alignment: Alignment.centerRight,
-            child: Container(
-                padding:
-                    EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
-                decoration: BoxDecoration(
-                    color: particle,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    )),
-                child: Text(_message.message,
-                    style: TextStyle(
-                        fontSize: 14,
-                        height: 1.4,
-                        fontWeight: FontWeight.w400,
-                        color: coal))))
+        _renderMessage()
       ])));
     }
 
