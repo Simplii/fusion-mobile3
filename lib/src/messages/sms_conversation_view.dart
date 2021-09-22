@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
@@ -27,8 +28,9 @@ import '../utils.dart';
 class SMSConversationView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final SMSConversation _smsConversation;
+  final Softphone _softphone;
 
-  SMSConversationView(this._fusionConnection, this._smsConversation, {Key key})
+  SMSConversationView(this._fusionConnection, this._softphone, this._smsConversation, {Key key})
       : super(key: key);
 
   @override
@@ -37,7 +39,7 @@ class SMSConversationView extends StatefulWidget {
 
 class _SMSConversationViewState extends State<SMSConversationView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
+  Softphone get _softphone => widget._softphone;
   SMSConversation get _conversation => widget._smsConversation;
   TextEditingController _messageInputController = TextEditingController();
   bool _loaded = false;
@@ -158,7 +160,10 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               width: 20,
               height: 20,
             ),
-            onPressed: () {}),
+            onPressed: () {
+              Navigator.pop(context);
+              widget._softphone.makeCall(_conversation.number);
+            }),
         FusionDropdown(
             onChange: (String chosen) {
               if (chosen == "contactprofile") {
@@ -169,7 +174,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                     backgroundColor: Colors.transparent,
                     isScrollControlled: true,
                     builder: (context) => ContactProfileView(
-                        _fusionConnection, _conversation.contacts[0])); });
+                        _fusionConnection, _softphone, _conversation.contacts[0])); });
               } else {
                 Future.delayed(Duration(milliseconds: 10), () {
                   _openMedia(null);

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
@@ -16,9 +17,10 @@ class MessageSearchResults extends StatefulWidget {
   final List<Contact> _contacts;
   final List<CrmContact> _crmContacts;
   final String _myNumber;
+  final Softphone _softphone;
 
   MessageSearchResults(this._myNumber, this._conversations, this._contacts,
-      this._crmContacts, this._fusionConnection,
+      this._crmContacts, this._fusionConnection, this._softphone,
       {Key key})
       : super(key: key);
 
@@ -28,6 +30,7 @@ class MessageSearchResults extends StatefulWidget {
 
 class _MessageSearchResults extends State<MessageSearchResults> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+  Softphone get _softphone => widget._softphone;
 
   List<SMSConversation> get _conversations => widget._conversations;
 
@@ -59,7 +62,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => SMSConversationView(_fusionConnection, convo));
+        builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo));
   }
 
   _contactBubbles() {
@@ -119,7 +122,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
 
   _messagesList() {
     return _conversations.map((SMSConversation convo) {
-      return SMSConversationSummaryView(_fusionConnection, convo);
+      return SMSConversationSummaryView(_fusionConnection, _softphone, convo);
     }).toList();
   }
 

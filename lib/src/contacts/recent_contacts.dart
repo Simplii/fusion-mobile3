@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
@@ -17,8 +18,9 @@ import 'contact_profile_view.dart';
 
 class RecentContactsTab extends StatefulWidget {
   final FusionConnection _fusionConnection;
+  final Softphone _softphone;
 
-  RecentContactsTab(this._fusionConnection, {Key key}) : super(key: key);
+  RecentContactsTab(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _RecentContactsTabState();
@@ -26,6 +28,7 @@ class RecentContactsTab extends StatefulWidget {
 
 class _RecentContactsTabState extends State<RecentContactsTab> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+  Softphone get _softphone => widget._softphone;
   SMSConversation openConversation = null;
   bool _showingResults = false;
   String _selectedTab = 'all';
@@ -104,8 +107,8 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
       }),
       !_showingResults ? _tabBar() : Container(),
       (_showingResults
-          ? ContactsSearchList(_fusionConnection, _query, _selectedTab)
-          : ContactsList(_fusionConnection, _getTitle(), _selectedTab))
+          ? ContactsSearchList(_fusionConnection, _softphone, _query, _selectedTab)
+          : ContactsList(_fusionConnection, _softphone, _getTitle(), _selectedTab))
     ];
     return Container(child: Column(children: children));
   }
@@ -113,10 +116,11 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
 
 class ContactsSearchList extends StatefulWidget {
   final FusionConnection _fusionConnection;
+  final Softphone _softphone;
   final String _query;
   final String _defaultTab;
 
-  ContactsSearchList(this._fusionConnection, this._query, this._defaultTab,
+  ContactsSearchList(this._fusionConnection, this._softphone, this._query, this._defaultTab,
       {Key key})
       : super(key: key);
 
@@ -126,6 +130,7 @@ class ContactsSearchList extends StatefulWidget {
 
 class _ContactsSearchListState extends State<ContactsSearchList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+  Softphone get _softphone => widget._softphone;
 
   String get _query => widget._query;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
@@ -269,7 +274,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => ContactProfileView(_fusionConnection, contact));
+        builder: (context) => ContactProfileView(_fusionConnection, _softphone, contact));
   }
 
   _resultRow(String letter, Contact contact) {
@@ -432,10 +437,11 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
 class ContactsList extends StatefulWidget {
   final FusionConnection _fusionConnection;
+  final Softphone _softphone;
   final String _label;
   final String _selectedTab;
 
-  ContactsList(this._fusionConnection, this._label, this._selectedTab,
+  ContactsList(this._fusionConnection, this._softphone, this._label, this._selectedTab,
       {Key key})
       : super(key: key);
 
@@ -445,7 +451,7 @@ class ContactsList extends StatefulWidget {
 
 class _ContactsListState extends State<ContactsList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
+  Softphone get _softphone => widget._softphone;
   String get _label => widget._label;
 
   String get _selectedTab => widget._selectedTab;
@@ -485,9 +491,11 @@ class _ContactsListState extends State<ContactsList> {
     });
 
     _fusionConnection.callHistory.getRecentHistory(0, 300,
-        (List<CallHistory> history) {
+        (List<CallHistory> history, bool fromServer) {
       this.setState(() {
-        lookupState = 2;
+        if (fromServer) {
+          lookupState = 2;
+        }
         _history = history;
       });
     });
@@ -511,7 +519,7 @@ class _ContactsListState extends State<ContactsList> {
       if (item.coworker != null && _coworkers[item.coworker.uid] != null) {
         item.coworker = _coworkers[item.coworker.uid];
       }
-      return CallHistorySummaryView(_fusionConnection, item);
+      return CallHistorySummaryView(_fusionConnection, _softphone, item);
     }).toList());
     return response;
   }
@@ -547,7 +555,9 @@ class _ContactsListState extends State<ContactsList> {
               Column(
                 children: [
                   Expanded(
-                      child: Container(
+                      child: _isSpinning()
+                          ? _spinner()
+                          : Container(
                           padding: EdgeInsets.only(top: 00),
                           child: CustomScrollView(slivers: [
                             SliverList(
@@ -579,8 +589,9 @@ class _ContactsListState extends State<ContactsList> {
 class CallHistorySummaryView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final CallHistory _historyItem;
+  final Softphone _softphone;
 
-  CallHistorySummaryView(this._fusionConnection, this._historyItem, {Key key})
+  CallHistorySummaryView(this._fusionConnection, this._softphone, this._historyItem, {Key key})
       : super(key: key);
 
   @override
@@ -589,7 +600,7 @@ class CallHistorySummaryView extends StatefulWidget {
 
 class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
+  Softphone get _softphone => widget._softphone;
   CallHistory get _historyItem => widget._historyItem;
   bool _expanded = false;
 
@@ -654,6 +665,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
         isScrollControlled: true,
         builder: (context) => SMSConversationView(
             _fusionConnection,
+            _softphone,
             SMSConversation.build(
                 contacts:
                     _historyItem.contact != null ? [_historyItem.contact] : [],
@@ -666,13 +678,19 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                     : _historyItem.fromDid)));
   }
 
+  _makeCall() {
+    _softphone.makeCall(
+      _historyItem.direction == "inbound" ? _historyItem.fromDid : _historyItem.toDid
+    );
+  }
+
   _openProfile() {
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            ContactProfileView(_fusionConnection, _historyItem.contact));
+            ContactProfileView(_fusionConnection, _softphone, _historyItem.contact));
   }
 
   @override
@@ -688,7 +706,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           margin: EdgeInsets.only(top: 12, bottom: 12),
           child: Row(children: [
             actionButton("Profile", "user_dark", 18, 18, _openProfile),
-            actionButton("Call", "phone_dark", 18, 18, () {}),
+            actionButton("Call", "phone_dark", 18, 18, _makeCall),
             actionButton("Message", "message_dark", 18, 18, _openMessage)
             // _actionButton("Video", "video_dark", 18, 18, () {}),
           ])));
