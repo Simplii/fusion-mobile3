@@ -129,6 +129,10 @@ class _MessagesListState extends State<MessagesList> {
           _convos = allconvos.values.toList().cast<SMSConversation>();
         }
 
+        _convos.sort((SMSConversation a, SMSConversation b) {
+          return DateTime.parse(a.lastContactTime).isAfter(DateTime.parse(b.lastContactTime)) ? -1 : 1;
+        });
+
         if (convos.length < 100 && fromServer) {
           _page = -1;
         }
