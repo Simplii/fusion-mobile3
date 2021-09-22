@@ -102,7 +102,7 @@ class Softphone implements SipUaHelperListener {
       'android': {
         'alertTitle': 'Permissions required',
         'alertDescription':
-            'This application needs to access your phone accounts',
+        'This application needs to access your phone accounts',
         'cancelButton': 'Cancel',
         'okButton': 'ok',
         'foregroundService': {
@@ -253,7 +253,9 @@ class Softphone implements SipUaHelperListener {
     }
 
     if (!callIdFound) {
-      int time = DateTime.now().millisecondsSinceEpoch;
+      int time = DateTime
+          .now()
+          .millisecondsSinceEpoch;
       bool matched = false;
       for (String tempUUID in _tempUUIDs.keys) {
         if (time - _tempUUIDs[tempUUID] < 10 * 1000) {
@@ -338,6 +340,10 @@ class Softphone implements SipUaHelperListener {
 
   _removeCall(Call call) {
     print("removing _call_ - " + call.id);
+    if (call == activeCall) {
+      activeCall = null;
+    }
+
     for (Call c in calls) {
       if (c == call || c.id == call.id) {
         calls.remove(c);
@@ -345,6 +351,8 @@ class Softphone implements SipUaHelperListener {
         _callKeep.endCall(_uuidFor(c));
       }
     }
+
+    _updateListeners();
   }
 
   _uuidFor(Call call) {
@@ -359,7 +367,9 @@ class Softphone implements SipUaHelperListener {
         _awaitingCall = "none";
       } else {
         print("_call setting temp uuid " + uuid);
-        _tempUUIDs[uuid] = DateTime.now().millisecondsSinceEpoch;
+        _tempUUIDs[uuid] = DateTime
+            .now()
+            .millisecondsSinceEpoch;
       }
       data['uuid'] = uuid;
       return uuid;
@@ -375,6 +385,7 @@ class Softphone implements SipUaHelperListener {
       return callData[id];
     } else {
       callData[id] = Map<String, dynamic>();
+      callData[id]['onHold'] = false;
       return callData[id];
     }
   }
@@ -409,7 +420,7 @@ class Softphone implements SipUaHelperListener {
         await _callKeep.hasDefaultPhoneAccount(_context, <String, dynamic>{
           'alertTitle': 'Permissions required',
           'alertDescription':
-              'This application needs to access your phone accounts',
+          'This application needs to access your phone accounts',
           'cancelButton': 'Cancel',
           'okButton': 'ok',
           'foregroundService': {
@@ -422,14 +433,14 @@ class Softphone implements SipUaHelperListener {
       }
       print("getting callpop info " + call.remote_identity);
       _fusionConnection.callpopInfos.lookupPhone(call.remote_identity,
-          (CallpopInfo data) {
-        _callKeep.updateDisplay(_uuidFor(call),
-            displayName: data.getName(defaul: call.remote_display_name),
-            handle: call.remote_identity);
-        _getCallDataById(call.id)['callPopInfo'] = data;
-        print("got callpop info");
-        print(data);
-      });
+              (CallpopInfo data) {
+            _callKeep.updateDisplay(_uuidFor(call),
+                displayName: data.getName(defaul: call.remote_display_name),
+                handle: call.remote_identity);
+            _getCallDataById(call.id)['callPopInfo'] = data;
+            print("got callpop info");
+            print(data);
+          });
 
       //    _callKeep.displayIncomingCall(_uuidFor(call), call.remote_identity,
       //        handleType: 'number', hasVideo: false);
@@ -446,13 +457,24 @@ class Softphone implements SipUaHelperListener {
     }
   }
 
+  getCallerName(Call call) {
+    return call.remote_display_name;
+  }
+
+  getCallerNumber(Call call) {
+    return call.remote_identity;
+  }
+
+  getCallRunTime(Call call) {
+    return "00;00";
+  }
+
+  getHoldState(Call call) {
+    return _getCallDataById(call.id)['onHold'];
+  }
+
   @override
   void callStateChanged(Call call, CallState callState) {
-    if (callState.state == CallStateEnum.HOLD ||
-        callState.state == CallStateEnum.UNHOLD) {
-      return;
-    }
-
     if (callState.state == CallStateEnum.MUTED) {
       return;
     }
@@ -499,9 +521,15 @@ class Softphone implements SipUaHelperListener {
         }
         break;
       case CallStateEnum.HOLD:
+        Map<String, dynamic> updatedCall = _getCallDataById(call.id);
+        updatedCall['onHold'] = true;
+
         _callKeep.setOnHold(_uuidFor(call), true);
         break;
       case CallStateEnum.UNHOLD:
+        Map<String, dynamic> updatedCall = _getCallDataById(call.id);
+        updatedCall['onHold'] = false;
+
         _callKeep.setOnHold(_uuidFor(call), false);
         break;
       case CallStateEnum.NONE:

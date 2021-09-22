@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
@@ -545,35 +544,34 @@ class _ContactsListState extends State<ContactsList> {
                 borderRadius: BorderRadius.all(Radius.circular(16))),
             padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
             child: Stack(children: [
+              Column(
+                children: [
+                  Expanded(
+                      child: Container(
+                          padding: EdgeInsets.only(top: 00),
+                          child: CustomScrollView(slivers: [
+                            SliverList(
+                                delegate: SliverChildListDelegate(_historyList()))
+                          ])))
+                ],
+              ),
               Container(
-                  child: _isSpinning()
-                      ? _spinner()
-                      : Container(
-                      padding: EdgeInsets.only(top: 00),
-                      child: CustomScrollView(
-                          slivers: [
-                            SliverList(delegate: SliverChildListDelegate(_historyList()))
-                          ]))),
-              Container(
+                  alignment: Alignment.topLeft,
                   decoration: BoxDecoration(
                       boxShadow: [],
-                       borderRadius: BorderRadius.all(Radius.circular(16)),
+                      borderRadius: BorderRadius.all(Radius.circular(16)),
                       gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           stops: [0.5, 1.0],
-                          colors: [Colors.white, translucentWhite(0.0)])
-                  ),
+                          colors: [Colors.white, translucentWhite(0.0)])),
                   height: 60,
                   padding: EdgeInsets.only(
                     bottom: 24,
-                    top:12,
+                    top: 12,
                     left: 16,
                   ),
-                  child: Align(
-                      alignment: Alignment.topLeft,
-                      child:
-                          Text(_label.toUpperCase(), style: headerTextStyle))),
+                  child: Text(_label.toUpperCase(), style: headerTextStyle)),
             ])));
   }
 }
