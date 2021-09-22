@@ -153,7 +153,7 @@ class Softphone implements SipUaHelperListener {
         c.mute();
       }
     }
-  }
+    }
 
   sendDtmf(Call call, String tone) {
     _callKeep.sendDTMF(_uuidFor(call), tone);

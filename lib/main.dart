@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
@@ -322,7 +323,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             floatingActionButton: _getFloatingButton(),
             bottomNavigationBar: Container(
-                height: 94.0,
+                height: Platform.isAndroid ? 60 : 94.0,
                 margin: EdgeInsets.only(top: 0, left: 16, right: 16, bottom: 0),
                 child: Column(
                   children: [

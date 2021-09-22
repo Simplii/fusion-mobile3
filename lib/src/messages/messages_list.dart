@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
@@ -128,6 +129,10 @@ class _MessagesListState extends State<MessagesList> {
           _convos = allconvos.values.toList().cast<SMSConversation>();
         }
 
+        _convos.sort((SMSConversation a, SMSConversation b) {
+          return DateTime.parse(a.lastContactTime).isAfter(DateTime.parse(b.lastContactTime)) ? -1 : 1;
+        });
+
         if (convos.length < 100 && fromServer) {
           _page = -1;
         }
@@ -166,6 +171,18 @@ class _MessagesListState extends State<MessagesList> {
     return options;
   }
 
+  _spinner() {
+    return
+      Container(
+          alignment: Alignment.center,
+          padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
+          child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
+  }
+
+  _isSpinning() {
+    return lookupState < 2 && _convos.length == 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (lookupState == 0) {
@@ -182,23 +199,26 @@ class _MessagesListState extends State<MessagesList> {
             child: Stack(children: [
               Column(children: [
                 Expanded(
-                    child: ListView.builder(
-                        itemCount:
-                            _page == -1 ? _convos.length : _convos.length + 2,
-                        itemBuilder: (BuildContext context, int index) {
-                          if (index == 0) {
-                            return Container(height: 60);
-                          } else if (index >= _convos.length &&
-                              lookupState != 1) {
-                            _loadMore();
-                            return Container(height: 30);
-                          } else if (_convos.length > index + 1) {
-                            return SMSConversationSummaryView(
-                                _fusionConnection, _convos[index + 1]);
-                          } else {
-                            return Container();
-                          }
-                        }))
+                    child: this._isSpinning()
+                        ? this._spinner()
+                        : ListView.builder(
+                            itemCount: _page == -1
+                                ? _convos.length
+                                : _convos.length + 2,
+                            itemBuilder: (BuildContext context, int index) {
+                              if (index == 0) {
+                                return Container(height: 60);
+                              } else if (index >= _convos.length &&
+                                  lookupState != 1) {
+                                _loadMore();
+                                return Container(height: 30);
+                              } else if (_convos.length > index + 1) {
+                                return SMSConversationSummaryView(
+                                    _fusionConnection, _convos[index - 1]);
+                              } else {
+                                return Container();
+                              }
+                            }))
               ]),
               Container(
                   height: 80,
@@ -206,7 +226,7 @@ class _MessagesListState extends State<MessagesList> {
                       EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
                   decoration: BoxDecoration(
                       boxShadow: [],
-                       borderRadius: BorderRadius.all(Radius.circular(16)),
+                      borderRadius: BorderRadius.all(Radius.circular(16)),
                       gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
