@@ -194,6 +194,7 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
   }
 
   sendMediaMessage(XFile file, SMSConversation conversation) async {
+    print("sendmediamessage");
     fusionConnection.apiV1Multipart("POST", "/chat/send_sms", {
       'number': conversation.myNumber,
       'schedule': 'false',
@@ -203,8 +204,7 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
       'to': conversation.number,
       'from_me': 'true',
       'destination': conversation.number,
-      'message': "",
-      'is_group': 'false'
+      'message': ""
     }, [
       http.MultipartFile.fromBytes(
           "file",
@@ -212,6 +212,7 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
           filename: basename(file.path),
           contentType: MediaType.parse(lookupMimeType(file.path)))
     ], callback: (Map<String, dynamic> data) {
+      print("gotresponse" + data.toString());
       SMSMessage message = SMSMessage(data);
       storeRecord(message);
     });

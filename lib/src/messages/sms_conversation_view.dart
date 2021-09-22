@@ -342,8 +342,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       if (_mediaToSend.length > 0) {
         for (XFile file in _mediaToSend) {
           _fusionConnection.messages.sendMediaMessage(file, _conversation);
-          _mediaToSend.remove(file);
         }
+        _mediaToSend = [];
       }
     });
   }
@@ -458,6 +458,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
         (List<SMSMessage> messages, fromServer) {
       this.setState(() {
         if (fromServer) lookupState = 2;
+        print("gotfromserver " + messages.length.toString() + " - " + (fromServer.toString()));
         _messages = messages;
       });
     });
@@ -492,6 +493,8 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     _messages.sort((SMSMessage m1, SMSMessage m2) {
       return m1.unixtime > m2.unixtime ? -1 : 1;
     });
+
+    print("allmessages" + _messages.length.toString());
 
     for (SMSMessage msg in _messages) {
       DateTime thisTime =
