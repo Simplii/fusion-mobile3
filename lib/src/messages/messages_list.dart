@@ -214,7 +214,7 @@ class _MessagesListState extends State<MessagesList> {
                                 return Container(height: 30);
                               } else if (_convos.length > index + 1) {
                                 return SMSConversationSummaryView(
-                                    _fusionConnection, _convos[index + 1]);
+                                    _fusionConnection, _convos[index - 1]);
                               } else {
                                 return Container();
                               }

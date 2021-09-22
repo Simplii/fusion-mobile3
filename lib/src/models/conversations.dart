@@ -212,7 +212,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       'group_id': groupId
     }, callback: (Map<String, dynamic> data) {
       List<SMSConversation> convos = [];
-      print(data);
+
       for (Map<String, dynamic> item in data['items']) {
         List<CrmContact> leads = [];
         List<Contact> contacts = [];
