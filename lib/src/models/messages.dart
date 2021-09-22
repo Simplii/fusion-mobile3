@@ -1,3 +1,8 @@
+import 'dart:io';
+
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart';
+
 import '../backend/fusion_connection.dart';
 import '../utils.dart';
 import 'carbon_date.dart';
@@ -5,6 +10,9 @@ import 'contact.dart';
 import 'conversations.dart';
 import 'crm_contact.dart';
 import 'fusion_model.dart';
+import 'package:mime/mime.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'fusion_store.dart';
 import 'dart:convert' as convert;
 
@@ -35,7 +43,7 @@ class SMSMessage extends FusionModel {
     this.fromMe = map['from_me'];
     this.id = map['id'].toString();
     this.isGroup = map['is_group'];
-    this.media = map['media'];
+    //this.media = map['media'];
     this.message = map['message'];
     this.messageStatus = map['message_status'];
     this.mime = map['mime'];
@@ -92,8 +100,7 @@ class SMSMessage extends FusionModel {
     if (obj['scheduledAt'] != null)
       this.scheduledAt = CarbonDate.unserialize(obj['scheduledAt']);
     this.smsWebhookId = obj['smsWebhookId'];
-    if (obj['time'] != null)
-      this.time = CarbonDate.unserialize(obj['time']);
+    if (obj['time'] != null) this.time = CarbonDate.unserialize(obj['time']);
     this.to = obj['to'];
     this.type = obj['type'];
     this.unixtime = obj['unixtime'];
@@ -169,7 +176,6 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     });
   }
 
-
   clearSubscription(name) {
     if (subscriptions.containsKey(name)) {
       subscriptions.remove(name);
@@ -185,6 +191,31 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     }
 
     persist(message);
+  }
+
+  sendMediaMessage(XFile file, SMSConversation conversation) async {
+    print("sendmediamessage");
+    fusionConnection.apiV1Multipart("POST", "/chat/send_sms", {
+      'number': conversation.myNumber,
+      'schedule': 'false',
+      'is_mms': 'true',
+      'from': conversation.myNumber,
+      'is_message': 'true',
+      'to': conversation.number,
+      'from_me': 'true',
+      'destination': conversation.number,
+      'message': ""
+    }, [
+      http.MultipartFile.fromBytes(
+          "file",
+          await file.readAsBytes(),
+          filename: basename(file.path),
+          contentType: MediaType.parse(lookupMimeType(file.path)))
+    ], callback: (Map<String, dynamic> data) {
+      print("gotresponse" + data.toString());
+      SMSMessage message = SMSMessage(data);
+      storeRecord(message);
+    });
   }
 
   sendMessage(String text, SMSConversation conversation) {
@@ -219,16 +250,21 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     List<Contact> matchedContacts = [];
 
     Function() _sendFromPersisted = () {
-      print("sending persisted" + matchedConversations.toString() + " " + matchedContacts.toString());
+      print("sending persisted" +
+          matchedConversations.toString() +
+          " " +
+          matchedContacts.toString());
       callback(matchedConversations, matchedCrmContacts, matchedContacts);
     };
 
-    fusionConnection.conversations.searchPersisted(query, "-2", 100, 0, (List<SMSConversation> convos, fromHttp) {
+    fusionConnection.conversations.searchPersisted(query, "-2", 100, 0,
+        (List<SMSConversation> convos, fromHttp) {
       matchedConversations = convos;
       _sendFromPersisted();
     });
 
-    fusionConnection.contacts.searchPersisted(query, 100, 0, (List<Contact> contacts, bool fromServer) {
+    fusionConnection.contacts.searchPersisted(query, 100, 0,
+        (List<Contact> contacts, bool fromServer) {
       matchedContacts = contacts;
       _sendFromPersisted();
     });
@@ -289,16 +325,19 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     });
   }
 
-  getPersisted(
-      SMSConversation convo , int limit, int offset, Function(List<SMSMessage>, bool) callback) {
-    fusionConnection.db.query(
-        'sms_message',
+  getPersisted(SMSConversation convo, int limit, int offset,
+      Function(List<SMSMessage>, bool) callback) {
+    fusionConnection.db.query('sms_message',
         limit: limit,
         offset: offset,
         where: '(`to` = ? and `from` = ?) or (`from` = ? and `to` = ?)',
         orderBy: "id desc",
-        whereArgs: [convo.myNumber, convo.number, convo.myNumber, convo.number])
-        .then((List<Map<String, dynamic>> results) {
+        whereArgs: [
+          convo.myNumber,
+          convo.number,
+          convo.myNumber,
+          convo.number
+        ]).then((List<Map<String, dynamic>> results) {
       List<SMSMessage> list = [];
       for (Map<String, dynamic> result in results) {
         list.add(SMSMessage.unserialize(result['raw']));
@@ -309,7 +348,6 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
 
   getMessages(SMSConversation convo, int limit, int offset,
       Function(List<SMSMessage> messages, bool fromServer) callback) {
-
     getPersisted(convo, limit, offset, callback);
     fusionConnection.apiV1Call("get", "/chat/conversation/messages", {
       'my_numbers': convo.myNumber,
