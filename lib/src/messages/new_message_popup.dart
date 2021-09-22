@@ -38,22 +38,21 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
   }
 
-  _search() {
+  _search(String value) {
     if (willSearch == 0) {
       willSearch = 1;
+
       Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
-        String query = _searchTextController.value.text;
         willSearch = 0;
+        String query = _searchTextController.value.text;
+
         if (query != _searchingFor) {
-          print("searching for " + query);
           _searchingFor = query;
           _fusionConnection.messages.search(query,
               (List<SMSConversation> convos, List<CrmContact> crmContacts,
                   List<Contact> contacts) {
-            print("got result" + query);
-            if (mounted) {
-              this.setState(() {
-                print("setting state" + query + _contacts.toString());
+            if (mounted && query == _searchingFor) {
+              setState(() {
                 _convos = convos;
                 _crmContacts = crmContacts;
                 _contacts = contacts;
@@ -117,7 +116,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                 height: 40,
                 child: TextField(
                     controller: _searchTextController,
-                    onChanged: _search(),
+                    onChanged: _search,
                     decoration: const InputDecoration(
                         border: InputBorder.none,
                         hintStyle: TextStyle(
@@ -194,11 +193,11 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                                       fontWeight: FontWeight.w400,
                                     ))))
                         : Container(),
-                    Container(
-                        child: _convos.length > 0
+                    Expanded(child: Container(
+                        child: _convos.length + _contacts.length + _crmContacts.length > 0
                             ? MessageSearchResults(myPhoneNumber, _convos,
                                 _contacts, _crmContacts, _fusionConnection)
-                            : Container())
+                            : Container()))
                   ])))
         ]));
   }

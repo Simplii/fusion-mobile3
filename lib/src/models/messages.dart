@@ -289,7 +289,7 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
       Map<String, dynamic> convoslist = {};
 
       if (data['agg']['conversations'] is List<dynamic>) {
-        convoslist = data['agg']['conversations'];
+        convoslist = {};//data['agg']['conversations'];
       }
 
       for (String key in convoslist.keys) {
@@ -313,10 +313,12 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
       List<SMSConversation> fullConversations = [];
       for (Map<String, dynamic> item in data['items']) {
         SMSMessage message = SMSMessage(item);
-        SMSConversation convo = conversations[item['conversation_id']];
-        SMSConversation newConvo = SMSConversation.copy(convo);
-        newConvo.message = message;
-        fullConversations.add(newConvo);
+        if (item['conversation_id'] != null && conversations.containsKey(item['conversation_id'])) {
+          SMSConversation convo = conversations[item['conversation_id']];
+          SMSConversation newConvo = SMSConversation.copy(convo);
+          newConvo.message = message;
+          fullConversations.add(newConvo);
+        }
       }
 
       print("calling callback " + fullConversations.toString());
