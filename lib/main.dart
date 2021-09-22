@@ -258,7 +258,7 @@ class _MyHomePageState extends State<MyHomePage> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => NewMessagePopup(fusionConnection));
+        builder: (context) => NewMessagePopup(fusionConnection, softphone));
   }
 
   void _loginSuccess(String username, String password) {
@@ -290,8 +290,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _getTabWidget() {
     return (_currentIndex == 0
-        ? RecentContactsTab(fusionConnection)
-        : MessagesTab(fusionConnection));
+        ? RecentContactsTab(fusionConnection, softphone)
+        : MessagesTab(fusionConnection, softphone));
   }
 
   @override

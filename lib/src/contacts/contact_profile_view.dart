@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
@@ -17,8 +18,9 @@ import '../utils.dart';
 class ContactProfileView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Contact _contact;
+  final Softphone _softphone;
 
-  ContactProfileView(this._fusionConnection, this._contact, {Key key})
+  ContactProfileView(this._fusionConnection, this._softphone, this._contact, {Key key})
       : super(key: key);
 
   @override
@@ -27,7 +29,7 @@ class ContactProfileView extends StatefulWidget {
 
 class _ContactProfileViewState extends State<ContactProfileView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
+  Softphone get _softphone => widget._softphone;
   Contact get _contact => widget._contact;
   TextEditingController _messageInputController = TextEditingController();
   String _selectedTab = 'profile';
@@ -184,7 +186,10 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     ]);
   }
 
-  _makeCall(String number) {}
+  _makeCall(String number) {
+    Navigator.pop(context);
+    _softphone.makeCall(number);
+  }
 
   _openMessage(String theirNumber) {
     String number =
@@ -196,6 +201,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
         isScrollControlled: true,
         builder: (context) => SMSConversationView(
             _fusionConnection,
+            _softphone,
             SMSConversation.build(
                 contacts: [_contact],
                 crmContacts: [],

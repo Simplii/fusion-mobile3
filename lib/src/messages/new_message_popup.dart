@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
@@ -14,8 +15,9 @@ import 'sms_conversation_view.dart';
 
 class NewMessagePopup extends StatefulWidget {
   final FusionConnection _fusionConnection;
+  final Softphone _softphone;
 
-  NewMessagePopup(this._fusionConnection, {Key key}) : super(key: key);
+  NewMessagePopup(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _NewMessagePopupState();
@@ -24,6 +26,7 @@ class NewMessagePopup extends StatefulWidget {
 class _NewMessagePopupState extends State<NewMessagePopup> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   final _searchTextController = TextEditingController();
+  Softphone get _softphone => widget._softphone;
   int willSearch = 0;
   List<SMSConversation> _convos = [];
   List<CrmContact> _crmContacts = [];
@@ -143,7 +146,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => SMSConversationView(_fusionConnection, convo));
+        builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo));
   }
 
   @override
@@ -196,7 +199,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                     Expanded(child: Container(
                         child: _convos.length + _contacts.length + _crmContacts.length > 0
                             ? MessageSearchResults(myPhoneNumber, _convos,
-                                _contacts, _crmContacts, _fusionConnection)
+                                _contacts, _crmContacts, _fusionConnection, _softphone)
                             : Container()))
                   ])))
         ]));
