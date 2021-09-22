@@ -11,6 +11,7 @@ MERGED from [:image_picker] C:\cygwin64\home\david\projects\fusion_mobile_revamp
 MERGED from [:flutter_plugin_android_lifecycle] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_plugin_android_lifecycle\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:firebase_messaging] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_messaging\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-46:12
 MERGED from [:callkeep] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\callkeep\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-10:12
+MERGED from [:url_launcher] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\url_launcher\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-14:12
 MERGED from [:flutter_keyboard_visibility] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_keyboard_visibility\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:path_provider] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\path_provider\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:android_intent_plus] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\android_intent_plus\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
@@ -231,6 +232,8 @@ MERGED from [:image_picker] C:\cygwin64\home\david\projects\fusion_mobile_revamp
 MERGED from [:image_picker] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\image_picker\intermediates\library_manifest\debug\AndroidManifest.xml:7:5-17:19
 MERGED from [:firebase_messaging] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_messaging\intermediates\library_manifest\debug\AndroidManifest.xml:11:5-44:19
 MERGED from [:firebase_messaging] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_messaging\intermediates\library_manifest\debug\AndroidManifest.xml:11:5-44:19
+MERGED from [:url_launcher] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\url_launcher\intermediates\library_manifest\debug\AndroidManifest.xml:7:5-12:19
+MERGED from [:url_launcher] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\url_launcher\intermediates\library_manifest\debug\AndroidManifest.xml:7:5-12:19
 MERGED from [:firebase_core] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_core\intermediates\library_manifest\debug\AndroidManifest.xml:7:5-13:19
 MERGED from [:firebase_core] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_core\intermediates\library_manifest\debug\AndroidManifest.xml:7:5-13:19
 MERGED from [com.google.firebase:firebase-core:19.0.0] C:\Users\david\.gradle\caches\transforms-2\files-2.1\271742e1cf4963998a819615c41eb25c\jetified-firebase-core-19.0.0\AndroidManifest.xml:7:5-20
@@ -357,6 +360,8 @@ MERGED from [:firebase_messaging] C:\cygwin64\home\david\projects\fusion_mobile_
 MERGED from [:firebase_messaging] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_messaging\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:callkeep] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\callkeep\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:callkeep] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\callkeep\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:url_launcher] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\url_launcher\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:url_launcher] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\url_launcher\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:flutter_keyboard_visibility] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_keyboard_visibility\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:flutter_keyboard_visibility] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_keyboard_visibility\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:path_provider] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\path_provider\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
@@ -595,6 +600,14 @@ ADDED from [:firebase_messaging] C:\cygwin64\home\david\projects\fusion_mobile_r
 		ADDED from [:firebase_messaging] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_messaging\intermediates\library_manifest\debug\AndroidManifest.xml:43:13-35
 	android:name
 		ADDED from [:firebase_messaging] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_messaging\intermediates\library_manifest\debug\AndroidManifest.xml:40:13-102
+activity#io.flutter.plugins.urllauncher.WebViewActivity
+ADDED from [:url_launcher] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\url_launcher\intermediates\library_manifest\debug\AndroidManifest.xml:8:9-11:74
+	android:exported
+		ADDED from [:url_launcher] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\url_launcher\intermediates\library_manifest\debug\AndroidManifest.xml:10:13-37
+	android:theme
+		ADDED from [:url_launcher] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\url_launcher\intermediates\library_manifest\debug\AndroidManifest.xml:11:13-71
+	android:name
+		ADDED from [:url_launcher] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\url_launcher\intermediates\library_manifest\debug\AndroidManifest.xml:9:13-74
 meta-data#com.google.firebase.components:io.flutter.plugins.firebase.core.FlutterFirebaseCoreRegistrar
 ADDED from [:firebase_core] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\firebase_core\intermediates\library_manifest\debug\AndroidManifest.xml:9:13-11:85
 	android:value
