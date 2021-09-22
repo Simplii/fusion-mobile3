@@ -361,6 +361,7 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
   String myPhoneNumber = "8014569812";
   String _query = "";
   int willSearch = 0;
+  String _searchingFor;
 
   Function() get _onClearSearch => widget._onClearSearch;
 
@@ -374,13 +375,14 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
     if (willSearch == 0) {
       willSearch = 1;
       Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
-        String query = _searchInputController.value.text;
         willSearch = 0;
+
+        String query = _searchInputController.value.text;
+        _searchingFor = query;
+
         _fusionConnection.messages.search(query, (List<SMSConversation> convos,
             List<CrmContact> crmContacts, List<Contact> contacts) {
-          willSearch = 0;
-
-          if (mounted) {
+          if (mounted && query == _searchingFor) {
             this._onHasResults(convos, crmContacts, contacts);
           }
         });
