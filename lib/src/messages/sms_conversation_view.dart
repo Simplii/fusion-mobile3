@@ -732,7 +732,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
 
     texts.add(TextSpan(text: message.substring(start), style: style));
 
-    return new RichText(text: TextSpan(children: texts));
+    return new SelectableText.rich(TextSpan(children: texts));
   }
 
   _renderMessage() {
