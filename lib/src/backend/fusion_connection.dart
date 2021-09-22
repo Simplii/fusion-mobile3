@@ -1,4 +1,5 @@
 import 'dart:convert' as convert;
+import 'dart:convert';
 import 'package:path/path.dart' as p;
 
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
@@ -161,6 +162,7 @@ class FusionConnection {
       }
 
       Function fn = {
+
         'post': client.post,
         'get': client.get,
         'patch': client.patch,
@@ -170,6 +172,7 @@ class FusionConnection {
 
       Map<Symbol, dynamic> args = {};
       String urlParams = '?';
+
 
       if (method.toLowerCase() == 'get') {
         for (String key in data.keys) {
@@ -182,13 +185,48 @@ class FusionConnection {
 
       Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
       print(url);
+
       print(args);
       var uriResponse = await Function.apply(fn, [url], args);
 
+
       print(url);
+
 
       var jsonResponse =
           convert.jsonDecode(uriResponse.body);
+
+      callback(jsonResponse);
+    } finally {
+      client.close();
+    }
+  }
+
+  apiV1Multipart(String method, String route, Map<String, dynamic> data, List<http.MultipartFile> files,
+      {Function callback}) async {
+    var client = http.Client();
+    try {
+      if (!data.containsKey('username')) {
+        data['username'] = _username;
+        data['password'] = _password;
+      }
+
+      Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route);
+      http.MultipartRequest request = new http.MultipartRequest(method, url);
+
+      for (String key in data.keys) {
+        request.fields[key] = data[key].toString();
+      }
+
+      for (http.MultipartFile file in files) {
+        request.files.add(file);
+      }
+
+      var uriResponse = await request.send();
+      String responseBody = await uriResponse.stream.transform(utf8.decoder).join();
+
+      var jsonResponse =
+          convert.jsonDecode(responseBody);
 
       callback(jsonResponse);
     } finally {
