@@ -1,17 +1,26 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 
 import '../styles.dart';
 import 'dialpad_key.dart';
 
 class DialPad extends StatefulWidget {
-  DialPad({Key key}) : super(key: key);
+  DialPad(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
+
+  final FusionConnection _fusionConnection;
+  final Softphone _softphone;
 
   @override
   State<StatefulWidget> createState() => _DialPadState();
 }
 
 class _DialPadState extends State<DialPad> {
+  FusionConnection get _fusionConnection => widget._fusionConnection;
+  Softphone get _softphone => widget._softphone;
+
   var dialedNumber = '';
 
   void handleDialPadKeyPress(String key) {
@@ -30,9 +39,11 @@ class _DialPadState extends State<DialPad> {
     });
   }
 
-  void placeCall() {}
+  void placeCall() {
+    _softphone.makeCall(dialedNumber);
+    Navigator.pop(context);
+  }
 
-  var digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'];
   var digitAlphas = [
     '',
     'ABC',
@@ -68,22 +79,40 @@ class _DialPadState extends State<DialPad> {
                     child: Icon(CupertinoIcons.delete_left_fill))
               ],
             ),
-            GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 3,
-              children: digits
-                  .asMap()
-                  .map((index, digit) => MapEntry(
-                      index,
-                      DialPadKey(
-                        onPressed: () {
-                          handleDialPadKeyPress(digit);
-                        },
-                        digit: digit,
-                        alphas: digitAlphas[index],
-                      )))
-                  .values
-                  .toList(),
+            ConstrainedBox(
+              constraints: BoxConstraints.tightFor(width: 350),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '1', alphas: digitAlphas[0]),
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '2', alphas: digitAlphas[1]),
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '3', alphas: digitAlphas[2]),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '4', alphas: digitAlphas[3]),
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '5', alphas: digitAlphas[4]),
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '6', alphas: digitAlphas[5]),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '7', alphas: digitAlphas[6]),
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '8', alphas: digitAlphas[7]),
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '9', alphas: digitAlphas[8]),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '*', alphas: digitAlphas[9]),
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '0', alphas: digitAlphas[10]),
+                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '#', alphas: digitAlphas[11]),
+                    ],
+                  ),
+                ],
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
