@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
@@ -16,8 +17,9 @@ import 'sms_conversation_view.dart';
 
 class MessagesTab extends StatefulWidget {
   final FusionConnection _fusionConnection;
+  final Softphone _softphone;
 
-  MessagesTab(this._fusionConnection, {Key key}) : super(key: key);
+  MessagesTab(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _MessagesTabState();
@@ -25,6 +27,7 @@ class MessagesTab extends StatefulWidget {
 
 class _MessagesTabState extends State<MessagesTab> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+  Softphone get _softphone => widget._softphone;
   SMSConversation openConversation = null;
   bool showingResults = false;
   List<SMSConversation> _convos = [];
@@ -71,17 +74,11 @@ class _MessagesTabState extends State<MessagesTab> {
                   padding:
                       EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
                   child: MessageSearchResults(_myNumber, _convos, _contacts,
-                      _crmContacts, _fusionConnection)))
+                      _crmContacts, _fusionConnection, _softphone)))
           : _loaded
-              ? MessagesList(_fusionConnection)
+              ? MessagesList(_fusionConnection, _softphone)
               : Container()
     ];
-    /*}
-    else {
-      children = [
-        SMSConversationView(_fusionConnection, openConversation)
-      ];
-    }*/
 
     return Container(child: Column(children: children));
   }
@@ -89,8 +86,9 @@ class _MessagesTabState extends State<MessagesTab> {
 
 class MessagesList extends StatefulWidget {
   final FusionConnection _fusionConnection;
+  final Softphone _softphone;
 
-  MessagesList(this._fusionConnection, {Key key}) : super(key: key);
+  MessagesList(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _MessagesListState();
@@ -98,6 +96,7 @@ class MessagesList extends StatefulWidget {
 
 class _MessagesListState extends State<MessagesList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+  Softphone get _softphone => widget._softphone;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
   String _selectedGroupId = "-2";
@@ -142,7 +141,7 @@ class _MessagesListState extends State<MessagesList> {
 
   _messagesList() {
     return _convos.map((convo) {
-      return SMSConversationSummaryView(_fusionConnection, convo);
+      return SMSConversationSummaryView(_fusionConnection, _softphone, convo);
     }).toList();
   }
 
@@ -214,7 +213,7 @@ class _MessagesListState extends State<MessagesList> {
                                 return Container(height: 30);
                               } else if (_convos.length > index + 1) {
                                 return SMSConversationSummaryView(
-                                    _fusionConnection, _convos[index - 1]);
+                                    _fusionConnection, _softphone, _convos[index - 1]);
                               } else {
                                 return Container();
                               }
@@ -266,9 +265,10 @@ class _MessagesListState extends State<MessagesList> {
 
 class SMSConversationSummaryView extends StatefulWidget {
   final FusionConnection _fusionConnection;
+  final Softphone _softphone;
   final SMSConversation _convo;
 
-  SMSConversationSummaryView(this._fusionConnection, this._convo, {Key key})
+  SMSConversationSummaryView(this._fusionConnection, this._softphone, this._convo, {Key key})
       : super(key: key);
 
   @override
@@ -278,6 +278,7 @@ class SMSConversationSummaryView extends StatefulWidget {
 class _SMSConversationSummaryViewState
     extends State<SMSConversationSummaryView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+  Softphone get _softphone => widget._softphone;
 
   SMSConversation get _convo => widget._convo;
   final _searchInputController = TextEditingController();
@@ -287,7 +288,7 @@ class _SMSConversationSummaryViewState
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => SMSConversationView(_fusionConnection, _convo));
+        builder: (context) => SMSConversationView(_fusionConnection, _softphone, _convo));
   }
 
   @override
@@ -361,6 +362,7 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
   String myPhoneNumber = "8014569812";
   String _query = "";
   int willSearch = 0;
+  String _searchingFor;
 
   Function() get _onClearSearch => widget._onClearSearch;
 
@@ -374,13 +376,14 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
     if (willSearch == 0) {
       willSearch = 1;
       Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
-        String query = _searchInputController.value.text;
         willSearch = 0;
+
+        String query = _searchInputController.value.text;
+        _searchingFor = query;
+
         _fusionConnection.messages.search(query, (List<SMSConversation> convos,
             List<CrmContact> crmContacts, List<Contact> contacts) {
-          willSearch = 0;
-
-          if (mounted) {
+          if (mounted && query == _searchingFor) {
             this._onHasResults(convos, crmContacts, contacts);
           }
         });
