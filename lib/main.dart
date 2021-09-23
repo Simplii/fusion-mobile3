@@ -9,6 +9,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_view.dart';
+import 'package:fusion_mobile_revamped/src/dialpad/dialpad_view.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:uuid/uuid.dart';
@@ -17,7 +18,6 @@ import 'src/backend/fusion_connection.dart';
 import 'src/backend/softphone.dart';
 import 'src/components/menu.dart';
 import 'src/contacts/recent_contacts.dart';
-import 'src/dialpad/dialpad.dart';
 import 'src/login.dart';
 import 'src/messages/messages_list.dart';
 import 'src/messages/new_message_popup.dart';
@@ -244,7 +244,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _openDialPad() {
     showBarModalBottomSheet(
         context: context,
-        builder: (context) => DialPad(fusionConnection, softphone));
+        builder: (context) => DialPadView(fusionConnection, softphone));
   }
 
   void _openCallView() {
