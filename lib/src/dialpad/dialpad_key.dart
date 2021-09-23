@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/styles.dart';
 
 class DialPadKey extends StatefulWidget {
   DialPadKey({Key key, this.onPressed, this.digit, this.alphas})
@@ -27,7 +28,7 @@ class _DialPadKeyState extends State<DialPadKey> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(widget.digit, style: digitStyling),
-                  Text(widget.alphas)
+                  Text(widget.alphas, style: TextStyle(color: smoke))
                 ])));
   }
 }
