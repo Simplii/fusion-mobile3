@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
@@ -14,8 +15,9 @@ import 'sms_conversation_view.dart';
 
 class NewMessagePopup extends StatefulWidget {
   final FusionConnection _fusionConnection;
+  final Softphone _softphone;
 
-  NewMessagePopup(this._fusionConnection, {Key key}) : super(key: key);
+  NewMessagePopup(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _NewMessagePopupState();
@@ -24,6 +26,7 @@ class NewMessagePopup extends StatefulWidget {
 class _NewMessagePopupState extends State<NewMessagePopup> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   final _searchTextController = TextEditingController();
+  Softphone get _softphone => widget._softphone;
   int willSearch = 0;
   List<SMSConversation> _convos = [];
   List<CrmContact> _crmContacts = [];
@@ -38,22 +41,21 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
   }
 
-  _search() {
+  _search(String value) {
     if (willSearch == 0) {
       willSearch = 1;
+
       Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
-        String query = _searchTextController.value.text;
         willSearch = 0;
+        String query = _searchTextController.value.text;
+
         if (query != _searchingFor) {
-          print("searching for " + query);
           _searchingFor = query;
           _fusionConnection.messages.search(query,
               (List<SMSConversation> convos, List<CrmContact> crmContacts,
                   List<Contact> contacts) {
-            print("got result" + query);
-            if (mounted) {
-              this.setState(() {
-                print("setting state" + query + _contacts.toString());
+            if (mounted && query == _searchingFor) {
+              setState(() {
                 _convos = convos;
                 _crmContacts = crmContacts;
                 _contacts = contacts;
@@ -117,7 +119,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                 height: 40,
                 child: TextField(
                     controller: _searchTextController,
-                    onChanged: _search(),
+                    onChanged: _search,
                     decoration: const InputDecoration(
                         border: InputBorder.none,
                         hintStyle: TextStyle(
@@ -144,7 +146,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => SMSConversationView(_fusionConnection, convo));
+        builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo));
   }
 
   @override
@@ -194,11 +196,11 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                                       fontWeight: FontWeight.w400,
                                     ))))
                         : Container(),
-                    Container(
-                        child: _convos.length > 0
+                    Expanded(child: Container(
+                        child: _convos.length + _contacts.length + _crmContacts.length > 0
                             ? MessageSearchResults(myPhoneNumber, _convos,
-                                _contacts, _crmContacts, _fusionConnection)
-                            : Container())
+                                _contacts, _crmContacts, _fusionConnection, _softphone)
+                            : Container()))
                   ])))
         ]));
   }

@@ -5,8 +5,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
+import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
@@ -26,8 +28,9 @@ import '../utils.dart';
 class SMSConversationView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final SMSConversation _smsConversation;
+  final Softphone _softphone;
 
-  SMSConversationView(this._fusionConnection, this._smsConversation, {Key key})
+  SMSConversationView(this._fusionConnection, this._softphone, this._smsConversation, {Key key})
       : super(key: key);
 
   @override
@@ -36,11 +39,12 @@ class SMSConversationView extends StatefulWidget {
 
 class _SMSConversationViewState extends State<SMSConversationView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
+  Softphone get _softphone => widget._softphone;
   SMSConversation get _conversation => widget._smsConversation;
   TextEditingController _messageInputController = TextEditingController();
   bool _loaded = false;
   List<XFile> _mediaToSend = [];
+  List<SMSMessage> _messages = [];
 
   initState() {
     if (_fusionConnection.smsDepartments.lookupRecord("-2") != null) {
@@ -51,6 +55,80 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         _loaded = true;
       });
     });
+  }
+
+  _openMedia(SMSMessage message) {
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: translucentBlack(0.3),
+        isScrollControlled: true,
+        builder: (context) {
+          return _mediaGallery(message);
+        });
+  }
+
+  _mediaGallery(SMSMessage activeMessage) {
+    List<SMSMessage> galleryItems = _messages
+        .where((SMSMessage message) {
+          return message.mime != null && message.mime.contains("image") ||
+              message.mime.contains("video");
+        })
+        .toList()
+        .cast<SMSMessage>();
+    int currentPage = 0;
+
+    int index = 0;
+    for (SMSMessage m in galleryItems) {
+      if (m == activeMessage) currentPage = index;
+      index += 1;
+    }
+
+    PageController pageController = PageController(initialPage: currentPage);
+
+    print("messageslength" + galleryItems.length.toString());
+
+    return BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+        child: Container(
+            decoration: BoxDecoration(color: Colors.transparent),
+            child: PhotoViewGallery.builder(
+              scrollPhysics: const BouncingScrollPhysics(),
+              builder: (BuildContext context, int index) {
+                SMSMessage message = galleryItems[index];
+                if (message.mime.contains("image"))
+                  return PhotoViewGalleryPageOptions(
+                    imageProvider: NetworkImage(message.message),
+                    initialScale: PhotoViewComputedScale.contained * 0.8,
+                    heroAttributes:
+                        PhotoViewHeroAttributes(tag: galleryItems[index].id),
+                  );
+                else
+                  return PhotoViewGalleryPageOptions.customChild(
+                      initialScale: PhotoViewComputedScale.contained * 0.8,
+                      heroAttributes:
+                          PhotoViewHeroAttributes(tag: galleryItems[index].id),
+                      child: VideoPlayer(
+                          VideoPlayerController.network(message.message)));
+              },
+              itemCount: galleryItems.length,
+              loadingBuilder: (context, event) => Center(
+                child: Container(
+                  width: 20.0,
+                  height: 20.0,
+                  child: CircularProgressIndicator(
+                    value: event == null
+                        ? 0
+                        : event.cumulativeBytesLoaded /
+                            event.expectedTotalBytes,
+                  ),
+                ),
+              ),
+              backgroundDecoration: BoxDecoration(color: Colors.transparent),
+              pageController: pageController,
+              onPageChanged: (int page) {
+                print("page changed" + page.toString());
+              },
+            )));
   }
 
   _header() {
@@ -82,15 +160,44 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               width: 20,
               height: 20,
             ),
-            onPressed: () {}),
-        IconButton(
-            iconSize: 32,
-            icon: Image.asset(
-              "assets/icons/three_dots.png",
-              width: 4,
-              height: 16,
-            ),
-            onPressed: () {})
+            onPressed: () {
+              Navigator.pop(context);
+              widget._softphone.makeCall(_conversation.number);
+            }),
+        FusionDropdown(
+            onChange: (String chosen) {
+              if (chosen == "contactprofile") {
+                print("contactprofile");
+                Future.delayed(Duration(milliseconds: 10), () {
+                showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    builder: (context) => ContactProfileView(
+                        _fusionConnection, _softphone, _conversation.contacts[0])); });
+              } else {
+                Future.delayed(Duration(milliseconds: 10), () {
+                  _openMedia(null);
+                });
+              }
+            },
+            value: "",
+            options: _conversation.contacts.length > 0
+                ? [
+                    ["Open Contact Profile", "contactprofile"],
+                    ["Shared Media", "sharedmedia"]
+                  ]
+                : [
+                    ["Shared Media", "sharedmedia"]
+                  ],
+            label: _conversation.contactName(),
+            button: IconButton(
+                iconSize: 32,
+                icon: Image.asset(
+                  "assets/icons/three_dots.png",
+                  width: 4,
+                  height: 16,
+                )))
       ]),
       Row(children: [horizontalLine(16)]),
       Row(children: [
@@ -382,7 +489,10 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                               Expanded(
                                   child: _loaded
                                       ? ConvoMessagesList(
-                                          _fusionConnection, _conversation)
+                                          _fusionConnection, _conversation,
+                                          (List<SMSMessage> messages) {
+                                          _messages = messages;
+                                        }, _openMedia)
                                       : Container())
                             ]))),
                   ]))),
@@ -396,8 +506,12 @@ class _SMSConversationViewState extends State<SMSConversationView> {
 class ConvoMessagesList extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final SMSConversation _conversation;
+  final Function(List<SMSMessage>) _onPulledMessages;
+  final Function(SMSMessage) _openMedia;
 
-  ConvoMessagesList(this._fusionConnection, this._conversation, {Key key})
+  ConvoMessagesList(this._fusionConnection, this._conversation,
+      this._onPulledMessages, this._openMedia,
+      {Key key})
       : super(key: key);
 
   @override
@@ -408,6 +522,8 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   SMSConversation get _conversation => widget._conversation;
 
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
+  Function(SMSMessage) get _openMedia => widget._openMedia;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSMessage> _messages = [];
   String _subscriptionKey;
@@ -458,8 +574,12 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
         (List<SMSMessage> messages, fromServer) {
       this.setState(() {
         if (fromServer) lookupState = 2;
-        print("gotfromserver " + messages.length.toString() + " - " + (fromServer.toString()));
+        print("gotfromserver " +
+            messages.length.toString() +
+            " - " +
+            (fromServer.toString()));
         _messages = messages;
+        widget._onPulledMessages(_messages);
       });
     });
   }
@@ -520,80 +640,13 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
           horizontalLine(8)
         ]);
       }
-      list.add(SMSMessageView(_fusionConnection, msg, _conversation, (SMSMessage message) { _openMedia(message); }));
+      list.add(SMSMessageView(_fusionConnection, msg, _conversation,
+          (SMSMessage message) {
+        _openMedia(message);
+      }));
     }
 
     return list;
-  }
-
-  _openMedia(SMSMessage message) {
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: translucentBlack(0.3),
-        isScrollControlled: true,
-        builder: (context)  {
-          return _mediaGallery(message);
-        }
-    );
-  }
-
-  _mediaGallery(SMSMessage activeMessage) {
-    List<SMSMessage> galleryItems = _messages
-        .where((SMSMessage message) {
-      return message.mime != null
-          && message.mime.contains("image") || message.mime.contains("video"); })
-        .toList()
-        .cast<SMSMessage>();
-    int currentPage = 0;
-
-    int index = 0;
-    for (SMSMessage m in galleryItems) {
-      if (m == activeMessage)
-        currentPage = index;
-      index += 1;
-    }
-
-    PageController pageController = PageController(initialPage: currentPage);
-
-        print("messageslength" + galleryItems.length.toString());
-
-     return BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-    child: Container(
-       decoration: BoxDecoration(color: Colors.transparent),
-         child: PhotoViewGallery.builder(
-      scrollPhysics: const BouncingScrollPhysics(),
-      builder: (BuildContext context, int index) {
-        SMSMessage message = galleryItems[index];
-        if (message.mime.contains("image"))
-          return PhotoViewGalleryPageOptions(
-            imageProvider: NetworkImage(message.message),
-            initialScale: PhotoViewComputedScale.contained * 0.8,
-            heroAttributes: PhotoViewHeroAttributes(tag: galleryItems[index].id),
-          );
-        else
-          return PhotoViewGalleryPageOptions.customChild(
-            initialScale: PhotoViewComputedScale.contained * 0.8,
-            heroAttributes: PhotoViewHeroAttributes(tag: galleryItems[index].id),
-            child: VideoPlayer(VideoPlayerController.network(message.message)));
-      },
-      itemCount: galleryItems.length,
-      loadingBuilder: (context, event) => Center(
-        child: Container(
-          width: 20.0,
-          height: 20.0,
-          child: CircularProgressIndicator(
-            value: event == null
-                ? 0
-                : event.cumulativeBytesLoaded / event.expectedTotalBytes,
-          ),
-        ),
-      ),
-      backgroundDecoration: BoxDecoration(color: Colors.transparent),
-      pageController: pageController,
-      onPageChanged: (int page) {print("page changed" + page.toString()); },
-    ))
-  );
   }
 
   @override
@@ -629,7 +682,8 @@ class SMSMessageView extends StatefulWidget {
   final SMSConversation _conversation;
   final Function(SMSMessage) _openMedia;
 
-  SMSMessageView(this._fusionConnection, this._message, this._conversation, this._openMedia,
+  SMSMessageView(this._fusionConnection, this._message, this._conversation,
+      this._openMedia,
       {Key key})
       : super(key: key);
 
@@ -656,36 +710,34 @@ class _SMSMessageViewState extends State<SMSMessageView> {
 
     int start = 0;
     List<TextSpan> texts = [];
-    print("urlmatches"+ urlMatches.toString());
+    print("urlmatches" + urlMatches.toString());
 
     for (RegExpMatch urlMatch in urlMatches) {
-          print("urlmatch" + urlMatch.toString() + ":" + urlMatch.start.toString() + ":" + urlMatch.end.toString());
-          if (urlMatch.start > start) {
-            texts.add(TextSpan(text: message.substring(start, urlMatch.start),
-                style: style));
-          }
-          TapGestureRecognizer recognizer = new TapGestureRecognizer();
-          recognizer.onTap = () {
-            print("launching :" + message.substring(urlMatch.start, urlMatch.end));
-            launch(message.substring(urlMatch.start, urlMatch.end));
-          };
-          texts.add(TextSpan(
-              text: message.substring(urlMatch.start, urlMatch.end),
-              style: TextStyle(color: crimsonLight),
-            recognizer: recognizer
-          ));
-          start = urlMatch.end;
-        }
+      print("urlmatch" +
+          urlMatch.toString() +
+          ":" +
+          urlMatch.start.toString() +
+          ":" +
+          urlMatch.end.toString());
+      if (urlMatch.start > start) {
+        texts.add(TextSpan(
+            text: message.substring(start, urlMatch.start), style: style));
+      }
+      TapGestureRecognizer recognizer = new TapGestureRecognizer();
+      recognizer.onTap = () {
+        print("launching :" + message.substring(urlMatch.start, urlMatch.end));
+        launch(message.substring(urlMatch.start, urlMatch.end));
+      };
+      texts.add(TextSpan(
+          text: message.substring(urlMatch.start, urlMatch.end),
+          style: TextStyle(color: crimsonLight),
+          recognizer: recognizer));
+      start = urlMatch.end;
+    }
 
-    texts.add(TextSpan(
-        text: message.substring(start),
-        style: style));
+    texts.add(TextSpan(text: message.substring(start), style: style));
 
-    return new RichText(
-      text: TextSpan(
-        children: texts
-      )
-    );
+    return new SelectableText.rich(TextSpan(children: texts));
   }
 
   _renderMessage() {
@@ -697,25 +749,27 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         child:
             _message.mime != null && _message.mime.toString().contains('image')
                 ? GestureDetector(
-                onTap: _openMedia,
-                child: ClipRRect(
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(isFromMe ? 8 : 0),
-                        topRight: Radius.circular(isFromMe ? 0 : 8),
-                        bottomLeft: Radius.circular(8),
-                        bottomRight: Radius.circular(8)),
-                    child: Container(
-                        constraints: BoxConstraints(
-                            minHeight: 100, maxWidth: maxWidth, maxHeight: 200),
-                        decoration: BoxDecoration(
-                            image: DecorationImage(
-                                fit: BoxFit.fill,
-                                image: NetworkImage(_message.message))))))
+                    onTap: _openMedia,
+                    child: ClipRRect(
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(isFromMe ? 8 : 0),
+                            topRight: Radius.circular(isFromMe ? 0 : 8),
+                            bottomLeft: Radius.circular(8),
+                            bottomRight: Radius.circular(8)),
+                        child: Container(
+                            constraints: BoxConstraints(
+                                minHeight: 100,
+                                maxWidth: maxWidth,
+                                maxHeight: 200),
+                            decoration: BoxDecoration(
+                                image: DecorationImage(
+                                    fit: BoxFit.fill,
+                                    image: NetworkImage(_message.message))))))
                 : Container(
                     constraints: BoxConstraints(maxWidth: maxWidth),
                     margin: EdgeInsets.only(top: 2),
                     padding:
-                        EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 8),
+                        EdgeInsets.only(left: 16, right: 16, top: 6, bottom: 8),
                     decoration: BoxDecoration(
                         color: isFromMe ? particle : coal,
                         borderRadius: BorderRadius.only(
@@ -724,8 +778,9 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                           bottomLeft: Radius.circular(8),
                           bottomRight: Radius.circular(8),
                         )),
-                    child: _messageText(_message.message,
-                         TextStyle(
+                    child: _messageText(
+                        _message.message,
+                        TextStyle(
                             fontSize: 14,
                             height: 1.4,
                             fontWeight: FontWeight.w400,
