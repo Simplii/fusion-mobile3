@@ -6,6 +6,23 @@ import 'carbon_date.dart';
 import 'fusion_model.dart';
 import 'fusion_store.dart';
 
+class ContactCrmReference {
+  String crmName;
+  String module;
+  String contactName;
+  String url;
+  String crmContactId;
+  String icon;
+
+  ContactCrmReference(
+      {this.crmName,
+      this.module,
+      this.contactName,
+      this.url,
+      this.crmContactId,
+      this.icon});
+}
+
 class Contact extends FusionModel {
   List<dynamic> addresses;
   String company;
@@ -39,6 +56,39 @@ class Contact extends FusionModel {
 
   @override
   String getId() => this.id;
+
+  List<ContactCrmReference> crms() {
+    List<ContactCrmReference> matches = [];
+
+    if (contacts != null) {
+      for (Map<String, dynamic> obj in contacts) {
+        matches.add(ContactCrmReference(
+            url: obj['url'],
+            crmContactId: obj['network_id'].toString(),
+            contactName: obj['name'],
+            crmName: obj['network'],
+            module: obj['module'],
+            icon: obj['icon']));
+      }
+    }
+
+    return matches;
+  }
+
+  String pictureUrl() {
+    if (pictures != null) {
+      for (Map<String, dynamic> picture in pictures) {
+        if (picture['url'] != null && picture['url'].trim() != '') {
+          return picture['url'];
+        }
+      }
+    }
+    if (emails != null) {
+      for (Map<String, dynamic> email in emails) {
+        if (email['email'] != null && email['email'].trim() != '') {}
+      }
+    }
+  }
 
   searchString() {
     List<String> list = [company, firstName, lastName];
@@ -82,39 +132,61 @@ class Contact extends FusionModel {
     this.crmId = contactObject['crm_id'];
   }
 
+  Map<String, dynamic> serverPayload() {
+    return {
+      "addresses": addresses,
+      "company": company,
+      "contacts": contacts,
+      "emails": emails,
+      "first_name": firstName,
+      "groups": groups,
+      "id": id,
+      "job_title": jobTitle,
+      "last_name": lastName,
+      "name": name,
+      "owner": owner,
+      "phone_numbers": phoneNumbers,
+      "pictures": pictures,
+      "socials": socials,
+      "type": type,
+      "uid": uid
+    };
+  }
+
   serialize() {
     return convert.jsonEncode({
-    'addresses': this.addresses,
-    'company': this.company,
-    'contacts': this.contacts,
-    'createdAt': this.createdAt.serialize(),
-    'deleted': this.deleted,
-    'domain': this.domain,
-    'emails': this.emails,
-    'firstContactDate': this.firstContactDate,
-    'coworker': this.coworker,
-    'firstName': this.firstName,
-    'groups': this.groups,
-    'id': this.id,
-    'jobTitle': this.jobTitle,
-    'lastName': this.lastName,
-    'leadCreationDate': this.leadCreationDate,
-    'name': this.name,
-    'owner': this.owner,
-    'parentId': this.parentId,
-    'phoneNumbers': this.phoneNumbers,
-    'pictures': this.pictures,
-    'socials': this.socials,
-    'lastCommunication': this.lastCommunication,
-    'type': this.type,
-    'uid': this.uid,
-    'updatedAt': this.updatedAt.serialize(),
-    'crmUrl': this.crmUrl,
-    'crmName': this.crmName,
-    'crmId': this.crmId,
-    'unread': this.unread,
-  });
+      'addresses': this.addresses,
+      'company': this.company,
+      'contacts': this.contacts,
+      'createdAt': this.createdAt.serialize(),
+      'deleted': this.deleted,
+      'domain': this.domain,
+      'emails': this.emails,
+      'firstContactDate': this.firstContactDate,
+      'coworker': this.coworker,
+      'firstName': this.firstName,
+      'groups': this.groups,
+      'id': this.id,
+      'jobTitle': this.jobTitle,
+      'lastName': this.lastName,
+      'leadCreationDate': this.leadCreationDate,
+      'name': this.name,
+      'owner': this.owner,
+      'parentId': this.parentId,
+      'phoneNumbers': this.phoneNumbers,
+      'pictures': this.pictures,
+      'socials': this.socials,
+      'lastCommunication': this.lastCommunication,
+      'type': this.type,
+      'uid': this.uid,
+      'updatedAt': this.updatedAt.serialize(),
+      'crmUrl': this.crmUrl,
+      'crmName': this.crmName,
+      'crmId': this.crmId,
+      'unread': this.unread,
+    });
   }
+
   Contact.unserialize(String data) {
     Map<String, dynamic> obj = convert.jsonDecode(data);
     this.addresses = obj['addresses'];
@@ -147,6 +219,72 @@ class Contact extends FusionModel {
     this.crmId = obj['crmId'];
     this.unread = obj['unread'];
   }
+
+  Contact.copy(Contact contact) {
+    this.addresses = convert.jsonDecode(convert.jsonEncode(contact.socials));
+    this.company = contact.company;
+    this.contacts = contact.contacts;
+    this.createdAt = contact.createdAt;
+    this.deleted = contact.deleted;
+    this.domain = contact.domain;
+    this.emails = convert.jsonDecode(convert.jsonEncode(contact.emails));
+    this.firstContactDate = contact.firstContactDate;
+    this.coworker = contact.coworker;
+    this.firstName = contact.firstName;
+    this.groups = contact.groups;
+    this.id = contact.id;
+    this.jobTitle = contact.jobTitle;
+    this.lastName = contact.lastName;
+    this.leadCreationDate = contact.leadCreationDate;
+    this.name = contact.name;
+    this.owner = contact.owner;
+    this.parentId = contact.parentId;
+    this.phoneNumbers =
+        convert.jsonDecode(convert.jsonEncode(contact.phoneNumbers));
+    this.pictures = convert.jsonDecode(convert.jsonEncode(contact.pictures));
+    this.socials = convert.jsonDecode(convert.jsonEncode(contact.socials));
+    this.lastCommunication = contact.lastCommunication;
+    this.type = contact.type;
+    this.uid = contact.uid;
+    this.updatedAt = contact.updatedAt;
+    this.crmUrl = contact.crmUrl;
+    this.crmName = contact.crmName;
+    this.crmId = contact.crmId;
+    this.unread = contact.unread;
+  }
+
+  copy(Contact contact) {
+    this.addresses = convert.jsonDecode(convert.jsonEncode(contact.socials));
+    this.company = contact.company;
+    this.contacts = contact.contacts;
+    this.createdAt = contact.createdAt;
+    this.deleted = contact.deleted;
+    this.domain = contact.domain;
+    this.emails = convert.jsonDecode(convert.jsonEncode(contact.emails));
+    this.firstContactDate = contact.firstContactDate;
+    this.coworker = contact.coworker;
+    this.firstName = contact.firstName;
+    this.groups = contact.groups;
+    this.id = contact.id;
+    this.jobTitle = contact.jobTitle;
+    this.lastName = contact.lastName;
+    this.leadCreationDate = contact.leadCreationDate;
+    this.name = contact.name;
+    this.owner = contact.owner;
+    this.parentId = contact.parentId;
+    this.phoneNumbers =
+        convert.jsonDecode(convert.jsonEncode(contact.phoneNumbers));
+    this.pictures = convert.jsonDecode(convert.jsonEncode(contact.pictures));
+    this.socials = convert.jsonDecode(convert.jsonEncode(contact.socials));
+    this.lastCommunication = contact.lastCommunication;
+    this.type = contact.type;
+    this.uid = contact.uid;
+    this.updatedAt = contact.updatedAt;
+    this.crmUrl = contact.crmUrl;
+    this.crmName = contact.crmName;
+    this.crmId = contact.crmId;
+    this.unread = contact.unread;
+  }
 }
 
 class ContactsStore extends FusionStore<Contact> {
@@ -159,36 +297,39 @@ class ContactsStore extends FusionStore<Contact> {
   }
 
   persist(Contact record) {
-    fusionConnection.db.delete('contacts', where: 'id = ?', whereArgs: [record.id]);
-    fusionConnection.db.insert(
-      'contacts',
-      {'id': record.id,
+    fusionConnection.db
+        .delete('contacts', where: 'id = ?', whereArgs: [record.id]);
+    fusionConnection.db.insert('contacts', {
+      'id': record.id,
       'company': record.company,
       'deleted': record.deleted ? 1 : 0,
       'searchString': record.searchString(),
       'firstName': record.firstName,
       'lastName': record.lastName,
-      'raw': record.serialize()}
-    );
-    print("persisting -- " + {'id': record.id,
-      'company': record.company,
-      'deleted': record.deleted ? 1 : 0,
-      'searchString': record.searchString(),
-      'firstName': record.firstName,
-      'lastName': record.lastName,
-      'raw': record.serialize()}.toString());
+      'raw': record.serialize()
+    });
+    print("persisting -- " +
+        {
+          'id': record.id,
+          'company': record.company,
+          'deleted': record.deleted ? 1 : 0,
+          'searchString': record.searchString(),
+          'firstName': record.firstName,
+          'lastName': record.lastName,
+          'raw': record.serialize()
+        }.toString());
   }
 
-  searchPersisted(
-      String query, int limit, int offset, Function(List<Contact>, bool) callback) {
-    fusionConnection.db.query(
-        'contacts',
+  searchPersisted(String query, int limit, int offset,
+      Function(List<Contact>, bool) callback) {
+    fusionConnection.db.query('contacts',
         limit: limit,
         offset: offset,
         where: 'searchString Like ?',
         orderBy: "lastName asc, firstName asc",
-        whereArgs: ["%" + query + "%"])
-        .then((List<Map<String, dynamic>> results) {
+        whereArgs: [
+          "%" + query + "%"
+        ]).then((List<Map<String, dynamic>> results) {
       List<Contact> list = [];
       print("persisted contacts match " + query + " " + results.toString());
       for (Map<String, dynamic> result in results) {
@@ -199,13 +340,12 @@ class ContactsStore extends FusionStore<Contact> {
     });
   }
 
-  search(
-      String query, int limit, int offset, Function(List<Contact>, bool) callback) {
+  search(String query, int limit, int offset,
+      Function(List<Contact>, bool) callback) {
     query = query.toLowerCase();
 
-
     searchPersisted(query, limit, offset, callback);
-  /*  List<Contact> matched = getRecords()
+    /*  List<Contact> matched = getRecords()
         .where((Contact c) {
           return (c.name + " " + c.company).toLowerCase().contains(query);
         })
@@ -225,6 +365,7 @@ class ContactsStore extends FusionStore<Contact> {
       'sort_by': 'last_name',
       'group_type_filter': 'any',
       'enterprise': false,
+      'enterprise': false,
     }, callback: (List<dynamic> datas) {
       List<Contact> response = [];
 
@@ -236,5 +377,12 @@ class ContactsStore extends FusionStore<Contact> {
 
       callback(response, true);
     });
+  }
+
+  void save(Contact edited) {
+    storeRecord(edited);
+    fusionConnection.apiV1Call("post", "/clients/filtered_contacts",
+        {'contact': edited.serverPayload()},
+        callback: (List<dynamic> datas) {});
   }
 }
