@@ -115,7 +115,7 @@ class _EditContactViewState extends State<EditContactView> {
                     color: coal, fontSize: 16, fontWeight: FontWeight.w700),
                 label: label,
                 options: options,
-                value: fieldValue,
+                value: fieldValue != null ? fieldValue : "",
                 onChange: (String value) {
                   _startEditingIfNotStared();
                   setState(() {
