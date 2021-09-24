@@ -179,6 +179,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         _query +
         " " +
         lookupState.toString() +
+
         " " +
         _page.toString());
     if (lookupState == 1) return;
@@ -210,6 +211,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             _page = -1;
           }
           _sortList(_contacts);
+
         });
       });
     } else if (_typeFilter == 'Integrated Contacts') {
