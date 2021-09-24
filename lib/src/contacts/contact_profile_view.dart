@@ -10,6 +10,7 @@ import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
+import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -41,7 +42,30 @@ class _ContactProfileViewState extends State<ContactProfileView> {
   String _selectedTab = 'profile';
   String _selectedPhone = null;
   String _selectedEmail = null;
+  List<TimelineItem> _timelineItems = [];
   bool _editing = false;
+  int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
+
+  _lookupTimeline() {
+    print("lookuptimeline");
+    if (lookupState == 1) return;
+    lookupState = 1;
+
+    _fusionConnection.timelineItems.getTimelineFromNumbers(
+        _contact.phoneNumbers
+            .map((number) => number['number'])
+            .where((number) => number.length >= 10)
+            .toList()
+            .cast<String>(), (List<TimelineItem> items, bool fromServer) {
+      print("got itemstimeline" + items.toString());
+      this.setState(() {
+        if (fromServer) {
+          lookupState = 2;
+        }
+        _timelineItems = items;
+      });
+    });
+  }
 
   _headerButton(String tabName, String iconName) {
     return Expanded(
@@ -81,11 +105,9 @@ class _ContactProfileViewState extends State<ContactProfileView> {
 
     if (hasTitle && hasCompany)
       return _contact.jobTitle + " " + mDash + " " + _contact.company;
-    else
-    if (hasTitle && !hasCompany)
+    else if (hasTitle && !hasCompany)
       return _contact.jobTitle;
-    else
-    if (!hasTitle && hasCompany)
+    else if (!hasTitle && hasCompany)
       return _contact.company;
     else
       return null;
@@ -96,8 +118,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
       setState(() {
         _editing = true;
       });
-    }
-    else if (selectedOption.substring(0, 5) == "open:") {
+    } else if (selectedOption.substring(0, 5) == "open:") {
       launch(selectedOption.substring(5));
     }
   }
@@ -120,7 +141,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
 
     if (_contact.uid != null && _contact.uid != "") {
       Coworker coworker =
-      _fusionConnection.coworkers.lookupCoworker(_contact.uid);
+          _fusionConnection.coworkers.lookupCoworker(_contact.uid);
       children.add(Container(
           margin: EdgeInsets.only(left: 8),
           child: Column(children: [
@@ -143,8 +164,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     }
 
     return Container(
-        padding: EdgeInsets.all(16),
-        child: Row(children: children));
+        padding: EdgeInsets.all(16), child: Row(children: children));
   }
 
   _header() {
@@ -168,7 +188,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
           Container(
               margin: EdgeInsets.only(top: 4, bottom: 0),
               child:
-              ContactCircle.withDiameterAndMargin([_contact], [], 74, 0)),
+                  ContactCircle.withDiameterAndMargin([_contact], [], 74, 0)),
           _headerButton("timeline", "timeline")
         ]),
         Container(
@@ -181,7 +201,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                 button: Container(
                     decoration: BoxDecoration(color: Colors.transparent),
                     padding:
-                    EdgeInsets.only(right: 16, left: 16, top: 6, bottom: 4),
+                        EdgeInsets.only(right: 16, left: 16, top: 6, bottom: 4),
                     child: Image.asset("assets/icons/three_dots.png",
                         width: 4, height: 16))))
       ]),
@@ -197,26 +217,26 @@ class _ContactProfileViewState extends State<ContactProfileView> {
       occupation == null
           ? Container()
           : Container(
-          margin: EdgeInsets.only(bottom: 8),
-          child: Align(
-              alignment: Alignment.center,
-              child: Text(occupation,
-                  style: TextStyle(
-                      color: coal,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12)))),
+              margin: EdgeInsets.only(bottom: 8),
+              child: Align(
+                  alignment: Alignment.center,
+                  child: Text(occupation,
+                      style: TextStyle(
+                          color: coal,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 12)))),
       contactStatus == null ? Container() : Row(children: [horizontalLine(0)]),
       contactStatus == null
           ? Container(height: 16)
           : Container(
-          margin: EdgeInsets.all(8),
-          child: Align(
-              alignment: Alignment.center,
-              child: Text(contactStatus,
-                  style: TextStyle(
-                      color: coal,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400)))),
+              margin: EdgeInsets.all(8),
+              child: Align(
+                  alignment: Alignment.center,
+                  child: Text(contactStatus,
+                      style: TextStyle(
+                          color: coal,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400)))),
     ]);
   }
 
@@ -230,30 +250,30 @@ class _ContactProfileViewState extends State<ContactProfileView> {
           "phone_filled_dark",
           _contact.phoneNumbers
               .map((number) {
-            Map<String, dynamic> phone = number;
-            return _renderField(
-                "phone",
-                number['type'] != null && number['type'] != null
-                    ? number['type']
-                    : 'Phone',
-                number['number'],
-                false);
-          })
+                Map<String, dynamic> phone = number;
+                return _renderField(
+                    "phone",
+                    number['type'] != null && number['type'] != null
+                        ? number['type']
+                        : 'Phone',
+                    number['number'],
+                    false);
+              })
               .toList()
               .cast<Widget>()),
       _renderFieldGroup(
           "mail_filled_dark",
           _contact.emails
               .map((email) {
-            Map<String, dynamic> mail = email;
-            return _renderField(
-                "email",
-                email['type'] != null && email['type'] != null
-                    ? email['type']
-                    : 'Email',
-                email['email'],
-                false);
-          })
+                Map<String, dynamic> mail = email;
+                return _renderField(
+                    "email",
+                    email['type'] != null && email['type'] != null
+                        ? email['type']
+                        : 'Email',
+                    email['email'],
+                    false);
+              })
               .toList()
               .cast<Widget>()),
     ].cast<Widget>();
@@ -283,23 +303,20 @@ class _ContactProfileViewState extends State<ContactProfileView> {
 
   _openMessage(String theirNumber) {
     String number =
-    _fusionConnection.smsDepartments
-        .getDepartment("-2")
-        .numbers[0];
+        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
 
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) =>
-            SMSConversationView(
-                _fusionConnection,
-                _softphone,
-                SMSConversation.build(
-                    contacts: [_contact],
-                    crmContacts: [],
-                    myNumber: number,
-                    number: theirNumber)));
+        builder: (context) => SMSConversationView(
+            _fusionConnection,
+            _softphone,
+            SMSConversation.build(
+                contacts: [_contact],
+                crmContacts: [],
+                myNumber: number,
+                number: theirNumber)));
   }
 
   _renderField(String type, String label, String value, bool selected) {
@@ -339,9 +356,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
               });
             },
             child: _renderField("text", label, value.formatPhone(), false));
-    }
-    else
-    if (type == "text" || type == "email") {
+    } else if (type == "text" || type == "email") {
       return Container(
           decoration: BoxDecoration(color: Colors.transparent),
           margin: EdgeInsets.only(top: 10, left: 12, bottom: 10, right: 12),
@@ -365,47 +380,140 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     }
   }
 
+  List<Widget> _getTimeline() {
+    List<Widget> list = [];
+    DateTime lastDate;
+    Widget toAdd;
+
+    for (TimelineItem item in _timelineItems) {
+      DateTime thisTime = item.time;
+
+      if (lastDate == null ||
+          thisTime.difference(lastDate).inHours.abs() > 24) {
+        lastDate = thisTime;
+
+        if (toAdd != null) {
+          list.add(toAdd);
+        }
+
+        toAdd = Container(
+            padding: EdgeInsets.only(left: 16, right: 16),
+            child: Row(children: [
+              horizontalLine(8),
+              Container(
+                  margin:
+                      EdgeInsets.only(left: 4, right: 4, bottom: 12, top: 12),
+                  child: Text(
+                    DateFormat("E MMM d, y").format(thisTime),
+                    style: TextStyle(
+                        color: char, fontSize: 12, fontWeight: FontWeight.w700),
+                  )),
+              horizontalLine(8)
+            ]));
+      }
+
+      if (item.type == "message") {
+        list.add(SMSMessageView(
+            _fusionConnection,
+            item.message,
+            SMSConversation.build(
+                myNumber: item.phoneNumber == item.message.to
+                    ? item.message.from
+                    : item.message.to,
+                number: item.phoneNumber,
+                contacts: [_contact],
+                crmContacts: []),
+            (SMSMessage message) {}));
+      } else {
+        String duration = Duration(seconds: item.callLog.duration)
+            .toString()
+            .split('.')
+            .first
+            .padLeft(8, "0");
+
+        if (item.callLog.duration < 60 * 60)
+          duration = duration.substring(3);
+
+            print("itemcallog" + item.callLog.from.toString());
+        list.add(SMSMessageView(
+            _fusionConnection,
+            SMSMessage(
+              {
+                "from": item.callLog.from,
+                "to": item.callLog.to,
+                "fromMe": item.callLog.type == "Outgoing",
+                "id": item.id,
+                "isGroup": false,
+                "message": (duration + " " + item.callLog.type + " call "
+                    + ((item.callLog.disposition == null
+                        || item.callLog.disposition.trim().length == 0) ? "" : (mDash + " " + item.callLog.disposition + " "))
+                    + ((item.callLog.note == null
+                        || item.callLog.note.trim().length == 0) ? "" : (mDash + " " + item.callLog.note))),
+                "mime": "",
+                "read": true,
+                "time": {"date": item.time.toString(), "timezone": "", "timezone_type": 3},
+                "unixtime": (item.time.millisecondsSinceEpoch / 1000).round(),
+                'user': false
+              }
+            ),
+            SMSConversation.build(
+                myNumber: item.callLog.type == "Outgoing"
+                    ? item.callLog.from
+                    : item.callLog.to,
+                number: item.callLog.type == "Outgoing"
+                    ? item.callLog.to
+                    : item.callLog.from,
+                contacts: [_contact],
+                crmContacts: []),
+            (SMSMessage message) {}));
+      }
+    }
+
+    return list;
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (lookupState == 0) _lookupTimeline();
+
     List<Widget> children = [];
     Widget bodyContainer;
 
     if (_editing) {
-      bodyContainer = EditContactView(
-          _fusionConnection,
-          _contact,
-              () { setState(() {
-                this._editing = false; }); });
-    }
-    else {
+      bodyContainer = EditContactView(_fusionConnection, _contact, () {
+        setState(() {
+          this._editing = false;
+        });
+      });
+    } else {
       bodyContainer = Column(children: [
         _header(),
         Expanded(
             child: Container(
                 decoration: whiteForegroundBox(),
                 child: ListView(
+                    reverse: _selectedTab == 'timeline',
                     padding: EdgeInsets.only(top: 12),
-                    children: _getFieldGroups()))),
+                    children: _selectedTab == "timeline"
+                        ? _getTimeline()
+                        : _getFieldGroups()))),
         _footer()
       ]);
     }
 
     return Container(
         child: Column(children: [
-          Expanded(
+      Expanded(
+          child: Container(
+              decoration: BoxDecoration(color: Colors.transparent),
+              padding: EdgeInsets.only(top: 80, bottom: 0),
               child: Container(
-                  decoration: BoxDecoration(color: Colors.transparent),
-                  padding: EdgeInsets.only(top: 80, bottom: 0),
-                  child: Container(
-                      decoration: BoxDecoration(
-                          color: particle,
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(16),
-                              topRight: Radius.circular(16))),
-                      child: bodyContainer)))
-        ]));
+                  decoration: BoxDecoration(
+                      color: particle,
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16))),
+                  child: bodyContainer)))
+    ]));
   }
 }
-
-
-
