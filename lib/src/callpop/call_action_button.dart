@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/styles.dart';
 
 class CallActionButton extends StatefulWidget {
-  CallActionButton({Key key, this.onPressed, this.title, this.icon})
+  CallActionButton(
+      {Key key, this.onPressed, this.title, this.icon, this.disabled})
       : super(key: key);
 
   final VoidCallback onPressed;
   final String title;
-  final icon;
+  final IconData icon;
+  final bool disabled;
 
   @override
   State<StatefulWidget> createState() => _CallActionButtonState();
@@ -24,7 +27,8 @@ class _CallActionButtonState extends State<CallActionButton> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(widget.icon, color: Colors.white),
+            Icon(widget.icon,
+                color: widget.disabled == true ? halfGray : Colors.white),
             Text(widget.title.toUpperCase(),
                 style: TextStyle(color: Color.fromARGB(127, 0, 0, 0)))
           ],

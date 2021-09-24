@@ -20,16 +20,22 @@ class CallActionButtons extends StatefulWidget {
 class _CallActionButtonsState extends State<CallActionButtons> {
   bool dialPadOpen = false;
 
-  Widget _getMainView() {
+  Widget _getMainView(bool onHold) {
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            CallActionButton(
-                onPressed: widget.actions['onHoldBtnPress'],
-                title: 'Hold',
-                icon: CupertinoIcons.pause_solid),
+            if (onHold)
+              CallActionButton(
+                  onPressed: widget.actions['onResumeBtnPress'],
+                  title: 'Resume',
+                  icon: CupertinoIcons.play_arrow_solid)
+            else
+              CallActionButton(
+                  onPressed: widget.actions['onHoldBtnPress'],
+                  title: 'Hold',
+                  icon: CupertinoIcons.pause_solid),
             CallActionButton(
                 onPressed: widget.actions['onXferBtnPress'],
                 title: 'Xfer',
@@ -50,7 +56,8 @@ class _CallActionButtonsState extends State<CallActionButtons> {
             CallActionButton(
                 onPressed: widget.actions['onConfBtnPress'],
                 title: 'Conf',
-                icon: CupertinoIcons.plus),
+                icon: CupertinoIcons.plus,
+                disabled: onHold),
           ],
         ),
         Row(
@@ -59,27 +66,29 @@ class _CallActionButtonsState extends State<CallActionButtons> {
             CallActionButton(
                 onPressed: widget.actions['onRecBtnPress'],
                 title: 'Rec',
-                icon: CupertinoIcons.smallcircle_fill_circle),
+                icon: CupertinoIcons.smallcircle_fill_circle,
+                disabled: onHold),
             CallActionButton(
                 onPressed: widget.actions['onVidBtnPress'],
                 title: 'Video',
-                icon: CupertinoIcons.video_camera_solid),
+                icon: CupertinoIcons.video_camera_solid,
+                disabled: onHold),
             Expanded(
                 child: GestureDetector(
               onTap: widget.actions['onHangup'],
               child: Center(
                   child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(50.0)),
-                        color: crimsonLight),
-                    child: Icon(
-                      CupertinoIcons.phone_down_fill,
-                      color: Colors.white,
-                      size: 35.0,
-                    ),
-                  )),
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(50.0)),
+                    color: crimsonLight),
+                child: Icon(
+                  CupertinoIcons.phone_down_fill,
+                  color: Colors.white,
+                  size: 35.0,
+                ),
+              )),
             )),
             CallActionButton(
                 onPressed: widget.actions['onTextBtnPress'],
@@ -131,12 +140,12 @@ class _CallActionButtonsState extends State<CallActionButtons> {
 
   Widget _getView() {
     if (widget.callOnHold) {
-      return _getMainView();
+      return _getMainView(true);
     } else {
       if (dialPadOpen) {
         return _getDialPadView();
       } else {
-        return _getMainView();
+        return _getMainView(false);
       }
     }
   }
@@ -145,12 +154,8 @@ class _CallActionButtonsState extends State<CallActionButtons> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-      decoration: BoxDecoration(
-          color: Colors.white10, borderRadius: BorderRadius.circular(10)),
-      child: ClipRect(
-          child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: _getView())),
+      decoration: BoxDecoration(color: Colors.white10),
+      child: _getView(),
     );
   }
 }
