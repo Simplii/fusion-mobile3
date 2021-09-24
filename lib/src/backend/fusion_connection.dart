@@ -1,5 +1,6 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
+import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
@@ -36,6 +37,7 @@ class FusionConnection {
   CallHistoryStore callHistory;
   CoworkerStore coworkers;
   IntegratedContactsStore integratedContacts;
+  ContactFieldStore contactFields;
   Database db;
 
   Function _onLogOut = () {};
@@ -54,6 +56,8 @@ class FusionConnection {
     smsDepartments = SMSDepartmentsStore(this);
     callHistory = CallHistoryStore(this);
     coworkers = CoworkerStore(this);
+    contactFields = ContactFieldStore(this);
+    contactFields.getFields((List<ContactField> list, bool fromServer) {});
     getDatabase();
   }
 

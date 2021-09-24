@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 Color fusionRed = Color.fromARGB(255, 255, 51, 74);
 Color crimsonLight = fusionRed;
+Color crimsonDark = Color.fromARGB(255,229,3,42);
 Color darkGrey = Color.fromARGB(255, 51, 45, 46);
 Color coal = Color.fromARGB(255, 51, 45, 45);
 Color bgBlend = Color.fromARGB((255 * 0.75).round(), 51, 45, 45);
@@ -112,4 +115,39 @@ actionButton(
                             fontSize: 14,
                             fontWeight: FontWeight.w800))
                   ])))));
+}
+
+whiteForegroundBox() {
+  return BoxDecoration(
+      boxShadow: [thinShadowBorder()],
+      borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(8),
+          bottomRight: Radius.circular(8),
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8)),
+      color: Colors.white);
+}
+
+thinShadowBorder() {
+  return BoxShadow(
+      color: translucentBlack(0.05),
+      spreadRadius: 0.5,
+      blurRadius: 0.5);
+}
+
+// for gesture detectors, containers need a decoration to be
+// in the tappable area
+clearBg() {
+  return BoxDecoration(color: Colors.transparent);
+}
+
+lighten(Color color, int amount) {
+  return color
+      .withRed(max(0, min(color.red + amount, 255)))
+      .withGreen(max(0, min(255, color.green + amount)))
+      .withBlue(max(0, min(255, color.blue + amount)));
+}
+
+darken(Color color, int amount) {
+  return lighten(color, 0 - amount);
 }
