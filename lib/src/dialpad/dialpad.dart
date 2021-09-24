@@ -55,18 +55,19 @@ class _DialPadState extends State<DialPad> {
     'TUV',
     'WXYZ',
     '',
-    '',
+    '+',
     ''
   ];
 
   @override
   Widget build(BuildContext context) {
     return Container(
+        constraints: BoxConstraints.tightFor(height: dialedNumber == '' ? 430 - 66.0 : 430),
         decoration: BoxDecoration(color: darkGrey),
         padding: EdgeInsets.all(12.0),
         child: Column(
           children: [
-            Row(
+            if (dialedNumber != '') Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Padding(padding: EdgeInsets.only(left: 40)),
@@ -85,30 +86,66 @@ class _DialPadState extends State<DialPad> {
                 children: [
                   Row(
                     children: [
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '1', alphas: digitAlphas[0]),
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '2', alphas: digitAlphas[1]),
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '3', alphas: digitAlphas[2]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '1',
+                          alphas: digitAlphas[0]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '2',
+                          alphas: digitAlphas[1]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '3',
+                          alphas: digitAlphas[2]),
                     ],
                   ),
                   Row(
                     children: [
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '4', alphas: digitAlphas[3]),
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '5', alphas: digitAlphas[4]),
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '6', alphas: digitAlphas[5]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '4',
+                          alphas: digitAlphas[3]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '5',
+                          alphas: digitAlphas[4]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '6',
+                          alphas: digitAlphas[5]),
                     ],
                   ),
                   Row(
                     children: [
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '7', alphas: digitAlphas[6]),
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '8', alphas: digitAlphas[7]),
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '9', alphas: digitAlphas[8]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '7',
+                          alphas: digitAlphas[6]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '8',
+                          alphas: digitAlphas[7]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '9',
+                          alphas: digitAlphas[8]),
                     ],
                   ),
                   Row(
                     children: [
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '*', alphas: digitAlphas[9]),
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '0', alphas: digitAlphas[10]),
-                      DialPadKey(onPressed: handleDialPadKeyPress, digit: '#', alphas: digitAlphas[11]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '*',
+                          alphas: digitAlphas[9]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '0',
+                          alphas: digitAlphas[10]),
+                      DialPadKey(
+                          onPressed: handleDialPadKeyPress,
+                          digit: '#',
+                          alphas: digitAlphas[11]),
                     ],
                   ),
                 ],
@@ -120,9 +157,10 @@ class _DialPadState extends State<DialPad> {
                 RawMaterialButton(
                   onPressed: placeCall,
                   elevation: 2.0,
-                  fillColor: Colors.green,
+                  fillColor: successGreen,
                   child: Icon(
                     CupertinoIcons.phone_solid,
+                    color: Colors.white,
                     size: 35.0,
                   ),
                   padding: EdgeInsets.all(15.0),

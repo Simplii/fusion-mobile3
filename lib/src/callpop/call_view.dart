@@ -105,6 +105,7 @@ class _CallViewState extends State<CallView> {
 
     Map<String, Function()> actions = {
       'onHoldBtnPress': _onHoldBtnPress,
+      'onResumeBtnPress': _onResumeBtnPress,
       'onXferBtnPress': _onXferBtnPress,
       'onDialBtnPress': _onDialBtnPress,
       'onParkBtnPress': _onParkBtnPress,
