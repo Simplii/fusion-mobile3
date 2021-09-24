@@ -1,8 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/contacts_search.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad.dart';
+import 'package:fusion_mobile_revamped/src/styles.dart';
 
 class DialPadView extends StatefulWidget {
   DialPadView(this._fusionConnection, this._softphone, {Key key})
@@ -22,12 +24,48 @@ class _DialPadViewState extends State<DialPadView> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints.tightFor(height: 725),
-      child: Column(children: [
-        Expanded(child: ContactsSearch(_fusionConnection, _softphone)),
-        DialPad(_fusionConnection, _softphone)
-      ]),
-    );
+    return SafeArea(
+        child: Scaffold(
+      body: TabBarView(
+        children: [
+          Container(
+            constraints: BoxConstraints.tightFor(height: 725),
+            color: Colors.yellow,
+          ),
+          Container(
+            constraints: BoxConstraints.tightFor(height: 725),
+            child: Column(children: [
+              Expanded(child: ContactsSearch(_fusionConnection, _softphone)),
+              DialPad(_fusionConnection, _softphone)
+            ]),
+          ),
+          Container(
+            constraints: BoxConstraints.tightFor(height: 725),
+            color: Colors.lightGreen,
+          )
+        ],
+      ),
+      bottomNavigationBar: new TabBar(
+        tabs: [
+          Tab(
+            icon: new Icon(CupertinoIcons.car_detailed),
+            text: 'Parked',
+          ),
+          Tab(
+            icon: new Icon(Icons.dialpad),
+            text: 'Dial Pad'
+          ),
+          Tab(
+            icon: new Icon(CupertinoIcons.envelope_badge_fill),
+            text: 'Voicemail'
+          ),
+        ],
+        labelColor: smoke,
+        unselectedLabelColor: ash,
+        indicatorSize: TabBarIndicatorSize.label,
+        indicatorPadding: EdgeInsets.all(5.0),
+        indicatorColor: Colors.red,
+      ),
+    ));
   }
 }
