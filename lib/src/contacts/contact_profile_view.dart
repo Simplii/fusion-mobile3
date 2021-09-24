@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
@@ -118,14 +121,16 @@ class _ContactProfileViewState extends State<ContactProfileView> {
       setState(() {
         _editing = true;
       });
-    } else if (selectedOption.substring(0, 5) == "open:") {
+    } else if (selectedOption.length > 4 &&
+        selectedOption.substring(0, 5) == "open:") {
       launch(selectedOption.substring(5));
     }
   }
 
   _footer() {
     List<Widget> children = [];
-    List<ContactCrmReference> crms = _contact.crms().sublist(0, 5);
+    List<ContactCrmReference> crms = _contact.crms();
+    crms = crms.sublist(0, min(crms.length, 5));
 
     for (ContactCrmReference crmRef in crms) {
       print("addingotchildren" + crmRef.icon);
@@ -142,25 +147,27 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     if (_contact.uid != null && _contact.uid != "") {
       Coworker coworker =
           _fusionConnection.coworkers.lookupCoworker(_contact.uid);
-      children.add(Container(
-          margin: EdgeInsets.only(left: 8),
-          child: Column(children: [
-            Text("Owned by",
-                style: TextStyle(
-                    color: smoke,
-                    fontSize: 10,
-                    height: 1.4,
-                    fontWeight: FontWeight.w800)),
-            Text(
-                (coworker.firstName != null ? coworker.firstName : '') +
-                    ' ' +
-                    (coworker.lastName != null ? coworker.lastName : ''),
-                style: TextStyle(
-                    color: char,
-                    fontSize: 12,
-                    height: 1.4,
-                    fontWeight: FontWeight.w700)),
-          ])));
+      if (coworker != null) {
+        children.add(Container(
+            margin: EdgeInsets.only(left: 8),
+            child: Column(children: [
+              Text("Owned by",
+                  style: TextStyle(
+                      color: smoke,
+                      fontSize: 10,
+                      height: 1.4,
+                      fontWeight: FontWeight.w800)),
+              Text(
+                  (coworker.firstName != null ? coworker.firstName : '') +
+                      ' ' +
+                      (coworker.lastName != null ? coworker.lastName : ''),
+                  style: TextStyle(
+                      color: char,
+                      fontSize: 12,
+                      height: 1.4,
+                      fontWeight: FontWeight.w700)),
+            ])));
+      }
     }
 
     return Container(
@@ -206,10 +213,11 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                         width: 4, height: 16))))
       ]),
       Container(
-          margin: EdgeInsets.only(top: 8),
+          margin: EdgeInsets.only(top: 8, left: 24, right: 24),
           child: Align(
               alignment: Alignment.center,
               child: Text(_contact.name,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                       color: coal,
                       fontWeight: FontWeight.w700,
@@ -217,10 +225,11 @@ class _ContactProfileViewState extends State<ContactProfileView> {
       occupation == null
           ? Container()
           : Container(
-              margin: EdgeInsets.only(bottom: 8),
+              margin: EdgeInsets.only(bottom: 8, left: 24, right: 24),
               child: Align(
                   alignment: Alignment.center,
                   child: Text(occupation,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                           color: coal,
                           fontWeight: FontWeight.w400,
@@ -233,6 +242,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
               child: Align(
                   alignment: Alignment.center,
                   child: Text(contactStatus,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                           color: coal,
                           fontSize: 12,
@@ -380,7 +390,50 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     }
   }
 
+  _spinner() {
+    return
+      Container(
+          alignment: Alignment.center,
+          padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
+          child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
+  }
+
+  _noHistoryMessage() {
+    return
+      Container(
+          alignment: Alignment.center,
+          padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
+          //constraints: BoxConstraints(maxWidth: 170),
+          child: this.lookupState < 2
+              ? Center(child: SpinKitThreeBounce(color: smoke, size: 50))
+              : Text(
+                  "This is the beginning of your communications history with " +
+                      _contact.name,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: smoke,
+                      fontSize: 14,
+                      height: 1.4,
+                      fontWeight: FontWeight.w400,
+                      fontStyle: FontStyle.italic)));
+
+  }
+
+  _isSpinning() {
+    return lookupState < 2 && _timelineItems.length == 0;
+  }
+
+  _isEmpty() {
+    return lookupState >= 2 && _timelineItems.length == 0;
+  }
+
   List<Widget> _getTimeline() {
+    if (_isSpinning())
+      return [_spinner()];
+
+    if (_isEmpty())
+      return [_noHistoryMessage()];
+
     List<Widget> list = [];
     DateTime lastDate;
     Widget toAdd;
@@ -431,31 +484,39 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             .first
             .padLeft(8, "0");
 
-        if (item.callLog.duration < 60 * 60)
-          duration = duration.substring(3);
+        if (item.callLog.duration < 60 * 60) duration = duration.substring(3);
 
-            print("itemcallog" + item.callLog.from.toString());
+        print("itemcallog" + item.callLog.from.toString());
         list.add(SMSMessageView(
             _fusionConnection,
-            SMSMessage(
-              {
-                "from": item.callLog.from,
-                "to": item.callLog.to,
-                "fromMe": item.callLog.type == "Outgoing",
-                "id": item.id,
-                "isGroup": false,
-                "message": (duration + " " + item.callLog.type + " call "
-                    + ((item.callLog.disposition == null
-                        || item.callLog.disposition.trim().length == 0) ? "" : (mDash + " " + item.callLog.disposition + " "))
-                    + ((item.callLog.note == null
-                        || item.callLog.note.trim().length == 0) ? "" : (mDash + " " + item.callLog.note))),
-                "mime": "",
-                "read": true,
-                "time": {"date": item.time.toString(), "timezone": "", "timezone_type": 3},
-                "unixtime": (item.time.millisecondsSinceEpoch / 1000).round(),
-                'user': false
-              }
-            ),
+            SMSMessage({
+              "from": item.callLog.from,
+              "to": item.callLog.to,
+              "fromMe": item.callLog.type == "Outgoing",
+              "id": item.id,
+              "isGroup": false,
+              "message": (duration +
+                  " " +
+                  item.callLog.type +
+                  " call " +
+                  ((item.callLog.disposition == null ||
+                          item.callLog.disposition.trim().length == 0)
+                      ? ""
+                      : (mDash + " " + item.callLog.disposition + " ")) +
+                  ((item.callLog.note == null ||
+                          item.callLog.note.trim().length == 0)
+                      ? ""
+                      : (mDash + " " + item.callLog.note))),
+              "mime": "",
+              "read": true,
+              "time": {
+                "date": item.time.toString(),
+                "timezone": "",
+                "timezone_type": 3
+              },
+              "unixtime": (item.time.millisecondsSinceEpoch / 1000).round(),
+              'user': false
+            }),
             SMSConversation.build(
                 myNumber: item.callLog.type == "Outgoing"
                     ? item.callLog.from
