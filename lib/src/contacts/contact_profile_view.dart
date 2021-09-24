@@ -150,8 +150,12 @@ class _ContactProfileViewState extends State<ContactProfileView> {
       if (coworker != null) {
         children.add(Container(
             margin: EdgeInsets.only(left: 8),
-            child: Column(children: [
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               Text("Owned by",
+                  textAlign: TextAlign.left,
                   style: TextStyle(
                       color: smoke,
                       fontSize: 10,
@@ -161,6 +165,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                   (coworker.firstName != null ? coworker.firstName : '') +
                       ' ' +
                       (coworker.lastName != null ? coworker.lastName : ''),
+                  textAlign: TextAlign.left,
                   style: TextStyle(
                       color: char,
                       fontSize: 12,
@@ -178,8 +183,13 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     String occupation = _contactOccupation();
     String contactStatus = null;
     List<List<String>> settingOptions = [
-      ["Edit", "edit"]
+
     ];
+print("contactid:" + _contact.id);
+    if (new RegExp(r"^[0-9]+$").hasMatch(_contact.id)) {
+      settingOptions.add(["Edit", "edit"]);
+    }
+
     List<ContactCrmReference> crms = _contact.crms();
 
     for (ContactCrmReference ref in crms) {
@@ -198,6 +208,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                   ContactCircle.withDiameterAndMargin([_contact], [], 74, 0)),
           _headerButton("timeline", "timeline")
         ]),
+        if (settingOptions.length > 0)
         Container(
             height: 70,
             alignment: Alignment.centerRight,

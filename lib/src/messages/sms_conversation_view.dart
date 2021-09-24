@@ -730,7 +730,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
       };
       texts.add(TextSpan(
           text: message.substring(urlMatch.start, urlMatch.end),
-          style: TextStyle(color: crimsonLight),
+          style: TextStyle(color: crimsonDark),
           recognizer: recognizer));
       start = urlMatch.end;
     }
