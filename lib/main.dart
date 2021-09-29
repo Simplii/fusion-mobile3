@@ -246,7 +246,9 @@ class _MyHomePageState extends State<MyHomePage> {
         expand: false,
         context: context,
         builder: (context) => DefaultTabController(
-            length: 3, child: DialPadView(fusionConnection, softphone)));
+            initialIndex: 1,
+            length: 3,
+            child: DialPadView(fusionConnection, softphone)));
   }
 
   void _openCallView() {
