@@ -245,10 +245,7 @@ class _MyHomePageState extends State<MyHomePage> {
     showBarModalBottomSheet(
         expand: false,
         context: context,
-        builder: (context) => DefaultTabController(
-            initialIndex: 1,
-            length: 3,
-            child: DialPadView(fusionConnection, softphone)));
+        builder: (context) => DialPadView(fusionConnection, softphone));
   }
 
   void _openCallView() {

@@ -14,7 +14,8 @@ class DialPadKey extends StatefulWidget {
 }
 
 class _DialPadKeyState extends State<DialPadKey> {
-  var digitStyling = TextStyle(color: Colors.white, fontSize: 36.0);
+  var digitStyling = TextStyle(color: Colors.white, fontSize: 36.0, height: 1.0);
+  var alphaStyling = TextStyle(color: smoke, height: 1.0);
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +29,7 @@ class _DialPadKeyState extends State<DialPadKey> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(widget.digit, style: digitStyling),
-                  Text(widget.alphas, style: TextStyle(color: smoke))
+                  Text(widget.alphas, style: alphaStyling)
                 ])));
   }
 }
