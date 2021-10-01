@@ -19,6 +19,7 @@ class DialPad extends StatefulWidget {
 
 class _DialPadState extends State<DialPad> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Softphone get _softphone => widget._softphone;
 
   var dialedNumber = '';
@@ -62,29 +63,37 @@ class _DialPadState extends State<DialPad> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        constraints: BoxConstraints.tightFor(height: dialedNumber == '' ? 430 - 66.0 : 430),
-        decoration: BoxDecoration(color: darkGrey),
+        constraints: BoxConstraints.tightFor(
+            height: dialedNumber == '' ? 430 - 66.0 : 430),
+        decoration: BoxDecoration(
+            color: darkGrey,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+            )),
         padding: EdgeInsets.all(12.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            if (dialedNumber != '') Container(
-              height: 66,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(padding: EdgeInsets.only(left: 40)),
-                  Padding(
-                      padding: EdgeInsets.only(left: 18),
-                      child: Text(dialedNumber,
-                          style: TextStyle(fontSize: 36, color: Colors.white))),
-                  TextButton(
-                      onPressed: removeLastDigit,
-                      child: Icon(CupertinoIcons.delete_left_fill))
-                ],
+            if (dialedNumber != '')
+              Container(
+                height: 66,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(padding: EdgeInsets.only(left: 40)),
+                    Padding(
+                        padding: EdgeInsets.only(left: 18),
+                        child: Text(dialedNumber,
+                            style:
+                                TextStyle(fontSize: 36, color: Colors.white))),
+                    TextButton(
+                        onPressed: removeLastDigit,
+                        child: Icon(CupertinoIcons.delete_left_fill))
+                  ],
+                ),
               ),
-            ),
             Container(
               child: ConstrainedBox(
                 constraints: BoxConstraints.tightFor(width: 350, height: 275),
