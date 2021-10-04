@@ -492,7 +492,7 @@ class _ContactsListState extends State<ContactsList> {
       });
     });
 
-    _fusionConnection.callHistory.getRecentHistory(0, 300,
+    _fusionConnection.callHistory.getRecentHistory(300, 0,
         (List<CallHistory> history, bool fromServer) {
       this.setState(() {
         if (fromServer) {
