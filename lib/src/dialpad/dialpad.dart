@@ -19,6 +19,7 @@ class DialPad extends StatefulWidget {
 
 class _DialPadState extends State<DialPad> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Softphone get _softphone => widget._softphone;
 
   var dialedNumber = '';
@@ -62,93 +63,109 @@ class _DialPadState extends State<DialPad> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        constraints: BoxConstraints.tightFor(height: dialedNumber == '' ? 430 - 66.0 : 430),
-        decoration: BoxDecoration(color: darkGrey),
+        constraints: BoxConstraints.tightFor(
+            height: dialedNumber == '' ? 430 - 66.0 : 430),
+        decoration: BoxDecoration(
+            color: darkGrey,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+            )),
         padding: EdgeInsets.all(12.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            if (dialedNumber != '') Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(padding: EdgeInsets.only(left: 40)),
-                Padding(
-                    padding: EdgeInsets.fromLTRB(18, 12, 0, 0),
-                    child: Text(dialedNumber,
-                        style: TextStyle(fontSize: 36, color: Colors.white))),
-                TextButton(
-                    onPressed: removeLastDigit,
-                    child: Icon(CupertinoIcons.delete_left_fill))
-              ],
-            ),
-            ConstrainedBox(
-              constraints: BoxConstraints.tightFor(width: 350),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '1',
-                          alphas: digitAlphas[0]),
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '2',
-                          alphas: digitAlphas[1]),
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '3',
-                          alphas: digitAlphas[2]),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '4',
-                          alphas: digitAlphas[3]),
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '5',
-                          alphas: digitAlphas[4]),
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '6',
-                          alphas: digitAlphas[5]),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '7',
-                          alphas: digitAlphas[6]),
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '8',
-                          alphas: digitAlphas[7]),
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '9',
-                          alphas: digitAlphas[8]),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '*',
-                          alphas: digitAlphas[9]),
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '0',
-                          alphas: digitAlphas[10]),
-                      DialPadKey(
-                          onPressed: handleDialPadKeyPress,
-                          digit: '#',
-                          alphas: digitAlphas[11]),
-                    ],
-                  ),
-                ],
+            if (dialedNumber != '')
+              Container(
+                height: 66,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(padding: EdgeInsets.only(left: 40)),
+                    Padding(
+                        padding: EdgeInsets.only(left: 18),
+                        child: Text(dialedNumber,
+                            style:
+                                TextStyle(fontSize: 36, color: Colors.white))),
+                    TextButton(
+                        onPressed: removeLastDigit,
+                        child: Icon(CupertinoIcons.delete_left_fill))
+                  ],
+                ),
+              ),
+            Container(
+              child: ConstrainedBox(
+                constraints: BoxConstraints.tightFor(width: 350, height: 275),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '1',
+                            alphas: digitAlphas[0]),
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '2',
+                            alphas: digitAlphas[1]),
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '3',
+                            alphas: digitAlphas[2]),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '4',
+                            alphas: digitAlphas[3]),
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '5',
+                            alphas: digitAlphas[4]),
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '6',
+                            alphas: digitAlphas[5]),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '7',
+                            alphas: digitAlphas[6]),
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '8',
+                            alphas: digitAlphas[7]),
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '9',
+                            alphas: digitAlphas[8]),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '*',
+                            alphas: digitAlphas[9]),
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '0',
+                            alphas: digitAlphas[10]),
+                        DialPadKey(
+                            onPressed: handleDialPadKeyPress,
+                            digit: '#',
+                            alphas: digitAlphas[11]),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
             Row(

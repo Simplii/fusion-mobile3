@@ -243,6 +243,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _openDialPad() {
     showBarModalBottomSheet(
+        expand: false,
         context: context,
         builder: (context) => DialPadView(fusionConnection, softphone));
   }
