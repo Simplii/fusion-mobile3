@@ -23,10 +23,11 @@ class _CrmLeadsRowState extends State<CrmLeadsRow> {
   @override
   Widget build(BuildContext context) {
     CallpopInfo info = widget._softphone.getCallpopInfo(widget._activeCall.id);
+    if (info == null || info.crmContacts == null) return Container();
     return Container(
       child: Row(
         children:
-          info.crmContacts.map((CrmContact c) {
+        (info.crmContacts == null ? [].cast<CrmContact>() : info.crmContacts).map((CrmContact c) {
 
             return GestureDetector(
                 onTap: () { launch(c.url); },
