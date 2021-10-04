@@ -8,17 +8,25 @@ import 'package:fusion_mobile_revamped/src/styles.dart';
 enum Views { Main, DialPad, Hold }
 
 class CallActionButtons extends StatefulWidget {
-  CallActionButtons({Key key, this.actions, this.callOnHold}) : super(key: key);
+  CallActionButtons(
+      {Key key,
+      this.dialPadOpen,
+      this.setDialpad,
+      this.actions,
+      this.callOnHold})
+      : super(key: key);
 
   final Map<String, Function()> actions;
   final bool callOnHold;
+  final bool dialPadOpen;
+  Function(bool) setDialpad;
 
   @override
   State<StatefulWidget> createState() => _CallActionButtonsState();
 }
 
 class _CallActionButtonsState extends State<CallActionButtons> {
-  bool dialPadOpen = false;
+  bool  get dialPadOpen => widget.dialPadOpen;
 
   Widget _getMainView(bool onHold) {
     return Column(
@@ -45,9 +53,6 @@ class _CallActionButtonsState extends State<CallActionButtons> {
                     width: 24, height: 24)),
             CallActionButton(
                 onPressed: () {
-                  setState(() {
-                    dialPadOpen = !dialPadOpen;
-                  });
                   widget.actions['onDialBtnPress']();
                 },
                 title: 'Dial',
@@ -81,25 +86,7 @@ class _CallActionButtonsState extends State<CallActionButtons> {
                 icon: Image.asset("assets/icons/call_view/video chat.png",
                     width: 24, height: 24),
                 disabled: onHold),
-            Expanded(
-                child: GestureDetector(
-              onTap: widget.actions['onHangup'],
-              child: Center(
-                  child: Container(
-                      decoration: raisedButtonBorder(crimsonLight,
-                          darkenAmount: 40, lightenAmount: 60),
-                      padding: EdgeInsets.all(1),
-                      child: Container(
-                          width: 48,
-                          height: 48,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(50.0)),
-                              color: crimsonLight),
-                          child: Image.asset("assets/icons/phone.png",
-                              width: 28, height: 28)))),
-            )),
+            Expanded(child: _hangupButton()),
             CallActionButton(
                 onPressed: widget.actions['onTextBtnPress'],
                 title: 'Text',
@@ -116,35 +103,46 @@ class _CallActionButtonsState extends State<CallActionButtons> {
     );
   }
 
+  _hangupButton() {
+    return GestureDetector(
+      onTap: widget.actions['onHangup'],
+      child: Center(
+          child: Container(
+              decoration: raisedButtonBorder(crimsonLight,
+                  darkenAmount: 40, lightenAmount: 60),
+              padding: EdgeInsets.all(1),
+              child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(50.0)),
+                      color: crimsonLight),
+                  child: Image.asset("assets/icons/phone.png",
+                      width: 28, height: 28)))),
+    );
+  }
+
   Widget _getDialPadView() {
     return ConstrainedBox(
       constraints: BoxConstraints.expand(height: 80),
       child: Row(
         children: [
           Spacer(),
-          RawMaterialButton(
-            onPressed: widget.actions['onHangup'],
-            elevation: 2.0,
-            fillColor: Colors.redAccent,
-            child: Icon(
-              CupertinoIcons.phone_down_fill,
-              color: Colors.white,
-              size: 35.0,
-            ),
-            shape: CircleBorder(),
-          ),
+          _hangupButton(),
           Expanded(
-              child: TextButton(
-                  onPressed: () {
-                    setState(() {
-                      dialPadOpen = false;
-                    });
+              child: GestureDetector(
+                  onTap: () {
+                    widget.setDialpad(false);
                   },
-                  child: Text('Hide',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16))))
+                  child: Container(
+                      alignment: Alignment.center,
+                      decoration: clearBg(),
+                      child: Text('Hide',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16)))))
         ],
       ),
     );
@@ -154,7 +152,7 @@ class _CallActionButtonsState extends State<CallActionButtons> {
     if (widget.callOnHold) {
       return _getMainView(true);
     } else {
-      if (dialPadOpen) {
+      if (widget.dialPadOpen) {
         return _getDialPadView();
       } else {
         return _getMainView(false);
@@ -164,15 +162,23 @@ class _CallActionButtonsState extends State<CallActionButtons> {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
-        child: Container(
-          padding: EdgeInsets.only(top: 12, bottom: 10),
-          decoration: BoxDecoration(
-              color: coal.withAlpha((255 * 0.7).round()),
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(8), topRight: Radius.circular(8))),
-          child: _getView(),
-        )));
+    Widget contents = Container(
+      padding: EdgeInsets.only(top: 12, bottom: 10),
+      decoration: BoxDecoration(
+          color: widget.callOnHold || widget.dialPadOpen
+              ? Colors.transparent
+              : coal.withAlpha((255 * 0.7).round()),
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(8), topRight: Radius.circular(8))),
+      child: _getView(),
+    );
+
+    if (widget.callOnHold || widget.dialPadOpen)
+      return ClipRect(child: contents);
+    else
+      return ClipRect(
+          child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+              child: contents));
   }
 }

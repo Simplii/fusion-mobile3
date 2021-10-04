@@ -31,12 +31,12 @@ class _CallViewState extends State<CallView> {
   Timer _timer;
 
   initState() {
-     _timer = new Timer.periodic(
-         Duration(seconds:1 ),
-     (Timer timer) {
-       setState(() {});
-     },
-     );
+    _timer = new Timer.periodic(
+      Duration(seconds: 1),
+      (Timer timer) {
+        setState(() {});
+      },
+    );
   }
 
   @override
@@ -84,7 +84,12 @@ class _CallViewState extends State<CallView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('On hold'),
+          Text('ON HOLD',
+              style: TextStyle(
+                  color: translucentWhite(0.67),
+                  fontSize: 12,
+                  height: 1.4,
+                  fontWeight: FontWeight.w700)),
           GestureDetector(
               onTap: _onResumeBtnPress,
               child: Row(
@@ -92,16 +97,28 @@ class _CallViewState extends State<CallView> {
                 children: [
                   Container(
                     alignment: Alignment.center,
-                    padding: EdgeInsets.all(6.0),
+                    padding: EdgeInsets.only(
+                        top: 12, left: 16, right: 16, bottom: 12),
+                    margin: EdgeInsets.only(top: 8),
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(8.0)),
                         color: translucentWhite(0.2)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(CupertinoIcons.play_arrow_solid,
-                            color: Colors.white, size: 16.0),
-                        Text('Resume')
+                        Container(
+                            margin: EdgeInsets.only(right: 8),
+                            child: Image.asset(
+                                "assets/icons/call_view/play.png",
+                                width: 12,
+                                height: 16)),
+                        Text('RESUME',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                height: 1.2))
                       ],
                     ),
                   )
@@ -122,22 +139,25 @@ class _CallViewState extends State<CallView> {
         _activeCall); // get call start time and calculate duration
     String callRunTime = "";
     if (duration < 60) {
-      callRunTime = "00:"
-          + (duration % 60 < 10 ? "0" : "")
-          + duration.toString();
+      callRunTime =
+          "00:" + (duration % 60 < 10 ? "0" : "") + duration.toString();
     } else if (duration < 60 * 60) {
-      callRunTime = ((duration / 60).floor() < 10 ? "0" : "")
-          + (duration / 60).floor().toString() + ":"
-          + (duration % 60 < 10 ? "0" : "")
-          + (duration % 60).toString();
+      callRunTime = ((duration / 60).floor() < 10 ? "0" : "") +
+          (duration / 60).floor().toString() +
+          ":" +
+          (duration % 60 < 10 ? "0" : "") +
+          (duration % 60).toString();
     } else {
       int hours = (duration / (60 * 60)).floor();
       duration = duration - hours;
-      callRunTime = (hours < 10 ? "0" : "") + hours.toString() + ":"
-          + ((duration / 60).floor() < 10 ? "0" : "")
-          + (duration / 60).floor().toString() + ":"
-          + (duration % 60 < 10 ? "0" : "")
-          + (duration % 60).toString();
+      callRunTime = (hours < 10 ? "0" : "") +
+          hours.toString() +
+          ":" +
+          ((duration / 60).floor() < 10 ? "0" : "") +
+          (duration / 60).floor().toString() +
+          ":" +
+          (duration % 60 < 10 ? "0" : "") +
+          (duration % 60).toString();
     }
 
     Map<String, Function()> actions = {
@@ -162,16 +182,21 @@ class _CallViewState extends State<CallView> {
           backgroundColor: Colors.transparent,
           body: Stack(
             children: [
-              if (_softphone.getHoldState(_activeCall))
-              Expanded(
-                  child: Container(
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Color(0xFF000000), Color(0x1affffff)],
+              if (_softphone.getHoldState(_activeCall) || dialpadVisible)
+                Expanded(
+                    child: Container(
+                  decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [translucentWhite(0.0), Colors.black],
+                  )),
                 )),
-              )),
+              if (_softphone.getHoldState(_activeCall) || dialpadVisible)
+                ClipRect(
+                    child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 21, sigmaY: 21),
+                        child: Container())),
               SafeArea(
                   bottom: false,
                   child: Expanded(
@@ -192,6 +217,14 @@ class _CallViewState extends State<CallView> {
                           CallDialPad(),
                         CallActionButtons(
                             actions: actions,
+                            dialPadOpen: dialpadVisible,
+                            setDialpad: (bool isOpen) {
+                              setState(() {
+                                print("isopen" + isOpen.toString() + dialpadVisible.toString());
+                                dialpadVisible = isOpen;
+                                print("isopen" + isOpen.toString() + dialpadVisible.toString());
+                              });
+                            },
                             callOnHold: _softphone.getHoldState(_activeCall)),
                         CallFooterDetails(_softphone, _activeCall)
                       ],
