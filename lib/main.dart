@@ -9,7 +9,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_view.dart';
-import 'package:fusion_mobile_revamped/src/dialpad/dialpad_view.dart';
+import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:uuid/uuid.dart';
@@ -246,7 +246,7 @@ class _MyHomePageState extends State<MyHomePage> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => DialPadView(fusionConnection, softphone));
+        builder: (context) => DialPadModal(fusionConnection, softphone));
   }
 
   void _openCallView() {

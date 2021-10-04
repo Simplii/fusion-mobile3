@@ -8,10 +8,11 @@ import '../styles.dart';
 import 'dialpad_key.dart';
 
 class DialPad extends StatefulWidget {
-  DialPad(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
+  DialPad(this._fusionConnection, this._softphone, {Key key, this.onQueryChange}) : super(key: key);
 
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
+  final Function onQueryChange;
 
   @override
   State<StatefulWidget> createState() => _DialPadState();
@@ -27,6 +28,7 @@ class _DialPadState extends State<DialPad> {
   void handleDialPadKeyPress(String key) {
     setState(() {
       dialedNumber += key;
+      //widget.onQueryChange(dialedNumber);
     });
 
     print('DialPad key pressed : $key');
