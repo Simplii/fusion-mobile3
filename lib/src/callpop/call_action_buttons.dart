@@ -30,16 +30,19 @@ class _CallActionButtonsState extends State<CallActionButtons> {
               CallActionButton(
                   onPressed: widget.actions['onResumeBtnPress'],
                   title: 'Resume',
-                  icon: CupertinoIcons.play_arrow_solid)
+                  icon: Image.asset("assets/icons/call_view/play.png",
+                      width: 24, height: 24))
             else
               CallActionButton(
                   onPressed: widget.actions['onHoldBtnPress'],
                   title: 'Hold',
-                  icon: CupertinoIcons.pause_solid),
+                  icon: Image.asset("assets/icons/call_view/hold.png",
+                      width: 24, height: 24)),
             CallActionButton(
                 onPressed: widget.actions['onXferBtnPress'],
                 title: 'Xfer',
-                icon: CupertinoIcons.phone_fill_arrow_up_right),
+                icon: Image.asset("assets/icons/call_view/transfer.png",
+                    width: 24, height: 24)),
             CallActionButton(
                 onPressed: () {
                   setState(() {
@@ -48,15 +51,18 @@ class _CallActionButtonsState extends State<CallActionButtons> {
                   widget.actions['onDialBtnPress']();
                 },
                 title: 'Dial',
-                icon: Icons.dialpad),
+                icon: Image.asset("assets/icons/call_view/dialpad.png",
+                    width: 24, height: 24)),
             CallActionButton(
                 onPressed: widget.actions['onParkBtnPress'],
                 title: 'Park',
-                icon: CupertinoIcons.car_detailed),
+                icon: Image.asset("assets/icons/call_view/park.png",
+                    width: 24, height: 24)),
             CallActionButton(
                 onPressed: widget.actions['onConfBtnPress'],
                 title: 'Conf',
-                icon: CupertinoIcons.plus,
+                icon: Image.asset("assets/icons/call_view/conference.png",
+                    width: 24, height: 24),
                 disabled: onHold),
           ],
         ),
@@ -66,38 +72,44 @@ class _CallActionButtonsState extends State<CallActionButtons> {
             CallActionButton(
                 onPressed: widget.actions['onRecBtnPress'],
                 title: 'Rec',
-                icon: CupertinoIcons.smallcircle_fill_circle,
+                icon: Image.asset("assets/icons/call_view/record_icon.png",
+                    width: 24, height: 24),
                 disabled: onHold),
             CallActionButton(
                 onPressed: widget.actions['onVidBtnPress'],
                 title: 'Video',
-                icon: CupertinoIcons.video_camera_solid,
+                icon: Image.asset("assets/icons/call_view/video chat.png",
+                    width: 24, height: 24),
                 disabled: onHold),
             Expanded(
                 child: GestureDetector(
               onTap: widget.actions['onHangup'],
               child: Center(
                   child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(50.0)),
-                    color: crimsonLight),
-                child: Icon(
-                  CupertinoIcons.phone_down_fill,
-                  color: Colors.white,
-                  size: 35.0,
-                ),
-              )),
+                      decoration: raisedButtonBorder(crimsonLight,
+                          darkenAmount: 40, lightenAmount: 60),
+                      padding: EdgeInsets.all(1),
+                      child: Container(
+                          width: 48,
+                          height: 48,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(50.0)),
+                              color: crimsonLight),
+                          child: Image.asset("assets/icons/phone.png",
+                              width: 28, height: 28)))),
             )),
             CallActionButton(
                 onPressed: widget.actions['onTextBtnPress'],
                 title: 'Text',
-                icon: CupertinoIcons.chat_bubble_fill),
+                icon: Image.asset("assets/icons/call_view/reply.png",
+                    width: 24, height: 24)),
             CallActionButton(
                 onPressed: widget.actions['onAudioBtnPress'],
                 title: 'Audio',
-                icon: CupertinoIcons.speaker_2_fill),
+                icon: Image.asset("assets/icons/call_view/audio.png",
+                    width: 24, height: 24)),
           ],
         )
       ],
@@ -152,10 +164,15 @@ class _CallActionButtonsState extends State<CallActionButtons> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-      decoration: BoxDecoration(color: Colors.white10),
-      child: _getView(),
-    );
+    return ClipRect(child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+        child: Container(
+          padding: EdgeInsets.only(top: 12, bottom: 10),
+          decoration: BoxDecoration(
+              color: coal.withAlpha((255 * 0.7).round()),
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8), topRight: Radius.circular(8))),
+          child: _getView(),
+        )));
   }
 }

@@ -17,11 +17,11 @@ class _CrmLeadsRowState extends State<CrmLeadsRow> {
           Padding(
               padding: EdgeInsets.only(left: 5, right: 5),
               child: Image.asset("assets/crm_icons/hubspot.png",
-                  height: 16, width: 16)),
+                  height: 18, width: 18)),
           Padding(
               padding: EdgeInsets.only(left: 5, right: 5),
               child: Image.asset("assets/crm_icons/helpscout.png",
-                  height: 16, width: 16))
+                  height: 18, width: 18))
         ],
       ),
     );

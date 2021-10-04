@@ -233,7 +233,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  int _currentIndex = 1;
+  int _currentIndex = 0;
 
   void onTabTapped(int index) {
     this.setState(() {
@@ -242,9 +242,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _openDialPad() {
-    showBarModalBottomSheet(
-        expand: false,
+    showModalBottomSheet(
         context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
         builder: (context) => DialPadView(fusionConnection, softphone));
   }
 

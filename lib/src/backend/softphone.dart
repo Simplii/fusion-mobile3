@@ -466,7 +466,8 @@ class Softphone implements SipUaHelperListener {
   }
 
   getCallRunTime(Call call) {
-    return "00;00";
+    f
+    return "00:00";
   }
 
   getHoldState(Call call) {

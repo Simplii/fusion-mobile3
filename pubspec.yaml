@@ -72,6 +72,8 @@ flutter:
     - assets/icons/
     - assets/icons/hamburger.png
     - assets/icons/down_chevron.png
+    - assets/icons/call_view/
+    - assets/icons/call_view/toolbar/
     - assets/background.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
