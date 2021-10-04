@@ -63,13 +63,11 @@ class _DialPadState extends State<DialPad> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        constraints: BoxConstraints.tightFor(
-            height: dialedNumber == '' ? 430 - 66.0 : 430),
         decoration: BoxDecoration(
             color: darkGrey,
             borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
+              topLeft: Radius.circular(8),
+              topRight: Radius.circular(8),
             )),
         padding: EdgeInsets.all(12.0),
         child: Column(
@@ -77,26 +75,55 @@ class _DialPadState extends State<DialPad> {
           children: [
             if (dialedNumber != '')
               Container(
-                height: 66,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                alignment: Alignment.topCenter,
+                padding: EdgeInsets.only(top: 0, bottom: 10),
+                width: MediaQuery.of(context).size.width - 24,
+                child: Stack(
+                  alignment: Alignment.centerRight,
                   children: [
-                    Padding(padding: EdgeInsets.only(left: 40)),
-                    Padding(
-                        padding: EdgeInsets.only(left: 18),
-                        child: Text(dialedNumber,
-                            style:
-                                TextStyle(fontSize: 36, color: Colors.white))),
-                    TextButton(
-                        onPressed: removeLastDigit,
-                        child: Icon(CupertinoIcons.delete_left_fill))
+                    Container(
+                        height: 40,
+                        alignment: Alignment.topCenter,
+                        width: MediaQuery.of(context).size.width - 24,
+                        child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              Container(
+                                  alignment: Alignment.topCenter,
+                                  width: MediaQuery.of(context).size.width - 24,
+                                  child: Text(dialedNumber,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 36, color: Colors.white)))
+                            ])),
+                    GestureDetector(
+                        onTap: removeLastDigit,
+                        child: Opacity(
+                            opacity: 0.66,
+                            child: Container(
+                                decoration: clearBg(),
+                                height: 22,
+                                width: 40,
+                                child: Container(
+                                    width: 22,
+                                    height: 16,
+                                    child: Image.asset(
+                                        "assets/icons/call_view/backspace.png",
+                                        width: 22,
+                                        height: 16)))))
                   ],
                 ),
               ),
+            if (dialedNumber != '')
+              Container(
+                  height: 1,
+                  margin: EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(color: translucentWhite(0.1494))),
+            if (dialedNumber == '')
+              Container(height: 6),
             Container(
               child: ConstrainedBox(
-                constraints: BoxConstraints.tightFor(width: 350, height: 275),
+                constraints: BoxConstraints(maxWidth: 350),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -171,17 +198,25 @@ class _DialPadState extends State<DialPad> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                RawMaterialButton(
-                  onPressed: placeCall,
-                  elevation: 2.0,
-                  fillColor: successGreen,
-                  child: Icon(
-                    CupertinoIcons.phone_solid,
-                    color: Colors.white,
-                    size: 35.0,
-                  ),
-                  padding: EdgeInsets.all(15.0),
-                  shape: CircleBorder(),
+                GestureDetector(
+                  onTap: placeCall,
+                  child: Container(
+                      margin: EdgeInsets.only(top: 12, bottom: 14),
+                      decoration: raisedButtonBorder(successGreen,
+                          lightenAmount: 40, darkenAmount: 40),
+                      padding: EdgeInsets.all(1),
+                      child: Container(
+                          width: 56,
+                          height: 56,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(28)),
+                            color: successGreen,
+                          ),
+                          child: Image.asset(
+                              "assets/icons/call_view/phone_answer.png",
+                              width: 24,
+                              height: 24))),
                 ),
               ],
             )
