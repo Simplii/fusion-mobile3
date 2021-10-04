@@ -1,11 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/crm_leads_row.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
+import 'package:sip_ua/sip_ua.dart';
 
 class CallFooterDetails extends StatefulWidget {
-  CallFooterDetails({Key key}) : super(key: key);
+  CallFooterDetails(this._softphone, this._activeCall, {Key key}) : super(key: key);
+
+  final Softphone _softphone;
+  final Call _activeCall;
 
   @override
   State<StatefulWidget> createState() => _CallFooterDetailsState();
@@ -41,7 +46,7 @@ class _CallFooterDetailsState extends State<CallFooterDetails> {
       padding: EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: Row(
         children: [
-          CrmLeadsRow(),
+          CrmLeadsRow(widget._softphone, widget._activeCall),
           Spacer(),
           TextButton(
             style: TextButton.styleFrom(

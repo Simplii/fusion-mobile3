@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
@@ -27,6 +28,22 @@ class _CallViewState extends State<CallView> {
   Call get _activeCall => _softphone.activeCall;
 
   bool dialpadVisible = false;
+  Timer _timer;
+
+  initState() {
+     _timer = new Timer.periodic(
+         Duration(seconds:1 ),
+     (Timer timer) {
+       setState(() {});
+     },
+     );
+  }
+
+  @override
+  dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
 
   _onHoldBtnPress() {
     _softphone.setHold(_activeCall, true);
@@ -97,11 +114,31 @@ class _CallViewState extends State<CallView> {
 
   @override
   Widget build(BuildContext context) {
+    var companyName = _softphone.getCallerCompany(_activeCall);
     var callerName = _softphone.getCallerName(_activeCall);
     var callerOrigin =
         _softphone.getCallerNumber(_activeCall); // 'mobile' | 'work' ...etc
-    var callRunTime = _softphone.getCallRunTime(
+    var duration = _softphone.getCallRunTime(
         _activeCall); // get call start time and calculate duration
+    String callRunTime = "";
+    if (duration < 60) {
+      callRunTime = "00:"
+          + (duration % 60 < 10 ? "0" : "")
+          + duration.toString();
+    } else if (duration < 60 * 60) {
+      callRunTime = ((duration / 60).floor() < 10 ? "0" : "")
+          + (duration / 60).floor().toString() + ":"
+          + (duration % 60 < 10 ? "0" : "")
+          + (duration % 60).toString();
+    } else {
+      int hours = (duration / (60 * 60)).floor();
+      duration = duration - hours;
+      callRunTime = (hours < 10 ? "0" : "") + hours.toString() + ":"
+          + ((duration / 60).floor() < 10 ? "0" : "")
+          + (duration / 60).floor().toString() + ":"
+          + (duration % 60 < 10 ? "0" : "")
+          + (duration % 60).toString();
+    }
 
     Map<String, Function()> actions = {
       'onHoldBtnPress': _onHoldBtnPress,
@@ -143,6 +180,7 @@ class _CallViewState extends State<CallView> {
                       children: [
                         CallHeaderDetails(
                             callerName: callerName,
+                            companyName: companyName,
                             callerOrigin: callerOrigin,
                             callRunTime: callRunTime),
                         if (_softphone.getHoldState(_activeCall))
@@ -155,7 +193,7 @@ class _CallViewState extends State<CallView> {
                         CallActionButtons(
                             actions: actions,
                             callOnHold: _softphone.getHoldState(_activeCall)),
-                        CallFooterDetails()
+                        CallFooterDetails(_softphone, _activeCall)
                       ],
                     ),
                   ))

@@ -380,6 +380,16 @@ class Softphone implements SipUaHelperListener {
     callData.remove(call.id);
   }
 
+  void _setCallDataValue(String id, String name, dynamic value) {
+    var data = _getCallDataById(id);
+    data[name] = value;
+  }
+
+  dynamic _getCallDataValue(String id, String name) {
+    var data = _getCallDataById(id);
+    return data[name];
+  }
+
   _getCallDataById(String id) {
     if (callData.containsKey(id)) {
       return callData[id];
@@ -437,11 +447,13 @@ class Softphone implements SipUaHelperListener {
             _callKeep.updateDisplay(_uuidFor(call),
                 displayName: data.getName(defaul: call.remote_display_name),
                 handle: call.remote_identity);
-            _getCallDataById(call.id)['callPopInfo'] = data;
+            _setCallDataValue(call.id, "callPopInfo", data);
             print("got callpop info");
             print(data);
           });
 
+
+      _setCallDataValue(call.id, "startTime", DateTime.now());
       //    _callKeep.displayIncomingCall(_uuidFor(call), call.remote_identity,
       //        handleType: 'number', hasVideo: false);
     }
@@ -457,17 +469,43 @@ class Softphone implements SipUaHelperListener {
     }
   }
 
+  CallpopInfo getCallpopInfo(String id) {
+    return _getCallDataValue(id, "callPopInfo") as CallpopInfo;
+  }
+
   getCallerName(Call call) {
-    return call.remote_display_name;
+    CallpopInfo data = getCallpopInfo(call.id);
+    if (data != null) {
+      return data.getName();
+    }
+    else {
+      return call.remote_display_name;
+    }
+  }
+
+
+  String getCallerCompany(Call call) {
+    CallpopInfo data = getCallpopInfo(call.id);
+    if (data != null) {
+      return data.getCompany();
+    }
+    else {
+      return "";
+    }
   }
 
   getCallerNumber(Call call) {
     return call.remote_identity;
   }
 
-  getCallRunTime(Call call) {
-    f
-    return "00:00";
+  int getCallRunTime(Call call) {
+    DateTime time = _getCallDataValue(call.id, "answerTime") as DateTime;
+    if (time == null)
+      time = _getCallDataValue(call.id, "startTime") as DateTime;
+    if (time == null)
+      return 0;
+    else
+      return DateTime.now().difference(time).inSeconds;
   }
 
   getHoldState(Call call) {
@@ -513,6 +551,7 @@ class Softphone implements SipUaHelperListener {
         break;
       case CallStateEnum.ACCEPTED:
       case CallStateEnum.CONFIRMED:
+        _setCallDataValue(call.id, "answerTime", DateTime.now());
         if (!isIncoming(call)) {
           print("_call connecting out going" + _uuidFor(call));
           _callKeep.reportConnectedOutgoingCallWithUUID(_uuidFor(call));

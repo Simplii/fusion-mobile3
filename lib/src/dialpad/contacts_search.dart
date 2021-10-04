@@ -40,10 +40,11 @@ class _ContactsSearchState extends State<ContactsSearch> {
 
     _subscriptionKey =
         _fusionConnection.coworkers.subscribe(null, (List<Coworker> coworkers) {
-          this.setState(() {
-            for (Coworker c in coworkers) {
-              _coworkers[c.uid] = c;
-            }
+          if (mounted)
+            this.setState(() {
+              for (Coworker c in coworkers) {
+                _coworkers[c.uid] = c;
+              }
           });
         });
 
