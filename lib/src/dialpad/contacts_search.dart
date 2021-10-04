@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
@@ -6,11 +8,12 @@ import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 
 class ContactsSearch extends StatefulWidget {
-  ContactsSearch(this._fusionConnection, this._softphone, {Key key})
+  ContactsSearch(this._fusionConnection, this._softphone, this._query, {Key key})
       : super(key: key);
 
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
+  final _query;
 
   @override
   State<StatefulWidget> createState() => _ContactsSearchState();
@@ -18,8 +21,9 @@ class ContactsSearch extends StatefulWidget {
 
 class _ContactsSearchState extends State<ContactsSearch> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
   Softphone get _softphone => widget._softphone;
+  String get _query => widget._query;
+
   List<CallHistory> _history = [];
   int lookupState = 0;
   String _subscriptionKey;
@@ -70,7 +74,7 @@ class _ContactsSearchState extends State<ContactsSearch> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: CustomScrollView(slivers: [
+      child: _query != '' ? Text(_query) : CustomScrollView(slivers: [
         SliverList(
             delegate: SliverChildListDelegate(_historyList()))
       ]),
