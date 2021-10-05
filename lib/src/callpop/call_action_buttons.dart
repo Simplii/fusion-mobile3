@@ -10,17 +10,19 @@ enum Views { Main, DialPad, Hold }
 class CallActionButtons extends StatefulWidget {
   CallActionButtons(
       {Key key,
-      this.dialPadOpen,
-      this.setDialpad,
-      this.actions,
-      this.callIsRecording,
-      this.callOnHold})
+        this.dialPadOpen,
+        this.callIsMuted,
+        this.setDialpad,
+        this.actions,
+        this.callIsRecording,
+        this.callOnHold})
       : super(key: key);
 
   final Map<String, Function()> actions;
   final bool callOnHold;
   final bool callIsRecording;
   final bool dialPadOpen;
+  final bool callIsMuted;
   Function(bool) setDialpad;
 
   @override
@@ -100,7 +102,10 @@ class _CallActionButtonsState extends State<CallActionButtons> {
             CallActionButton(
                 onPressed: widget.actions['onAudioBtnPress'],
                 title: 'Audio',
-                icon: Image.asset("assets/icons/call_view/audio.png",
+                icon: Image.asset(
+                    widget.callIsMuted
+                    ? "assets/icons/call_view/audio_muted.png"
+                    : "assets/icons/call_view/audio.png",
                     width: 24, height: 24)),
           ],
         )

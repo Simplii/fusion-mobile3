@@ -30,8 +30,33 @@ class SMSConversationView extends StatefulWidget {
   final SMSConversation _smsConversation;
   final Softphone _softphone;
 
-  SMSConversationView(this._fusionConnection, this._softphone, this._smsConversation, {Key key})
+  SMSConversationView(
+      this._fusionConnection, this._softphone, this._smsConversation,
+      {Key key})
       : super(key: key);
+
+  static openConversation(
+      BuildContext context,
+      FusionConnection fusionConnection,
+      List<Contact> contacts,
+      List<CrmContact> crmContacts,
+      Softphone softphone,
+      String phoneNumber) {
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => SMSConversationView(
+            fusionConnection,
+            softphone,
+            SMSConversation.build(
+                contacts: contacts,
+                crmContacts: crmContacts,
+                myNumber: fusionConnection.smsDepartments
+                    .getDepartment("-2")
+                    .numbers[0],
+                number: phoneNumber)));
+  }
 
   @override
   State<StatefulWidget> createState() => _SMSConversationViewState();
@@ -39,7 +64,9 @@ class SMSConversationView extends StatefulWidget {
 
 class _SMSConversationViewState extends State<SMSConversationView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Softphone get _softphone => widget._softphone;
+
   SMSConversation get _conversation => widget._smsConversation;
   TextEditingController _messageInputController = TextEditingController();
   bool _loaded = false;
@@ -169,12 +196,15 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               if (chosen == "contactprofile") {
                 print("contactprofile");
                 Future.delayed(Duration(milliseconds: 10), () {
-                showModalBottomSheet(
-                    context: context,
-                    backgroundColor: Colors.transparent,
-                    isScrollControlled: true,
-                    builder: (context) => ContactProfileView(
-                        _fusionConnection, _softphone, _conversation.contacts[0])); });
+                  showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (context) => ContactProfileView(
+                          _fusionConnection,
+                          _softphone,
+                          _conversation.contacts[0]));
+                });
               } else {
                 Future.delayed(Duration(milliseconds: 10), () {
                   _openMedia(null);

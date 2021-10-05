@@ -310,7 +310,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if (softphone.activeCall != null) {
-      return CallView(softphone, closeView: _openCallView);
+      return CallView(fusionConnection, softphone, closeView: _openCallView);
     }
 
     return Container(

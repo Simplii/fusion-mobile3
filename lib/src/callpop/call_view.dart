@@ -4,18 +4,22 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_action_buttons.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_dialpad.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_footer_details.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_header_details.dart';
+import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
+import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:sip_ua/sip_ua.dart';
 
 class CallView extends StatefulWidget {
-  CallView(this._softphone, {Key key, this.closeView}) : super(key: key);
+  CallView(this._fusionConnection, this._softphone, {Key key, this.closeView}) : super(key: key);
 
   final VoidCallback closeView;
+  final FusionConnection _fusionConnection;
   final Softphone _softphone;
 
   @override
@@ -24,6 +28,7 @@ class CallView extends StatefulWidget {
 
 class _CallViewState extends State<CallView> {
   Softphone get _softphone => widget._softphone;
+  FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Call get _activeCall => _softphone.activeCall;
 
@@ -76,9 +81,96 @@ class _CallViewState extends State<CallView> {
 
   _onVidBtnPress() {}
 
-  _onTextBtnPress() {}
+  _onTextBtnPress() {
+    SMSConversationView.openConversation(
+      context,
+      _fusionConnection,
+      _softphone.getCallpopInfo(_activeCall.id).contacts,
+      _softphone.getCallpopInfo(_activeCall.id).crmContacts,
+      _softphone,
+      _softphone.getCallpopInfo(_activeCall.id).phoneNumber
+    );
+  }
 
-  _onAudioBtnPress() {}
+  _onAudioBtnPress() {
+    List<List<String>> options = [
+      ["assets/icons/call_view/audio_phone.png", "Phone", "phone"],
+      ["assets/icons/call_view/audio_speaker.png", "Speaker", "speaker"],
+    ];
+    String callAudioOutput = _softphone.getCallOutput(_activeCall);
+    bool muted = _softphone.getMuted(_activeCall);
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (contact) => PopupMenu(
+            label: "AUDIO SOURCE",
+            topChild: Row(children: [Expanded(child: GestureDetector(
+                onTap: () {
+                  _softphone.setMute(_activeCall, !muted);
+                  Navigator.pop(context);
+                },
+                child: Container(
+              alignment: Alignment.center,
+              margin: EdgeInsets.only(bottom: 24, left: 20, right: 20, top: 6),
+              padding: EdgeInsets.only(top: 12, bottom: 12),
+              decoration: BoxDecoration(
+                color: muted ? crimsonDarker : coal,
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+                boxShadow: [BoxShadow(
+                  color: translucentBlack(0.28),
+                  offset: Offset.zero,
+                  blurRadius: 36)]
+              ),
+              child: Text(
+                muted ? "Muted" : "Mute",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  height: 1.4,
+                )
+              )
+            )))]),
+            bottomChild: Container(
+                constraints: BoxConstraints(
+                    minHeight: 24,
+                    maxHeight: 100,
+                    minWidth: 90,
+                    maxWidth: MediaQuery.of(context).size.width - 136),
+                child: ListView(
+                    padding: EdgeInsets.all(8),
+                    children: options.map((List<String> option) {
+                      return GestureDetector(
+                          onTap: () {
+                            _softphone.setCallOutput(_activeCall, option[2]);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                              padding: EdgeInsets.only(
+                                  top: 12, bottom: 12, left: 18, right: 18),
+                              decoration: BoxDecoration(
+                                  color: option[2] == callAudioOutput
+                                      ? lightHighlight
+                                      : Colors.transparent,
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: lightDivider, width: 1.0))),
+                              child: Row(
+                                  children: [
+                                    Image.asset(option[0], width: 15, height: 15),
+                                    Container(width: 12),
+                                    Text(option[1],
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w700)),
+                                    Spacer(),
+                                    if (callAudioOutput == option[2])
+                                      Image.asset("assets/icons/call_view/check.png", width: 16, height: 11)
+                                  ])));
+                    }).toList()))));
+  }
 
   _onHangup() {
     _softphone.hangUp(_activeCall);
@@ -235,6 +327,7 @@ class _CallViewState extends State<CallView> {
                               });
                             },
                             callIsRecording: _softphone.getRecordState(_activeCall),
+                            callIsMuted: _softphone.getMuted(_activeCall),
                             callOnHold: _softphone.getHoldState(_activeCall)),
                         CallFooterDetails(_softphone, _activeCall)
                       ],

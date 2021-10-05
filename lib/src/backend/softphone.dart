@@ -191,10 +191,16 @@ class Softphone implements SipUaHelperListener {
 
   setMute(Call call, bool setMute) {
     if (setMute) {
+      _setCallDataValue(call.id, "muted", true);
       call.mute();
     } else {
+      _setCallDataValue(call.id, "muted", false);
       call.unmute();
     }
+  }
+
+  getMuted(Call call) {
+    return _getCallDataValue(call.id, "muted", def: false);
   }
 
   isIncoming(Call call) {
@@ -517,6 +523,14 @@ class Softphone implements SipUaHelperListener {
     return _getCallDataValue(call.id, "onHold", def: false);
   }
 
+  getCallOutput(Call call) {
+    return this.outputDevice == 'Speaker' ? 'speaker' : 'phone';
+  }
+
+  setCallOutput(Call call, String outputDevice) {
+    setSpeaker(outputDevice == 'speaker');
+  }
+
   recordCall(Call call) {
     _setCallDataValue(call.id, "isRecording", true);
     _fusionConnection.nsApiCall(
@@ -541,15 +555,6 @@ class Softphone implements SipUaHelperListener {
 
   @override
   void callStateChanged(Call call, CallState callState) {
-    if (callState.state == CallStateEnum.MUTED) {
-      return;
-    }
-
-    if (callState.state == CallStateEnum.UNMUTED) {
-      return;
-    }
-
-    if (callState.state != CallStateEnum.STREAM) {}
 
     print("event- _call_ -" +
         call.direction +
@@ -568,9 +573,11 @@ class Softphone implements SipUaHelperListener {
         _removeCall(call);
         break;
       case CallStateEnum.UNMUTED:
+        _setCallDataValue(call.id, "muted", false);
         _callKeep.setMutedCall(_uuidFor(call), false);
         break;
       case CallStateEnum.MUTED:
+        _setCallDataValue(call.id, "muted", true);
         _callKeep.setMutedCall(_uuidFor(call), true);
         break;
       case CallStateEnum.CONNECTING:
