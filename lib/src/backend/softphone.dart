@@ -350,13 +350,17 @@ class Softphone implements SipUaHelperListener {
       activeCall = null;
     }
 
+    List<Call> toRemove = [];
+
     for (Call c in calls) {
       if (c == call || c.id == call.id) {
-        calls.remove(c);
-        _removeDataFor(c);
+        toRemove.add(c);
         _callKeep.endCall(_uuidFor(c));
       }
     }
+
+    for (Call c in toRemove)
+      calls.remove(c);
 
     _updateListeners();
   }

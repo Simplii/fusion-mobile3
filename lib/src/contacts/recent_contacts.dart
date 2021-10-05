@@ -20,7 +20,8 @@ class RecentContactsTab extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
 
-  RecentContactsTab(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
+  RecentContactsTab(this._fusionConnection, this._softphone, {Key key})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _RecentContactsTabState();
@@ -28,6 +29,7 @@ class RecentContactsTab extends StatefulWidget {
 
 class _RecentContactsTabState extends State<RecentContactsTab> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Softphone get _softphone => widget._softphone;
   SMSConversation openConversation = null;
   bool _showingResults = false;
@@ -47,13 +49,10 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
     return Expanded(
         child: GestureDetector(
             onTapUp: (e) {
-              print("tappedup" + name);
             },
             onTapDown: (e) {
-              print("tappeddown" + name);
             },
             onTap: () {
-              print("tapped" + name);
               this.setState(() {
                 _selectedTab = name;
               });
@@ -93,7 +92,6 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
       SearchContactsBar(_fusionConnection, (String query) {
         this.setState(() {
           if (query.trim() != "") {
-            print("searching now " + query);
             _showingResults = true;
             _query = query;
           } else {
@@ -107,8 +105,10 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
       }),
       !_showingResults ? _tabBar() : Container(),
       (_showingResults
-          ? ContactsSearchList(_fusionConnection, _softphone, _query, _selectedTab)
-          : ContactsList(_fusionConnection, _softphone, _getTitle(), _selectedTab))
+          ? ContactsSearchList(
+              _fusionConnection, _softphone, _query, _selectedTab)
+          : ContactsList(
+              _fusionConnection, _softphone, _getTitle(), _selectedTab))
     ];
     return Container(child: Column(children: children));
   }
@@ -119,9 +119,12 @@ class ContactsSearchList extends StatefulWidget {
   final Softphone _softphone;
   final String _query;
   final String _defaultTab;
+  final Function(Contact contact, CrmContact crmContact) onSelect;
+  bool embedded;
 
-  ContactsSearchList(this._fusionConnection, this._softphone, this._query, this._defaultTab,
-      {Key key})
+  ContactsSearchList(
+      this._fusionConnection, this._softphone, this._query, this._defaultTab,
+      {Key key, this.embedded, this.onSelect})
       : super(key: key);
 
   @override
@@ -130,7 +133,10 @@ class ContactsSearchList extends StatefulWidget {
 
 class _ContactsSearchListState extends State<ContactsSearchList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Softphone get _softphone => widget._softphone;
+
+  bool get _embedded => widget.embedded == null ? false : widget.embedded;
 
   String get _query => widget._query;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
@@ -175,13 +181,6 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   }
 
   _lookupQuery() {
-    print("contactssearch looking up " +
-        _query +
-        " " +
-        lookupState.toString() +
-
-        " " +
-        _page.toString());
     if (lookupState == 1) return;
     lookupState = 1;
     _lookedUpQuery = _query;
@@ -190,7 +189,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       if (_page == -1) return;
       _fusionConnection.contacts.search(_query, 100, _page * 100,
           (List<Contact> contacts, bool fromServer) {
-        print("gotresult" + contacts.toString());
+
         this.setState(() {
           if (fromServer) {
             lookupState = 2;
@@ -211,14 +210,13 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             _page = -1;
           }
           _sortList(_contacts);
-
         });
       });
     } else if (_typeFilter == 'Integrated Contacts') {
       if (_page == -1) return;
       _fusionConnection.integratedContacts.search(_query, 100, _page * 100,
           (List<Contact> contacts, bool fromServer) {
-        print("gotresult" + contacts.toString());
+
         this.setState(() {
           if (fromServer) {
             lookupState = 2;
@@ -276,13 +274,17 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => ContactProfileView(_fusionConnection, _softphone, contact));
+        builder: (context) =>
+            ContactProfileView(_fusionConnection, _softphone, contact));
   }
 
   _resultRow(String letter, Contact contact) {
     return GestureDetector(
         onTap: () {
-          _openProfile(contact);
+          if (widget.onSelect != null)
+            widget.onSelect(contact, null);
+          else
+            _openProfile(contact);
         },
         child: Container(
             decoration: BoxDecoration(color: Colors.transparent),
@@ -355,11 +357,10 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   }
 
   _spinner() {
-    return
-      Container(
-          alignment: Alignment.center,
-          padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
-          child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
+    return Container(
+        alignment: Alignment.center,
+        padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
+        child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
   }
 
   _isSpinning() {
@@ -387,22 +388,24 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                   child: _isSpinning()
                       ? _spinner()
                       : ListView.builder(
-                      itemCount:
-                          _page == -1 ? _contacts.length : _contacts.length + 1,
-                      itemBuilder: (BuildContext context, int index) {
-                        if (index >= _contacts.length) {
-                          _loadMore();
-                          return Container();
-                        } else {
-                          String letter = _letterFor(_contacts[index]);
-                          if (index != 0 &&
-                              _letterFor(_contacts[index - 1]) == letter) {
-                            letter = "";
-                          }
-                          return _resultRow(letter, _contacts[index]);
-                        }
-                      },
-                      padding: EdgeInsets.only(left: 12, right: 12, top: 40))),
+                          itemCount: _page == -1
+                              ? _contacts.length
+                              : _contacts.length + 1,
+                          itemBuilder: (BuildContext context, int index) {
+                            if (index >= _contacts.length) {
+                              _loadMore();
+                              return Container();
+                            } else {
+                              String letter = _letterFor(_contacts[index]);
+                              if (index != 0 &&
+                                  _letterFor(_contacts[index - 1]) == letter) {
+                                letter = "";
+                              }
+                              return _resultRow(letter, _contacts[index]);
+                            }
+                          },
+                          padding:
+                              EdgeInsets.only(left: 12, right: 12, top: 40))),
               Container(
                   decoration: BoxDecoration(
                     boxShadow: [],
@@ -442,9 +445,11 @@ class ContactsList extends StatefulWidget {
   final Softphone _softphone;
   final String _label;
   final String _selectedTab;
+  final Function(Contact contact, CrmContact crmContact) onSelect;
 
-  ContactsList(this._fusionConnection, this._softphone, this._label, this._selectedTab,
-      {Key key})
+  ContactsList(
+      this._fusionConnection, this._softphone, this._label, this._selectedTab,
+      {Key key, this.onSelect})
       : super(key: key);
 
   @override
@@ -453,7 +458,9 @@ class ContactsList extends StatefulWidget {
 
 class _ContactsListState extends State<ContactsList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Softphone get _softphone => widget._softphone;
+
   String get _label => widget._label;
 
   String get _selectedTab => widget._selectedTab;
@@ -521,17 +528,26 @@ class _ContactsListState extends State<ContactsList> {
       if (item.coworker != null && _coworkers[item.coworker.uid] != null) {
         item.coworker = _coworkers[item.coworker.uid];
       }
-      return CallHistorySummaryView(_fusionConnection, _softphone, item);
+      return CallHistorySummaryView(_fusionConnection, _softphone, item,
+          onSelect: widget.onSelect == null
+              ? null
+              : () {
+                  widget.onSelect(
+                      item.coworker != null
+                          ? item.coworker.toContact()
+                          : item.contact,
+                      item.crmContact);
+                });
     }).toList());
+
     return response;
   }
 
   _spinner() {
-    return
-      Container(
-          alignment: Alignment.center,
-          padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
-          child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
+    return Container(
+        alignment: Alignment.center,
+        padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
+        child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
   }
 
   _isSpinning() {
@@ -560,11 +576,12 @@ class _ContactsListState extends State<ContactsList> {
                       child: _isSpinning()
                           ? _spinner()
                           : Container(
-                          padding: EdgeInsets.only(top: 00),
-                          child: CustomScrollView(slivers: [
-                            SliverList(
-                                delegate: SliverChildListDelegate(_historyList()))
-                          ])))
+                              padding: EdgeInsets.only(top: 00),
+                              child: CustomScrollView(slivers: [
+                                SliverList(
+                                    delegate:
+                                        SliverChildListDelegate(_historyList()))
+                              ])))
                 ],
               ),
               Container(
@@ -592,8 +609,11 @@ class CallHistorySummaryView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final CallHistory _historyItem;
   final Softphone _softphone;
+  Function() onSelect;
 
-  CallHistorySummaryView(this._fusionConnection, this._softphone, this._historyItem, {Key key})
+  CallHistorySummaryView(
+      this._fusionConnection, this._softphone, this._historyItem,
+      {Key key, this.onSelect})
       : super(key: key);
 
   @override
@@ -602,7 +622,9 @@ class CallHistorySummaryView extends StatefulWidget {
 
 class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Softphone get _softphone => widget._softphone;
+
   CallHistory get _historyItem => widget._historyItem;
   bool _expanded = false;
 
@@ -657,10 +679,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _openMessage() {
-    print("tappedmessage");
     String number =
-    _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
-    print("tapped number" + number);
+        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -681,9 +701,9 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _makeCall() {
-    _softphone.makeCall(
-      _historyItem.direction == "inbound" ? _historyItem.fromDid : _historyItem.toDid
-    );
+    _softphone.makeCall(_historyItem.direction == "inbound"
+        ? _historyItem.fromDid
+        : _historyItem.toDid);
   }
 
   _openProfile() {
@@ -691,8 +711,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) =>
-            ContactProfileView(_fusionConnection, _softphone, _historyItem.contact));
+        builder: (context) => ContactProfileView(
+            _fusionConnection, _softphone, _historyItem.contact));
   }
 
   @override
@@ -734,7 +754,10 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   _topPart() {
     return GestureDetector(
         onTap: () {
-          _expand();
+          if (widget.onSelect != null)
+            widget.onSelect();
+          else
+            _expand();
         },
         child: Row(children: [
           ContactCircle.withCoworker(

@@ -8,17 +8,18 @@ import '../styles.dart';
 import 'dialpad_key.dart';
 
 class DialPad extends StatefulWidget {
-  DialPad(this._fusionConnection, this._softphone, {Key key, this.onQueryChange}) : super(key: key);
+  DialPad(this._fusionConnection, this._softphone, {Key key, this.onQueryChange, this.onPlaceCall}) : super(key: key);
 
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
   final Function onQueryChange;
+  final Function(String number) onPlaceCall;
 
   @override
   State<StatefulWidget> createState() => _DialPadState();
 }
 
-class _DialPadState extends State<DialPad> {
+class _DialPadState extends State<DialPad> with TickerProviderStateMixin{
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Softphone get _softphone => widget._softphone;
@@ -28,10 +29,9 @@ class _DialPadState extends State<DialPad> {
   void handleDialPadKeyPress(String key) {
     setState(() {
       dialedNumber += key;
-      //widget.onQueryChange(dialedNumber);
+      if (widget.onQueryChange != null)
+        widget.onQueryChange(dialedNumber);
     });
-
-    print('DialPad key pressed : $key');
   }
 
   void removeLastDigit() {
@@ -39,12 +39,18 @@ class _DialPadState extends State<DialPad> {
 
     setState(() {
       dialedNumber = dialedNumber.substring(0, dialedNumber.length - 1);
+      if (widget.onQueryChange != null)
+        widget.onQueryChange(dialedNumber);
     });
   }
 
   void placeCall() {
-    _softphone.makeCall(dialedNumber);
-    Navigator.pop(context);
+    if (widget.onPlaceCall != null)
+      widget.onPlaceCall(dialedNumber);
+    else {
+      _softphone.makeCall(dialedNumber);
+      Navigator.pop(context);
+    }
   }
 
   var digitAlphas = [
@@ -75,6 +81,15 @@ class _DialPadState extends State<DialPad> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
+            AnimatedSize(
+              vsync: this,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeIn,
+                child: Container(
+                  height: dialedNumber == "" ? 0 : 69,
+                    child:Column(
+            key: ValueKey<String>(dialedNumber == "" ? "emptykey" : "enteredkey"),
+            children: [
             if (dialedNumber != '')
               Container(
                 alignment: Alignment.topCenter,
@@ -104,8 +119,9 @@ class _DialPadState extends State<DialPad> {
                             opacity: 0.66,
                             child: Container(
                                 decoration: clearBg(),
-                                height: 22,
-                                width: 40,
+                                height: 42,
+                                padding:EdgeInsets.only(top:10, bottom: 10, left: 40, right: 0),
+                                width: 80,
                                 child: Container(
                                     width: 22,
                                     height: 16,
@@ -123,6 +139,7 @@ class _DialPadState extends State<DialPad> {
                   decoration: BoxDecoration(color: translucentWhite(0.1494))),
             if (dialedNumber == '')
               Container(height: 6),
+    ]))),
             Container(
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: 350),
@@ -200,8 +217,12 @@ class _DialPadState extends State<DialPad> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                GestureDetector(
-                  onTap: placeCall,
+                AnimatedOpacity(
+                  opacity: dialedNumber == "" ? 0.5 : 1.0,
+                curve: Curves.easeIn,
+                duration: const Duration(milliseconds:200),
+                child: GestureDetector(
+                  onTap: dialedNumber == "" ? () {} : placeCall,
                   child: Container(
                       margin: EdgeInsets.only(top: 12, bottom: 14),
                       decoration: raisedButtonBorder(successGreen,
@@ -219,7 +240,7 @@ class _DialPadState extends State<DialPad> {
                               "assets/icons/call_view/phone_answer.png",
                               width: 24,
                               height: 24))),
-                ),
+                )),
               ],
             )
           ],

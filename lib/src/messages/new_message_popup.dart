@@ -37,6 +37,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   String _searchingFor = "";
 
   initState() {
+    super.initState();
     myPhoneNumber =
         _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
   }

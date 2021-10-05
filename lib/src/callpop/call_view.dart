@@ -10,13 +10,15 @@ import 'package:fusion_mobile_revamped/src/callpop/call_action_buttons.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_dialpad.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_footer_details.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_header_details.dart';
+import 'package:fusion_mobile_revamped/src/callpop/transfer_call_popup.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:sip_ua/sip_ua.dart';
 
 class CallView extends StatefulWidget {
-  CallView(this._fusionConnection, this._softphone, {Key key, this.closeView}) : super(key: key);
+  CallView(this._fusionConnection, this._softphone, {Key key, this.closeView})
+      : super(key: key);
 
   final VoidCallback closeView;
   final FusionConnection _fusionConnection;
@@ -28,6 +30,7 @@ class CallView extends StatefulWidget {
 
 class _CallViewState extends State<CallView> {
   Softphone get _softphone => widget._softphone;
+
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Call get _activeCall => _softphone.activeCall;
@@ -36,6 +39,7 @@ class _CallViewState extends State<CallView> {
   Timer _timer;
 
   initState() {
+    super.initState();
     _timer = new Timer.periodic(
       Duration(seconds: 1),
       (Timer timer) {
@@ -58,7 +62,32 @@ class _CallViewState extends State<CallView> {
     _softphone.setHold(_activeCall, false);
   }
 
-  _onXferBtnPress() {}
+  _makeXferUrl(String url) {
+    if (url.contains("@"))
+      return 'sip:' + url;
+    else
+      return url;
+  }
+
+  _onXferBtnPress() {
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (contact) =>
+            TransferCallPopup(
+                _fusionConnection, _softphone,
+                    () {
+                      Navigator.pop(context);
+                    },
+                    (String xferTo, String xferType) {
+                      if (xferType == "blind") {
+                        _softphone.transfer(_activeCall, _makeXferUrl(xferTo));
+                        print("xferrred" + ":" + _makeXferUrl(xferTo) + ":" + _activeCall.toString());
+                      }
+                      Navigator.pop(context);
+                    }));
+  }
 
   _onDialBtnPress() {
     setState(() {
@@ -66,7 +95,14 @@ class _CallViewState extends State<CallView> {
     });
   }
 
-  _onParkBtnPress() {}
+  _onParkBtnPress() {
+    _fusionConnection.nsApiCall("call", "park", {
+      "uid": _fusionConnection.getUid(),
+      "callid": _activeCall.id
+    }, callback: (Map<String, dynamic> respone) {
+      print("response" + respone.toString());
+    });
+  }
 
   _onConfBtnPress() {}
 
@@ -83,13 +119,12 @@ class _CallViewState extends State<CallView> {
 
   _onTextBtnPress() {
     SMSConversationView.openConversation(
-      context,
-      _fusionConnection,
-      _softphone.getCallpopInfo(_activeCall.id).contacts,
-      _softphone.getCallpopInfo(_activeCall.id).crmContacts,
-      _softphone,
-      _softphone.getCallpopInfo(_activeCall.id).phoneNumber
-    );
+        context,
+        _fusionConnection,
+        _softphone.getCallpopInfo(_activeCall.id).contacts,
+        _softphone.getCallpopInfo(_activeCall.id).crmContacts,
+        _softphone,
+        _softphone.getCallpopInfo(_activeCall.id).phoneNumber);
   }
 
   _onAudioBtnPress() {
@@ -105,33 +140,36 @@ class _CallViewState extends State<CallView> {
         isScrollControlled: true,
         builder: (contact) => PopupMenu(
             label: "AUDIO SOURCE",
-            topChild: Row(children: [Expanded(child: GestureDetector(
-                onTap: () {
-                  _softphone.setMute(_activeCall, !muted);
-                  Navigator.pop(context);
-                },
-                child: Container(
-              alignment: Alignment.center,
-              margin: EdgeInsets.only(bottom: 24, left: 20, right: 20, top: 6),
-              padding: EdgeInsets.only(top: 12, bottom: 12),
-              decoration: BoxDecoration(
-                color: muted ? crimsonDarker : coal,
-                borderRadius: BorderRadius.all(Radius.circular(8)),
-                boxShadow: [BoxShadow(
-                  color: translucentBlack(0.28),
-                  offset: Offset.zero,
-                  blurRadius: 36)]
-              ),
-              child: Text(
-                muted ? "Muted" : "Mute",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                  height: 1.4,
-                )
-              )
-            )))]),
+            topChild: Row(children: [
+              Expanded(
+                  child: GestureDetector(
+                      onTap: () {
+                        _softphone.setMute(_activeCall, !muted);
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                          alignment: Alignment.center,
+                          margin: EdgeInsets.only(
+                              bottom: 24, left: 20, right: 20, top: 6),
+                          padding: EdgeInsets.only(top: 12, bottom: 12),
+                          decoration: BoxDecoration(
+                              color: muted ? crimsonDarker : coal,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8)),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: translucentBlack(0.28),
+                                    offset: Offset.zero,
+                                    blurRadius: 36)
+                              ]),
+                          child: Text(muted ? "Muted" : "Mute",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                height: 1.4,
+                              )))))
+            ]),
             bottomChild: Container(
                 constraints: BoxConstraints(
                     minHeight: 24,
@@ -156,19 +194,21 @@ class _CallViewState extends State<CallView> {
                                   border: Border(
                                       bottom: BorderSide(
                                           color: lightDivider, width: 1.0))),
-                              child: Row(
-                                  children: [
-                                    Image.asset(option[0], width: 15, height: 15),
-                                    Container(width: 12),
-                                    Text(option[1],
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w700)),
-                                    Spacer(),
-                                    if (callAudioOutput == option[2])
-                                      Image.asset("assets/icons/call_view/check.png", width: 16, height: 11)
-                                  ])));
+                              child: Row(children: [
+                                Image.asset(option[0], width: 15, height: 15),
+                                Container(width: 12),
+                                Text(option[1],
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700)),
+                                Spacer(),
+                                if (callAudioOutput == option[2])
+                                  Image.asset(
+                                      "assets/icons/call_view/check.png",
+                                      width: 16,
+                                      height: 11)
+                              ])));
                     }).toList()))));
   }
 
@@ -187,8 +227,7 @@ class _CallViewState extends State<CallView> {
               style: TextStyle(
                   color: translucentWhite(0.67),
                   fontSize: 12,
-                  height
-                      : 1.4,
+                  height: 1.4,
                   fontWeight: FontWeight.w700)),
           GestureDetector(
               onTap: _onResumeBtnPress,
@@ -307,7 +346,8 @@ class _CallViewState extends State<CallView> {
                             callerName: callerName,
                             companyName: companyName,
                             callerOrigin: callerOrigin,
-                            callIsRecording: _softphone.getRecordState(_activeCall),
+                            callIsRecording:
+                                _softphone.getRecordState(_activeCall),
                             callRunTime: callRunTime),
                         if (_softphone.getHoldState(_activeCall))
                           _onHoldView()
@@ -321,12 +361,17 @@ class _CallViewState extends State<CallView> {
                             dialPadOpen: dialpadVisible,
                             setDialpad: (bool isOpen) {
                               setState(() {
-                                print("isopen" + isOpen.toString() + dialpadVisible.toString());
+                                print("isopen" +
+                                    isOpen.toString() +
+                                    dialpadVisible.toString());
                                 dialpadVisible = isOpen;
-                                print("isopen" + isOpen.toString() + dialpadVisible.toString());
+                                print("isopen" +
+                                    isOpen.toString() +
+                                    dialpadVisible.toString());
                               });
                             },
-                            callIsRecording: _softphone.getRecordState(_activeCall),
+                            callIsRecording:
+                                _softphone.getRecordState(_activeCall),
                             callIsMuted: _softphone.getMuted(_activeCall),
                             callOnHold: _softphone.getHoldState(_activeCall)),
                         CallFooterDetails(_softphone, _activeCall)

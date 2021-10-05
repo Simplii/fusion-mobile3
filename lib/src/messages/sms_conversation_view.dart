@@ -74,6 +74,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   List<SMSMessage> _messages = [];
 
   initState() {
+    super.initState();
     if (_fusionConnection.smsDepartments.lookupRecord("-2") != null) {
       _loaded = true;
     }
