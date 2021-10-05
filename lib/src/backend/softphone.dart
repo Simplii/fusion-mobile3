@@ -208,6 +208,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   isConnected(Call call) {
+    return _getCallDataValue(call.id, "answerTime") != null;
     return call.state == CallStateEnum.ACCEPTED ||
         call.state == CallStateEnum.CONFIRMED ||
         call.state == CallStateEnum.STREAM ||

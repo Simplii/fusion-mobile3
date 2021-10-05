@@ -14,11 +14,15 @@ class CallActionButtons extends StatefulWidget {
         this.callIsMuted,
         this.setDialpad,
         this.actions,
+        this.isIncoming,
+        this.isRinging,
         this.callIsRecording,
         this.callOnHold})
       : super(key: key);
 
   final Map<String, Function()> actions;
+  final bool isIncoming;
+  final bool isRinging;
   final bool callOnHold;
   final bool callIsRecording;
   final bool dialPadOpen;
@@ -140,11 +144,15 @@ class _CallActionButtonsState extends State<CallActionButtons> {
         children: [
           Spacer(),
           _hangupButton(),
+          if (widget.isRinging)
+            Spacer(),
+          if (!widget.isRinging)
           Expanded(
               child: GestureDetector(
                   onTap: () {
                     widget.setDialpad(false);
                   },
+
                   child: Container(
                       alignment: Alignment.center,
                       decoration: clearBg(),
@@ -159,14 +167,14 @@ class _CallActionButtonsState extends State<CallActionButtons> {
   }
 
   Widget _getView() {
-    if (widget.callOnHold) {
+    if (widget.isRinging) {
+      return _getDialPadView();
+    } if (widget.callOnHold) {
       return _getMainView(true);
-    } else {
-      if (widget.dialPadOpen) {
+    } else if (widget.dialPadOpen) {
         return _getDialPadView();
-      } else {
-        return _getMainView(false);
-      }
+    } else {
+      return _getMainView(false);
     }
   }
 
