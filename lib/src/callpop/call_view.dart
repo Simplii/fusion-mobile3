@@ -217,6 +217,10 @@ class _CallViewState extends State<CallView> {
     widget.closeView();
   }
 
+  _onAnswer() {
+    _softphone.answerCall(_activeCall);
+  }
+
   _onHoldView() {
     return Expanded(
         child: Container(
@@ -311,6 +315,7 @@ class _CallViewState extends State<CallView> {
       'onTextBtnPress': _onTextBtnPress,
       'onAudioBtnPress': _onAudioBtnPress,
       'onHangup': _onHangup,
+      'onAnswer': _onAnswer,
     };
 
     bool isIncoming = _softphone.isIncoming(_activeCall);

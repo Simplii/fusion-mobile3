@@ -209,13 +209,6 @@ class Softphone implements SipUaHelperListener {
 
   isConnected(Call call) {
     return _getCallDataValue(call.id, "answerTime") != null;
-    return call.state == CallStateEnum.ACCEPTED ||
-        call.state == CallStateEnum.CONFIRMED ||
-        call.state == CallStateEnum.STREAM ||
-        call.state == CallStateEnum.HOLD ||
-        call.state == CallStateEnum.UNHOLD ||
-        call.state == CallStateEnum.MUTED ||
-        call.state == CallStateEnum.UNMUTED;
   }
 
   transfer(Call call, String destination) {
@@ -241,6 +234,7 @@ class Softphone implements SipUaHelperListener {
     print("answering callkeep " + _uuidFor(call));
     _callKeep.answerIncomingCall(_uuidFor(call));
     makeActiveCall(call);
+    _setCallDataValue(call.id, "answerTime", DateTime.now());
   }
 
   backToForeground() {
