@@ -383,11 +383,12 @@ class Softphone implements SipUaHelperListener {
   void _setCallDataValue(String id, String name, dynamic value) {
     var data = _getCallDataById(id);
     data[name] = value;
+    _updateListeners();
   }
 
-  dynamic _getCallDataValue(String id, String name) {
+  dynamic _getCallDataValue(String id, String name, {dynamic def}) {
     var data = _getCallDataById(id);
-    return data[name];
+    return data[name] == null ? def : data[name];
   }
 
   _getCallDataById(String id) {
@@ -508,8 +509,34 @@ class Softphone implements SipUaHelperListener {
       return DateTime.now().difference(time).inSeconds;
   }
 
+  getRecordState(Call call) {
+    return _getCallDataValue(call.id, "isRecording", def: false);
+  }
+
   getHoldState(Call call) {
-    return _getCallDataById(call.id)['onHold'];
+    return _getCallDataValue(call.id, "onHold", def: false);
+  }
+
+  recordCall(Call call) {
+    _setCallDataValue(call.id, "isRecording", true);
+    _fusionConnection.nsApiCall(
+        "call",
+        "record_on",
+        {"callid": call.id,
+          "uid": _fusionConnection.getUid()},
+        callback: (Map<String, dynamic> result) {
+        });
+  }
+
+  stopRecordCall(Call call) {
+    _setCallDataValue(call.id, "isRecording", false);
+    _fusionConnection.nsApiCall(
+        "call",
+        "record_off",
+        {"callid": call.id,
+          "uid": _fusionConnection.getUid()},
+        callback: (Map<String, dynamic> result) {
+        });
   }
 
   @override

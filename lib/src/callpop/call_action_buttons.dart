@@ -13,11 +13,13 @@ class CallActionButtons extends StatefulWidget {
       this.dialPadOpen,
       this.setDialpad,
       this.actions,
+      this.callIsRecording,
       this.callOnHold})
       : super(key: key);
 
   final Map<String, Function()> actions;
   final bool callOnHold;
+  final bool callIsRecording;
   final bool dialPadOpen;
   Function(bool) setDialpad;
 
@@ -26,7 +28,7 @@ class CallActionButtons extends StatefulWidget {
 }
 
 class _CallActionButtonsState extends State<CallActionButtons> {
-  bool  get dialPadOpen => widget.dialPadOpen;
+  bool get dialPadOpen => widget.dialPadOpen;
 
   Widget _getMainView(bool onHold) {
     return Column(
@@ -77,7 +79,10 @@ class _CallActionButtonsState extends State<CallActionButtons> {
             CallActionButton(
                 onPressed: widget.actions['onRecBtnPress'],
                 title: 'Rec',
-                icon: Image.asset("assets/icons/call_view/record_icon.png",
+                icon: Image.asset(
+                    widget.callIsRecording
+                    ? "assets/icons/call_view/rec_stop.png"
+                    : "assets/icons/call_view/rec.png",
                     width: 24, height: 24),
                 disabled: onHold),
             CallActionButton(
@@ -85,12 +90,12 @@ class _CallActionButtonsState extends State<CallActionButtons> {
                 title: 'Video',
                 icon: Image.asset("assets/icons/call_view/video chat.png",
                     width: 24, height: 24),
-                disabled: onHold),
+                disabled: true),
             Expanded(child: _hangupButton()),
             CallActionButton(
                 onPressed: widget.actions['onTextBtnPress'],
                 title: 'Text',
-                icon: Image.asset("assets/icons/call_view/reply.png",
+                icon: Image.asset("assets/icons/call_view/chat text.png",
                     width: 24, height: 24)),
             CallActionButton(
                 onPressed: widget.actions['onAudioBtnPress'],
