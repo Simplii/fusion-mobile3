@@ -44,10 +44,15 @@ class _CallFooterDetailsState extends State<CallFooterDetails> {
     return Container(
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(12, 6, 12, 6),
+      alignment: Alignment.center,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          if (!widget._softphone.isConnected(widget._activeCall))
+            Spacer(),
           CrmLeadsRow(widget._softphone, widget._activeCall),
           Spacer(),
+          if (widget._softphone.isConnected(widget._activeCall))
           TextButton(
             style: TextButton.styleFrom(
                 backgroundColor: ash,

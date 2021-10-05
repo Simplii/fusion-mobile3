@@ -313,6 +313,9 @@ class _CallViewState extends State<CallView> {
       'onHangup': _onHangup,
     };
 
+    bool isIncoming = _softphone.isIncoming(_activeCall);
+    bool isRinging = !_softphone.isConnected(_activeCall);
+
     return Container(
         decoration: BoxDecoration(
             image: DecorationImage(
@@ -346,6 +349,7 @@ class _CallViewState extends State<CallView> {
                             callerName: callerName,
                             companyName: companyName,
                             callerOrigin: callerOrigin,
+                            isRinging: isRinging,
                             callIsRecording:
                                 _softphone.getRecordState(_activeCall),
                             callRunTime: callRunTime),
@@ -358,6 +362,8 @@ class _CallViewState extends State<CallView> {
                           CallDialPad(),
                         CallActionButtons(
                             actions: actions,
+                            isRinging: isRinging,
+                            isIncoming: isIncoming,
                             dialPadOpen: dialpadVisible,
                             setDialpad: (bool isOpen) {
                               setState(() {
