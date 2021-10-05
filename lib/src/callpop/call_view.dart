@@ -65,7 +65,14 @@ class _CallViewState extends State<CallView> {
 
   _onConfBtnPress() {}
 
-  _onRecBtnPress() {}
+  _onRecBtnPress() {
+    print("recbtnpress");
+    if (_softphone.getRecordState(_activeCall)) {
+      _softphone.stopRecordCall(_activeCall);
+    } else {
+      _softphone.recordCall(_activeCall);
+    }
+  }
 
   _onVidBtnPress() {}
 
@@ -88,7 +95,8 @@ class _CallViewState extends State<CallView> {
               style: TextStyle(
                   color: translucentWhite(0.67),
                   fontSize: 12,
-                  height: 1.4,
+                  height
+                      : 1.4,
                   fontWeight: FontWeight.w700)),
           GestureDetector(
               onTap: _onResumeBtnPress,
@@ -183,7 +191,7 @@ class _CallViewState extends State<CallView> {
           body: Stack(
             children: [
               if (_softphone.getHoldState(_activeCall) || dialpadVisible)
-                Expanded(
+                Container(
                     child: Container(
                   decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -199,7 +207,7 @@ class _CallViewState extends State<CallView> {
                         child: Container())),
               SafeArea(
                   bottom: false,
-                  child: Expanded(
+                  child: Container(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -207,6 +215,7 @@ class _CallViewState extends State<CallView> {
                             callerName: callerName,
                             companyName: companyName,
                             callerOrigin: callerOrigin,
+                            callIsRecording: _softphone.getRecordState(_activeCall),
                             callRunTime: callRunTime),
                         if (_softphone.getHoldState(_activeCall))
                           _onHoldView()
@@ -225,6 +234,7 @@ class _CallViewState extends State<CallView> {
                                 print("isopen" + isOpen.toString() + dialpadVisible.toString());
                               });
                             },
+                            callIsRecording: _softphone.getRecordState(_activeCall),
                             callOnHold: _softphone.getHoldState(_activeCall)),
                         CallFooterDetails(_softphone, _activeCall)
                       ],

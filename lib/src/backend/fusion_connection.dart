@@ -150,8 +150,12 @@ class FusionConnection {
           Uri.parse('https://fusioncomm.net/api/v1/clients/api_request'),
           body: data);
 
-      var jsonResponse =
-          convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
+      Map<String, dynamic> jsonResponse = {};
+      try {
+        jsonResponse =
+        convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
+      } catch (e) {
+      }
 
       callback(jsonResponse);
     } finally {
