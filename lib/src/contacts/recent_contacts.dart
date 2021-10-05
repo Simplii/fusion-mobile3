@@ -659,7 +659,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   _openMessage() {
     print("tappedmessage");
     String number =
-        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
+    _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
     print("tapped number" + number);
     showModalBottomSheet(
         context: context,

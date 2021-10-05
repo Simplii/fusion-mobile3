@@ -60,7 +60,7 @@ class _CallHeaderDetailsState extends State<CallHeaderDetails> {
               children: [
                 if (widget.callIsRecording)
                   Container(
-                      margin: EdgeInsets.only(right: 12),
+                      margin: EdgeInsets.only(right: 8),
                       child: Image.asset(
                           "assets/icons/call_view/recording.png",
                           width: 13, height: 13
