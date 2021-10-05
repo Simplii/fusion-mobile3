@@ -29,7 +29,7 @@ class _DialerState extends State<Dialer> {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      Expanded(child: ContactsSearch(_fusionConnection, _softphone, _dialPadQuery)),
+      Expanded(child: ContactsSearch(_fusionConnection, _softphone, "")),
       DialPad(_fusionConnection, _softphone, onQueryChange: _updateDialPadQuery)
     ]);
   }
