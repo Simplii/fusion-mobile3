@@ -39,11 +39,48 @@ class Softphone implements SipUaHelperListener {
 
   setup() {
     print("setting up");
+    //FlutterVoipKit.init(
+//        callStateChangeHandler: callStateChangeHandler,
+  //      callActionHandler: callActionHandler);
+
     _callKeep = FlutterCallkeep();
     setupPermissions();
     setupCallKeep();
     print(_callKeep);
   }
+
+    /*Future<bool> callStateChangeHandler(call) async {
+    print("widget call state changed lisener: $call");
+
+    //it is important we perform logic and return true/false for every CallState possible
+    switch (call.callState) {
+      case voipKit.CallState
+          .connecting: //simulate connection time of 3 seconds for our VOIP service
+        print("--------------> Call connecting");
+        await Future.delayed(const Duration(seconds: 3));
+        return true;
+      case voipKit.CallState
+          .active: //here we would likely begin playig audio out of speakers
+        print("--------> Call active");
+        return true;            //
+      case voipKit.CallState.ended: //end audio, disconnect
+        print("--------> Call ended");
+        await Future.delayed(const Duration(seconds: 1));
+        return true;
+      case voipKit.CallState.failed: //cleanup
+        print("--------> Call failed");
+        return true;
+      case voipKit.CallState.held: //pause audio for specified call
+        print("--------> Call held");
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  Future<bool> callActionHandler(voipKit.Call call, voipKit.CallAction action) async {
+    print("call action -- " + call.uuid + " - " + action.toString());
+  }*/
 
   register(String login, String password, String aor) {
     UaSettings settings = UaSettings();
@@ -80,8 +117,7 @@ class Softphone implements SipUaHelperListener {
 
     FirebaseMessaging.instance.getToken().then((String key) {
       print("firebase token - " + key);
-    });
-  }
+    });  }
 
   setupCallKeep() {
     _callKeep.on(

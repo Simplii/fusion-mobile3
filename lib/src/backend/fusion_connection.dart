@@ -1,5 +1,6 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:path/path.dart' as p;
@@ -75,6 +76,14 @@ class FusionConnection {
   logOut() {
     _onLogOut();
     apiV1Call("get", "/log_out", {}, callback: (data) {});
+    FirebaseMessaging.instance.getToken().then((token){
+          print("gotfbtoken: " + token);
+          apiV1Call(
+            "delete",
+            "/clients/device_token",
+            {"token": token},
+          );
+      });
   }
 
   getDatabase() {
@@ -278,6 +287,15 @@ class FusionConnection {
         callback(true);
 
         smsDepartments.getDepartments((List<SMSDepartment> lis) {});
+
+        FirebaseMessaging.instance.getToken().then((token){
+          print("gotfbtoken: " + token);
+          apiV1Call(
+            "post",
+            "/clients/device_token",
+            {"token": token},
+          );
+      });
       } else {
         callback(false);
       }
