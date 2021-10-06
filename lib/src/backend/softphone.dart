@@ -26,6 +26,7 @@ class Softphone implements SipUaHelperListener {
   String _awaitingCall = "none";
   Map<String, int> _tempUUIDs = {};
   final FusionConnection _fusionConnection;
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
   Softphone(this._fusionConnection) {
     setup();
@@ -130,6 +131,16 @@ class Softphone implements SipUaHelperListener {
         print(message);
         print(message);
       });
+
+      _firebaseMessaging.getToken().then((token){
+          print("gotfbtoken: " + token);
+          _fusionConnection.apiV1Call(
+            "post",
+            "/clients/device_token",
+            {"token": token},
+          );
+      });
+
     }
   }
 
