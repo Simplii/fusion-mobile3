@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad_key.dart';
 
+import '../styles.dart';
+
 class CallDialPad extends StatefulWidget {
   CallDialPad({Key key}) : super(key: key);
 
@@ -48,21 +50,48 @@ class _CallDialPadState extends State<CallDialPad> {
     return Container(
         child: Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Padding(padding: EdgeInsets.only(left: 40)),
-            Padding(
-                padding: EdgeInsets.fromLTRB(18, 12, 0, 0),
-                child: Text(dialedNumber,
-                    style: TextStyle(fontSize: 36, color: Colors.white))),
-            TextButton(
-                onPressed: removeLastDigit,
-                child: Icon(CupertinoIcons.delete_left_fill))
-          ],
-        ),
-        ConstrainedBox(
-          constraints: BoxConstraints.tightFor(height: 350),
+        Container(
+                alignment: Alignment.topCenter,
+                padding: EdgeInsets.only(top: 0, bottom: 10),
+                width: MediaQuery.of(context).size.width - 24,
+                child: Stack(
+                  alignment: Alignment.centerRight,
+                  children: [
+                    Container(
+                        height: 40,
+                        alignment: Alignment.topCenter,
+                        width: MediaQuery.of(context).size.width - 24,
+                        child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              Container(
+                                  alignment: Alignment.topCenter,
+                                  width: MediaQuery.of(context).size.width - 24,
+                                  child: Text(dialedNumber,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 36, color: Colors.white)))
+                            ])),
+                    GestureDetector(
+                        onTap: removeLastDigit,
+                        child: Opacity(
+                            opacity: 0.66,
+                            child: Container(
+                                decoration: clearBg(),
+                                height: 22,
+                                width: 40,
+                                child: Container(
+                                    width: 22,
+                                    height: 16,
+                                    child: Image.asset(
+                                        "assets/icons/call_view/backspace.png",
+                                        width: 22,
+                                        height: 16)))))])),
+              Container(
+                  height: 1,
+                  margin: EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(color: translucentWhite(0.1494))),
+        Container(
           child: Column(
             children: [
               Row(

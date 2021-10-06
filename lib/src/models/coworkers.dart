@@ -81,7 +81,7 @@ class CoworkerSubscription {
 
   sendMatching(List<Coworker> items) {
     List<Coworker> list = [];
-    print("send matching" + items.toString());
+
     for (Coworker item in items) {
       if (testMatches(item)) {
         list.add(item);

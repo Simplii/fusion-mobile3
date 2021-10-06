@@ -33,12 +33,18 @@ class _PopupMenuState extends State<PopupMenu> {
     }
 
     children.add(Container(
+        margin: EdgeInsets.only(left: 20, right: 20),
         decoration: BoxDecoration(
+          boxShadow: [BoxShadow(
+                  color: translucentBlack(0.28),
+                  offset: Offset.zero,
+                  blurRadius: 36)],
             color: coal,
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16), topRight: Radius.circular(16))),
         child: Column(children: [
-          Container(
+          Row(children: [Expanded(child: Container(
+              alignment: Alignment.center,
               padding:
                   EdgeInsets.only(top: 16.5, left: 28, right: 28, bottom: 16.5),
               decoration: BoxDecoration(
@@ -48,7 +54,7 @@ class _PopupMenuState extends State<PopupMenu> {
                   style: TextStyle(
                       color: smoke,
                       fontSize: 12,
-                      fontWeight: FontWeight.w700))),
+                      fontWeight: FontWeight.w700))))]),
           Stack(alignment: Alignment.bottomCenter, children: [
             Container(
                 padding: EdgeInsets.only(left: 47.5, right: 47.5, bottom: 97.5),
@@ -81,10 +87,7 @@ class _PopupMenuState extends State<PopupMenu> {
       Expanded(
           child: Container(
               decoration: BoxDecoration(color: Colors.transparent,
-              boxShadow: [BoxShadow(
-                  color: translucentBlack(0.28),
-                  offset: Offset.zero,
-                  blurRadius: 36)]),
+              ),
               padding: EdgeInsets.only(top: 80, bottom: 0),
               child: Column(children: children)))
     ]));

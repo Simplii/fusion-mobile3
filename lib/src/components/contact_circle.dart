@@ -42,7 +42,6 @@ class _ContactCircleState extends State<ContactCircle> {
   double get _margin => widget._margin;
 
   _gravatarUrl(String email) {
-    print(email);
     return Gravatar(email).imageUrl();
   }
 

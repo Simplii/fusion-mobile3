@@ -8,7 +8,7 @@ class CallActionButton extends StatefulWidget {
 
   final VoidCallback onPressed;
   final String title;
-  final IconData icon;
+  final Image icon;
   final bool disabled;
 
   @override
@@ -22,15 +22,22 @@ class _CallActionButtonState extends State<CallActionButton> {
         child: GestureDetector(
       onTap: widget.onPressed,
       child: Container(
-        width: 64,
-        height: 64,
+        padding: EdgeInsets.only(top: 12, left: 8, right: 8),
+        decoration: clearBg(),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(widget.icon,
-                color: widget.disabled == true ? halfGray : Colors.white),
-            Text(widget.title.toUpperCase(),
-                style: TextStyle(color: Color.fromARGB(127, 0, 0, 0)))
+            Opacity(
+                opacity: widget.disabled == true ? 0.5 : 1.0,
+                child: widget.icon),
+            Container(
+                margin: EdgeInsets.only(top: 6, bottom: 10),
+                child: Text(widget.title.toUpperCase(),
+                    style: TextStyle(
+                        fontSize: 10,
+                        height: 1.4,
+                        fontWeight: FontWeight.w800,
+                        color: Color.fromARGB(127, 255, 255, 255))))
           ],
         ),
       ),
