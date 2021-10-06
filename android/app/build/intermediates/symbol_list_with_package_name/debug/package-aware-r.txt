@@ -312,6 +312,8 @@ color abc_tint_spinner
 color abc_tint_switch_track
 color accent_material_dark
 color accent_material_light
+color androidx_core_ripple_material_light
+color androidx_core_secondary_text_default_material_light
 color background_floating_material_dark
 color background_floating_material_light
 color background_material_dark
@@ -573,6 +575,8 @@ drawable abc_textfield_search_activated_mtrl_alpha
 drawable abc_textfield_search_default_mtrl_alpha
 drawable abc_textfield_search_material
 drawable abc_vector_test
+drawable app_icon_background
+drawable ic_launcher_background
 drawable launch_background
 drawable notification_action_background
 drawable notification_bg
@@ -819,7 +823,12 @@ layout select_dialog_item_material
 layout select_dialog_multichoice_material
 layout select_dialog_singlechoice_material
 layout support_simple_spinner_dropdown_item
+mipmap app_icon
+mipmap app_icon_foreground
+mipmap app_icon_round
 mipmap ic_launcher
+mipmap ic_launcher_foreground
+mipmap ic_launcher_round
 string abc_action_bar_home_description
 string abc_action_bar_up_description
 string abc_action_menu_overflow_description
