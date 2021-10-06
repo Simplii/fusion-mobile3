@@ -14,21 +14,27 @@ class DialPadKey extends StatefulWidget {
 }
 
 class _DialPadKeyState extends State<DialPadKey> {
-  var digitStyling = TextStyle(color: Colors.white, fontSize: 36.0);
+  var digitStyling = TextStyle(color: particle, fontSize: 36.0, height: 1.0);
+  var alphaStyling = TextStyle(color: smoke, height: 1.0);
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-        child: RawMaterialButton(
-            shape: CircleBorder(),
-            onPressed: () {
+        child: GestureDetector(
+            onTap: () {
               widget.onPressed(widget.digit);
             },
-            child: Column(
+            child: Container(
+              decoration: clearBg(),
+                child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(widget.digit, style: digitStyling),
-                  Text(widget.alphas, style: TextStyle(color: smoke))
-                ])));
+                  Container(
+                      margin: EdgeInsets.only(bottom: 2),
+                      child: Text(widget.digit, style: digitStyling)),
+                  Container(
+                    margin: EdgeInsets.only(bottom: 10),
+                      child: Text(widget.alphas, style: alphaStyling))
+                ]))));
   }
 }

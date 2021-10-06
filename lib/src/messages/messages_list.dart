@@ -37,6 +37,7 @@ class _MessagesTabState extends State<MessagesTab> {
   bool _loaded = false;
 
   initState() {
+    super.initState();
     if (_fusionConnection.smsDepartments.lookupRecord("-2") != null) {
       _loaded = true;
     }

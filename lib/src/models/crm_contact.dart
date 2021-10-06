@@ -130,6 +130,26 @@ class CrmContact extends FusionModel {
   String getId() {
     return this.nid;
   }
+
+   List<String> numbersAsStrings() {
+    List<String> numbers = [];
+    if (phone_number != null && phone_number.trim().length > 2)
+        numbers.add(phone_number);
+    if (phone_number != null && phone_number.trim().length > 2)
+        numbers.add(phone_number);
+    if (phone_number != null && phone_number.trim().length > 2)
+        numbers.add(phone_number);
+
+    return numbers;
+  }
+
+  String firstNumber() {
+    List<String> numbers = numbersAsStrings();
+    if (numbers.length > 0)
+      return numbers[0];
+    else
+      return null;
+  }
 }
 
 class CrmContactsStore extends FusionStore<CrmContact> {

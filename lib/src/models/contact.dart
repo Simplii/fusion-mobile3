@@ -57,6 +57,24 @@ class Contact extends FusionModel {
   @override
   String getId() => this.id;
 
+  List<String> numbersAsStrings() {
+    List<String> numbers = [];
+    for (Map<String, dynamic> number in phoneNumbers) {
+      if (number['number'] != null && number['number'].trim().length > 2) {
+        numbers.add(number['number']);
+      }
+    }
+    return numbers;
+  }
+
+  String firstNumber() {
+    List<String> numbers = numbersAsStrings();
+    if (numbers.length > 0)
+      return numbers[0];
+    else
+      return null;
+  }
+
   List<ContactCrmReference> crms() {
     List<ContactCrmReference> matches = [];
 
@@ -308,16 +326,7 @@ class ContactsStore extends FusionStore<Contact> {
       'lastName': record.lastName,
       'raw': record.serialize()
     });
-    print("persisting -- " +
-        {
-          'id': record.id,
-          'company': record.company,
-          'deleted': record.deleted ? 1 : 0,
-          'searchString': record.searchString(),
-          'firstName': record.firstName,
-          'lastName': record.lastName,
-          'raw': record.serialize()
-        }.toString());
+
   }
 
   searchPersisted(String query, int limit, int offset,
@@ -331,9 +340,8 @@ class ContactsStore extends FusionStore<Contact> {
           "%" + query + "%"
         ]).then((List<Map<String, dynamic>> results) {
       List<Contact> list = [];
-      print("persisted contacts match " + query + " " + results.toString());
+
       for (Map<String, dynamic> result in results) {
-        print("persisted contact match " + query + " " + result.toString());
         list.add(Contact.unserialize(result['raw']));
       }
       callback(list, false);

@@ -22,6 +22,21 @@ class CallpopInfo extends FusionModel {
 
   String getId() => this.phoneNumber;
 
+  String getCompany({String defaul}) {
+    for (Contact c in contacts) {
+      if (c.company.trim() != "") {
+        return c.company;
+      }
+    }
+    for (CrmContact c in crmContacts) {
+      if (c.company.trim() != '') {
+        return c.company;
+      }
+    }
+    return defaul != null ? defaul : "";
+  }
+
+
   String getName({String defaul}) {
     for (Contact c in contacts) {
       if (c.name.trim() != "") {

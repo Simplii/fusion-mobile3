@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 Color fusionRed = Color.fromARGB(255, 255, 51, 74);
 Color crimsonLight = fusionRed;
 Color crimsonDark = Color.fromARGB(255,229,3,42);
+Color crimsonDarker = Color.fromARGB(255,217,3,40);
 Color darkGrey = Color.fromARGB(255, 51, 45, 46);
 Color coal = Color.fromARGB(255, 51, 45, 45);
 Color bgBlend = Color.fromARGB((255 * 0.75).round(), 51, 45, 45);
@@ -151,4 +152,27 @@ lighten(Color color, int amount) {
 
 darken(Color color, int amount) {
   return lighten(color, 0 - amount);
+}
+
+raisedButtonBorder(Color color, {int lightenAmount, int darkenAmount}) {
+  return BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                  color: translucentBlack(0.06),
+                  offset: Offset(0, 1),
+                  blurRadius: 1.93),
+              BoxShadow(
+                  color: translucentBlack(0.1),
+                  offset: Offset(0, 3.5),
+                  blurRadius: 6.48)
+            ],
+            borderRadius: BorderRadius.all(Radius.circular(50)),
+            color: color,
+            gradient: LinearGradient(
+              colors: [
+                lighten(color, lightenAmount == null ? 80 : lightenAmount),
+                darken(color, darkenAmount == null ? 30 : darkenAmount)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ));
 }

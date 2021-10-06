@@ -1,5 +1,6 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:path/path.dart' as p;
@@ -75,6 +76,14 @@ class FusionConnection {
   logOut() {
     _onLogOut();
     apiV1Call("get", "/log_out", {}, callback: (data) {});
+    FirebaseMessaging.instance.getToken().then((token){
+          print("gotfbtoken: " + token);
+          apiV1Call(
+            "delete",
+            "/clients/device_token",
+            {"token": token},
+          );
+      });
   }
 
   getDatabase() {
@@ -150,8 +159,12 @@ class FusionConnection {
           Uri.parse('https://fusioncomm.net/api/v1/clients/api_request'),
           body: data);
 
-      var jsonResponse =
-          convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
+      Map<String, dynamic> jsonResponse = {};
+      try {
+        jsonResponse =
+        convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
+      } catch (e) {
+      }
 
       callback(jsonResponse);
     } finally {
@@ -202,8 +215,8 @@ class FusionConnection {
 
       var jsonResponse =
           convert.jsonDecode(uriResponse.body);
-
-      callback(jsonResponse);
+      if (callback != null)
+        callback(jsonResponse);
     } finally {
       client.close();
     }
@@ -274,6 +287,15 @@ class FusionConnection {
         callback(true);
 
         smsDepartments.getDepartments((List<SMSDepartment> lis) {});
+
+        FirebaseMessaging.instance.getToken().then((token){
+          print("gotfbtoken: " + token);
+          apiV1Call(
+            "post",
+            "/clients/device_token",
+            {"token": token},
+          );
+      });
       } else {
         callback(false);
       }
@@ -314,11 +336,10 @@ class FusionConnection {
     });
     _socket.onMessage((dynamic messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
-      print("gotmessage " + messageData.toString());
+
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
       } else if (message.containsKey('sms_received')) {
-        print("gotIM" + messageData.toString());
         messages.storeRecord(SMSMessage(message['message_object']));
       } else if (message.containsKey('new_status')) {
         coworkers.storePresence(
