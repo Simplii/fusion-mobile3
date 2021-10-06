@@ -206,8 +206,8 @@ class FusionConnection {
 
       var jsonResponse =
           convert.jsonDecode(uriResponse.body);
-
-      callback(jsonResponse);
+      if (callback != null)
+        callback(jsonResponse);
     } finally {
       client.close();
     }
