@@ -17,6 +17,8 @@ import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:sip_ua/sip_ua.dart';
 
+import 'answered_while_on_call.dart';
+
 class CallView extends StatefulWidget {
   CallView(this._fusionConnection, this._softphone, {Key key, this.closeView})
       : super(key: key);
@@ -281,30 +283,7 @@ class _CallViewState extends State<CallView> {
     var callerName = _softphone.getCallerName(_activeCall);
     var callerOrigin =
         _softphone.getCallerNumber(_activeCall); // 'mobile' | 'work' ...etc
-    var duration = _softphone.getCallRunTime(
-        _activeCall); // get call start time and calculate duration
-    String callRunTime = "";
-    if (duration < 60) {
-      callRunTime =
-          "00:" + (duration % 60 < 10 ? "0" : "") + duration.toString();
-    } else if (duration < 60 * 60) {
-      callRunTime = ((duration / 60).floor() < 10 ? "0" : "") +
-          (duration / 60).floor().toString() +
-          ":" +
-          (duration % 60 < 10 ? "0" : "") +
-          (duration % 60).toString();
-    } else {
-      int hours = (duration / (60 * 60)).floor();
-      duration = duration - hours;
-      callRunTime = (hours < 10 ? "0" : "") +
-          hours.toString() +
-          ":" +
-          ((duration / 60).floor() < 10 ? "0" : "") +
-          (duration / 60).floor().toString() +
-          ":" +
-          (duration % 60 < 10 ? "0" : "") +
-          (duration % 60).toString();
-    }
+
 
     Map<String, Function()> actions = {
       'onHoldBtnPress': _onHoldBtnPress,
@@ -321,6 +300,8 @@ class _CallViewState extends State<CallView> {
       'onAnswer': _onAnswer,
     };
 
+     String callRunTime = _softphone.getCallRunTimeString(_activeCall);
+
     bool isIncoming = _softphone.isIncoming(_activeCall);
     bool isRinging = !_softphone.isConnected(_activeCall);
 
@@ -330,7 +311,7 @@ class _CallViewState extends State<CallView> {
     for (Call c in _allCalls) {
       if (c != _activeCall && !_softphone.isConnected(c))
         incomingCall = c;
-      else
+      else if (c != _activeCall)
         connectedCalls.add(c);
     }
 
@@ -402,6 +383,8 @@ class _CallViewState extends State<CallView> {
                       ],
                     ),
                   )),
+              if (connectedCalls.length > 0)
+                AnsweredWhileOnCall(calls: connectedCalls, softphone: _softphone),
               if (incomingCall != null)
                 IncomingWhileOnCall(call: incomingCall, softphone: _softphone)
             ],

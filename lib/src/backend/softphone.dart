@@ -565,6 +565,33 @@ class Softphone implements SipUaHelperListener {
       return DateTime.now().difference(time).inSeconds;
   }
 
+  String getCallRunTimeString(Call call) {
+    var duration = getCallRunTime(call);
+    String callRunTime = "";
+    if (duration < 60) {
+      callRunTime =
+          "00:" + (duration % 60 < 10 ? "0" : "") + duration.toString();
+    } else if (duration < 60 * 60) {
+      callRunTime = ((duration / 60).floor() < 10 ? "0" : "") +
+          (duration / 60).floor().toString() +
+          ":" +
+          (duration % 60 < 10 ? "0" : "") +
+          (duration % 60).toString();
+    } else {
+      int hours = (duration / (60 * 60)).floor();
+      duration = duration - hours;
+      callRunTime = (hours < 10 ? "0" : "") +
+          hours.toString() +
+          ":" +
+          ((duration / 60).floor() < 10 ? "0" : "") +
+          (duration / 60).floor().toString() +
+          ":" +
+          (duration % 60 < 10 ? "0" : "") +
+          (duration % 60).toString();
+    }
+    return callRunTime;
+  }
+
   getRecordState(Call call) {
     return _getCallDataValue(call.id, "isRecording", def: false);
   }
