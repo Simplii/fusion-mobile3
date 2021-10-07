@@ -1,6 +1,7 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:path/path.dart' as p;
@@ -42,7 +43,8 @@ class FusionConnection {
   ContactFieldStore contactFields;
   TimelineItemStore timelineItems;
   Database db;
-
+  PushConnector _connector;
+  String _pushkitToken;
   Function _onLogOut = () {};
 
   String serverRoot = "https://fusioncomm.net";
@@ -73,15 +75,18 @@ class FusionConnection {
     _onLogOut = callback;
   }
 
+  setPushkitToken(String token) {
+    _pushkitToken = token;
+  }
+
   logOut() {
     _onLogOut();
     apiV1Call("get", "/log_out", {}, callback: (data) {});
     FirebaseMessaging.instance.getToken().then((token){
-          print("gotfbtoken: " + token);
           apiV1Call(
             "delete",
             "/clients/device_token",
-            {"token": token},
+            {"token": token, "pn_tok": _pushkitToken},
           );
       });
   }
@@ -289,11 +294,11 @@ class FusionConnection {
         smsDepartments.getDepartments((List<SMSDepartment> lis) {});
 
         FirebaseMessaging.instance.getToken().then((token){
-          print("gotfbtoken: " + token);
+          print("gotfbtoken: " + token + " pn_tok:" + _pushkitToken);
           apiV1Call(
             "post",
             "/clients/device_token",
-            {"token": token},
+            {"token": token, "pn_tok": _pushkitToken}
           );
       });
       } else {
@@ -350,5 +355,9 @@ class FusionConnection {
     });
     _reconnectSocket();
     _sendHeartbeat();
+  }
+
+  void setAPNSConnector(PushConnector connector) {
+    _connector = connector;
   }
 }

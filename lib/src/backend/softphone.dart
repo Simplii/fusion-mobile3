@@ -271,17 +271,16 @@ class Softphone implements SipUaHelperListener {
   }
 
   answerCall(Call call) async {
-    // this should only be called on android. in iOS the call
-    // must be answered through the callkit ui
-    print("answering _call - " + _uuidFor(call));
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     MediaStream mediaStream;
     mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
     call.answer(helper.buildCallOptions(), mediaStream: mediaStream);
-    print("answering callkeep " + _uuidFor(call));
+
     _callKeep.answerIncomingCall(_uuidFor(call));
     makeActiveCall(call);
     _setCallDataValue(call.id, "answerTime", DateTime.now());
+    print("answering");
+    setCallOutput(call, getCallOutput(call));
   }
 
   backToForeground() {
@@ -359,8 +358,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   _callKeepPushkitToken(CallKeepPushKitToken event) {
-    print("callkeep pushkit");
-    print(event);
+    _fusionConnection.setPushkitToken(event.token);
   }
 
   _getCallByUuid(String uuid) {
