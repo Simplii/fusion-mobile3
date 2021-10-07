@@ -21,7 +21,6 @@ class CallHistory extends FusionModel {
   String direction;
 
   CallHistory(Map<String, dynamic> obj) {
-    print("importing" + obj.toString());
     id = obj['id'].toString();
     startTime = DateTime.fromMillisecondsSinceEpoch(int.parse(obj['starttime']) * 1000);
     toDid = obj['to_did'];

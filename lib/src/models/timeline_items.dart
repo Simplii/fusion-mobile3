@@ -27,7 +27,6 @@ class TimelineItem extends FusionModel {
   CallLog callLog;
 
   TimelineItem(Map<String, dynamic> obj) {
-    print("importing" + obj.toString());
       time = obj.containsKey('time')
         ? DateTime.parse(obj['time']['date'])
         : (obj.containsKey('time_start')
