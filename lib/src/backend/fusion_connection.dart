@@ -44,7 +44,7 @@ class FusionConnection {
   TimelineItemStore timelineItems;
   Database db;
   PushConnector _connector;
-
+  String _pushkitToken;
   Function _onLogOut = () {};
 
   String serverRoot = "https://fusioncomm.net";
@@ -75,15 +75,18 @@ class FusionConnection {
     _onLogOut = callback;
   }
 
+  setPushkitToken(String token) {
+    _pushkitToken = token;
+  }
+
   logOut() {
     _onLogOut();
     apiV1Call("get", "/log_out", {}, callback: (data) {});
     FirebaseMessaging.instance.getToken().then((token){
-          print("gotfbtoken: " + token);
           apiV1Call(
             "delete",
             "/clients/device_token",
-            {"token": token, "pn_tok": _connector.token},
+            {"token": token, "pn_tok": _pushkitToken},
           );
       });
   }
@@ -291,11 +294,11 @@ class FusionConnection {
         smsDepartments.getDepartments((List<SMSDepartment> lis) {});
 
         FirebaseMessaging.instance.getToken().then((token){
-          print("gotfbtoken: " + token);
+          print("gotfbtoken: " + token + " pn_tok:" + _pushkitToken);
           apiV1Call(
             "post",
             "/clients/device_token",
-            {"token": token},
+            {"token": token, "pn_tok": _pushkitToken}
           );
       });
       } else {
