@@ -229,9 +229,11 @@ class Softphone implements SipUaHelperListener {
   }
 
   setHold(Call call, bool setOnHold) {
+    _setCallDataValue(call.id, "onHold", setOnHold);
     if (setOnHold) {
       call.hold();
     } else {
+      print("unholding");
       call.unhold();
     }
   }
@@ -402,6 +404,9 @@ class Softphone implements SipUaHelperListener {
     for (Call c in toRemove)
       calls.remove(c);
 
+    if (calls.length > 0)
+      makeActiveCall(calls[0]);
+
     _updateListeners();
   }
 
@@ -474,7 +479,8 @@ class Softphone implements SipUaHelperListener {
       /*_callKeep.startCall(
           _uuidFor(call), call.remote_identity, call.remote_display_name);*/
       calls.add(call);
-      makeActiveCall(call);
+      if (activeCall == null)
+        makeActiveCall(call);
 
       final bool hasPhoneAccount = await _callKeep.hasPhoneAccount();
       if (!hasPhoneAccount) {
@@ -641,13 +647,13 @@ class Softphone implements SipUaHelperListener {
       case CallStateEnum.HOLD:
         Map<String, dynamic> updatedCall = _getCallDataById(call.id);
         updatedCall['onHold'] = true;
-
+        _setCallDataValue(call.id, "onHold", true);
         _callKeep.setOnHold(_uuidFor(call), true);
         break;
       case CallStateEnum.UNHOLD:
         Map<String, dynamic> updatedCall = _getCallDataById(call.id);
         updatedCall['onHold'] = false;
-
+        _setCallDataValue(call.id, "onHold", false);
         _callKeep.setOnHold(_uuidFor(call), false);
         break;
       case CallStateEnum.NONE:

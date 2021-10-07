@@ -10,6 +10,7 @@ import 'package:fusion_mobile_revamped/src/callpop/call_action_buttons.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_dialpad.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_footer_details.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_header_details.dart';
+import 'package:fusion_mobile_revamped/src/callpop/incoming_while_on_call.dart';
 import 'package:fusion_mobile_revamped/src/callpop/transfer_call_popup.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
@@ -34,6 +35,7 @@ class _CallViewState extends State<CallView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Call get _activeCall => _softphone.activeCall;
+  List<Call> get _allCalls => _softphone.calls;
 
   bool dialpadVisible = false;
   Timer _timer;
@@ -59,6 +61,7 @@ class _CallViewState extends State<CallView> {
   }
 
   _onResumeBtnPress() {
+    print("resuming");
     _softphone.setHold(_activeCall, false);
   }
 
@@ -321,6 +324,16 @@ class _CallViewState extends State<CallView> {
     bool isIncoming = _softphone.isIncoming(_activeCall);
     bool isRinging = !_softphone.isConnected(_activeCall);
 
+    Call incomingCall = null;
+    List<Call> connectedCalls = [];
+
+    for (Call c in _allCalls) {
+      if (c != _activeCall && !_softphone.isConnected(c))
+        incomingCall = c;
+      else
+        connectedCalls.add(c);
+    }
+
     return Container(
         decoration: BoxDecoration(
             image: DecorationImage(
@@ -388,7 +401,9 @@ class _CallViewState extends State<CallView> {
                         CallFooterDetails(_softphone, _activeCall)
                       ],
                     ),
-                  ))
+                  )),
+              if (incomingCall != null)
+                IncomingWhileOnCall(call: incomingCall, softphone: _softphone)
             ],
           ),
         ));
