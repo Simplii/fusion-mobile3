@@ -191,12 +191,12 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (Platform.isAndroid) {
+ // if (Platform.isAndroid) {
     await Firebase.initializeApp();
-    FirebaseMessaging.onBackgroundMessage(backgroundMessageHandler); }
-  else {
-     Firebase.initializeApp();
-  }
+    FirebaseMessaging.onBackgroundMessage(backgroundMessageHandler);// }
+  //else {
+//     Firebase.initializeApp();
+//  }
   registerNotifications();
   runApp(MaterialApp(home: MyApp()));
 }
@@ -218,13 +218,13 @@ class MyApp extends StatelessWidget {
     _fusionConnection.setAPNSConnector(connector);
   }
 
-  _onLaunch(RemoteMessage m) {
+  Future<void> _onLaunch(RemoteMessage m) {
     print("onloaunch");
   }
-  _onResume(RemoteMessage m) {
+  Future<void> _onResume(RemoteMessage m) {
     print("onresume");
   }
-  _onMessage(RemoteMessage m) {
+  Future<void> _onMessage(RemoteMessage m) {
     print("onmessage");
   }
 
@@ -435,7 +435,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             floatingActionButton: _getFloatingButton(),
             bottomNavigationBar: Container(
-                height: Platform.isAndroid ? 60 : 94.0,
+                height: Platform.isAndroid ? 60 : 60.0,
                 margin: EdgeInsets.only(top: 0, left: 16, right: 16, bottom: 0),
                 child: Column(
                   children: [
