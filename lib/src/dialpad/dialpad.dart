@@ -74,6 +74,8 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin{
         decoration: BoxDecoration(
             color: darkGrey,
             borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(8),
+              bottomRight: Radius.circular(8),
               topLeft: Radius.circular(8),
               topRight: Radius.circular(8),
             )),

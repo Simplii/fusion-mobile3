@@ -50,7 +50,14 @@ class _CallFooterDetailsState extends State<CallFooterDetails> {
         children: [
           if (!widget._softphone.isConnected(widget._activeCall))
             Spacer(),
-          CrmLeadsRow(widget._softphone, widget._activeCall),
+          Container(
+            height: 38,
+              constraints: BoxConstraints(
+              minWidth: 120,
+              maxWidth: MediaQuery.of(context).size.width - 160),
+          child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [CrmLeadsRow(widget._softphone, widget._activeCall)])),
           Spacer(),
           if (widget._softphone.isConnected(widget._activeCall))
           TextButton(

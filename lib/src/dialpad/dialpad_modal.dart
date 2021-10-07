@@ -55,6 +55,7 @@ class _DialPadModalState extends State<DialPadModal>
 
   Widget body() {
     return Container(
+      padding: EdgeInsets.only(top: 24),
         child: TabBarView(
       controller: _tc,
       children: [
@@ -79,16 +80,14 @@ class _DialPadModalState extends State<DialPadModal>
     return Container(
         height: 60,
         decoration: BoxDecoration(
-            color: particle,
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8))),
+            color: particle),
         padding: EdgeInsets.only(top: 0, left: 16, right: 16, bottom: 0),
         child: Column(
           children: [
             Row(children: [
               Expanded(
-                  child: Container(
+                  child: AnimatedContainer(
+                      duration: Duration(milliseconds: 300),
                       height: 4,
                       decoration: BoxDecoration(
                           color: _tabIndex == 0
@@ -99,7 +98,8 @@ class _DialPadModalState extends State<DialPadModal>
                             bottomRight: Radius.circular(2),
                           )))),
               Expanded(
-                  child: Container(
+                  child: AnimatedContainer(
+                      duration: Duration(milliseconds: 300),
                       height: 4,
                       decoration: BoxDecoration(
                           color: _tabIndex == 1
@@ -110,7 +110,8 @@ class _DialPadModalState extends State<DialPadModal>
                             bottomRight: Radius.circular(2),
                           )))),
               Expanded(
-                  child: Container(
+                  child: AnimatedContainer(
+                      duration: Duration(milliseconds: 300),
                       height: 4,
                       decoration: BoxDecoration(
                           color: _tabIndex == 2
@@ -159,17 +160,18 @@ class _DialPadModalState extends State<DialPadModal>
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-//<<<<<<< HEAD:lib/src/dialpad/dialpad_view.dart
         child: Container(
             margin: EdgeInsets.only(top: 80),
             decoration: BoxDecoration(
-                color: Colors.white,
+                color: particle,
                 borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(8), topRight: Radius.circular(8))),
             child: Container(
                 decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: particle,
                     borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
                         topLeft: Radius.circular(8),
                         topRight: Radius.circular(8))),
                 child: Stack(
@@ -188,96 +190,5 @@ class _DialPadModalState extends State<DialPadModal>
                           margin: EdgeInsets.all(8),
                           child: Center(child: popupHandle()))
                     ]))));
-/*=======
-        child: Scaffold(
-      body: TabBarView(
-        controller: _tc,
-        children: [
-          Container(
-            constraints: BoxConstraints.tightFor(height: 725),
-            child: ParkedCalls(_fusionConnection, _softphone),
-          ),
-          Container(
-            constraints: BoxConstraints.tightFor(height: 725),
-            child: Dialer(_fusionConnection, _softphone),
-          ),
-          Container(
-            constraints: BoxConstraints.tightFor(height: 725),
-            child: Voicemails(_fusionConnection, _softphone),
-          )
-        ],
-      ),
-      bottomNavigationBar: Container(
-          height: 60,
-          margin: EdgeInsets.only(top: 0, left: 16, right: 16, bottom: 0),
-          child: Column(
-            children: [
-              Row(children: [
-                Expanded(
-                    child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                            color: _tabIndex == 0
-                                ? crimsonLight
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(2),
-                              bottomRight: Radius.circular(2),
-                            )))),
-                Expanded(
-                    child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                            color: _tabIndex == 1
-                                ? crimsonLight
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(2),
-                              bottomRight: Radius.circular(2),
-                            )))),
-                Expanded(
-                    child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                            color: _tabIndex == 2
-                                ? crimsonLight
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(2),
-                              bottomRight: Radius.circular(2),
-                            ))))
-              ]),
-              BottomNavigationBar(
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                selectedItemColor: crimsonLight,
-                unselectedItemColor: smoke,
-                onTap: _onTabTapped,
-                currentIndex: _tc != null ? _tc.index : 1,
-                iconSize: 20,
-                selectedLabelStyle: TextStyle(
-                    height: 1.8, fontSize: 10, fontWeight: FontWeight.w800),
-                unselectedLabelStyle: TextStyle(
-                    height: 1.8, fontSize: 10, fontWeight: FontWeight.w800),
-                items: [
-                  BottomNavigationBarItem(
-                    icon: new Icon(CupertinoIcons.car_detailed),
-                    activeIcon: new Icon(CupertinoIcons.car_detailed),
-                    label: "Parked Calls",
-                  ),
-                  BottomNavigationBarItem(
-                      icon: new Icon(Icons.dialpad),
-                      activeIcon: new Icon(Icons.dialpad),
-                      label: 'Dial Pad'),
-                  BottomNavigationBarItem(
-                      icon: new Icon(CupertinoIcons.envelope_badge_fill),
-                      activeIcon: new Icon(CupertinoIcons.envelope_badge_fill),
-                      label: 'Voicemails')
-                ],
-              )
-            ],
-          )),
-    ));
->>>>>>> d55ac52bc183b15a3f65dfe08d2d59243ee00ac3:lib/src/dialpad/dialpad_modal.dart*/
   }
 }
