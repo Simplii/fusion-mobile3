@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_apns/flutter_apns.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_view.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
@@ -190,8 +191,12 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  FirebaseMessaging.onBackgroundMessage(backgroundMessageHandler);
+  if (Platform.isAndroid) {
+    await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(backgroundMessageHandler); }
+  else {
+     Firebase.initializeApp();
+  }
   registerNotifications();
   runApp(MaterialApp(home: MyApp()));
 }
@@ -203,6 +208,24 @@ class MyApp extends StatelessWidget {
   MyApp() {
     this._fusionConnection = FusionConnection();
     this._softphone = Softphone(_fusionConnection);
+
+    final connector = createPushConnector();
+    connector.configure(
+    onLaunch: _onLaunch,
+    onResume: _onResume,
+    onMessage: _onMessage);
+
+    _fusionConnection.setAPNSConnector(connector);
+  }
+
+  _onLaunch(RemoteMessage m) {
+    print("onloaunch");
+  }
+  _onResume(RemoteMessage m) {
+    print("onresume");
+  }
+  _onMessage(RemoteMessage m) {
+    print("onmessage");
   }
 
   bool _listenerHasBeenSetup = false;

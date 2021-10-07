@@ -1,6 +1,7 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:path/path.dart' as p;
@@ -42,6 +43,7 @@ class FusionConnection {
   ContactFieldStore contactFields;
   TimelineItemStore timelineItems;
   Database db;
+  PushConnector _connector;
 
   Function _onLogOut = () {};
 
@@ -81,7 +83,7 @@ class FusionConnection {
           apiV1Call(
             "delete",
             "/clients/device_token",
-            {"token": token},
+            {"token": token, "pn_tok": _connector.token},
           );
       });
   }
@@ -350,5 +352,9 @@ class FusionConnection {
     });
     _reconnectSocket();
     _sendHeartbeat();
+  }
+
+  void setAPNSConnector(PushConnector connector) {
+    _connector = connector;
   }
 }
