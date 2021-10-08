@@ -115,7 +115,14 @@ class _IncomingWhileOnCallState extends State<IncomingWhileOnCall> {
                 ],
               ),
               Container(height: 12),
-              Row(children: [Spacer() , _hangupButton(), Spacer(), _answerButton(), Spacer()])
+              Row(children: [
+                Spacer() ,
+                _hangupButton(),
+                if (widget.softphone.isIncoming(widget.call))
+                  Spacer(),
+                if (widget.softphone.isIncoming(widget.call))
+                  _answerButton(),
+                Spacer()])
             ])));
 
     return contents;

@@ -46,7 +46,7 @@ class _FusionDropdownState extends State<FusionDropdown> {
   _openPopup() {
     double maxHeight = MediaQuery.of(context).size.height * 0.5;
     double contentHeight = _options.length * 60.0;
-    if (contentHeight < maxHeight) maxHeight = contentHeight;
+    if (contentHeight > 0 && contentHeight < maxHeight) maxHeight = contentHeight;
 
     showModalBottomSheet(
         context: context,

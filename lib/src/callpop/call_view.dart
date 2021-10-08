@@ -13,6 +13,7 @@ import 'package:fusion_mobile_revamped/src/callpop/call_header_details.dart';
 import 'package:fusion_mobile_revamped/src/callpop/incoming_while_on_call.dart';
 import 'package:fusion_mobile_revamped/src/callpop/transfer_call_popup.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
+import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:sip_ua/sip_ua.dart';
@@ -37,6 +38,7 @@ class _CallViewState extends State<CallView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Call get _activeCall => _softphone.activeCall;
+
   List<Call> get _allCalls => _softphone.calls;
 
   bool dialpadVisible = false;
@@ -80,18 +82,19 @@ class _CallViewState extends State<CallView> {
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (contact) =>
-            TransferCallPopup(
-                _fusionConnection, _softphone,
-                    () {
-                      Navigator.pop(context);
-                    },
-                    (String xferTo, String xferType) {
-                      if (xferType == "blind") {
-                        _softphone.transfer(_activeCall, _makeXferUrl(xferTo));
-                        print("xferrred" + ":" + _makeXferUrl(xferTo) + ":" + _activeCall.toString());
-                      }
-                      Navigator.pop(context);
-                    }));
+            TransferCallPopup(_fusionConnection, _softphone, () {
+              Navigator.pop(context);
+            }, (String xferTo, String xferType) {
+              if (xferType == "blind") {
+                _softphone.transfer(_activeCall, _makeXferUrl(xferTo));
+                print("xferrred" +
+                    ":" +
+                    _makeXferUrl(xferTo) +
+                    ":" +
+                    _activeCall.toString());
+              }
+              Navigator.pop(context);
+            }));
   }
 
   _onDialBtnPress() {
@@ -109,7 +112,13 @@ class _CallViewState extends State<CallView> {
     });
   }
 
-  _onConfBtnPress() {}
+  _onConfBtnPress() {
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => DialPadModal(_fusionConnection, _softphone));
+  }
 
   _onRecBtnPress() {
     print("recbtnpress");
@@ -284,7 +293,6 @@ class _CallViewState extends State<CallView> {
     var callerOrigin =
         _softphone.getCallerNumber(_activeCall); // 'mobile' | 'work' ...etc
 
-
     Map<String, Function()> actions = {
       'onHoldBtnPress': _onHoldBtnPress,
       'onResumeBtnPress': _onResumeBtnPress,
@@ -300,7 +308,7 @@ class _CallViewState extends State<CallView> {
       'onAnswer': _onAnswer,
     };
 
-     String callRunTime = _softphone.getCallRunTimeString(_activeCall);
+    String callRunTime = _softphone.getCallRunTimeString(_activeCall);
 
     bool isIncoming = _softphone.isIncoming(_activeCall);
     bool isRinging = !_softphone.isConnected(_activeCall);
@@ -311,8 +319,7 @@ class _CallViewState extends State<CallView> {
     for (Call c in _allCalls) {
       if (c != _activeCall && !_softphone.isConnected(c))
         incomingCall = c;
-      else if (c != _activeCall)
-        connectedCalls.add(c);
+      else if (c != _activeCall) connectedCalls.add(c);
     }
 
     return Container(
@@ -364,6 +371,7 @@ class _CallViewState extends State<CallView> {
                             isRinging: isRinging,
                             isIncoming: isIncoming,
                             dialPadOpen: dialpadVisible,
+                            isOnConference: _softphone.isCallMerged(_activeCall),
                             setDialpad: (bool isOpen) {
                               setState(() {
                                 print("isopen" +
@@ -379,12 +387,15 @@ class _CallViewState extends State<CallView> {
                                 _softphone.getRecordState(_activeCall),
                             callIsMuted: _softphone.getMuted(_activeCall),
                             callOnHold: _softphone.getHoldState(_activeCall)),
-                        CallFooterDetails(_softphone, _activeCall)
+                        CallFooterDetails(_fusionConnection, _softphone, _activeCall)
                       ],
                     ),
                   )),
               if (connectedCalls.length > 0)
-                AnsweredWhileOnCall(calls: connectedCalls, softphone: _softphone),
+                AnsweredWhileOnCall(
+                    calls: connectedCalls,
+                    softphone: _softphone,
+                    activeCall: _activeCall),
               if (incomingCall != null)
                 IncomingWhileOnCall(call: incomingCall, softphone: _softphone)
             ],

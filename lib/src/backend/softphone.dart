@@ -282,7 +282,7 @@ class Softphone implements SipUaHelperListener {
     makeActiveCall(call);
     _setCallDataValue(call.id, "answerTime", DateTime.now());
     print("answering");
-    setCallOutput(call, getCallOutput(call));
+    setCallOutput(call, "phone");
   }
 
   backToForeground() {
@@ -533,10 +533,16 @@ class Softphone implements SipUaHelperListener {
   getCallerName(Call call) {
     CallpopInfo data = getCallpopInfo(call.id);
     if (data != null) {
-      return data.getName();
+      if (data.getName().trim().length > 0)
+        return data.getName();
+      else
+        return "Unknown";
     }
     else {
-      return call.remote_display_name;
+      if (call.remote_display_name != null && call.remote_display_name.trim().length > 0)
+        return call.remote_display_name;
+      else
+        return "Unknown";
     }
   }
 
@@ -606,6 +612,34 @@ class Softphone implements SipUaHelperListener {
 
   setCallOutput(Call call, String outputDevice) {
     setSpeaker(outputDevice == 'speaker');
+  }
+
+  isCallMerged(Call call) {
+    return _getCallDataValue(call.id, "mergedWith") != null;
+  }
+
+  mergedCall(Call call) {
+    return _getCallById(_getCallDataValue(call.id, "mergedWith"));
+  }
+
+  mergeCalls(Call call, Call call2) {
+    /*MediaStream call2Remote = call2.peerConnection.getLocalStreams()[0];
+    call.peerConnection.getRemoteStreams().map((MediaStream m) {
+      m.getAudioTracks().map((MediaStreamTrack mt) {
+        call2Remote.addTrack(mt);
+      });
+    });
+    MediaStream callRemote = call.peerConnection.getLocalStreams()[0];
+    call2.peerConnection.getRemoteStreams().map((MediaStream m) {
+      m.getAudioTracks().map((MediaStreamTrack mt) {
+        callRemote.addTrack(mt);
+      });
+    });*/
+    _setCallDataValue(call.id, "mergedWith", call2.id);
+    _setCallDataValue(call2.id, "mergedWith", call.id);
+    print("merged");
+    print(call);
+    print(call2);
   }
 
   recordCall(Call call) {

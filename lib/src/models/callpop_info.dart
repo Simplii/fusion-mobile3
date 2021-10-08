@@ -17,7 +17,7 @@ class CallpopInfo extends FusionModel {
     this.phoneNumber = map['phone_number'];
     this.crmContacts = map['crm_contacts'];
     this.contacts = map['contacts'];
-    this.dispositionGroups = map['dispositionGroups'];
+    this.dispositionGroups = map['dispositions'];
   }
 
   String getId() => this.phoneNumber;
@@ -82,7 +82,7 @@ class CallpopInfoStore extends FusionStore<CallpopInfo> {
         'phone_number': phoneNumber,
         'crm_contacts': leads,
         'contacts': contacts,
-        'dispositions': []
+        'dispositions': data['dispositions']
       });
 
       storeRecord(info);

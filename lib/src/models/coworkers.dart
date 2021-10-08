@@ -98,6 +98,10 @@ class CoworkerStore extends FusionStore<Coworker> {
   Map<String, CoworkerSubscription> subscriptions = {};
   CoworkerStore(FusionConnection fusionConnection) : super(fusionConnection);
 
+  hasntLoaded() {
+    return getRecords().length == 0;
+  }
+
   subscribe(List<String> uids, Function(List<Coworker>) callback) {
     String name = randomString(20);
     subscriptions[name] = CoworkerSubscription(uids, callback);
