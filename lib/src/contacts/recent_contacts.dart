@@ -364,7 +364,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   }
 
   _isSpinning() {
-    return lookupState < 2 && _contacts.length == 0;
+    return lookupState < 2 && _contacts.length == 0
+        && (_typeFilter != 'Coworkers' || _fusionConnection.coworkers.hasntLoaded());
   }
 
   @override
@@ -380,7 +381,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     return Expanded(
         child: Container(
             decoration: BoxDecoration(
-                color: Colors.white,
+                color: widget.embedded ? Colors.transparent : Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(16))),
             padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
             child: Stack(children: [
@@ -405,7 +406,10 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                             }
                           },
                           padding:
-                              EdgeInsets.only(left: 12, right: 12, top: 40))),
+                              EdgeInsets.only(
+                                  left: 12,
+                                  right: 12,
+                                  top: widget.embedded ? 28 : 40))),
               Container(
                   decoration: BoxDecoration(
                     boxShadow: [],
@@ -414,9 +418,11 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         stops: [0.5, 1.0],
-                        colors: [Colors.white, translucentWhite(0.0)]),
+                        colors: [
+                          widget.embedded ? particle : Colors.white,
+                          widget.embedded ? particle.withAlpha(0) : translucentWhite(0.0)]),
                   ),
-                  padding: EdgeInsets.only(left: 12, top: 12, bottom: 32),
+                  padding: EdgeInsets.only(left: 12, top: widget.embedded ? 0 : 12, bottom: 32),
                   child: FusionDropdown(
                       onChange: (String value) {
                         this.setState(() {

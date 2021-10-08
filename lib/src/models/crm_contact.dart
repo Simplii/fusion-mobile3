@@ -18,7 +18,7 @@ class CrmContact extends FusionModel {
   String name;
   String url;
   String phone_number;
-  String company;
+  String company = "";
 
   String serialize() {
     return convert.jsonEncode({

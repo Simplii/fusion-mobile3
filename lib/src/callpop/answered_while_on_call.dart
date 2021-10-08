@@ -12,10 +12,12 @@ import 'package:sip_ua/sip_ua.dart';
 enum Views { Main, DialPad, Hold }
 
 class AnsweredWhileOnCall extends StatefulWidget {
-  AnsweredWhileOnCall({Key key, this.softphone, this.calls}) : super(key: key);
+  AnsweredWhileOnCall({Key key, this.activeCall, this.softphone, this.calls})
+      : super(key: key);
 
   final Softphone softphone;
   final List<Call> calls;
+  final Call activeCall;
 
   @override
   State<StatefulWidget> createState() => _AnsweredWhileOnCallState();
@@ -24,34 +26,70 @@ class AnsweredWhileOnCall extends StatefulWidget {
 class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
   List<Call> get calls => widget.calls;
 
+  Call get activeCall => widget.activeCall;
+
   Softphone get softphone => widget.softphone;
 
-  _callRow(Call call) {
-    CallpopInfo info = softphone.getCallpopInfo(call.id);
+  switchGestureDetector(Widget child, call) {
     return GestureDetector(
         onTap: () {
           softphone.makeActiveCall(call);
         },
-        child: Container(
-            decoration: clearBg(),
-            child: Row(children: [
-              ContactCircle.withDiameterAndMargin(
-                  info != null ? info.contacts : [],
-                  info != null ? info.crmContacts : [],
-                  24,
-                  8),
-              Text(softphone.getCallerName(call),
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
-              Spacer(),
-              Text("Hold " + mDash + " " + softphone.getCallRunTimeString(call),
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
-            ])));
+        child: Container(decoration: clearBg(), child: child));
+  }
+
+  _callRow(Call call) {
+    CallpopInfo info = softphone.getCallpopInfo(call.id);
+    TextStyle textStyle = TextStyle(
+        fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white);
+    bool isMerged = softphone.isCallMerged(call);
+
+    return Row(children: [
+      switchGestureDetector(
+          ContactCircle.withDiameterAndMargin(info != null ? info.contacts : [],
+              info != null ? info.crmContacts : [], 24, 8),
+          call),
+      switchGestureDetector(
+          Text(softphone.getCallerName(call), style: textStyle), call),
+      Expanded(child: switchGestureDetector(Container(), call)),
+      if (softphone.getHoldState(call))
+        switchGestureDetector(Text("Hold", style: textStyle), call),
+      Text(" " + mDash + " " + softphone.getCallRunTimeString(call),
+          style: textStyle),
+      if (!isMerged)
+        GestureDetector(
+            onTap: () {
+              print("merging");
+              softphone.mergeCalls(activeCall, call);
+            },
+            child: Container(
+                decoration: clearBg(),
+                padding: EdgeInsets.only(left: 12, top: 2, bottom: 2),
+                child: Image.asset("assets/icons/call_view/merge.png",
+                    width: 20, height: 20))),
+    ]);
+  }
+
+  _hangupButton(call) {
+    return GestureDetector(
+      onTap: () {
+        widget.softphone.hangUp(call);
+      },
+      child: Center(
+          child: Container(
+              decoration: raisedButtonBorder(crimsonLight,
+                  darkenAmount: 40, lightenAmount: 60),
+              padding: EdgeInsets.all(1),
+              child: Container(
+                  width: 20,
+                  height: 20,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(50.0)),
+                      color: crimsonLight),
+                  child: Image.asset("assets/icons/phone.png",
+                      width: 14, height: 14)))),
+    );
   }
 
   @override

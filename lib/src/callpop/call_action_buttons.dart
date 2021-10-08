@@ -17,10 +17,12 @@ class CallActionButtons extends StatefulWidget {
         this.isIncoming,
         this.isRinging,
         this.callIsRecording,
+        this.isOnConference,
         this.callOnHold})
       : super(key: key);
 
   final Map<String, Function()> actions;
+  final bool isOnConference;
   final bool isIncoming;
   final bool isRinging;
   final bool callOnHold;
@@ -80,7 +82,7 @@ class _CallActionButtonsState extends State<CallActionButtons> {
                 title: 'Conf',
                 icon: Image.asset("assets/icons/call_view/conference.png",
                     width: 24, height: 24),
-                disabled: onHold),
+                disabled: onHold || widget.isOnConference),
           ],
         ),
         Row(

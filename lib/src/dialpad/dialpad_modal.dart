@@ -2,11 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
+import 'package:fusion_mobile_revamped/src/contacts/recent_contacts.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/contacts_search.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialer.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/parked_calls.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/voicemails.dart';
+import 'package:fusion_mobile_revamped/src/models/contact.dart';
+import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 
 class DialPadModal extends StatefulWidget {
@@ -28,6 +31,7 @@ class _DialPadModalState extends State<DialPadModal>
   TabController _tc;
   final int _initialIndex = 1;
   int _tabIndex = 1;
+  String _query = "";
 
   @override
   void initState() {
@@ -64,8 +68,22 @@ class _DialPadModalState extends State<DialPadModal>
         ),
         Container(
           child: Column(children: [
-            Expanded(child: ContactsSearch(_fusionConnection, _softphone, "")),
-            DialPad(_fusionConnection, _softphone)
+             ContactsSearchList(_fusionConnection, _softphone, _query, "coworkers",
+                 embedded: true,
+                 onSelect: (Contact contact, CrmContact crmContact) {
+                   if (contact != null && contact.firstNumber() != null) {
+                     _softphone.makeCall(contact.firstNumber());
+                     Navigator.pop(context);
+                   } else if (crmContact != null && crmContact.firstNumber() != null) {
+                     _softphone.makeCall(crmContact.firstNumber());
+                     Navigator.pop(context);
+                   }
+                 }),
+            DialPad(_fusionConnection, _softphone, onQueryChange: (String s) {
+              setState(() {
+                _query = s;
+              });
+            })
           ]),
         ),
         Container(

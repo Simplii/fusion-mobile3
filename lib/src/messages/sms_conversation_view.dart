@@ -183,11 +183,11 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                   style: subHeaderTextStyle))
         ])),
         IconButton(
-            icon: Image.asset(
-              "assets/icons/phone.png",
+            icon: Opacity(opacity: 0.66, child: Image.asset(
+              "assets/icons/phone_dark.png",
               width: 20,
               height: 20,
-            ),
+            )),
             onPressed: () {
               Navigator.pop(context);
               widget._softphone.makeCall(_conversation.number);
@@ -787,15 +787,16 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                             topRight: Radius.circular(isFromMe ? 0 : 8),
                             bottomLeft: Radius.circular(8),
                             bottomRight: Radius.circular(8)),
-                        child: Container(
-                            constraints: BoxConstraints(
+                        child: FittedBox(
+                            /*constraints: BoxConstraints(
                                 minHeight: 100,
                                 maxWidth: maxWidth,
-                                maxHeight: 200),
+                                maxHeight: 600),
                             decoration: BoxDecoration(
                                 image: DecorationImage(
-                                    fit: BoxFit.fill,
-                                    image: NetworkImage(_message.message))))))
+                                    fit: BoxFit.fitWidth,
+                                    image: */
+                            child: Image.network(_message.message))))//))
                 : Container(
                     constraints: BoxConstraints(maxWidth: maxWidth),
                     margin: EdgeInsets.only(top: 2),
