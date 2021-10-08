@@ -120,7 +120,7 @@ class ContactsSearchList extends StatefulWidget {
   final String _query;
   final String _defaultTab;
   final Function(Contact contact, CrmContact crmContact) onSelect;
-  bool embedded;
+  bool embedded = false;
 
   ContactsSearchList(
       this._fusionConnection, this._softphone, this._query, this._defaultTab,
@@ -381,7 +381,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     return Expanded(
         child: Container(
             decoration: BoxDecoration(
-                color: widget.embedded ? Colors.transparent : Colors.white,
+                color: _embedded ? Colors.transparent : Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(16))),
             padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
             child: Stack(children: [
@@ -409,7 +409,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                               EdgeInsets.only(
                                   left: 12,
                                   right: 12,
-                                  top: widget.embedded ? 28 : 40))),
+                                  top: _embedded ? 28 : 40))),
               Container(
                   decoration: BoxDecoration(
                     boxShadow: [],
@@ -419,10 +419,10 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                         end: Alignment.bottomCenter,
                         stops: [0.5, 1.0],
                         colors: [
-                          widget.embedded ? particle : Colors.white,
-                          widget.embedded ? particle.withAlpha(0) : translucentWhite(0.0)]),
+                          _embedded ? particle : Colors.white,
+                          _embedded ? particle.withAlpha(0) : translucentWhite(0.0)]),
                   ),
-                  padding: EdgeInsets.only(left: 12, top: widget.embedded ? 0 : 12, bottom: 32),
+                  padding: EdgeInsets.only(left: 12, top: _embedded ? 0 : 12, bottom: 32),
                   child: FusionDropdown(
                       onChange: (String value) {
                         this.setState(() {
