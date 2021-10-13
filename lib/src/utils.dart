@@ -1,6 +1,25 @@
 import 'dart:convert';
 import 'dart:math';
 
+extension durations on int {
+  String printDuration() {
+    String duration = "";
+
+    int seconds = this % 60;
+    int minutes = (this / 60).floor();
+    int hours = (this / (60 * 60)).floor();
+
+    if (hours > 0) {
+      return hours.toString() + ":"
+          + (minutes < 10 ? "0" : "") + minutes.toString() + ":"
+          + (seconds < 10 ? "0" : "") + seconds.toString();
+    } else {
+        return (minutes < 10 ? "0" : "") + minutes.toString() + ":"
+          + (seconds < 10 ? "0" : "") + seconds.toString();
+    }
+  }
+}
+
 extension PhoneNumbers on String {
   String formatPhone() {
     if (this.contains("@"))

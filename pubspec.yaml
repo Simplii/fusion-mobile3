@@ -48,6 +48,7 @@ dependencies:
   image_picker:
   photo_view:
   mime:
+  just_audio:
 
 dev_dependencies:
   flutter_test:

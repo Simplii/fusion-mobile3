@@ -96,12 +96,12 @@ bottomRedBar(bool clear) {
 }
 
 actionButton(
-    String label, String icon, double width, double height, Function onTap) {
+    String label, String icon, double width, double height, Function onTap, {double opacity}) {
   return Expanded(
       child: GestureDetector(
           onTap: onTap,
           child: Opacity(
-              opacity: 0.66,
+              opacity: opacity != null ? opacity : 0.66,
               child: Container(
                   decoration: BoxDecoration(color: Colors.transparent),
                   margin: EdgeInsets.only(left: 12),
