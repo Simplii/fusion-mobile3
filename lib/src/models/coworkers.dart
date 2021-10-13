@@ -153,7 +153,12 @@ class CoworkerStore extends FusionStore<Coworker> {
     var future = new Future.delayed(const Duration(milliseconds: 10), ()
     {
       List<Contact> list = [];
-      for (Coworker c in getRecords()) {
+      List<Coworker> records = getRecords();
+      records.sort((Coworker c1, Coworker c2) {
+        return (c1.firstName + c1.lastName)
+            .compareTo(c2.firstName + c2.lastName);
+      });
+      for (Coworker c in records) {
         if ((c.firstName + " " + c.lastName
             + " " + c.email + " " + c.uid).contains(query)) {
           list.add(c.toContact());
