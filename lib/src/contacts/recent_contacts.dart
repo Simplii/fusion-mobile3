@@ -317,7 +317,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                           contact.coworker != null
-                              ? contact.coworker.statusMessage
+                              ? (contact.coworker.statusMessage != null ? contact.coworker.statusMessage : '')
                               : '',
                           style: TextStyle(
                               color: smoke,

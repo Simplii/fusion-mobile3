@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
+import 'package:fusion_mobile_revamped/src/models/voicemails.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
@@ -42,12 +43,13 @@ class FusionConnection {
   IntegratedContactsStore integratedContacts;
   ContactFieldStore contactFields;
   TimelineItemStore timelineItems;
+  VoicemailStore voicemails;
   Database db;
   PushConnector _connector;
   String _pushkitToken;
   Function _onLogOut = () {};
 
-  String serverRoot = "https://fusioncomm.net";
+  String serverRoot = "http://staging.fusioncomm.net";
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
 
   FusionConnection() {
@@ -63,6 +65,7 @@ class FusionConnection {
     coworkers = CoworkerStore(this);
     timelineItems = TimelineItemStore(this);
     contactFields = ContactFieldStore(this);
+    voicemails = VoicemailStore(this);
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     getDatabase();
   }
@@ -218,6 +221,47 @@ class FusionConnection {
       print(url);
 
 
+      var jsonResponse =
+          convert.jsonDecode(uriResponse.body);
+      if (callback != null)
+        callback(jsonResponse);
+    } finally {
+      client.close();
+    }
+  }
+
+  apiV2Call(String method, String route, Map<String, dynamic> data,
+      {Function callback}) async {
+    var client = http.Client();
+    try {
+      if (!data.containsKey('username')) {
+        data['username'] = _username;
+        data['password'] = _password;
+      }
+
+      Function fn = {
+        'post': client.post,
+        'get': client.get,
+        'patch': client.patch,
+        'put': client.put,
+        'delete': client.delete
+      }[method.toLowerCase()];
+
+      Map<Symbol, dynamic> args = {};
+      String urlParams = '?';
+
+      if (method.toLowerCase() == 'get') {
+        for (String key in data.keys) {
+          urlParams += key + "=" + data[key].toString() + '&';
+        }
+      } else {
+        args[#body] = convert.jsonEncode(data);
+        args[#headers] = {"Content-Type": "application/json"};
+      }
+
+      Uri url = Uri.parse('http://staging.fusioncomm.net/api/v2' + route + urlParams);
+print(url);
+      var uriResponse = await Function.apply(fn, [url], args);
       var jsonResponse =
           convert.jsonDecode(uriResponse.body);
       if (callback != null)
