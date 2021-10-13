@@ -4,6 +4,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
+import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
@@ -14,20 +15,19 @@ import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
 import '../styles.dart';
-import 'contact_profile_view.dart';
 
-class RecentContactsTab extends StatefulWidget {
+class RecentCallsTab extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
 
-  RecentContactsTab(this._fusionConnection, this._softphone, {Key key})
+  RecentCallsTab(this._fusionConnection, this._softphone, {Key key})
       : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _RecentContactsTabState();
+  State<StatefulWidget> createState() => _RecentCallsTabState();
 }
 
-class _RecentContactsTabState extends State<RecentContactsTab> {
+class _RecentCallsTabState extends State<RecentCallsTab> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Softphone get _softphone => widget._softphone;
@@ -36,429 +36,43 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
   String _selectedTab = 'all';
   String _query = '';
 
-  _getTitle() {
-    return {
-      'all': 'All Recents',
-      'coworkers': 'Coworker Recents',
-      'integrated': 'Integrated Recents',
-      'fusion': 'Recent Contacts'
-    }[_selectedTab];
-  }
-
-  _tabIcon(String name, String icon, double width, double height) {
-    return Expanded(
-        child: GestureDetector(
-            onTapUp: (e) {},
-            onTapDown: (e) {},
-            onTap: () {
-              this.setState(() {
-                _selectedTab = name;
-              });
-            },
-            child: Container(
-                decoration: BoxDecoration(color: Colors.transparent),
-                child: Column(children: [
-                  Container(
-                      padding: EdgeInsets.only(top: 12, bottom: 12),
-                      child: Image.asset(
-                          "assets/icons/" +
-                              icon +
-                              (_selectedTab == name ? '_selected' : '') +
-                              ".png",
-                          width: width,
-                          height: height)),
-                  bottomRedBar(_selectedTab != name),
-                ]))));
-  }
-
-  _tabBar() {
-    return Container(
-        padding: EdgeInsets.only(left: 12, right: 12),
-        child: Row(children: [
-          //_tabIcon("all", "all", 23, 20.5),
-          _tabIcon("coworkers", "briefcase", 23, 20.5),
-          _tabIcon("integrated", "integrated", 23, 20.5),
-          _tabIcon("fusion", "personalcontact", 23, 20.5),
-        ]));
-  }
-
   @override
   Widget build(BuildContext context) {
     List<Widget> children;
     //if (openConversation == null) {
     children = [
-      SearchContactsBar(_fusionConnection, (String query) {
+      SearchCallsBar(_fusionConnection, (String query) {
         this.setState(() {
-          _query = query;
+            _query = query;
         });
-      }, () {}),
-      _tabBar(),
-      ContactsSearchList(_fusionConnection, _softphone, _query, _selectedTab)
+      }, () {
+      }),
+      Container(height: 4),
+      RecentCallsList(_fusionConnection, _softphone, "Recent Calls", _selectedTab,
+          query: _query)
     ];
     return Container(child: Column(children: children));
   }
 }
 
-class ContactsSearchList extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final Softphone _softphone;
-  final String _query;
-  final String _defaultTab;
-  final Function(Contact contact, CrmContact crmContact) onSelect;
-  bool embedded = false;
-
-  ContactsSearchList(
-      this._fusionConnection, this._softphone, this._query, this._defaultTab,
-      {Key key, this.embedded, this.onSelect})
-      : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() => _ContactsSearchListState();
-}
-
-class _ContactsSearchListState extends State<ContactsSearchList> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
-
-  Softphone get _softphone => widget._softphone;
-
-  bool get _embedded => widget.embedded == null ? false : widget.embedded;
-
-  String get _query => widget._query;
-  int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
-  List<Contact> _contacts = [];
-  String _lookedUpQuery;
-
-  String get _defaultTab => widget._defaultTab;
-  String _typeFilter = "Fusion Contacts";
-  String _subscriptionKey;
-  int _page = 0;
-
-  initState() {
-    super.initState();
-  }
-
-  _subscribeCoworkers(List<String> uids, Function(List<Coworker>) callback) {
-    if (_subscriptionKey != null) {
-      _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
-    }
-
-    _subscriptionKey = _fusionConnection.coworkers.subscribe(uids, callback);
-  }
-
-  @override
-  dispose() {
-    super.dispose();
-    if (_subscriptionKey != null) {
-      _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
-    }
-  }
-
-  _loadMore() {
-    _page += 1;
-    _lookupQuery();
-  }
-
-  _lookupQuery() {
-    if (lookupState == 1) return;
-    lookupState = 1;
-    _lookedUpQuery = _typeFilter + _query;
-    String thisLookup = _typeFilter + _query;
-
-    if (_typeFilter == 'Fusion Contacts') {
-      if (_page == -1) return;
-      _fusionConnection.contacts.search(_query, 100, _page * 100,
-          (List<Contact> contacts, bool fromServer) {
-        if (thisLookup != _lookedUpQuery) return;
-        this.setState(() {
-          if (fromServer) {
-            lookupState = 2;
-          }
-          if (_page == 0) {
-            _contacts = contacts;
-          } else {
-            Map<String, Contact> list = {};
-            _contacts.forEach((Contact c) {
-              list[c.id] = c;
-            });
-            contacts.forEach((Contact c) {
-              list[c.id] = c;
-            });
-            _contacts = list.values.toList().cast<Contact>();
-          }
-          if (_contacts.length < 100 && fromServer) {
-            _page = -1;
-          }
-          _sortList(_contacts);
-        });
-      });
-    } else if (_typeFilter == 'Integrated Contacts') {
-      if (_page == -1) return;
-      _fusionConnection.integratedContacts.search(_query, 100, _page * 100,
-          (List<Contact> contacts, bool fromServer) {
-        if (thisLookup != _lookedUpQuery) return;
-        this.setState(() {
-          if (fromServer) {
-            lookupState = 2;
-          }
-
-          if (_page == 0) {
-            _contacts = contacts;
-          } else {
-            Map<String, Contact> list = {};
-            _contacts.forEach((Contact c) {
-              list[c.id] = c;
-            });
-            contacts.forEach((Contact c) {
-              list[c.id] = c;
-            });
-            _contacts = list.values.toList().cast<Contact>();
-          }
-
-          if (contacts.length < 100 && fromServer) {
-            _page = -1;
-          }
-
-          _sortList(_contacts);
-        });
-      });
-    } else if (_typeFilter == 'Coworkers') {
-      _fusionConnection.coworkers.search(_query, (List<Contact> contacts) {
-        if (thisLookup != _lookedUpQuery) return;
-        this.setState(() {
-          lookupState = 2;
-          _contacts = contacts;
-        });
-        _subscribeCoworkers(
-            contacts
-                .map((Contact c) {
-                  return c.coworker.uid;
-                })
-                .toList()
-                .cast<String>(), (List<Coworker> coworkers) {
-          this.setState(() {
-            _contacts = coworkers
-                .map((Coworker c) {
-                  return c.toContact();
-                })
-                .toList()
-                .cast<Contact>();
-            _sortList(_contacts);
-          });
-        });
-      });
-    }
-  }
-
-  _openProfile(Contact contact) {
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) =>
-            ContactProfileView(_fusionConnection, _softphone, contact));
-  }
-
-  _resultRow(String letter, Contact contact) {
-    return GestureDetector(
-        onTap: () {
-          if (widget.onSelect != null)
-            widget.onSelect(contact, null);
-          else
-            _openProfile(contact);
-        },
-        child: Container(
-            decoration: BoxDecoration(color: Colors.transparent),
-            child: Row(
-              children: [
-                Container(
-                    width: 32,
-                    height: 50,
-                    child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: letter.length > 0
-                            ? Text(letter.toUpperCase(),
-                                style: TextStyle(
-                                    color: smoke,
-                                    fontSize: 16,
-                                    height: 1,
-                                    fontWeight: FontWeight.w500))
-                            : Container())),
-                ContactCircle.withDiameter([contact], [], 36),
-                Expanded(
-                    child: Column(children: [
-                  Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(contact.name,
-                          style: TextStyle(
-                              color: coal,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700))),
-                  Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                          contact.coworker != null
-                              ? (contact.coworker.statusMessage != null
-                                  ? contact.coworker.statusMessage
-                                  : '')
-                              : '',
-                          style: TextStyle(
-                              color: smoke,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400)))
-                ]))
-              ],
-            )));
-  }
-
-  _sortList(List<Contact> list) {
-    _contacts.sort((a, b) {
-      return (a.firstName + a.lastName)
-          .trim()
-          .toLowerCase()
-          .compareTo((b.firstName + b.lastName).trim().toLowerCase());
-    });
-  }
-
-  _searchList() {
-    String usingLetter = '';
-    List<Widget> rows = [];
-    _contacts.forEach((item) {
-      String letter = (item.firstName + item.lastName).trim()[0].toLowerCase();
-      if (usingLetter != letter) {
-        usingLetter = letter;
-      } else {
-        letter = "";
-      }
-      rows.add(_resultRow(letter, item));
-    });
-    return rows;
-  }
-
-  _letterFor(Contact item) {
-    return (item.firstName + item.lastName).trim()[0].toLowerCase();
-  }
-
-  _spinner() {
-    return Container(
-        alignment: Alignment.center,
-        padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
-        child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
-  }
-
-  _isSpinning() {
-    return lookupState < 2 &&
-        _contacts.length == 0 &&
-        (_typeFilter != 'Coworkers' ||
-            _fusionConnection.coworkers.hasntLoaded());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_defaultTab == 'coworkers')
-      _typeFilter = 'Coworkers';
-    else if (_defaultTab == 'all')
-      _typeFilter = 'Fusion Contacts';
-    else if (_defaultTab == 'integrated')
-      _typeFilter = 'Integrated Contacts';
-    else if (_defaultTab == 'fusion') _typeFilter = 'Fusion Contacts';
-
-    if (_lookedUpQuery != _typeFilter + _query) {
-      _page = 0;
-      lookupState = 0;
-    }
-    if (lookupState == 0) {
-      _lookupQuery();
-    }
-
-    return Expanded(
-        child: Container(
-            decoration: BoxDecoration(
-                color: _embedded ? Colors.transparent : Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(16))),
-            padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
-            child: Stack(children: [
-              Container(
-                  child: _isSpinning()
-                      ? _spinner()
-                      : ListView.builder(
-                          itemCount: _page == -1
-                              ? _contacts.length
-                              : _contacts.length + 1,
-                          itemBuilder: (BuildContext context, int index) {
-                            if (index >= _contacts.length) {
-                              _loadMore();
-                              return Container();
-                            } else {
-                              String letter = _letterFor(_contacts[index]);
-                              if (index != 0 &&
-                                  _letterFor(_contacts[index - 1]) == letter) {
-                                letter = "";
-                              }
-                              return _resultRow(letter, _contacts[index]);
-                            }
-                          },
-                          padding: EdgeInsets.only(
-                              left: 12, right: 12, top: _embedded ? 28 : 40))),
-              Container(
-                  decoration: BoxDecoration(
-                    boxShadow: [],
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                    gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: [
-                          0.5,
-                          1.0
-                        ],
-                        colors: [
-                          _embedded ? particle : Colors.white,
-                          _embedded
-                              ? particle.withAlpha(0)
-                              : translucentWhite(0.0)
-                        ]),
-                  ),
-                  padding: EdgeInsets.only(
-                      left: 12, top: _embedded ? 0 : 12, bottom: 32),
-                  child: FusionDropdown(
-                      onChange: (String value) {
-                        this.setState(() {
-                          _typeFilter = value;
-                          _page = 0;
-                          lookupState = 0;
-                        });
-                      },
-                      value: _typeFilter,
-                      label: "Contact Type",
-                      options: [
-                        ["INTEGRATED CONTACTS", "Integrated Contacts"],
-                        ["COWORKERS", "Coworkers"],
-                        ["FUSION CONTACTS", "Fusion Contacts"]
-                      ],
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: coal)))
-            ])));
-  }
-}
-
-class ContactsList extends StatefulWidget {
+class RecentCallsList extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
   final String _label;
   final String _selectedTab;
+  final String query;
   final Function(Contact contact, CrmContact crmContact) onSelect;
 
-  ContactsList(
+  RecentCallsList(
       this._fusionConnection, this._softphone, this._label, this._selectedTab,
-      {Key key, this.onSelect})
+      {Key key, this.onSelect, this.query})
       : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _ContactsListState();
+  State<StatefulWidget> createState() => _RecentCallsListState();
 }
 
-class _ContactsListState extends State<ContactsList> {
+class _RecentCallsListState extends State<RecentCallsList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Softphone get _softphone => widget._softphone;
@@ -515,7 +129,20 @@ class _ContactsListState extends State<ContactsList> {
   _historyList() {
     List<Widget> response = [Container(height: 50)];
     response.addAll(_history.where((item) {
-      if (_selectedTab == 'all') {
+      String searchQuery = item.to + ":" + item.from + ":";
+
+      if (item.contact != null)
+        searchQuery += item.contact.searchString() + ":";
+
+      if (item.crmContact != null)
+        searchQuery += item.crmContact.company + ":" + item.crmContact.name + ":" + item.crmContact.crm;
+
+      if (item.coworker != null)
+        searchQuery += item.coworker.firstName + ':' + item.coworker.lastName;
+
+      if (widget.query != "" && !searchQuery.contains(widget.query)) {
+        return false;
+      } else if (_selectedTab == 'all') {
         return true;
       } else if (_selectedTab == 'integrated') {
         return item.crmContact != null;
@@ -809,20 +436,20 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 }
 
-class SearchContactsBar extends StatefulWidget {
+class SearchCallsBar extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Function() _onClearSearch;
   final Function(String query) _onChange;
 
-  SearchContactsBar(this._fusionConnection, this._onChange, this._onClearSearch,
+  SearchCallsBar(this._fusionConnection, this._onChange, this._onClearSearch,
       {Key key})
       : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _SearchContactsBarState();
+  State<StatefulWidget> createState() => _SearchCallsBarState();
 }
 
-class _SearchContactsBarState extends State<SearchContactsBar> {
+class _SearchCallsBarState extends State<SearchCallsBar> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   final _searchInputController = TextEditingController();
   String _selectedTab;
@@ -839,17 +466,10 @@ class _SearchContactsBarState extends State<SearchContactsBar> {
   Function(String query) get _onChange => widget._onChange;
 
   _search(String val) {
-    if (_searchInputController.value.text.trim() == "") {
-      this._onClearSearch();
-    }
-    if (willSearch == 0) {
-      willSearch = 1;
-      Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
-        String query = _searchInputController.value.text;
-        willSearch = 0;
-        _onChange(query);
-      });
-    }
+    Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
+      String query = _searchInputController.value.text.trim();
+      _onChange(query);
+    });
   }
 
   @override
