@@ -104,12 +104,11 @@ class _CallViewState extends State<CallView> {
   }
 
   _onParkBtnPress() {
-    _fusionConnection.nsApiCall("call", "park", {
-      "uid": _fusionConnection.getUid(),
-      "callid": _activeCall.id
-    }, callback: (Map<String, dynamic> respone) {
-      print("response" + respone.toString());
-    });
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => DialPadModal(_fusionConnection, _softphone, initialTab: 0));
   }
 
   _onConfBtnPress() {
