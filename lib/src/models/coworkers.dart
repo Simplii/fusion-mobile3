@@ -28,6 +28,10 @@ class Coworker extends FusionModel {
     uid = obj['uid'].toLowerCase();
   }
 
+  getName() {
+    return (firstName + " " + lastName).trim();
+  }
+
   getDomain() {
     return uid.split('@')[1];
   }

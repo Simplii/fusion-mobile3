@@ -391,7 +391,7 @@ class _MyHomePageState extends State<MyHomePage> {
         foregroundColor: Colors.white,
         child: Icon(Icons.dialpad),
       );
-    } else if (_currentIndex == 1) {
+    } else if (_currentIndex == 2) {
       return FloatingActionButton(
         backgroundColor: crimsonLight,
         foregroundColor: Colors.white,

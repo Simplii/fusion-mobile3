@@ -49,6 +49,7 @@ dependencies:
   photo_view:
   mime:
   just_audio:
+  dotted_border:
 
 dev_dependencies:
   flutter_test:
