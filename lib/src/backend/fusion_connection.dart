@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
+import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:fusion_mobile_revamped/src/models/voicemails.dart';
 import 'package:path/path.dart' as p;
@@ -43,6 +44,7 @@ class FusionConnection {
   IntegratedContactsStore integratedContacts;
   ContactFieldStore contactFields;
   TimelineItemStore timelineItems;
+  ParkLineStore parkLines;
   VoicemailStore voicemails;
   Database db;
   PushConnector _connector;
@@ -66,6 +68,7 @@ class FusionConnection {
     timelineItems = TimelineItemStore(this);
     contactFields = ContactFieldStore(this);
     voicemails = VoicemailStore(this);
+    parkLines = ParkLineStore(this);
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     getDatabase();
   }

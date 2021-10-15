@@ -419,21 +419,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                   ),
                   padding: EdgeInsets.only(
                       left: 12, top: _embedded ? 0 : 12, bottom: 32),
-                  child: FusionDropdown(
-                      onChange: (String value) {
-                        this.setState(() {
-                          _typeFilter = value;
-                          _page = 0;
-                          lookupState = 0;
-                        });
-                      },
-                      value: _typeFilter,
-                      label: "Contact Type",
-                      options: [
-                        ["INTEGRATED CONTACTS", "Integrated Contacts"],
-                        ["COWORKERS", "Coworkers"],
-                        ["FUSION CONTACTS", "Fusion Contacts"]
-                      ],
+                  child: Text(
+                      _typeFilter,
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
