@@ -7,8 +7,10 @@ import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/crm_leads_row.dart';
+import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
+import 'package:sip_ua/sip_ua.dart';
 import '../utils.dart';
 import '../styles.dart';
 
@@ -25,7 +27,7 @@ class ParkedCalls extends StatefulWidget {
 
 class _ParkedCallsState extends State<ParkedCalls> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
+  Call get _activeCall => _softphone.activeCall;
   Softphone get _softphone => widget._softphone;
   List<ParkLine> _parkLines = [];
   int _lookupState = 0;
@@ -41,7 +43,13 @@ class _ParkedCallsState extends State<ParkedCalls> {
     );
   }
 
-  _spinner() {
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+_spinner() {
     return Container(
         alignment: Alignment.center,
         padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
@@ -70,8 +78,64 @@ class _ParkedCallsState extends State<ParkedCalls> {
       return _activeParkRow(line, index);
   }
 
-  Widget _emptyParkRow(ParkLine line, int index) {
+  Widget _callView() {
+    CallpopInfo info = _softphone.getCallpopInfo(_activeCall.id);
     return Container(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ContactCircle.withDiameterAndMargin(info.contacts, info.crmContacts, 64, 8),
+          Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  if (info.getCompany(defaul: "").trim() != "")
+                    Text(info.getCompany(),
+                    style: TextStyle(
+                      color: translucentWhite(0.66),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14
+                    )),
+                  Text(
+                    info.getName(defaul: "Unknown"),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w900)
+                  ),
+                  Text(
+                    info.phoneNumber.formatPhone(),
+                    style: TextStyle(
+                      color: translucentWhite(0.66),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700
+                    )
+                  )
+                ]
+              )),
+          Text(
+            _softphone.getCallRunTimeString(_activeCall),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 21,
+              fontWeight: FontWeight.w900
+            )
+          )
+        ]
+      )
+    );
+  }
+
+  Widget _emptyParkRow(ParkLine line, int index) {
+    return GestureDetector(
+        onTap: () {
+          _fusionConnection.apiV2Call(
+              "get",
+              "/calls/" + _activeCall.id + "/park/" + line.parkLine.toString(),
+              {});
+          Navigator.pop(context);
+        },
+        child: Container(
         margin: EdgeInsets.only(bottom: 16),
         child: Column(children: [
           Row(children: [
@@ -110,7 +174,7 @@ class _ParkedCallsState extends State<ParkedCalls> {
                           Spacer()
                         ]))))
           ])
-        ]));
+        ])));
   }
 
   Widget _activeParkRow(ParkLine line, int index) {
