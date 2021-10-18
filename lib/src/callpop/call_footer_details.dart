@@ -105,7 +105,7 @@ class _CallFooterDetailsState extends State<CallFooterDetails> {
                 minWidth: 120,
                 maxWidth: MediaQuery.of(context).size.width - 160),
             child: ListView(scrollDirection: Axis.horizontal, children: [
-              CrmLeadsRow(widget._softphone, info.crmContacts)
+              CrmLeadsRow(widget._softphone, info != null ? info.crmContacts : [])
             ])),
         Spacer(),
         if (widget._softphone.isConnected(widget._activeCall))

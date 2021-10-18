@@ -128,10 +128,12 @@ _spinner() {
   Widget _emptyParkRow(ParkLine line, int index) {
     return GestureDetector(
         onTap: () {
-          _fusionConnection.apiV2Call(
-              "get",
-              "/calls/" + _activeCall.id + "/park/" + line.parkLine.toString(),
-              {});
+          if (_activeCall != null) {
+            _softphone.transfer(
+                _activeCall,
+                "sip:park_" + line.parkLine.toString() + "@" + _fusionConnection.getDomain());
+          }
+
           Navigator.pop(context);
         },
         child: Container(
