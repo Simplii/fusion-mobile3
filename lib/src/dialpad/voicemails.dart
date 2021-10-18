@@ -146,7 +146,7 @@ class _VoicemailsState extends State<Voicemails> {
         margin: EdgeInsets.only(bottom: 18),
         child: Column(children: [
           Row(children: [
-            ContactCircle.withDiameterAndMargin(vm.contacts, [], 40, 0),
+            ContactCircle.withCoworkerAndDiameter(vm.contacts, [], vm.coworker, 40),
             Container(width: 6),
             Expanded(
                 child: Column(children: [
@@ -347,10 +347,6 @@ class _VoicemailsState extends State<Voicemails> {
       _lookup();
     }
 
-    print("vmlength");
-    print(_voicemails.length);
-    print(_voicemails);
-
     return Container(
       child: Column(
         children: [
@@ -369,7 +365,6 @@ class _VoicemailsState extends State<Voicemails> {
                       : ListView.builder(
                           itemCount: _voicemails.length,
                           itemBuilder: (BuildContext context, int index) {
-                            print(index);
                             return _vmRow(_voicemails[index]);
                           },
                           padding:

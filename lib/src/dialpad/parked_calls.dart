@@ -37,12 +37,11 @@ class _ParkedCallsState extends State<ParkedCalls> {
     super.initState();
     _timer = new Timer.periodic(
       Duration(seconds: 1),
-      (Timer timer) {
+          (Timer timer) {
         setState(() {});
       },
     );
   }
-
   @override
   void dispose() {
     _timer.cancel();

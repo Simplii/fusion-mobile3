@@ -13,6 +13,7 @@ class Voicemail extends FusionModel {
   String phoneNumber;
   int duration;
   List<Contact> contacts;
+  Coworker coworker;
 
   Voicemail(Map<String, dynamic> obj) {
     this.id = obj['index'];
@@ -24,6 +25,9 @@ class Voicemail extends FusionModel {
   }
 
   contactName() {
+    if (coworker != null)
+      return coworker.getName();
+
     for (Contact c in contacts) {
       if (c.fullName() != "Unknown") {
         return c.fullName();
@@ -51,6 +55,11 @@ class VoicemailStore extends FusionStore<Voicemail> {
 
           for (Map<String, dynamic> item in datas['items']) {
             Voicemail obj = Voicemail(item);
+
+            if (obj.phoneNumber.length <= 6)
+              obj.coworker = fusionConnection.coworkers.lookupCoworker(obj.phoneNumber
+                  + '@' + fusionConnection.getDomain());
+
             storeRecord(obj);
             response.add(obj);
           }
