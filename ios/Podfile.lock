@@ -172,7 +172,7 @@ SPEC CHECKSUMS:
   FirebaseCoreDiagnostics: fe77f42da6329d6d83d21fd9d621a6b704413bfc
   FirebaseInstallations: 2563cb18a723ef9c6ef18318a49519b75dce613c
   FirebaseMessaging: 93227dd71d7888e200baef65043f81acb2b6596e
-  Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
+  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
   flutter_apns_only: 3d91c0ca9dbef4439874858590909a19f8ed06a4
   flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
@@ -192,6 +192,6 @@ SPEC CHECKSUMS:
   WebRTC-SDK: 540a44f2e30e89c75e331d5c4a372253ba668233
   websocket_manager: cadb93f3b88cf3f5d60fca8629824c1b50f30e1b
 
-PODFILE CHECKSUM: 7368163408c647b7eb699d0d788ba6718e18fb8d
+PODFILE CHECKSUM: 93df0152def9c1a4a2ed1cc340afdbe5adf956ea
 
 COCOAPODS: 1.11.2
