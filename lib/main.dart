@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:callkeep/callkeep.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -201,7 +202,11 @@ Future<void> main() async {
 //     Firebase.initializeApp();
 //  }
   registerNotifications();
-  runApp(MaterialApp(home: MyApp()));
+
+  await SentryFlutter.init(
+        (options) => options.dsn = 'https://91be6ab841f64100a3698952bbc577c2@o68456.ingest.sentry.io/6019626',
+    appRunner: () => runApp(MaterialApp(home: MyApp())),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -215,6 +220,8 @@ class MyApp extends StatelessWidget {
     final connector = createPushConnector();
     connector.configure(
         onLaunch: _onLaunch, onResume: _onResume, onMessage: _onMessage);
+
+
 
     _fusionConnection.setAPNSConnector(connector);
   }
