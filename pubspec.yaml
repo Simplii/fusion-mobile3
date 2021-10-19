@@ -50,6 +50,7 @@ dependencies:
   mime:
   just_audio:
   dotted_border:
+  sentry_flutter:
 
 dev_dependencies:
   flutter_test:
