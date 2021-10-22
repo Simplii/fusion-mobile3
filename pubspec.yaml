@@ -27,6 +27,7 @@ dependencies:
   callkeep:
   firebase_messaging:
   firebase_core:
+  flutter_dtmf:
   android_intent_plus:
   websocket_manager:
   flutter_gravatar: any

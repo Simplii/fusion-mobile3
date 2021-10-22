@@ -51,7 +51,7 @@ class FusionConnection {
   String _pushkitToken;
   Function _onLogOut = () {};
 
-  String serverRoot = "http://staging.fusioncomm.net";
+  String serverRoot = "http://fusioncomm.net";
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
 
   FusionConnection() {
@@ -262,7 +262,7 @@ class FusionConnection {
         args[#headers] = {"Content-Type": "application/json"};
       }
 
-      Uri url = Uri.parse('http://staging.fusioncomm.net/api/v2' + route + urlParams);
+      Uri url = Uri.parse('http://fusioncomm.net/api/v2' + route + urlParams);
 print(url);
       var uriResponse = await Function.apply(fn, [url], args);
       var jsonResponse =
@@ -341,7 +341,6 @@ print(url);
         smsDepartments.getDepartments((List<SMSDepartment> lis) {});
 
         FirebaseMessaging.instance.getToken().then((token){
-          print("gotfbtoken: " + token + " pn_tok:" + _pushkitToken);
           apiV1Call(
             "post",
             "/clients/device_token",
