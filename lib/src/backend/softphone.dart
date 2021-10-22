@@ -6,8 +6,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:uuid/uuid.dart';
+import 'package:ringtone_player/ringtone_player.dart';
 
 import 'fusion_connection.dart';
 
@@ -28,9 +30,17 @@ class Softphone implements SipUaHelperListener {
   Map<String, int> _tempUUIDs = {};
   final FusionConnection _fusionConnection;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  AudioPlayer outboundRingtone = AudioPlayer();
+  AudioPlayer inboundRingtone = AudioPlayer();
 
   Softphone(this._fusionConnection) {
     setup();
+    outboundRingtone.setAsset("assets/audio/outbound.mp3");
+    outboundRingtone.setLoopMode(LoopMode.one);
+
+    inboundRingtone.setAsset("assets/audio/inbound.mp3");
+    inboundRingtone.setLoopMode(LoopMode.one);
+
   }
 
   setContext(BuildContext context) {
@@ -186,6 +196,8 @@ class Softphone implements SipUaHelperListener {
     MediaStream mediaStream;
     mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
 
+    outboundRingtone.play();
+
     helper.call(destination, voiceonly: true, mediaStream: mediaStream);
   }
 
@@ -196,9 +208,11 @@ class Softphone implements SipUaHelperListener {
     call.unhold();
 
     for (Call c in calls) {
-      if (c != call) {
+      print("checking hold" + c.id);
+      if (c.id != call.id) {
+        print("holding:" + c.id);
         c.hold();
-        c.mute();
+        print("held:" + c.id);
       }
     }
     }
@@ -743,9 +757,14 @@ class Softphone implements SipUaHelperListener {
         _handleStreams(callState);
         break;
       case CallStateEnum.ENDED:
+        outboundRingtone.stop();
+        inboundRingtone.stop();
         _removeCall(call);
         break;
       case CallStateEnum.FAILED:
+        outboundRingtone.stop();
+        inboundRingtone.stop();
+
         _removeCall(call);
         break;
       case CallStateEnum.UNMUTED:
@@ -757,10 +776,17 @@ class Softphone implements SipUaHelperListener {
         _callKeep.setMutedCall(_uuidFor(call), true);
         break;
       case CallStateEnum.CONNECTING:
+        inboundRingtone.play();
+        print("playaudio");
+        break;
       case CallStateEnum.PROGRESS:
+        outboundRingtone.stop();
+        print("playoutbound");
         break;
       case CallStateEnum.ACCEPTED:
       case CallStateEnum.CONFIRMED:
+      outboundRingtone.stop();
+      inboundRingtone.stop();
         _setCallDataValue(call.id, "answerTime", DateTime.now());
         if (!isIncoming(call)) {
           print("_call connecting out going" + _uuidFor(call));
