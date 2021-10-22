@@ -364,8 +364,9 @@ class _CallViewState extends State<CallView> {
                           Spacer(),
                         if (!_softphone.getHoldState(_activeCall) &&
                             dialpadVisible)
-                          CallDialPad(),
+                          CallDialPad(_softphone, _activeCall),
                         CallActionButtons(
+
                             actions: actions,
                             isRinging: isRinging,
                             isIncoming: isIncoming,

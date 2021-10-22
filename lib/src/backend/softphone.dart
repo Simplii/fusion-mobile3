@@ -11,6 +11,7 @@ import 'package:uuid/uuid.dart';
 
 import 'fusion_connection.dart';
 
+
 class Softphone implements SipUaHelperListener {
   String outputDevice = "Phone";
   MediaStream _localStream;
@@ -623,23 +624,87 @@ class Softphone implements SipUaHelperListener {
   }
 
   mergeCalls(Call call, Call call2) {
-    /*MediaStream call2Remote = call2.peerConnection.getLocalStreams()[0];
+    print("peerconnection1remote:" + call.peerConnection.getRemoteStreams().toString());
+    print("peerconnection1local:" + call.peerConnection.getLocalStreams().toString());
+    print("peerconnection2remote:" + call2.peerConnection.getRemoteStreams().toString());
+    print("peerconnection2local:" + call2.peerConnection.getLocalStreams().toString());
+    call2.peerConnection.getLocalDescription().then((value) {
+      print("local descriptionc2");
+      print(value); });
+    call.peerConnection.getLocalDescription().then((value) {
+      print("local descriptionc1");
+      print(value); });
+    MediaStream call2Remote = call2.peerConnection.getRemoteStreams()[1];
     call.peerConnection.getRemoteStreams().map((MediaStream m) {
+      call2.peerConnection.addStream(m);
       m.getAudioTracks().map((MediaStreamTrack mt) {
-        call2Remote.addTrack(mt);
+        call2.peerConnection.addTrack(mt);
+        print("addtrackc2");print(mt);
       });
     });
-    MediaStream callRemote = call.peerConnection.getLocalStreams()[0];
+    MediaStream callRemote = call.peerConnection.getRemoteStreams()[1];
     call2.peerConnection.getRemoteStreams().map((MediaStream m) {
+      call.peerConnection.addStream(m);
       m.getAudioTracks().map((MediaStreamTrack mt) {
-        callRemote.addTrack(mt);
+        call.peerConnection.addTrack(mt);
+        print("addtrack");print(mt);
       });
-    });*/
+    });
     _setCallDataValue(call.id, "mergedWith", call2.id);
     _setCallDataValue(call2.id, "mergedWith", call.id);
     print("merged");
     print(call);
     print(call2);
+
+    createLocalMediaStream('local').then((MediaStream mergedStream) {
+      call.peerConnection.getLocalStreams().map((MediaStream m) {
+        m.getAudioTracks().map((MediaStreamTrack mt) {
+          mergedStream.addTrack(mt);
+        });
+      });
+
+      call2.peerConnection.getRemoteStreams().map((MediaStream m) {
+        m.getAudioTracks().map((MediaStreamTrack mt) {
+          mergedStream.addTrack(mt);
+        });
+      });
+
+      call.peerConnection.getLocalStreams().map((stream) => call.peerConnection.removeStream(stream));
+      call.peerConnection.addStream(mergedStream);
+    });
+    //
+    //
+    // createLocalMediaStream('local').then((MediaStream mergedStream) {
+    //   call.peerConnection.getReceivers().then((receivers) {
+    //
+    //     call2.peerConnection.getSenders().then((senders) {
+    //       call2.peerConnection.addTrack(track)
+    //       senders.map((sender) {
+    //         receivers.map((receiver)  {
+    //           sender.trac
+    //         });
+    //         mergedStream.addTrack(sender.track);
+    //       });
+    //       senders[0].replaceTrack(mergedStream).
+    //     });
+    //   });
+    //   call.peerConnection.getLocalStreams().map((MediaStream m) {
+    //     m.getAudioTracks().map((MediaStreamTrack mt) {
+    //       mergedStream.addTrack(mt);
+    //     });
+    //   });
+    //
+    //   call2.peerConnection.getRemoteStreams().map((MediaStream m) {
+    //     m.getAudioTracks().map((MediaStreamTrack mt) {
+    //       mergedStream.addTrack(mt);
+    //     });
+    //   });
+    //
+    //   call.peerConnection.getLocalStreams().map((stream) =>
+    //       call.peerConnection.removeStream(stream));
+    //   call.peerConnection.addStream(mergedStream);
+    // });
+
   }
 
   recordCall(Call call) {
