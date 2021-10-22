@@ -13,11 +13,13 @@ MERGED from [:flutter_plugin_android_lifecycle] C:\cygwin64\home\david\projects\
 MERGED from [:awesome_notifications] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\awesome_notifications\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-62:12
 MERGED from [:websocket_manager] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\websocket_manager\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:sqflite] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\sqflite\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
+MERGED from [:ringtone_player] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\ringtone_player\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:flutter_local_notifications] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_local_notifications\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-28:12
 MERGED from [:just_audio] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\just_audio\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:flutter_webrtc] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_webrtc\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:path_provider] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\path_provider\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:android_intent_plus] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\android_intent_plus\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
+MERGED from [:flutter_dtmf] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_dtmf\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:sentry_flutter] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\sentry_flutter\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-18:12
 MERGED from [:video_player] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\video_player\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
 MERGED from [:flutter_keyboard_visibility] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_keyboard_visibility\intermediates\library_manifest\debug\AndroidManifest.xml:2:1-7:12
@@ -416,6 +418,8 @@ MERGED from [:websocket_manager] C:\cygwin64\home\david\projects\fusion_mobile_r
 MERGED from [:websocket_manager] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\websocket_manager\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:sqflite] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\sqflite\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:sqflite] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\sqflite\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:ringtone_player] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\ringtone_player\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:ringtone_player] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\ringtone_player\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:flutter_local_notifications] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_local_notifications\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:flutter_local_notifications] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_local_notifications\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:just_audio] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\just_audio\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
@@ -426,6 +430,8 @@ MERGED from [:path_provider] C:\cygwin64\home\david\projects\fusion_mobile_revam
 MERGED from [:path_provider] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\path_provider\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:android_intent_plus] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\android_intent_plus\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:android_intent_plus] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\android_intent_plus\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:flutter_dtmf] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_dtmf\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
+MERGED from [:flutter_dtmf] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\flutter_dtmf\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44
 MERGED from [:sentry_flutter] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\sentry_flutter\intermediates\library_manifest\debug\AndroidManifest.xml:6:5-8:41
 MERGED from [:sentry_flutter] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\sentry_flutter\intermediates\library_manifest\debug\AndroidManifest.xml:6:5-8:41
 MERGED from [:video_player] C:\cygwin64\home\david\projects\fusion_mobile_revamped\build\video_player\intermediates\library_manifest\debug\AndroidManifest.xml:5:5-44

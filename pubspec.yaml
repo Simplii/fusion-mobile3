@@ -52,6 +52,7 @@ dependencies:
   just_audio:
   dotted_border:
   sentry_flutter:
+  ringtone_player:
 
 dev_dependencies:
   flutter_test:
@@ -75,6 +76,7 @@ flutter:
 
   assets:
     - assets/
+    - assets/audio/
     - assets/crm_icons/
     - assets/icons/
     - assets/icons/hamburger.png
