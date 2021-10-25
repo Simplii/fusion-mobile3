@@ -289,7 +289,7 @@ class _CallViewState extends State<CallView> {
   Widget build(BuildContext context) {
     var companyName = _softphone.getCallerCompany(_activeCall);
     var callerName = _softphone.getCallerName(_activeCall);
-    var callerOrigin =
+    var callerNumber =
         _softphone.getCallerNumber(_activeCall); // 'mobile' | 'work' ...etc
 
     Map<String, Function()> actions = {
@@ -353,7 +353,7 @@ class _CallViewState extends State<CallView> {
                         CallHeaderDetails(
                             callerName: callerName,
                             companyName: companyName,
-                            callerOrigin: callerOrigin,
+                            callerNumber: callerNumber,
                             isRinging: isRinging,
                             callIsRecording:
                                 _softphone.getRecordState(_activeCall),
