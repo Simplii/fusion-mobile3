@@ -24,6 +24,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:websocket_manager/websocket_manager.dart';
 
 import '../utils.dart';
+import 'softphone.dart';
 
 class FusionConnection {
   String _extension = '';
@@ -49,6 +50,7 @@ class FusionConnection {
   Database db;
   PushConnector _connector;
   String _pushkitToken;
+  Softphone _softphone;
   Function _onLogOut = () {};
 
   String serverRoot = "http://fusioncomm.net";
@@ -71,6 +73,10 @@ class FusionConnection {
     parkLines = ParkLineStore(this);
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     getDatabase();
+  }
+
+  setSoftphone(Softphone softphone) {
+    _softphone = softphone;
   }
 
   final channel = WebSocketChannel.connect(
@@ -176,7 +182,7 @@ class FusionConnection {
         convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
       } catch (e) {
       }
-
+print("apicall:" + data.toString() + ":" + jsonResponse.toString());
       callback(jsonResponse);
     } finally {
       client.close();
@@ -398,6 +404,8 @@ print(url);
             message['new_status'],
             message['message']);
       }
+
+      _softphone.checkCallIds(message);
     });
     _reconnectSocket();
     _sendHeartbeat();

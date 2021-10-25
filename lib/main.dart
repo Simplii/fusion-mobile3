@@ -214,8 +214,9 @@ class MyApp extends StatelessWidget {
   Softphone _softphone;
 
   MyApp() {
-    this._fusionConnection = FusionConnection();
-    this._softphone = Softphone(_fusionConnection);
+    _fusionConnection = FusionConnection();
+    _softphone = Softphone(_fusionConnection);
+    _fusionConnection.setSoftphone(_softphone);
 
     final connector = createPushConnector();
     connector.configure(
