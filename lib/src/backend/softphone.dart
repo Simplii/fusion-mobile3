@@ -32,6 +32,7 @@ class Softphone implements SipUaHelperListener {
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   AudioPlayer outboundRingtone = AudioPlayer();
   AudioPlayer inboundRingtone = AudioPlayer();
+  bool _savedOutput = false;
 
   Softphone(this._fusionConnection) {
     setup();
@@ -239,6 +240,8 @@ class Softphone implements SipUaHelperListener {
   }
 
   setSpeaker(bool useSpeaker) {
+    _savedOutput = useSpeaker;
+    print("set speaker:" + useSpeaker.toString());
     _localStream.getAudioTracks()[0].enableSpeakerphone(useSpeaker);
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
   }
@@ -297,7 +300,6 @@ class Softphone implements SipUaHelperListener {
     makeActiveCall(call);
     _setCallDataValue(call.id, "answerTime", DateTime.now());
     print("answering");
-    setCallOutput(call, "phone");
   }
 
   backToForeground() {
@@ -626,6 +628,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   setCallOutput(Call call, String outputDevice) {
+    print("setcalloutput:" + outputDevice);
     setSpeaker(outputDevice == 'speaker');
   }
 
@@ -784,7 +787,10 @@ class Softphone implements SipUaHelperListener {
         print("playoutbound");
         break;
       case CallStateEnum.ACCEPTED:
+            setCallOutput(call, "phone");
+            break;
       case CallStateEnum.CONFIRMED:
+        setCallOutput(call,  'phone');
       outboundRingtone.stop();
       inboundRingtone.stop();
         _setCallDataValue(call.id, "answerTime", DateTime.now());
