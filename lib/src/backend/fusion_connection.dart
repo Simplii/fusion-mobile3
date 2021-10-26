@@ -106,22 +106,20 @@ class FusionConnection {
   }
 
   logOut() {
-    _onLogOut();
-    apiV1Call("get", "/log_out", {}, callback: (data) {});
     FirebaseMessaging.instance.getToken().then((token) {
-      apiV1Call(
-        "delete",
-        "/clients/device_token",
-        {"token": token, "pn_tok": _pushkitToken},
-      );
+      apiV1Call("delete", "/clients/device_token",
+          {"token": token, "pn_tok": _pushkitToken}, callback: (data) {
+        apiV1Call("get", "/log_out", {}, callback: (data) {
+          _onLogOut();
+          _cookies.deleteAll();
+        });
+      });
     });
   }
 
   getDatabase() {
-    print("gettingdatabase");
     getDatabasesPath().then((String path) {
       openDatabase(p.join(path, "fusion.db"), version: 1, onOpen: (db) {
-        print("executing");
         print(db.execute('''
           CREATE TABLE IF NOT EXISTS sms_conversation(
           id TEXT PRIMARY key,
@@ -204,13 +202,14 @@ class FusionConnection {
       data['username'] = await _getUsername();
       //data['password'] = _password;
       print("cookie");
-      Uri url = Uri.parse('https://fusioncomm.net/api/v1/clients/api_request?username=' + data['username']);
+      Uri url = Uri.parse(
+          'https://fusioncomm.net/api/v1/clients/api_request?username=' +
+              data['username']);
       Map<String, String> headers = await _cookieHeaders(url);
       String body = convert.jsonEncode(data);
       headers["Content-Type"] = "application/json";
 
-      var uriResponse = await client.post(url,
-          headers: headers, body: body);
+      var uriResponse = await client.post(url, headers: headers, body: body);
       _saveCookie(uriResponse);
       Map<String, dynamic> jsonResponse = {};
       try {
@@ -364,10 +363,16 @@ class FusionConnection {
             : {"username": username},
         callback: (Map<String, dynamic> response) {
       if (response.containsKey("access_key")) {
-        _username = username;
+        _username = username.split('@')[0] + '@' + response['domain'];
+
+        SharedPreferences.getInstance().then((SharedPreferences prefs) {
+          prefs.setString("username", _username);
+        });
+
+        _username = _username;
         _password = password;
-        _domain = username.split('@')[1];
-        _extension = username.split('@')[0];
+        _domain = _username.split('@')[1];
+        _extension = _username.split('@')[0];
         settings.setOptions(response);
         settings.lookupSubscriber();
         coworkers.getCoworkers((data) {});
