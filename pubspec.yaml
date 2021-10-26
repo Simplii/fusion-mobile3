@@ -53,6 +53,8 @@ dependencies:
   dotted_border:
   sentry_flutter:
   ringtone_player:
+  cookie_jar:
+  shared_preferences:
 
 dev_dependencies:
   flutter_test:
