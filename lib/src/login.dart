@@ -39,7 +39,7 @@ class _LoginViewState extends State<LoginView> {
                     _wasSuccessful = true;
                     _onLogin(
                         _usernameController.value.text,
-                        _passwordController.value.text);
+                        null);
                   }
                   this.setState(() {});
                 });

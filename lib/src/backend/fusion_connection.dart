@@ -204,14 +204,14 @@ class FusionConnection {
       data['username'] = await _getUsername();
       //data['password'] = _password;
       print("cookie");
-      Uri url = Uri.parse('https://fusioncomm.net/api/v1/clients/api_request');
+      Uri url = Uri.parse('https://fusioncomm.net/api/v1/clients/api_request?username=' + data['username']);
+      Map<String, String> headers = await _cookieHeaders(url);
+      String body = convert.jsonEncode(data);
+      headers["Content-Type"] = "application/json";
 
       var uriResponse = await client.post(url,
-          headers: await _cookieHeaders(url), body: data);
-
+          headers: headers, body: body);
       _saveCookie(uriResponse);
-      print("nsapicall:" + uriResponse.headers['set-cookie'].toString());
-
       Map<String, dynamic> jsonResponse = {};
       try {
         jsonResponse =
