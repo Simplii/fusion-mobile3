@@ -98,11 +98,13 @@ class _CallActionButtonsState extends State<CallActionButtons> {
                     width: 24, height: 24),
                 disabled: onHold),
             CallActionButton(
-                onPressed: widget.actions['onVidBtnPress'],
-                title: 'Video',
-                icon: Image.asset("assets/icons/call_view/video chat.png",
-                    width: 24, height: 24),
-                disabled: true),
+                onPressed: widget.actions['onMuteBtnPress'],
+                title: widget.callIsMuted ? 'Unute' : 'Mute',
+                icon: Image.asset(
+                    widget.callIsMuted
+                        ? "assets/icons/muted.png"
+                        : "assets/icons/notmuted.png",
+                    width: 24, height: 24)),
             Expanded(child: _hangupButton()),
             CallActionButton(
                 onPressed: widget.actions['onTextBtnPress'],
