@@ -55,6 +55,8 @@ dependencies:
   ringtone_player:
   cookie_jar:
   shared_preferences:
+  all_sensors:
+  wakelock:
 
 dev_dependencies:
   flutter_test:

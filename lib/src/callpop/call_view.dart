@@ -17,6 +17,7 @@ import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:sip_ua/sip_ua.dart';
+import 'package:all_sensors/all_sensors.dart';
 
 import 'answered_while_on_call.dart';
 
@@ -52,6 +53,11 @@ class _CallViewState extends State<CallView> {
         setState(() {});
       },
     );
+
+    proximityEvents.listen((ProximityEvent event) {
+      print("proximityevent");
+      print(event);
+    });
   }
 
   @override
