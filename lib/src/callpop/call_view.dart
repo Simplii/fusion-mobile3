@@ -243,6 +243,10 @@ class _CallViewState extends State<CallView> {
                     }).toList()))));
   }
 
+  _onMuteBtnPress() {
+    _softphone.setMute(_activeCall, !_softphone.getMuted(_activeCall));
+  }
+
   _onHangup() {
     _softphone.hangUp(_activeCall);
     widget.closeView();
@@ -319,6 +323,7 @@ class _CallViewState extends State<CallView> {
       'onConfBtnPress': _onConfBtnPress,
       'onRecBtnPress': _onRecBtnPress,
       'onVidBtnPress': _onVidBtnPress,
+      'onMuteBtnPress': _onMuteBtnPress,
       'onTextBtnPress': _onTextBtnPress,
       'onAudioBtnPress': _onAudioBtnPress,
       'onHangup': _onHangup,
