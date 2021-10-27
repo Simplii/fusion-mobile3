@@ -383,6 +383,13 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   _topPart() {
     return GestureDetector(
         onTap: () {
+          print("expanding");print(_historyItem.contact);
+          print(_historyItem.from);
+          print(_historyItem.fromDid);
+          print(_historyItem.to);
+          print(_historyItem.toDid);
+          print(_historyItem.coworker);
+          print(_historyItem.crmContact);
           if (widget.onSelect != null)
             widget.onSelect();
           else

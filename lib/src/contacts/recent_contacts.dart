@@ -551,8 +551,8 @@ class _ContactsListState extends State<ContactsList> {
     if (lookupState == 0) {
       _lookupHistory();
     }
-
-    return Expanded(
+print("Expanded rendering");
+    return Container(
         child: Container(
             decoration: BoxDecoration(
                 color: Colors.white,
@@ -634,6 +634,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _expand() {
+    print("expanding");
+    print(_historyItem);
     this.setState(() {
       _expanded = !_expanded;
     });
@@ -743,6 +745,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   _topPart() {
     return GestureDetector(
         onTap: () {
+          print("expanding");
+          print(_historyItem);
           if (widget.onSelect != null)
             widget.onSelect();
           else

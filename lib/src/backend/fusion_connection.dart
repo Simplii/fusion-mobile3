@@ -110,6 +110,8 @@ class FusionConnection {
       apiV1Call("delete", "/clients/device_token",
           {"token": token, "pn_tok": _pushkitToken}, callback: (data) {
         apiV1Call("get", "/log_out", {}, callback: (data) {
+          _username = '';
+          _password = '';
           _onLogOut();
           _cookies.deleteAll();
         });

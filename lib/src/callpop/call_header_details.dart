@@ -30,7 +30,7 @@ class _CallHeaderDetailsState extends State<CallHeaderDetails> {
           Padding(
               padding: EdgeInsets.only(left: 16.0, right: 16, top: 24, bottom: 16),
               child: Column(children: [
-                Text(widget.companyName != "" ? widget.companyName : "asdf",
+                Text(widget.companyName != "" ? widget.companyName : "",
                       style: TextStyle(
                           fontSize: 18,
                           height: 1.4,

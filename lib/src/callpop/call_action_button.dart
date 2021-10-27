@@ -20,7 +20,11 @@ class _CallActionButtonState extends State<CallActionButton> {
   Widget build(BuildContext context) {
     return Expanded(
         child: GestureDetector(
-      onTap: widget.onPressed,
+      onTap: () {
+        if (widget.disabled != true) {
+          widget.onPressed();
+        }
+      },
       child: Container(
         padding: EdgeInsets.only(top: 12, left: 8, right: 8),
         decoration: clearBg(),
