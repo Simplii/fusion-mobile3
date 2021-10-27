@@ -104,9 +104,20 @@ class _CallViewState extends State<CallView> {
   }
 
   _onDialBtnPress() {
-    setState(() {
-      dialpadVisible = !dialpadVisible;
-    });
+    if (_softphone.getHoldState(_activeCall)) {
+      setState(() {
+        dialpadVisible = false;
+        showModalBottomSheet(
+            context: context,
+            backgroundColor: Colors.transparent,
+            isScrollControlled: true,
+            builder: (context) => DialPadModal(_fusionConnection, _softphone));
+      });
+    } else {
+      setState(() {
+        dialpadVisible = !dialpadVisible;
+      });
+    }
   }
 
   _onParkBtnPress() {
@@ -114,7 +125,8 @@ class _CallViewState extends State<CallView> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => DialPadModal(_fusionConnection, _softphone, initialTab: 0));
+        builder: (context) =>
+            DialPadModal(_fusionConnection, _softphone, initialTab: 0));
   }
 
   _onConfBtnPress() {
@@ -372,12 +384,12 @@ class _CallViewState extends State<CallView> {
                             dialpadVisible)
                           CallDialPad(_softphone, _activeCall),
                         CallActionButtons(
-
                             actions: actions,
                             isRinging: isRinging,
                             isIncoming: isIncoming,
                             dialPadOpen: dialpadVisible,
-                            isOnConference: _softphone.isCallMerged(_activeCall),
+                            isOnConference:
+                                _softphone.isCallMerged(_activeCall),
                             setDialpad: (bool isOpen) {
                               setState(() {
                                 print("isopen" +
@@ -393,7 +405,8 @@ class _CallViewState extends State<CallView> {
                                 _softphone.getRecordState(_activeCall),
                             callIsMuted: _softphone.getMuted(_activeCall),
                             callOnHold: _softphone.getHoldState(_activeCall)),
-                        CallFooterDetails(_fusionConnection, _softphone, _activeCall)
+                        CallFooterDetails(
+                            _fusionConnection, _softphone, _activeCall)
                       ],
                     ),
                   )),
