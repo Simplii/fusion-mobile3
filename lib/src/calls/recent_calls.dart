@@ -48,8 +48,8 @@ class _RecentCallsTabState extends State<RecentCallsTab> {
       }, () {
       }),
       Container(height: 4),
-      RecentCallsList(_fusionConnection, _softphone, "Recent Calls", _selectedTab,
-          query: _query)
+      Expanded(child: RecentCallsList(_fusionConnection, _softphone, "Recent Calls", _selectedTab,
+          query: _query))
     ];
     return Container(child: Column(children: children));
   }
@@ -192,7 +192,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
       _lookupHistory();
     }
 
-    return Expanded(
+    return Container(
         child: Container(
             decoration: BoxDecoration(
                 color: Colors.white,
@@ -350,7 +350,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
 
     if (_expanded) {
       children.add(Container(
-          child: horizontalLine(0),
+          child: Row(children: [horizontalLine(0)]),
           margin: EdgeInsets.only(top: 4, bottom: 4)));
       children.add(Container(
           height: 28,
@@ -383,13 +383,6 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   _topPart() {
     return GestureDetector(
         onTap: () {
-          print("expanding");print(_historyItem.contact);
-          print(_historyItem.from);
-          print(_historyItem.fromDid);
-          print(_historyItem.to);
-          print(_historyItem.toDid);
-          print(_historyItem.coworker);
-          print(_historyItem.crmContact);
           if (widget.onSelect != null)
             widget.onSelect();
           else
