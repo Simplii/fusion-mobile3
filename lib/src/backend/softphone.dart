@@ -201,6 +201,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   makeActiveCall(Call call) {
+    print("makeactive");print(call);
     activeCall = call;
     _callKeep.setCurrentCallActive(_uuidFor(call));
     call.unmute();
@@ -211,6 +212,7 @@ class Softphone implements SipUaHelperListener {
       if (c.id != call.id) {
         print("holding:" + c.id);
         c.hold();
+        c.mute();
         print("held:" + c.id);
       }
     }
@@ -283,8 +285,10 @@ class Softphone implements SipUaHelperListener {
   }
 
   setHold(Call call, bool setOnHold) {
+    print("serttingonhold:" + setOnHold.toString());
     _setCallDataValue(call.id, "onHold", setOnHold);
     if (setOnHold) {
+      print("holding");
       call.hold();
     } else {
       print("unholding");
@@ -403,7 +407,9 @@ class Softphone implements SipUaHelperListener {
   }
 
   _callKeepDidToggleHold(CallKeepDidToggleHoldAction event) {
-    setHold(_getCallByUuid(event.callUUID), event.hold);
+    if (_getCallDataValue(_getCallByUuid(event.callUUID).id, "onHold") != event.hold) {
+      setHold(_getCallByUuid(event.callUUID), event.hold);
+    }
   }
 
   _callKeepPerformEndCall(CallKeepPerformEndCallAction event) {
@@ -833,14 +839,10 @@ class Softphone implements SipUaHelperListener {
         }
         break;
       case CallStateEnum.HOLD:
-        Map<String, dynamic> updatedCall = _getCallDataById(call.id);
-        updatedCall['onHold'] = true;
         _setCallDataValue(call.id, "onHold", true);
         _callKeep.setOnHold(_uuidFor(call), true);
         break;
       case CallStateEnum.UNHOLD:
-        Map<String, dynamic> updatedCall = _getCallDataById(call.id);
-        updatedCall['onHold'] = false;
         _setCallDataValue(call.id, "onHold", false);
         _callKeep.setOnHold(_uuidFor(call), false);
         break;
