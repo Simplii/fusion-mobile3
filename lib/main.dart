@@ -27,6 +27,7 @@ import 'src/login.dart';
 import 'src/messages/messages_list.dart';
 import 'src/messages/new_message_popup.dart';
 import 'src/styles.dart';
+import 'src/utils.dart';
 
 FlutterCallkeep __callKeep = FlutterCallkeep();
 bool __callKeepInited = false;
@@ -88,6 +89,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
   if (data.containsKey("alert") && data['alert'] == "call") {
     var callerName = data['phonenumber'] as String;
     final callUUID = Uuid().v4();
+    var id = int.parse(callerName.onlyNumbers());
 
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
         registerNotifications();
@@ -102,8 +104,9 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
     flutterLocalNotificationsPlugin.show(
-        0, callerName, 'Incoming phone call', platformChannelSpecifics,
+        id, callerName, 'Incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
+
 
     /*AwesomeNotifications().createNotification(
       content: NotificationContent(
