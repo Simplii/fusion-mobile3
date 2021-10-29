@@ -4,12 +4,14 @@ import 'package:callkeep/callkeep.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:uuid/uuid.dart';
 import 'package:ringtone_player/ringtone_player.dart';
+import '../../main.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
 
@@ -21,6 +23,8 @@ class Softphone implements SipUaHelperListener {
   List<Function> _listeners = [];
   FlutterCallkeep _callKeep;
   BuildContext _context;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        registerNotifications();
 
   Map<String, Map<String, dynamic>> callData = {};
   List<Call> calls = [];
@@ -444,7 +448,6 @@ class Softphone implements SipUaHelperListener {
   }
 
   _removeCall(Call call) {
-    print("removing _call_ - " + call.id);
     if (call == activeCall) {
       activeCall = null;
     }
@@ -463,6 +466,10 @@ class Softphone implements SipUaHelperListener {
     if (calls.length > 0) makeActiveCall(calls[0]);
 
     _updateListeners();
+    if (Platform.isAndroid) {
+      flutterLocalNotificationsPlugin.cancel(
+          int.parse((getCallerNumber(call) + "").onlyNumbers()));
+    }
   }
 
   _uuidFor(Call call) {
