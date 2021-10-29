@@ -116,7 +116,7 @@ class _MessagesListState extends State<MessagesList> {
         .getConversations(_selectedGroupId, 100, _page * 100,
             (List<SMSConversation> convos, bool fromServer) {
       this.setState(() {
-        if (fromServer) {
+        if (fromServer != null && fromServer) {
           lookupState = 2;
         }
 

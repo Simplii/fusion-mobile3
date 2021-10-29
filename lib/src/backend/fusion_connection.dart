@@ -63,6 +63,7 @@ class FusionConnection {
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
 
   FusionConnection() {
+    _getCookies();
     crmContacts = CrmContactsStore(this);
     integratedContacts = IntegratedContactsStore(this);
     contacts = ContactsStore(this);
@@ -79,13 +80,15 @@ class FusionConnection {
     parkLines = ParkLineStore(this);
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     getDatabase();
-    _getCookies();
   }
 
-  _getCookies() {
+  _getCookies({Function callback}) {
     getApplicationDocumentsDirectory().then((directory) {
       _cookies = PersistCookieJar(
           ignoreExpires: true, storage: FileStorage(directory.path));
+      if (callback != null) {
+        callback();
+      }
     });
   }
 
@@ -183,16 +186,21 @@ class FusionConnection {
   }
 
   _cookieHeaders(url) async {
-    List<Cookie> cookies = await _cookies.loadForRequest(url);
-    String cookiesHeader = "";
-    Map<String, String> headers = {};
+    if (_cookies == null) {
+      _getCookies();
+      return [];
+    } else {
+      List<Cookie> cookies = await _cookies.loadForRequest(url);
+      String cookiesHeader = "";
+      Map<String, String> headers = {};
 
-    for (Cookie c in cookies) {
-      cookiesHeader += c.name + "=" + c.value + "; ";
+      for (Cookie c in cookies) {
+        cookiesHeader += c.name + "=" + c.value + "; ";
+      }
+      print("cookeis header:" + cookiesHeader);
+      headers['cookie'] = cookiesHeader;
+      return headers;
     }
-    print("cookeis header:" + cookiesHeader);
-    headers['cookie'] = cookiesHeader;
-    return headers;
   }
 
   nsApiCall(String object, String action, Map<String, dynamic> data,
