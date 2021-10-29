@@ -61,7 +61,7 @@ class UserSettings {
           print(data);
           if (data.containsKey('subscriber')) {
             subscriber = data['subscriber'];
-            if (!subscriber['callid_nmbr'])
+            if (subscriber['callid_nmbr'] == null)
               subscriber['callid_nmbr'] = '';
           }
         });
