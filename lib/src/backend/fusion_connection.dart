@@ -179,9 +179,15 @@ class FusionConnection {
   }
 
   _saveCookie(Response response) {
+    print("savecookie:"+ response.headers.toString());
     if (response.headers.containsKey('set-cookie')) {
-      Cookie cookie = Cookie.fromSetCookieValue(response.headers['set-cookie']);
-      _cookies.saveFromResponse(response.request.url, [cookie]);
+      List<String> cookieStrings = response.headers['set-cookie'].split("HttpOnly,");
+      print("cookies:" + response.headers['set-cookie']);
+      for (String cookieString in cookieStrings) {
+        print("cookiestr:" + cookieString);
+        Cookie cookie = Cookie.fromSetCookieValue(cookieString);
+        _cookies.saveFromResponse(response.request.url, [cookie]);
+      }
     }
   }
 
@@ -227,6 +233,7 @@ class FusionConnection {
             convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
       } catch (e) {}
       print("apicall:" + data.toString() + ":" + jsonResponse.toString());
+      client.close();
       callback(jsonResponse);
     } finally {
       client.close();
@@ -237,7 +244,7 @@ class FusionConnection {
       {Function callback}) async {
     var client = http.Client();
     try {
-      print("apiv1:" + data.toString());
+      print("apiv1:" + route + ":" + data.toString());
       data['username'] = await _getUsername();
 
       Function fn = {
@@ -271,6 +278,7 @@ class FusionConnection {
       print(uriResponse.body);
       _saveCookie(uriResponse);
       var jsonResponse = convert.jsonDecode(uriResponse.body);
+      client.close();
       if (callback != null) callback(jsonResponse);
     } finally {
       client.close();

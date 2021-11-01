@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:callkeep/callkeep.dart';
@@ -26,6 +27,7 @@ import 'src/contacts/recent_contacts.dart';
 import 'src/login.dart';
 import 'src/messages/messages_list.dart';
 import 'src/messages/new_message_popup.dart';
+import 'src/messages/sms_conversation_view.dart';
 import 'src/styles.dart';
 import 'src/utils.dart';
 
@@ -106,7 +108,6 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
     flutterLocalNotificationsPlugin.show(
         id, callerName, 'Incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
-
 
     /*AwesomeNotifications().createNotification(
       content: NotificationContent(
@@ -207,7 +208,8 @@ Future<void> main() async {
   registerNotifications();
 
   await SentryFlutter.init(
-        (options) => options.dsn = 'https://91be6ab841f64100a3698952bbc577c2@o68456.ingest.sentry.io/6019626',
+    (options) => options.dsn =
+        'https://91be6ab841f64100a3698952bbc577c2@o68456.ingest.sentry.io/6019626',
     appRunner: () => runApp(MaterialApp(home: MyApp())),
   );
 }
@@ -224,8 +226,6 @@ class MyApp extends StatelessWidget {
     final connector = createPushConnector();
     connector.configure(
         onLaunch: _onLaunch, onResume: _onResume, onMessage: _onMessage);
-
-
 
     _fusionConnection.setAPNSConnector(connector);
   }
@@ -334,6 +334,48 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {});
     });
     _register();
+
+    _setupFirebase();
+  }
+
+  _setupFirebase() {
+    print("fbsetup");
+    FirebaseMessaging.onMessage.listen((event) {
+      print("gotfbmessage:" + event.data.toString());
+      event.data;
+      setState(() {
+        print("gotfbmessage:" + event.toString());
+      });
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((event) {
+      print("gotfbmessageandopened:" + event.data.toString());
+      if (event.data.containsKey('to_number')) {
+        fusionConnection.contacts.search(event.data['from_number'], 10, 0,
+            (contacts, fromServer) {
+          if (fromServer) {
+            fusionConnection.integratedContacts.search(
+                event.data['from_number'], 10, 0, (crmContacts, fromServer) {
+              if (fromServer) {
+                contacts.addAll(crmContacts);
+                showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    builder: (context) => SMSConversationView(
+                        fusionConnection,
+                        softphone,
+                        SMSConversation.build(
+                            contacts: contacts,
+                            crmContacts: [],
+                            myNumber: event.data['to_number'],
+                            number: event.data['from_number'])));
+              }
+            });
+          }
+        });
+      }
+    });
   }
 
   Future<void> _register() async {
@@ -517,12 +559,12 @@ class _MyHomePageState extends State<MyHomePage> {
                           label: "Calls",
                         ),
                         BottomNavigationBarItem(
-                          icon: Opacity(child: Image.asset("assets/icons/people.png",
-                              width: 18, height: 18), opacity: 0.5),
-                          activeIcon: Image.asset(
-                              "assets/icons/people.png",
-                              width: 18,
-                              height: 18),
+                          icon: Opacity(
+                              child: Image.asset("assets/icons/people.png",
+                                  width: 18, height: 18),
+                              opacity: 0.5),
+                          activeIcon: Image.asset("assets/icons/people.png",
+                              width: 18, height: 18),
                           label: "People",
                         ),
                         BottomNavigationBarItem(
