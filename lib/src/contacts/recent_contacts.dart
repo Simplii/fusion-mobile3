@@ -48,10 +48,8 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
   _tabIcon(String name, String icon, double width, double height) {
     return Expanded(
         child: GestureDetector(
-            onTapUp: (e) {
-            },
-            onTapDown: (e) {
-            },
+            onTapUp: (e) {},
+            onTapDown: (e) {},
             onTap: () {
               this.setState(() {
                 _selectedTab = name;
@@ -77,7 +75,7 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
     return Container(
         padding: EdgeInsets.only(left: 12, right: 12),
         child: Row(children: [
-          _tabIcon("all", "all", 23, 20.5),
+          //_tabIcon("all", "all", 23, 20.5),
           _tabIcon("coworkers", "briefcase", 23, 20.5),
           _tabIcon("integrated", "integrated", 23, 20.5),
           _tabIcon("fusion", "personalcontact", 23, 20.5),
@@ -91,24 +89,11 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
     children = [
       SearchContactsBar(_fusionConnection, (String query) {
         this.setState(() {
-          if (query.trim() != "") {
-            _showingResults = true;
-            _query = query;
-          } else {
-            _showingResults = false;
-          }
+          _query = query;
         });
-      }, () {
-        this.setState(() {
-          _showingResults = false;
-        });
-      }),
-      !_showingResults ? _tabBar() : Container(),
-      (_showingResults
-          ? ContactsSearchList(
-              _fusionConnection, _softphone, _query, _selectedTab)
-          : ContactsList(
-              _fusionConnection, _softphone, _getTitle(), _selectedTab))
+      }, () {}),
+      _tabBar(),
+      ContactsSearchList(_fusionConnection, _softphone, _query, _selectedTab)
     ];
     return Container(child: Column(children: children));
   }
@@ -150,13 +135,6 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
   initState() {
     super.initState();
-    if (_defaultTab == 'coworkers')
-      _typeFilter = 'Coworkers';
-    else if (_defaultTab == 'all')
-      _typeFilter = 'Fusion Contacts';
-    else if (_defaultTab == 'integrated')
-      _typeFilter = 'Integrated Contacts';
-    else if (_defaultTab == 'fusion') _typeFilter = 'Fusion Contacts';
   }
 
   _subscribeCoworkers(List<String> uids, Function(List<Coworker>) callback) {
@@ -183,13 +161,14 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   _lookupQuery() {
     if (lookupState == 1) return;
     lookupState = 1;
-    _lookedUpQuery = _query;
+    _lookedUpQuery = _typeFilter + _query;
+    String thisLookup = _typeFilter + _query;
 
     if (_typeFilter == 'Fusion Contacts') {
       if (_page == -1) return;
       _fusionConnection.contacts.search(_query, 100, _page * 100,
           (List<Contact> contacts, bool fromServer) {
-
+        if (thisLookup != _lookedUpQuery) return;
         this.setState(() {
           if (fromServer) {
             lookupState = 2;
@@ -216,7 +195,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       if (_page == -1) return;
       _fusionConnection.integratedContacts.search(_query, 100, _page * 100,
           (List<Contact> contacts, bool fromServer) {
-
+        if (thisLookup != _lookedUpQuery) return;
         this.setState(() {
           if (fromServer) {
             lookupState = 2;
@@ -244,6 +223,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       });
     } else if (_typeFilter == 'Coworkers') {
       _fusionConnection.coworkers.search(_query, (List<Contact> contacts) {
+        if (thisLookup != _lookedUpQuery) return;
         this.setState(() {
           lookupState = 2;
           _contacts = contacts;
@@ -317,7 +297,9 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                           contact.coworker != null
-                              ? contact.coworker.statusMessage
+                              ? (contact.coworker.statusMessage != null
+                                  ? contact.coworker.statusMessage
+                                  : '')
                               : '',
                           style: TextStyle(
                               color: smoke,
@@ -364,13 +346,23 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   }
 
   _isSpinning() {
-    return lookupState < 2 && _contacts.length == 0
-        && (_typeFilter != 'Coworkers' || _fusionConnection.coworkers.hasntLoaded());
+    return lookupState < 2 &&
+        _contacts.length == 0 &&
+        (_typeFilter != 'Coworkers' ||
+            _fusionConnection.coworkers.hasntLoaded());
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_lookedUpQuery != _query) {
+    if (_defaultTab == 'coworkers')
+      _typeFilter = 'Coworkers';
+    else if (_defaultTab == 'all')
+      _typeFilter = 'Fusion Contacts';
+    else if (_defaultTab == 'integrated')
+      _typeFilter = 'Integrated Contacts';
+    else if (_defaultTab == 'fusion') _typeFilter = 'Fusion Contacts';
+
+    if (_lookedUpQuery != _typeFilter + _query) {
       _page = 0;
       lookupState = 0;
     }
@@ -405,11 +397,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                               return _resultRow(letter, _contacts[index]);
                             }
                           },
-                          padding:
-                              EdgeInsets.only(
-                                  left: 12,
-                                  right: 12,
-                                  top: _embedded ? 28 : 40))),
+                          padding: EdgeInsets.only(
+                              left: 12, right: 12, top: _embedded ? 28 : 40))),
               Container(
                   decoration: BoxDecoration(
                     boxShadow: [],
@@ -417,27 +406,21 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                     gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        stops: [0.5, 1.0],
+                        stops: [
+                          0.5,
+                          1.0
+                        ],
                         colors: [
                           _embedded ? particle : Colors.white,
-                          _embedded ? particle.withAlpha(0) : translucentWhite(0.0)]),
+                          _embedded
+                              ? particle.withAlpha(0)
+                              : translucentWhite(0.0)
+                        ]),
                   ),
-                  padding: EdgeInsets.only(left: 12, top: _embedded ? 0 : 12, bottom: 32),
-                  child: FusionDropdown(
-                      onChange: (String value) {
-                        this.setState(() {
-                          _typeFilter = value;
-                          _page = 0;
-                          lookupState = 0;
-                        });
-                      },
-                      value: _typeFilter,
-                      label: "Contact Type",
-                      options: [
-                        ["INTEGRATED CONTACTS", "Integrated Contacts"],
-                        ["COWORKERS", "Coworkers"],
-                        ["FUSION CONTACTS", "Fusion Contacts"]
-                      ],
+                  padding: EdgeInsets.only(
+                      left: 12, top: _embedded ? 0 : 12, bottom: 32),
+                  child: Text(
+                      _typeFilter,
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,

@@ -9,10 +9,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../styles.dart';
 
 class CrmLeadsRow extends StatefulWidget {
-  CrmLeadsRow(this._softphone, this._activeCall, {Key key}) : super(key: key);
+  CrmLeadsRow(this._softphone, this._crmContacts, {Key key}) : super(key: key);
 
   final Softphone _softphone;
-  final Call _activeCall;
+  final List<CrmContact> _crmContacts;
 
 
   @override
@@ -22,12 +22,11 @@ class CrmLeadsRow extends StatefulWidget {
 class _CrmLeadsRowState extends State<CrmLeadsRow> {
   @override
   Widget build(BuildContext context) {
-    CallpopInfo info = widget._softphone.getCallpopInfo(widget._activeCall.id);
-    if (info == null || info.crmContacts == null) return Container();
+    if (widget._crmContacts == null) return Container();
     return Container(
       child: Row(
         children:
-        (info.crmContacts == null ? [].cast<CrmContact>() : info.crmContacts).map((CrmContact c) {
+        (widget._crmContacts == null ? [].cast<CrmContact>() : widget._crmContacts).map((CrmContact c) {
 
             return GestureDetector(
                 onTap: () { launch(c.url); },

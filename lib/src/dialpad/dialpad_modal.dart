@@ -1,23 +1,30 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
+import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/contacts/recent_contacts.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/contacts_search.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialer.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/parked_calls.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/voicemails.dart';
+import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
+import 'package:sip_ua/sip_ua.dart';
 
 class DialPadModal extends StatefulWidget {
-  DialPadModal(this._fusionConnection, this._softphone, {Key key})
+  DialPadModal(this._fusionConnection, this._softphone, {Key key, this.initialTab})
       : super(key: key);
 
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
+  int initialTab;
 
   @override
   State<StatefulWidget> createState() => _DialPadModalState();
@@ -26,16 +33,27 @@ class DialPadModal extends StatefulWidget {
 class _DialPadModalState extends State<DialPadModal>
     with TickerProviderStateMixin {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
+  Call get _activeCall => _softphone.activeCall;
   Softphone get _softphone => widget._softphone;
   TabController _tc;
-  final int _initialIndex = 1;
+  int _initialIndex = 1;
   int _tabIndex = 1;
   String _query = "";
+  Timer _timer;
 
   @override
   void initState() {
     super.initState();
+    _timer = new Timer.periodic(
+      Duration(seconds: 1),
+      (Timer timer) {
+        setState(() {});
+      },
+    );
+    if (widget.initialTab != null)
+      _initialIndex = widget.initialTab;
+    _tabIndex = _initialIndex;
+
     _tc =
         new TabController(length: 3, initialIndex: _initialIndex, vsync: this);
     _tc.addListener(_updateTabIndex);
@@ -44,6 +62,7 @@ class _DialPadModalState extends State<DialPadModal>
   @override
   void dispose() {
     _tc.dispose();
+    _timer.cancel();
     super.dispose();
   }
 
@@ -175,11 +194,76 @@ class _DialPadModalState extends State<DialPadModal>
         ));
   }
 
+  Widget _callView() {
+    CallpopInfo info = _softphone.getCallpopInfo(_activeCall.id);
+    return Container(
+      padding: EdgeInsets.only(left: 18, right: 18, bottom: 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ContactCircle.withDiameterAndMargin(info.contacts, info.crmContacts, 64, 8),
+          Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (info.getCompany(defaul: "").trim() != "")
+                    Text(info.getCompany(),
+                    style: TextStyle(
+                      color: translucentWhite(0.66),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14
+                    )),
+                  if (!(info.getCompany(defaul: "").trim() != ""))
+                    Text(" ",
+                    style: TextStyle(
+                      color: translucentWhite(0.66),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14
+                    )),
+
+                  Text(
+                    info.getName(defaul: "Unknown"),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w900)
+                  ),
+                  Text(
+                    info.phoneNumber.formatPhone(),
+                    style: TextStyle(
+                      color: translucentWhite(0.66),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700
+                    )
+                  )
+                ]
+              )),
+          Text(
+            _softphone.getCallRunTimeString(_activeCall),
+            style: TextStyle(
+              height: 1.0,
+              color: Colors.white,
+              fontSize: 21,
+              fontWeight: FontWeight.w900
+            )
+          )
+        ]
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
         child: Container(
-            margin: EdgeInsets.only(top: 80),
+          decoration: BoxDecoration(color: coal.withAlpha(140)),
+            child:Column(
+        children: [
+          Container(height: 60),
+          if (_tabIndex == 0 && _activeCall != null)
+            _callView(),
+          Expanded(child: Container(
             decoration: BoxDecoration(
                 color: particle,
                 borderRadius: BorderRadius.only(
@@ -207,6 +291,6 @@ class _DialPadModalState extends State<DialPadModal>
                           width: 80,
                           margin: EdgeInsets.all(8),
                           child: Center(child: popupHandle()))
-                    ]))));
+                    ]))))])));
   }
 }

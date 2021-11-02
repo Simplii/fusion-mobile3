@@ -1,4 +1,6 @@
 PODS:
+  - audio_session (0.0.1):
+    - Flutter
   - awesome_notifications (0.0.2):
     - Flutter
   - callkeep (0.0.1):
@@ -75,15 +77,26 @@ PODS:
     - GoogleUtilities/Logger
   - image_picker (0.0.1):
     - Flutter
+  - just_audio (0.0.1):
+    - Flutter
   - Libyuv (1703)
   - nanopb (2.30908.0):
     - nanopb/decode (= 2.30908.0)
     - nanopb/encode (= 2.30908.0)
   - nanopb/decode (2.30908.0)
   - nanopb/encode (2.30908.0)
+  - package_info_plus (0.4.5):
+    - Flutter
   - path_provider (0.0.1):
     - Flutter
   - PromisesObjC (2.0.0)
+  - Sentry (7.3.0):
+    - Sentry/Core (= 7.3.0)
+  - Sentry/Core (7.3.0)
+  - sentry_flutter (0.0.1):
+    - Flutter
+    - FlutterMacOS
+    - Sentry (~> 7.3.0)
   - sqflite (0.0.2):
     - Flutter
     - FMDB (>= 2.7.5)
@@ -98,6 +111,7 @@ PODS:
     - Starscream (~> 3.1.1)
 
 DEPENDENCIES:
+  - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - awesome_notifications (from `.symlinks/plugins/awesome_notifications/ios`)
   - callkeep (from `.symlinks/plugins/callkeep/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
@@ -108,7 +122,10 @@ DEPENDENCIES:
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_webrtc (from `.symlinks/plugins/flutter_webrtc/ios`)
   - image_picker (from `.symlinks/plugins/image_picker/ios`)
+  - just_audio (from `.symlinks/plugins/just_audio/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
+  - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
   - sqflite (from `.symlinks/plugins/sqflite/ios`)
   - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
   - video_player (from `.symlinks/plugins/video_player/ios`)
@@ -127,10 +144,13 @@ SPEC REPOS:
     - Libyuv
     - nanopb
     - PromisesObjC
+    - Sentry
     - Starscream
     - WebRTC-SDK
 
 EXTERNAL SOURCES:
+  audio_session:
+    :path: ".symlinks/plugins/audio_session/ios"
   awesome_notifications:
     :path: ".symlinks/plugins/awesome_notifications/ios"
   callkeep:
@@ -151,8 +171,14 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_webrtc/ios"
   image_picker:
     :path: ".symlinks/plugins/image_picker/ios"
+  just_audio:
+    :path: ".symlinks/plugins/just_audio/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider:
     :path: ".symlinks/plugins/path_provider/ios"
+  sentry_flutter:
+    :path: ".symlinks/plugins/sentry_flutter/ios"
   sqflite:
     :path: ".symlinks/plugins/sqflite/ios"
   url_launcher:
@@ -163,6 +189,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/websocket_manager/ios"
 
 SPEC CHECKSUMS:
+  audio_session: 4f3e461722055d21515cf3261b64c973c062f345
   awesome_notifications: 74462bc8e68b11f8235d78422266886759e9da61
   callkeep: 6b21abbd46786a36e482190816db99b391ada1e3
   Firebase: bc9325d5ee2041524bac78a5213d0e530c651309
@@ -180,15 +207,19 @@ SPEC CHECKSUMS:
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   GoogleDataTransport: 85fd18ff3019bb85d3f2c551d04c481dedf71fc9
   GoogleUtilities: 8de2a97a17e15b6b98e38e8770e2d129a57c0040
-  image_picker: e06f7a68f000bd36f552c1847e33cda96ed31f1f
+  image_picker: 9aa50e1d8cdacdbed739e925b7eea16d014367e6
+  just_audio: baa7252489dbcf47a4c7cc9ca663e9661c99aafa
   Libyuv: 5f79ced0ee66e60a612ca97de1e6ccacd187a437
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
-  path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
+  package_info_plus: 6c92f08e1f853dc01228d6f553146438dafcd14e
+  path_provider: d1e9807085df1f9cc9318206cd649dc0b76be3de
   PromisesObjC: 68159ce6952d93e17b2dfe273b8c40907db5ba58
+  Sentry: 9a4e621430e2dae4477d791f2f7e905720b6efbf
+  sentry_flutter: 08fadaed464f44e1233d3fbb0c72b10cebd79487
   sqflite: 6d358c025f5b867b29ed92fc697fd34924e11904
   Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
-  url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
-  video_player: 9cc823b1d9da7e8427ee591e8438bfbcde500e6e
+  url_launcher: b6e016d912f04be9f5bf6e8e82dc599b7ba59649
+  video_player: ecd305f42e9044793efd34846e1ce64c31ea6fcb
   WebRTC-SDK: 540a44f2e30e89c75e331d5c4a372253ba668233
   websocket_manager: cadb93f3b88cf3f5d60fca8629824c1b50f30e1b
 
