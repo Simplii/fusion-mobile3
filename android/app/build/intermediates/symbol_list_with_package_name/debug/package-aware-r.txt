@@ -479,10 +479,6 @@ dimen notification_small_icon_size_as_large
 dimen notification_subtext_size
 dimen notification_top_pad
 dimen notification_top_pad_large_text
-dimen subtitle_corner_radius
-dimen subtitle_outline_width
-dimen subtitle_shadow_offset
-dimen subtitle_shadow_radius
 dimen tooltip_corner_radius
 dimen tooltip_horizontal_padding
 dimen tooltip_margin
@@ -578,6 +574,11 @@ drawable abc_vector_test
 drawable app_icon_background
 drawable ic_launcher_background
 drawable launch_background
+drawable media_session_service_notification_ic_music_note
+drawable media_session_service_notification_ic_pause
+drawable media_session_service_notification_ic_play
+drawable media_session_service_notification_ic_skip_to_next
+drawable media_session_service_notification_ic_skip_to_previous
 drawable notification_action_background
 drawable notification_bg
 drawable notification_bg_low
@@ -701,6 +702,7 @@ id line3
 id listMode
 id list_item
 id media_actions
+id media_controller_compat_view_tag
 id message
 id middle
 id multiply
@@ -869,6 +871,7 @@ string abc_shareactionprovider_share_with
 string abc_shareactionprovider_share_with_application
 string abc_toolbar_collapse_description
 string common_google_play_services_unknown_issue
+string default_notification_channel_name
 string default_web_client_id
 string fcm_fallback_notification_channel_label
 string firebase_database_url
@@ -877,8 +880,12 @@ string google_api_key
 string google_app_id
 string google_crash_reporting_api_key
 string google_storage_bucket
+string pause_button_content_description
+string play_button_content_description
 string project_id
 string search_menu_title
+string skip_to_next_item_button_content_description
+string skip_to_previous_item_button_content_description
 string status_bar_notification_info_overflow
 style AlertDialog_AppCompat
 style AlertDialog_AppCompat_Light

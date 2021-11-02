@@ -33,11 +33,11 @@ class Contact extends FusionModel {
   List<dynamic> emails;
   String firstContactDate;
   Coworker coworker;
-  String firstName;
+  String firstName = "";
   List<String> groups;
   String id;
   String jobTitle;
-  String lastName;
+  String lastName = "";
   String leadCreationDate;
   String name;
   String owner;
@@ -73,6 +73,11 @@ class Contact extends FusionModel {
       return numbers[0];
     else
       return null;
+  }
+
+  String fullName() {
+    String name = (firstName + " " + lastName).trim();
+    return name == "" ? "Unknown" : name;
   }
 
   List<ContactCrmReference> crms() {
@@ -326,7 +331,6 @@ class ContactsStore extends FusionStore<Contact> {
       'lastName': record.lastName,
       'raw': record.serialize()
     });
-
   }
 
   searchPersisted(String query, int limit, int offset,

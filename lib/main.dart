@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:callkeep/callkeep.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -19,6 +20,7 @@ import 'package:uuid/uuid.dart';
 
 import 'src/backend/fusion_connection.dart';
 import 'src/backend/softphone.dart';
+import 'src/calls/recent_calls.dart';
 import 'src/components/menu.dart';
 import 'src/contacts/recent_contacts.dart';
 import 'src/login.dart';
@@ -40,38 +42,41 @@ class NavigationService {
 
 registerNotifications() {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('app_icon_background');
-final IOSInitializationSettings initializationSettingsIOS =
-    IOSInitializationSettings(
-        onDidReceiveLocalNotification: (int i, String a, String b,String s ) {});
-final MacOSInitializationSettings initializationSettingsMacOS =
-    MacOSInitializationSettings();
-final InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-    iOS: initializationSettingsIOS,
-    macOS: initializationSettingsMacOS);
- flutterLocalNotificationsPlugin.initialize(initializationSettings,
-    onSelectNotification: (String s) {print("gotonoticication" + s);});
- return flutterLocalNotificationsPlugin;
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('app_icon_background');
+  final IOSInitializationSettings initializationSettingsIOS =
+      IOSInitializationSettings(
+          onDidReceiveLocalNotification:
+              (int i, String a, String b, String s) {});
+  final MacOSInitializationSettings initializationSettingsMacOS =
+      MacOSInitializationSettings();
+  final InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+      macOS: initializationSettingsMacOS);
+  flutterLocalNotificationsPlugin.initialize(initializationSettings,
+      onSelectNotification: (String s) {
+    print("gotonoticication" + s);
+  });
+  return flutterLocalNotificationsPlugin;
   AwesomeNotifications().initialize(null, [
-      NotificationChannel(
-          channelKey: 'basic_channel',
-          channelName: 'Fusion Notifications',
-          channelDescription: 'Notification channel for incoming calls',
-          defaultColor: Color(0xFF9D50DD),
-          ledColor: Colors.white)
-    ]);
+    NotificationChannel(
+        channelKey: 'basic_channel',
+        channelName: 'Fusion Notifications',
+        channelDescription: 'Notification channel for incoming calls',
+        defaultColor: Color(0xFF9D50DD),
+        ledColor: Colors.white)
+  ]);
 
-    AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-      if (!isAllowed) {
-        // Insert here your friendly dialog box before call the request method
-        // This is very important to not harm the user experience
-        AwesomeNotifications().requestPermissionToSendNotifications();
-      }
-    });
+  AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
+    if (!isAllowed) {
+      // Insert here your friendly dialog box before call the request method
+      // This is very important to not harm the user experience
+      AwesomeNotifications().requestPermissionToSendNotifications();
+    }
+  });
 }
 
 Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
@@ -84,18 +89,19 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
     var callerName = data['phonenumber'] as String;
     final callUUID = Uuid().v4();
 
-    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = registerNotifications();
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        registerNotifications();
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails('fusion', 'Fusion calls',
-        channelDescription: 'Fusion incoming calls',
-        importance: Importance.max,
-        fullScreenIntent: true,
-        priority: Priority.high,
-        ticker: 'ticker');
+        AndroidNotificationDetails('fusion', 'Fusion calls',
+            channelDescription: 'Fusion incoming calls',
+            importance: Importance.max,
+            fullScreenIntent: true,
+            priority: Priority.high,
+            ticker: 'ticker');
     const NotificationDetails platformChannelSpecifics =
-    NotificationDetails(android: androidPlatformChannelSpecifics);
-     flutterLocalNotificationsPlugin.show(
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    flutterLocalNotificationsPlugin.show(
         0, callerName, 'Incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
 
@@ -130,26 +136,23 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
       print("callkeep");
       print(__callKeep);
       __callKeep.on(CallKeepPerformAnswerCallAction(),
-              (CallKeepPerformAnswerCallAction event) {
-            print(
-                'backgroundMessage: CallKeepPerformAnswerCallAction ${event
-                    .callUUID}');
-            __callKeep.startCall(event.callUUID, callerName, callerName);
+          (CallKeepPerformAnswerCallAction event) {
+        print(
+            'backgroundMessage: CallKeepPerformAnswerCallAction ${event.callUUID}');
+        __callKeep.startCall(event.callUUID, callerName, callerName);
 
-            Timer(const Duration(seconds: 1), () {
-              print(
-                  '[setCurrentCallActive] $callUUID, callerName: $callerName');
-              __callKeep.setCurrentCallActive(callUUID);
-            });
-            //_callKeep.endCall(event.callUUID);
-          });
+        Timer(const Duration(seconds: 1), () {
+          print('[setCurrentCallActive] $callUUID, callerName: $callerName');
+          __callKeep.setCurrentCallActive(callUUID);
+        });
+        //_callKeep.endCall(event.callUUID);
+      });
 
       __callKeep.on(CallKeepPerformEndCallAction(),
-              (CallKeepPerformEndCallAction event) {
-            print(
-                'backgroundMessage: CallKeepPerformEndCallAction ${event
-                    .callUUID}');
-          });
+          (CallKeepPerformEndCallAction event) {
+        print(
+            'backgroundMessage: CallKeepPerformEndCallAction ${event.callUUID}');
+      });
 
       if (!__callKeepInited) {
         final callSetup = <String, dynamic>{
@@ -159,14 +162,15 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
           'android': {
             'alertTitle': 'Permissions required',
             'alertDescription':
-            'This application needs to access your phone accounts',
+                'This application needs to access your phone accounts',
             'cancelButton': 'Cancel',
             'okButton': 'ok',
             'foregroundService': {
               'channelId': 'net.fusioncomm.flutter_app',
               'channelName': 'Foreground service for my app',
               'notificationTitle': 'My app is running on background',
-              'notificationIcon': 'Path to the resource icon of the notification',
+              'notificationIcon':
+                  'Path to the resource icon of the notification',
             },
           },
         };
@@ -191,14 +195,18 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
- // if (Platform.isAndroid) {
-    await Firebase.initializeApp();
-    FirebaseMessaging.onBackgroundMessage(backgroundMessageHandler);// }
+  // if (Platform.isAndroid) {
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(backgroundMessageHandler); // }
   //else {
 //     Firebase.initializeApp();
 //  }
   registerNotifications();
-  runApp(MaterialApp(home: MyApp()));
+
+  await SentryFlutter.init(
+        (options) => options.dsn = 'https://91be6ab841f64100a3698952bbc577c2@o68456.ingest.sentry.io/6019626',
+    appRunner: () => runApp(MaterialApp(home: MyApp())),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -211,9 +219,9 @@ class MyApp extends StatelessWidget {
 
     final connector = createPushConnector();
     connector.configure(
-    onLaunch: _onLaunch,
-    onResume: _onResume,
-    onMessage: _onMessage);
+        onLaunch: _onLaunch, onResume: _onResume, onMessage: _onMessage);
+
+
 
     _fusionConnection.setAPNSConnector(connector);
   }
@@ -221,9 +229,11 @@ class MyApp extends StatelessWidget {
   Future<void> _onLaunch(RemoteMessage m) {
     print("onloaunch");
   }
+
   Future<void> _onResume(RemoteMessage m) {
     print("onresume");
   }
+
   Future<void> _onMessage(RemoteMessage m) {
     print("onmessage");
   }
@@ -388,7 +398,7 @@ class _MyHomePageState extends State<MyHomePage> {
         foregroundColor: Colors.white,
         child: Icon(Icons.dialpad),
       );
-    } else if (_currentIndex == 1) {
+    } else if (_currentIndex == 2) {
       return FloatingActionButton(
         backgroundColor: crimsonLight,
         foregroundColor: Colors.white,
@@ -402,8 +412,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _getTabWidget() {
     return (_currentIndex == 0
-        ? RecentContactsTab(fusionConnection, softphone)
-        : MessagesTab(fusionConnection, softphone));
+        ? RecentCallsTab(fusionConnection, softphone)
+        : (_currentIndex == 1
+            ? RecentContactsTab(fusionConnection, softphone)
+            : MessagesTab(fusionConnection, softphone)));
   }
 
   @override
@@ -462,6 +474,17 @@ class _MyHomePageState extends State<MyHomePage> {
                                     bottomLeft: Radius.circular(2),
                                     bottomRight: Radius.circular(2),
                                   )))),
+                      Expanded(
+                          child: Container(
+                              height: 4,
+                              decoration: BoxDecoration(
+                                  color: _currentIndex == 2
+                                      ? crimsonLight
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(2),
+                                    bottomRight: Radius.circular(2),
+                                  )))),
                     ]),
                     BottomNavigationBar(
                       elevation: 0,
@@ -488,6 +511,15 @@ class _MyHomePageState extends State<MyHomePage> {
                               width: 18,
                               height: 18),
                           label: "Calls",
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Opacity(child: Image.asset("assets/icons/people.png",
+                              width: 18, height: 18), opacity: 0.5),
+                          activeIcon: Image.asset(
+                              "assets/icons/people.png",
+                              width: 18,
+                              height: 18),
+                          label: "People",
                         ),
                         BottomNavigationBarItem(
                             icon: Image.asset("assets/icons/message_btmbar.png",

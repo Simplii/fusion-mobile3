@@ -91,6 +91,8 @@ class _CallFooterDetailsState extends State<CallFooterDetails> {
 
   @override
   Widget build(BuildContext context) {
+    CallpopInfo info = widget._softphone.getCallpopInfo(widget._activeCall.id);
+
     return Container(
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(12, 6, 12, 6),
@@ -103,7 +105,7 @@ class _CallFooterDetailsState extends State<CallFooterDetails> {
                 minWidth: 120,
                 maxWidth: MediaQuery.of(context).size.width - 160),
             child: ListView(scrollDirection: Axis.horizontal, children: [
-              CrmLeadsRow(widget._softphone, widget._activeCall)
+              CrmLeadsRow(widget._softphone, info != null ? info.crmContacts : [])
             ])),
         Spacer(),
         if (widget._softphone.isConnected(widget._activeCall))
