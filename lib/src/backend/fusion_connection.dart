@@ -1,12 +1,18 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:fusion_mobile_revamped/src/models/voicemails.dart';
+<<<<<<< HEAD
+=======
+import 'package:http/http.dart';
+>>>>>>> e847b336fd959a580b91403651e5889a7a531a69
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
@@ -19,11 +25,14 @@ import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:websocket_manager/websocket_manager.dart';
+import 'package:cookie_jar/cookie_jar.dart';
 
 import '../utils.dart';
+import 'softphone.dart';
 
 class FusionConnection {
   String _extension = '';
@@ -49,12 +58,19 @@ class FusionConnection {
   Database db;
   PushConnector _connector;
   String _pushkitToken;
+  Softphone _softphone;
+  PersistCookieJar _cookies;
   Function _onLogOut = () {};
 
+<<<<<<< HEAD
   String serverRoot = "http://staging.fusioncomm.net";
+=======
+  String serverRoot = "http://fusioncomm.net";
+>>>>>>> e847b336fd959a580b91403651e5889a7a531a69
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
 
   FusionConnection() {
+    _getCookies();
     crmContacts = CrmContactsStore(this);
     integratedContacts = IntegratedContactsStore(this);
     contacts = ContactsStore(this);
@@ -73,6 +89,20 @@ class FusionConnection {
     getDatabase();
   }
 
+  _getCookies({Function callback}) {
+    getApplicationDocumentsDirectory().then((directory) {
+      _cookies = PersistCookieJar(
+          ignoreExpires: true, storage: FileStorage(directory.path));
+      if (callback != null) {
+        callback();
+      }
+    });
+  }
+
+  setSoftphone(Softphone softphone) {
+    _softphone = softphone;
+  }
+
   final channel = WebSocketChannel.connect(
     Uri.parse('wss://fusioncomm.net:8443'),
   );
@@ -86,28 +116,23 @@ class FusionConnection {
   }
 
   logOut() {
-    _onLogOut();
-    apiV1Call("get", "/log_out", {}, callback: (data) {});
-    FirebaseMessaging.instance.getToken().then((token){
-          apiV1Call(
-            "delete",
-            "/clients/device_token",
-            {"token": token, "pn_tok": _pushkitToken},
-          );
+    FirebaseMessaging.instance.getToken().then((token) {
+      apiV1Call("delete", "/clients/device_token",
+          {"token": token, "pn_tok": _pushkitToken}, callback: (data) {
+        apiV1Call("get", "/log_out", {}, callback: (data) {
+          _username = '';
+          _password = '';
+          _onLogOut();
+          _cookies.deleteAll();
+        });
       });
+    });
   }
 
   getDatabase() {
-    print("gettingdatabase");
-    getDatabasesPath()
-    .then((String path) {
-      openDatabase(
-          p.join(path, "fusion.db"),
-          version: 1,
-          onOpen: (db) {
-            print("executing");
-            print(db.execute(
-                '''
+    getDatabasesPath().then((String path) {
+      openDatabase(p.join(path, "fusion.db"), version: 1, onOpen: (db) {
+        print(db.execute('''
           CREATE TABLE IF NOT EXISTS sms_conversation(
           id TEXT PRIMARY key,
           groupName TEXT,
@@ -120,7 +145,7 @@ class FusionConnection {
           raw BLOB
           );'''));
 
-            print(db.execute('''
+        print(db.execute('''
           CREATE TABLE IF NOT EXISTS sms_message(
           id TEXT PRIMARY key,
           `from` TEXT,
@@ -135,7 +160,7 @@ class FusionConnection {
           raw BLOB
           );'''));
 
-            print(db.execute('''
+        print(db.execute('''
           CREATE TABLE IF NOT EXISTS contacts(
           id TEXT PRIMARY key,
           company TEXT,
@@ -146,9 +171,7 @@ class FusionConnection {
           raw BLOB
           );
           '''));
-          }
-      )
-          .then((Database db) {
+      }).then((Database db) {
         print("gotdatabase" + db.toString());
         this.db = db;
       }).catchError((error) {
@@ -157,26 +180,67 @@ class FusionConnection {
     });
   }
 
+  _getUsername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString("username");
+  }
+
+  _saveCookie(Response response) {
+    print("savecookie:"+ response.headers.toString());
+    if (response.headers.containsKey('set-cookie')) {
+      List<String> cookieStrings = response.headers['set-cookie'].split("HttpOnly,");
+      print("cookies:" + response.headers['set-cookie']);
+      for (String cookieString in cookieStrings) {
+        print("cookiestr:" + cookieString);
+        Cookie cookie = Cookie.fromSetCookieValue(cookieString);
+        _cookies.saveFromResponse(response.request.url, [cookie]);
+      }
+    }
+  }
+
+  _cookieHeaders(url) async {
+    if (_cookies == null) {
+      _getCookies();
+      return [];
+    } else {
+      List<Cookie> cookies = await _cookies.loadForRequest(url);
+      String cookiesHeader = "";
+      Map<String, String> headers = {};
+
+      for (Cookie c in cookies) {
+        cookiesHeader += c.name + "=" + c.value + "; ";
+      }
+      print("cookeis header:" + cookiesHeader);
+      headers['cookie'] = cookiesHeader;
+      return headers;
+    }
+  }
+
   nsApiCall(String object, String action, Map<String, dynamic> data,
       {Function callback}) async {
     var client = http.Client();
     try {
       data['action'] = action;
       data['object'] = object;
-      data['username'] = _username;
-      data['password'] = _password;
+      data['username'] = await _getUsername();
+      //data['password'] = _password;
+      print("cookie");
+      Uri url = Uri.parse(
+          'https://fusioncomm.net/api/v1/clients/api_request?username=' +
+              data['username']);
+      Map<String, String> headers = await _cookieHeaders(url);
+      String body = convert.jsonEncode(data);
+      headers["Content-Type"] = "application/json";
 
-      var uriResponse = await client.post(
-          Uri.parse('https://fusioncomm.net/api/v1/clients/api_request'),
-          body: data);
-
+      var uriResponse = await client.post(url, headers: headers, body: body);
+      _saveCookie(uriResponse);
       Map<String, dynamic> jsonResponse = {};
       try {
         jsonResponse =
-        convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
-      } catch (e) {
-      }
-
+            convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
+      } catch (e) {}
+      print("apicall:" + data.toString() + ":" + jsonResponse.toString());
+      client.close();
       callback(jsonResponse);
     } finally {
       client.close();
@@ -187,13 +251,10 @@ class FusionConnection {
       {Function callback}) async {
     var client = http.Client();
     try {
-      if (!data.containsKey('username')) {
-        data['username'] = _username;
-        data['password'] = _password;
-      }
+      print("apiv1:" + route + ":" + data.toString());
+      data['username'] = await _getUsername();
 
       Function fn = {
-
         'post': client.post,
         'get': client.get,
         'patch': client.patch,
@@ -203,36 +264,75 @@ class FusionConnection {
 
       Map<Symbol, dynamic> args = {};
       String urlParams = '?';
-
-
       if (method.toLowerCase() == 'get') {
         for (String key in data.keys) {
           urlParams += key + "=" + data[key].toString() + '&';
         }
-      } else {
-        args[#body] = convert.jsonEncode(data);
-        args[#headers] = {"Content-Type": "application/json"};
       }
-
       Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
-      print(url);
+      Map<String, String> headers = await _cookieHeaders(url);
 
+      if (method.toLowerCase() != 'get') {
+        args[#body] = convert.jsonEncode(data);
+        headers["Content-Type"] = "application/json";
+      }
+      args[#headers] = headers;
+
+      print(url);
       print(args);
+      print(headers.toString());
       var uriResponse = await Function.apply(fn, [url], args);
-
-
-      print(url);
-
-
-      var jsonResponse =
-          convert.jsonDecode(uriResponse.body);
-      if (callback != null)
-        callback(jsonResponse);
+      print(uriResponse.body);
+      _saveCookie(uriResponse);
+      var jsonResponse = convert.jsonDecode(uriResponse.body);
+      client.close();
+      if (callback != null) callback(jsonResponse);
     } finally {
       client.close();
     }
   }
 
+  apiV2Call(String method, String route, Map<String, dynamic> data,
+      {Function callback}) async {
+    var client = http.Client();
+    try {
+      Function fn = {
+        'post': client.post,
+        'get': client.get,
+        'patch': client.patch,
+        'put': client.put,
+        'delete': client.delete
+      }[method.toLowerCase()];
+
+      data['username'] = await _getUsername();
+      Map<Symbol, dynamic> args = {};
+      String urlParams = '?';
+
+      if (method.toLowerCase() == 'get') {
+        for (String key in data.keys) {
+          urlParams += key + "=" + data[key].toString() + '&';
+        }
+      }
+      Uri url = Uri.parse('http://fusioncomm.net/api/v2' + route + urlParams);
+      Map<String, String> headers = await _cookieHeaders(url);
+
+      if (method.toLowerCase() != 'get') {
+        args[#body] = convert.jsonEncode(data);
+        headers["Content-Type"] = "application/json";
+      }
+
+      args[#headers] = headers;
+      print(url);
+      var uriResponse = await Function.apply(fn, [url], args);
+      _saveCookie(uriResponse);
+      var jsonResponse = convert.jsonDecode(uriResponse.body);
+      if (callback != null) callback(jsonResponse);
+    } finally {
+      client.close();
+    }
+  }
+
+<<<<<<< HEAD
   apiV2Call(String method, String route, Map<String, dynamic> data,
       {Function callback}) async {
     var client = http.Client();
@@ -275,16 +375,18 @@ print(url);
   }
 
   apiV1Multipart(String method, String route, Map<String, dynamic> data, List<http.MultipartFile> files,
+=======
+  apiV1Multipart(String method, String route, Map<String, dynamic> data,
+      List<http.MultipartFile> files,
+>>>>>>> e847b336fd959a580b91403651e5889a7a531a69
       {Function callback}) async {
     var client = http.Client();
     try {
-      if (!data.containsKey('username')) {
-        data['username'] = _username;
-        data['password'] = _password;
-      }
+      data['username'] = await _getUsername();
 
       Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
+      _cookieHeaders(url).forEach((k, v) => request.headers[k] = v);
 
       for (String key in data.keys) {
         request.fields[key] = data[key].toString();
@@ -295,10 +397,10 @@ print(url);
       }
 
       var uriResponse = await request.send();
-      String responseBody = await uriResponse.stream.transform(utf8.decoder).join();
+      String responseBody =
+          await uriResponse.stream.transform(utf8.decoder).join();
 
-      var jsonResponse =
-          convert.jsonDecode(responseBody);
+      var jsonResponse = convert.jsonDecode(responseBody);
 
       callback(jsonResponse);
     } finally {
@@ -323,15 +425,24 @@ print(url);
   }
 
   login(String username, String password, Function(bool) callback) {
-    apiV1Call("get", "/clients/lookup_options", {
-      "username": username,
-      "password": password
-    }, callback: (Map<String, dynamic> response) {
+    apiV1Call(
+        "get",
+        "/clients/lookup_options",
+        password != null
+            ? {"username": username, "password": password}
+            : {"username": username},
+        callback: (Map<String, dynamic> response) {
       if (response.containsKey("access_key")) {
-        _username = username;
+        _username = username.split('@')[0] + '@' + response['domain'];
+
+        SharedPreferences.getInstance().then((SharedPreferences prefs) {
+          prefs.setString("username", _username);
+        });
+
+        _username = _username;
         _password = password;
-        _domain = username.split('@')[1];
-        _extension = username.split('@')[0];
+        _domain = _username.split('@')[1];
+        _extension = _username.split('@')[0];
         settings.setOptions(response);
         settings.lookupSubscriber();
         coworkers.getCoworkers((data) {});
@@ -340,14 +451,10 @@ print(url);
 
         smsDepartments.getDepartments((List<SMSDepartment> lis) {});
 
-        FirebaseMessaging.instance.getToken().then((token){
-          print("gotfbtoken: " + token + " pn_tok:" + _pushkitToken);
-          apiV1Call(
-            "post",
-            "/clients/device_token",
-            {"token": token, "pn_tok": _pushkitToken}
-          );
-      });
+        FirebaseMessaging.instance.getToken().then((token) {
+          apiV1Call("post", "/clients/device_token",
+              {"token": token, "pn_tok": _pushkitToken});
+        });
       } else {
         callback(false);
       }
@@ -399,6 +506,8 @@ print(url);
             message['new_status'],
             message['message']);
       }
+
+      _softphone.checkCallIds(message);
     });
     _reconnectSocket();
     _sendHeartbeat();

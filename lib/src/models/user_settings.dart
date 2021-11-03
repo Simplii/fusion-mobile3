@@ -9,6 +9,8 @@ class UserSettings {
   UserSettings(this._fusionConnection);
 
   myContact() {
+    if (subscriber['first_name'] == null) subscriber['first_name'] = "";
+    if (subscriber['last_name'] == null) subscriber['last_name'] = "";
     return Contact({
       'addresses': [],
       'company': options['domain'],
@@ -49,13 +51,18 @@ class UserSettings {
   }
 
   lookupSubscriber() {
+    print("lookupsubscriuber");
     _fusionConnection.nsApiCall(
         'subscriber',
         'read',
         {'uid': _fusionConnection.getUid()},
         callback: (Map<String, dynamic> data) {
+          print("subscriberresponse");
+          print(data);
           if (data.containsKey('subscriber')) {
             subscriber = data['subscriber'];
+            if (subscriber['callid_nmbr'] == null)
+              subscriber['callid_nmbr'] = '';
           }
         });
   }

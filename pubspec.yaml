@@ -27,6 +27,7 @@ dependencies:
   callkeep:
   firebase_messaging:
   firebase_core:
+  flutter_dtmf:
   android_intent_plus:
   websocket_manager:
   flutter_gravatar: any
@@ -51,6 +52,14 @@ dependencies:
   just_audio:
   dotted_border:
   sentry_flutter:
+<<<<<<< HEAD
+=======
+  ringtone_player:
+  cookie_jar:
+  shared_preferences:
+  all_sensors:
+  wakelock:
+>>>>>>> e847b336fd959a580b91403651e5889a7a531a69
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +83,7 @@ flutter:
 
   assets:
     - assets/
+    - assets/audio/
     - assets/crm_icons/
     - assets/icons/
     - assets/icons/hamburger.png

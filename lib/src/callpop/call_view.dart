@@ -17,6 +17,7 @@ import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:sip_ua/sip_ua.dart';
+import 'package:all_sensors/all_sensors.dart';
 
 import 'answered_while_on_call.dart';
 
@@ -52,6 +53,11 @@ class _CallViewState extends State<CallView> {
         setState(() {});
       },
     );
+
+    proximityEvents.listen((ProximityEvent event) {
+      print("proximityevent");
+      print(event);
+    });
   }
 
   @override
@@ -98,9 +104,20 @@ class _CallViewState extends State<CallView> {
   }
 
   _onDialBtnPress() {
-    setState(() {
-      dialpadVisible = !dialpadVisible;
-    });
+    if (_softphone.getHoldState(_activeCall)) {
+      setState(() {
+        dialpadVisible = false;
+        showModalBottomSheet(
+            context: context,
+            backgroundColor: Colors.transparent,
+            isScrollControlled: true,
+            builder: (context) => DialPadModal(_fusionConnection, _softphone));
+      });
+    } else {
+      setState(() {
+        dialpadVisible = !dialpadVisible;
+      });
+    }
   }
 
   _onParkBtnPress() {
@@ -108,7 +125,12 @@ class _CallViewState extends State<CallView> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
+<<<<<<< HEAD
         builder: (context) => DialPadModal(_fusionConnection, _softphone, initialTab: 0));
+=======
+        builder: (context) =>
+            DialPadModal(_fusionConnection, _softphone, initialTab: 0));
+>>>>>>> e847b336fd959a580b91403651e5889a7a531a69
   }
 
   _onConfBtnPress() {
@@ -225,6 +247,10 @@ class _CallViewState extends State<CallView> {
                     }).toList()))));
   }
 
+  _onMuteBtnPress() {
+    _softphone.setMute(_activeCall, !_softphone.getMuted(_activeCall));
+  }
+
   _onHangup() {
     _softphone.hangUp(_activeCall);
     widget.closeView();
@@ -289,7 +315,7 @@ class _CallViewState extends State<CallView> {
   Widget build(BuildContext context) {
     var companyName = _softphone.getCallerCompany(_activeCall);
     var callerName = _softphone.getCallerName(_activeCall);
-    var callerOrigin =
+    var callerNumber =
         _softphone.getCallerNumber(_activeCall); // 'mobile' | 'work' ...etc
 
     Map<String, Function()> actions = {
@@ -301,6 +327,7 @@ class _CallViewState extends State<CallView> {
       'onConfBtnPress': _onConfBtnPress,
       'onRecBtnPress': _onRecBtnPress,
       'onVidBtnPress': _onVidBtnPress,
+      'onMuteBtnPress': _onMuteBtnPress,
       'onTextBtnPress': _onTextBtnPress,
       'onAudioBtnPress': _onAudioBtnPress,
       'onHangup': _onHangup,
@@ -353,7 +380,7 @@ class _CallViewState extends State<CallView> {
                         CallHeaderDetails(
                             callerName: callerName,
                             companyName: companyName,
-                            callerOrigin: callerOrigin,
+                            callerNumber: callerNumber,
                             isRinging: isRinging,
                             callIsRecording:
                                 _softphone.getRecordState(_activeCall),
@@ -364,13 +391,14 @@ class _CallViewState extends State<CallView> {
                           Spacer(),
                         if (!_softphone.getHoldState(_activeCall) &&
                             dialpadVisible)
-                          CallDialPad(),
+                          CallDialPad(_softphone, _activeCall),
                         CallActionButtons(
                             actions: actions,
                             isRinging: isRinging,
                             isIncoming: isIncoming,
                             dialPadOpen: dialpadVisible,
-                            isOnConference: _softphone.isCallMerged(_activeCall),
+                            isOnConference:
+                                _softphone.isCallMerged(_activeCall),
                             setDialpad: (bool isOpen) {
                               setState(() {
                                 print("isopen" +
@@ -386,7 +414,8 @@ class _CallViewState extends State<CallView> {
                                 _softphone.getRecordState(_activeCall),
                             callIsMuted: _softphone.getMuted(_activeCall),
                             callOnHold: _softphone.getHoldState(_activeCall)),
-                        CallFooterDetails(_fusionConnection, _softphone, _activeCall)
+                        CallFooterDetails(
+                            _fusionConnection, _softphone, _activeCall)
                       ],
                     ),
                   )),
