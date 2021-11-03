@@ -1,11 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dtmf/flutter_dtmf.dart';
+import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad_key.dart';
+import 'package:sip_ua/sip_ua.dart';
 
 import '../styles.dart';
 
 class CallDialPad extends StatefulWidget {
-  CallDialPad({Key key}) : super(key: key);
+  CallDialPad(this._softphone, this._activeCall, {Key key}) : super(key: key);
+
+  final Softphone _softphone;
+  final Call _activeCall;
 
   @override
   State<StatefulWidget> createState() => _CallDialPadState();
@@ -18,8 +24,8 @@ class _CallDialPadState extends State<CallDialPad> {
     setState(() {
       dialedNumber += key;
     });
-
-    print('In-call DialPad key pressed : $key');
+    widget._softphone.sendDtmf(widget._activeCall, key);
+    FlutterDtmf.playTone(digits: key, durationMs: 300);
   }
 
   void removeLastDigit() {

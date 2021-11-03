@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'backend/fusion_connection.dart';
 import 'styles.dart';
@@ -23,6 +24,28 @@ class _LoginViewState extends State<LoginView> {
   final _passwordController =
       TextEditingController.fromValue(TextEditingValue(text: "***REMOVED***"));
   bool _wasSuccessful = null;
+
+  @override
+  initState() {
+    SharedPreferences.getInstance().then((SharedPreferences prefs) {
+      String username = prefs.getString("username");
+      if (username != null) {
+        _usernameController.text = username;
+
+        _fusionConnection
+            .login(username, null,
+                (bool success) {
+                  if (success) {
+                    _wasSuccessful = true;
+                    _onLogin(
+                        _usernameController.value.text,
+                        null);
+                  }
+                  this.setState(() {});
+                });
+      }
+    });
+  }
 
   _usernameInput() {
     return Flexible(
@@ -91,6 +114,9 @@ class _LoginViewState extends State<LoginView> {
   }
 
   _login() {
+    SharedPreferences.getInstance().then((SharedPreferences prefs) {
+      prefs.setString("username", _usernameController.value.text); });
+
     _fusionConnection
         .login(_usernameController.value.text, _passwordController.value.text,
             (bool success) {

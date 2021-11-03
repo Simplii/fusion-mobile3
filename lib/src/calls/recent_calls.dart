@@ -48,8 +48,13 @@ class _RecentCallsTabState extends State<RecentCallsTab> {
       }, () {
       }),
       Container(height: 4),
+<<<<<<< HEAD
       RecentCallsList(_fusionConnection, _softphone, "Recent Calls", _selectedTab,
           query: _query)
+=======
+      Expanded(child: RecentCallsList(_fusionConnection, _softphone, "Recent Calls", _selectedTab,
+          query: _query))
+>>>>>>> e847b336fd959a580b91403651e5889a7a531a69
     ];
     return Container(child: Column(children: children));
   }
@@ -192,7 +197,11 @@ class _RecentCallsListState extends State<RecentCallsList> {
       _lookupHistory();
     }
 
+<<<<<<< HEAD
     return Expanded(
+=======
+    return Container(
+>>>>>>> e847b336fd959a580b91403651e5889a7a531a69
         child: Container(
             decoration: BoxDecoration(
                 color: Colors.white,
@@ -350,7 +359,11 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
 
     if (_expanded) {
       children.add(Container(
+<<<<<<< HEAD
           child: horizontalLine(0),
+=======
+          child: Row(children: [horizontalLine(0)]),
+>>>>>>> e847b336fd959a580b91403651e5889a7a531a69
           margin: EdgeInsets.only(top: 4, bottom: 4)));
       children.add(Container(
           height: 28,
