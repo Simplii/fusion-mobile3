@@ -91,8 +91,8 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
   if (data.containsKey("alert") && data['alert'] == "call") {
     var callerName = data['phonenumber'] as String;
     final callUUID = Uuid().v4();
-    var id = int.parse(callerName.onlyNumbers());
-
+    String callerNums = callerName.onlyNumbers();
+    var id = int.parse(callerNums);
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
         registerNotifications();
 
