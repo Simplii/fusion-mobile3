@@ -125,12 +125,8 @@ class _CallViewState extends State<CallView> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-<<<<<<< HEAD
-        builder: (context) => DialPadModal(_fusionConnection, _softphone, initialTab: 0));
-=======
         builder: (context) =>
             DialPadModal(_fusionConnection, _softphone, initialTab: 0));
->>>>>>> e847b336fd959a580b91403651e5889a7a531a69
   }
 
   _onConfBtnPress() {
