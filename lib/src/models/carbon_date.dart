@@ -21,8 +21,10 @@ class CarbonDate {
   }
 
   CarbonDate(Map<String, dynamic> obj) {
-    this.date = obj['date'];
-    this.timezone = obj['timezone'];
-    this.timezone_type = obj['timezone_type'];
+    try {
+      this.date = obj['date'];
+      this.timezone = obj['timezone'];
+      this.timezone_type = obj['timezone_type'];
+    } catch (e) {}
   }
 }

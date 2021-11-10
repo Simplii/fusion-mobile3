@@ -36,7 +36,7 @@ extension PhoneNumbers on String {
   }
 
   String onlyNumbers() {
-    return this.replaceAll(r'[^0-9]+', '');
+    return this.replaceAll(RegExp(r'[^0-9]+'), '');
   }
 }
 
