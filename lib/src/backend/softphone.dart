@@ -467,8 +467,9 @@ class Softphone implements SipUaHelperListener {
 
     _updateListeners();
     if (Platform.isAndroid) {
+      String number = getCallerNumber(call);
       flutterLocalNotificationsPlugin.cancel(
-          int.parse((getCallerNumber(call) + "").onlyNumbers()));
+          int.parse(number.onlyNumbers()));
     }
   }
 
@@ -540,6 +541,11 @@ class Softphone implements SipUaHelperListener {
           _uuidFor(call), call.remote_identity, call.remote_display_name);*/
       calls.add(call);
       if (activeCall == null) makeActiveCall(call);
+
+      if (call.direction == "INCOMING")
+        inboundRingtone.play();
+      else
+        outboundRingtone.play();
 
       final bool hasPhoneAccount = await _callKeep.hasPhoneAccount();
       if (!hasPhoneAccount) {
@@ -822,14 +828,14 @@ class Softphone implements SipUaHelperListener {
         _callKeep.setMutedCall(_uuidFor(call), true);
         break;
       case CallStateEnum.CONNECTING:
-        inboundRingtone.play();
         print("playaudio");
         break;
       case CallStateEnum.PROGRESS:
-        outboundRingtone.stop();
         print("playoutbound");
         break;
       case CallStateEnum.ACCEPTED:
+        outboundRingtone.stop();
+        inboundRingtone.stop();
         setCallOutput(call, "phone");
         break;
       case CallStateEnum.CONFIRMED:
