@@ -858,6 +858,7 @@ class Softphone implements SipUaHelperListener {
       case CallStateEnum.UNHOLD:
         _setCallDataValue(call.id, "onHold", false);
         _callKeep.setOnHold(_uuidFor(call), false);
+        setCallOutput(call, getCallOutput(call));
         break;
       case CallStateEnum.NONE:
         break;
