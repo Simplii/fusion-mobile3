@@ -1,5 +1,7 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
+import 'dart:core';
+import 'dart:core';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_apns/src/connector.dart';
@@ -7,10 +9,7 @@ import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:fusion_mobile_revamped/src/models/voicemails.dart';
-<<<<<<< HEAD
-=======
 import 'package:http/http.dart';
->>>>>>> e847b336fd959a580b91403651e5889a7a531a69
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -62,11 +61,7 @@ class FusionConnection {
   PersistCookieJar _cookies;
   Function _onLogOut = () {};
 
-<<<<<<< HEAD
-  String serverRoot = "http://staging.fusioncomm.net";
-=======
   String serverRoot = "http://fusioncomm.net";
->>>>>>> e847b336fd959a580b91403651e5889a7a531a69
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
 
   FusionConnection() {
@@ -332,53 +327,8 @@ class FusionConnection {
     }
   }
 
-<<<<<<< HEAD
-  apiV2Call(String method, String route, Map<String, dynamic> data,
-      {Function callback}) async {
-    var client = http.Client();
-    try {
-      if (!data.containsKey('username')) {
-        data['username'] = _username;
-        data['password'] = _password;
-      }
-
-      Function fn = {
-        'post': client.post,
-        'get': client.get,
-        'patch': client.patch,
-        'put': client.put,
-        'delete': client.delete
-      }[method.toLowerCase()];
-
-      Map<Symbol, dynamic> args = {};
-      String urlParams = '?';
-
-      if (method.toLowerCase() == 'get') {
-        for (String key in data.keys) {
-          urlParams += key + "=" + data[key].toString() + '&';
-        }
-      } else {
-        args[#body] = convert.jsonEncode(data);
-        args[#headers] = {"Content-Type": "application/json"};
-      }
-
-      Uri url = Uri.parse('http://staging.fusioncomm.net/api/v2' + route + urlParams);
-print(url);
-      var uriResponse = await Function.apply(fn, [url], args);
-      var jsonResponse =
-          convert.jsonDecode(uriResponse.body);
-      if (callback != null)
-        callback(jsonResponse);
-    } finally {
-      client.close();
-    }
-  }
-
-  apiV1Multipart(String method, String route, Map<String, dynamic> data, List<http.MultipartFile> files,
-=======
   apiV1Multipart(String method, String route, Map<String, dynamic> data,
       List<http.MultipartFile> files,
->>>>>>> e847b336fd959a580b91403651e5889a7a531a69
       {Function callback}) async {
     var client = http.Client();
     try {

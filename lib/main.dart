@@ -3,10 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
-<<<<<<< HEAD
-=======
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
->>>>>>> e847b336fd959a580b91403651e5889a7a531a69
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:callkeep/callkeep.dart';
@@ -109,11 +106,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
     flutterLocalNotificationsPlugin.show(
-<<<<<<< HEAD
-        0, callerName, 'Incoming phone call', platformChannelSpecifics,
-=======
         id, callerName, 'Incoming phone call', platformChannelSpecifics,
->>>>>>> e847b336fd959a580b91403651e5889a7a531a69
         payload: callUUID.toString());
 
     /*AwesomeNotifications().createNotification(
@@ -215,12 +208,8 @@ Future<void> main() async {
   registerNotifications();
 
   await SentryFlutter.init(
-<<<<<<< HEAD
-        (options) => options.dsn = 'https://91be6ab841f64100a3698952bbc577c2@o68456.ingest.sentry.io/6019626',
-=======
     (options) => options.dsn =
         'https://91be6ab841f64100a3698952bbc577c2@o68456.ingest.sentry.io/6019626',
->>>>>>> e847b336fd959a580b91403651e5889a7a531a69
     appRunner: () => runApp(MaterialApp(home: MyApp())),
   );
 }
@@ -237,12 +226,6 @@ class MyApp extends StatelessWidget {
     final connector = createPushConnector();
     connector.configure(
         onLaunch: _onLaunch, onResume: _onResume, onMessage: _onMessage);
-<<<<<<< HEAD
-
-
-=======
->>>>>>> e847b336fd959a580b91403651e5889a7a531a69
-
     _fusionConnection.setAPNSConnector(connector);
   }
 
@@ -575,21 +558,12 @@ class _MyHomePageState extends State<MyHomePage> {
                           label: "Calls",
                         ),
                         BottomNavigationBarItem(
-<<<<<<< HEAD
-                          icon: Opacity(child: Image.asset("assets/icons/people.png",
-                              width: 18, height: 18), opacity: 0.5),
-                          activeIcon: Image.asset(
-                              "assets/icons/people.png",
-                              width: 18,
-                              height: 18),
-=======
                           icon: Opacity(
                               child: Image.asset("assets/icons/people.png",
                                   width: 18, height: 18),
                               opacity: 0.5),
                           activeIcon: Image.asset("assets/icons/people.png",
                               width: 18, height: 18),
->>>>>>> e847b336fd959a580b91403651e5889a7a531a69
                           label: "People",
                         ),
                         BottomNavigationBarItem(

@@ -52,14 +52,12 @@ dependencies:
   just_audio:
   dotted_border:
   sentry_flutter:
-<<<<<<< HEAD
-=======
+
   ringtone_player:
   cookie_jar:
   shared_preferences:
   all_sensors:
   wakelock:
->>>>>>> e847b336fd959a580b91403651e5889a7a531a69
 
 dev_dependencies:
   flutter_test:
