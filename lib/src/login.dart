@@ -20,9 +20,9 @@ class _LoginViewState extends State<LoginView> {
 
   Function(String username, String password) get _onLogin => widget._onLogin;
   final _usernameController =
-      TextEditingController.fromValue(TextEditingValue(text: ""));
+      TextEditingController.fromValue(TextEditingValue(text: "9812@Simplii1"));
   final _passwordController =
-      TextEditingController.fromValue(TextEditingValue(text: ""));
+      TextEditingController.fromValue(TextEditingValue(text: "***REMOVED***"));
   bool _wasSuccessful = null;
 
   @override

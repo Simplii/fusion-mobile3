@@ -230,7 +230,6 @@ class MyApp extends StatelessWidget {
     final connector = createPushConnector();
     connector.configure(
         onLaunch: _onLaunch, onResume: _onResume, onMessage: _onMessage);
-
     _fusionConnection.setAPNSConnector(connector);
   }
 
