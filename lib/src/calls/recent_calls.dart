@@ -48,7 +48,7 @@ class _RecentCallsTabState extends State<RecentCallsTab> {
       }, () {
       }),
       Container(height: 4),
-      Expanded(child: RecentCallsList(_fusionConnection, _softphone, "Recent Calls", _selectedTab,
+      Expanded(child:RecentCallsList(_fusionConnection, _softphone, "Recent Calls", _selectedTab,
           query: _query))
     ];
     return Container(child: Column(children: children));
