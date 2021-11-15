@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:sip_ua/sip_ua.dart';
@@ -19,12 +20,12 @@ class Softphone implements SipUaHelperListener {
   String outputDevice = "Phone";
   MediaStream _localStream;
   MediaStream _remoteStream;
-  final SIPUAHelper helper = SIPUAHelper();
+  final FusionSIPUAHelper helper = FusionSIPUAHelper();
   List<Function> _listeners = [];
   FlutterCallkeep _callKeep;
   BuildContext _context;
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-        registerNotifications();
+      registerNotifications();
 
   Map<String, Map<String, dynamic>> callData = {};
   List<Call> calls = [];
@@ -100,11 +101,13 @@ class Softphone implements SipUaHelperListener {
     UaSettings settings = UaSettings();
 
     settings.webSocketSettings.allowBadCertificate = true;
-    settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
+    //settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
+    settings.webSocketUrl = "ws://164.90.154.80:8080";
     settings.uri = aor;
     settings.authorizationUser = login;
     settings.password = password;
     settings.displayName = aor;
+
     settings.userAgent = 'Fusion Mobile - Dart';
     settings.dtmfMode = DtmfMode.RFC2833;
     settings.iceServers = [
@@ -196,6 +199,7 @@ class Softphone implements SipUaHelperListener {
 
   makeCall(String destination) async {
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
+    helper.setVideo(false);
     MediaStream mediaStream;
     mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
 
@@ -205,7 +209,8 @@ class Softphone implements SipUaHelperListener {
   }
 
   makeActiveCall(Call call) {
-    print("makeactive");print(call);
+    print("makeactive");
+    print(call);
     activeCall = call;
     _callKeep.setCurrentCallActive(_uuidFor(call));
     call.unmute();
@@ -215,7 +220,7 @@ class Softphone implements SipUaHelperListener {
       print("checking hold" + c.id);
       if (c.id != call.id) {
         print("holding:" + c.id);
-        c.hold();
+        setHold(c, true);
         c.mute();
         print("held:" + c.id);
       }
@@ -293,7 +298,11 @@ class Softphone implements SipUaHelperListener {
     _setCallDataValue(call.id, "onHold", setOnHold);
     if (setOnHold) {
       print("holding");
+      helper.setVideo(true);
       call.hold();
+      var future = new Future.delayed(const Duration(milliseconds: 2000), () {
+        helper.setVideo(false);
+      });
     } else {
       print("unholding");
       call.unhold();
@@ -411,7 +420,8 @@ class Softphone implements SipUaHelperListener {
   }
 
   _callKeepDidToggleHold(CallKeepDidToggleHoldAction event) {
-    if (_getCallDataValue(_getCallByUuid(event.callUUID).id, "onHold") != event.hold) {
+    if (_getCallDataValue(_getCallByUuid(event.callUUID).id, "onHold") !=
+        event.hold) {
       setHold(_getCallByUuid(event.callUUID), event.hold);
     }
   }
@@ -468,8 +478,7 @@ class Softphone implements SipUaHelperListener {
     _updateListeners();
     if (Platform.isAndroid) {
       String number = getCallerNumber(call);
-      flutterLocalNotificationsPlugin.cancel(
-          int.parse(number.onlyNumbers()));
+      flutterLocalNotificationsPlugin.cancel(int.parse(number.onlyNumbers()));
     }
   }
 
