@@ -24,7 +24,6 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_apns:
-  callkeep:
   firebase_messaging:
   firebase_core:
   flutter_dtmf:

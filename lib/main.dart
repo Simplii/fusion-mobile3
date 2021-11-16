@@ -6,7 +6,6 @@ import 'dart:ui';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:callkeep/callkeep.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -31,7 +30,7 @@ import 'src/messages/sms_conversation_view.dart';
 import 'src/styles.dart';
 import 'src/utils.dart';
 
-FlutterCallkeep __callKeep = FlutterCallkeep();
+//FlutterCallkeep __callKeep = FlutterCallkeep();
 bool __callKeepInited = false;
 
 class NavigationService {
@@ -140,7 +139,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
       print("gotevent" + event.toString());
     });
 */
-    if (false) {
+ /*   if (false) {
       print("callkeep");
       print(__callKeep);
       __callKeep.on(CallKeepPerformAnswerCallAction(),
@@ -185,19 +184,19 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
 
         __callKeep.setup(null, callSetup);
         __callKeepInited = true;
-      }
+      }*/
 
-      print('backgroundMessage: displayIncomingCall ($callerName)');
-      __callKeep.displayIncomingCall(callUUID, callerName,
-          localizedCallerName: callerName, hasVideo: false);
-      __callKeep.backToForeground();
+   //   print('backgroundMessage: displayIncomingCall ($callerName)');
+    //  __callKeep.displayIncomingCall(callUUID, callerName,
+    //      localizedCallerName: callerName, hasVideo: false);
+  //    __callKeep.backToForeground();
 
-      final SendPort send = IsolateNameServer.lookupPortByName('fusion_port');
-      send.send(true);
+    //  final SendPort send = IsolateNameServer.lookupPortByName('fusion_port');
+    //  send.send(true);
 
       // NavigationService.pushVideoView();
 
-    }
+   // }
   }
 }
 
