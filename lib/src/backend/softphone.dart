@@ -74,8 +74,8 @@ class Softphone implements SipUaHelperListener {
   }
 
   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
-    print("callkithandling provider:" + methodCall.method);
-
+    print("callkithandling provider:" + methodCall.method + ":" + methodCall.arguments[0].toString());
+    print("callkithandlingcalls:" + calls.toString());
     switch (methodCall.method) {
       case 'setPushToken':
         String token = methodCall.arguments[0] as String;
@@ -84,6 +84,9 @@ class Softphone implements SipUaHelperListener {
 
       case 'answerButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
+        print("callkithandlinganswer:" + callUuid);
+        print("callkithandlinganswercall:" + _getCallByUuid(callUuid).toString());
+        print("callkithandling:" + callData.toString());
         answerCall(_getCallByUuid(callUuid));
         return;
 
@@ -122,7 +125,7 @@ class Softphone implements SipUaHelperListener {
             callIdFound = true;
           }
         }
-
+print("callidfound call did:" + callUuid);
         if (!callIdFound) {
           int time = DateTime
               .now()
@@ -130,13 +133,13 @@ class Softphone implements SipUaHelperListener {
           bool matched = false;
           for (String tempUUID in _tempUUIDs.keys) {
             if (time - _tempUUIDs[tempUUID] < 10 * 1000) {
-              print("provider replace temp uuid");
+              print("provider replace temp uuid call did:" + callUuid + ":" + tempUUID);
               _replaceTempUUID(tempUUID, callUuid);
               matched = debugInstrumentationEnabled;
             }
           }
           if (!matched) {
-            print("provider awaiting call id");
+            print("provider awaiting call did id:" + callUuid);
             _awaitingCall = callUuid;
           }
         }
@@ -539,21 +542,28 @@ class Softphone implements SipUaHelperListener {
     }
   }
 
+  _linkUuidFor(Call call) {
+    _uuidFor(call);
+  }
+
   _uuidFor(Call call) {
     Map<String, dynamic> data = _getCallDataById(call.id);
     if (data.containsKey('uuid')) {
+      print("call did get uuid:"+data['uuid']);
       return data['uuid'];
     } else {
       String uuid = Uuid().v4();
 
       if (_awaitingCall != "none") {
+        print("call did get uuid from awaiting:" + _awaitingCall);
         uuid = _awaitingCall;
         _awaitingCall = "none";
       } else {
-        print("_call setting temp uuid " + uuid);
+        print("_call did setting temp uuid " + uuid);
         _tempUUIDs[uuid] = DateTime.now().millisecondsSinceEpoch;
       }
       data['uuid'] = uuid;
+      print("setting call did setting uuid:" + data['uuid']);
       return uuid;
     }
   }
@@ -606,6 +616,7 @@ class Softphone implements SipUaHelperListener {
       /*_callKeep.startCall(
           _uuidFor(call), call.remote_identity, call.remote_display_name);*/
       calls.add(call);
+      _linkUuidFor(call);
       if (activeCall == null) makeActiveCall(call);
 
       if (call.direction == "INCOMING")
