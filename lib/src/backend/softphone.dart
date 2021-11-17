@@ -64,7 +64,98 @@ class Softphone implements SipUaHelperListener {
     setupPermissions();
 //    setupCallKeep();
   //  print(_callKeep);
+    if (Platform.isIOS)
+      _setupCallKit();
   }
+
+  _setupCallKit() {
+    print("setupcallkit providerpush");
+    _callKit.setMethodCallHandler(_callKitHandler);
+  }
+
+  Future<dynamic> _callKitHandler(MethodCall methodCall) async {
+    print("callkithandling provider:" + methodCall.method);
+
+    switch (methodCall.method) {
+      case 'setPushToken':
+        String token = methodCall.arguments[0] as String;
+        _fusionConnection.setPushkitToken(token);
+        return;
+
+      case 'answerButtonPressed':
+        String callUuid = methodCall.arguments[0] as String;
+        answerCall(_getCallByUuid(callUuid));
+        return;
+
+      case 'endButtonPressed':
+        String callUuid = methodCall.arguments[0] as String;
+        hangUp(_getCallByUuid(callUuid));
+        return;
+
+      case 'holdButtonPressed':
+        String callUuid = methodCall.arguments[0] as String;
+        bool isHold = methodCall.arguments[1] as bool;
+        setHold(_getCallByUuid(callUuid), isHold);
+        return;
+
+      case 'muteButtonPressed':
+        String callUuid = methodCall.arguments[0] as String;
+        bool isMute = methodCall.arguments[1] as bool;
+        setMute(_getCallByUuid(callUuid), isMute);
+        return;
+
+      case 'dtmfPressed':
+        String callUuid = methodCall.arguments[0] as String;
+        String digits = methodCall.arguments[1] as String;
+        sendDtmf(_getCallByUuid(callUuid), digits);
+        return;
+
+      case 'startCall':
+        print("rujnning startcall here in dart provider");
+        String callUuid = methodCall.arguments[0] as String;
+        String callerId = methodCall.arguments[0] as String;
+        String callerName = methodCall.arguments[0] as String;
+
+        bool callIdFound = false;
+        for (Map<String, dynamic> data in callData.values) {
+          if (data.containsKey('uuid') && data['uuid'] == callUuid) {
+            callIdFound = true;
+          }
+        }
+
+        if (!callIdFound) {
+          int time = DateTime
+              .now()
+              .millisecondsSinceEpoch;
+          bool matched = false;
+          for (String tempUUID in _tempUUIDs.keys) {
+            if (time - _tempUUIDs[tempUUID] < 10 * 1000) {
+              print("provider replace temp uuid");
+              _replaceTempUUID(tempUUID, callUuid);
+              matched = debugInstrumentationEnabled;
+            }
+          }
+          if (!matched) {
+            print("provider awaiting call id");
+            _awaitingCall = callUuid;
+          }
+        }
+
+        print("_call did display: " + callUuid + " - " + _awaitingCall);
+        return;
+
+      default:
+        throw MissingPluginException('notImplemented');
+    }
+  }
+
+   Future<void> _reportOutgoingCall(String uuid) async {
+     try {
+       await _callKit.invokeMethod('reportOutgoingCall', uuid);
+     } on PlatformException catch (e) {
+       print("iosplatform exception");
+     }
+   }
 
 
   /*Future<bool> callStateChangeHandler(call) async {
@@ -159,6 +250,17 @@ class Softphone implements SipUaHelperListener {
     //_callKeep.setCurrentCallActive(_uuidFor(call));
     call.unmute();
     call.unhold();
+
+    if (_getCallDataValue(call.id, "isReported") != true && call.direction == "outbound") {
+      if (Platform.isIOS) {
+        print("pushplatform make active call");
+        _setCallDataValue(call.id, "isReported", true);
+        _callKit.invokeMethod("reportOutgoingCall",
+            [_uuidFor(call),
+              getCallerNumber(call),
+              getCallerName(call)]);
+      }
+    }
 
     for (Call c in calls) {
       print("checking hold" + c.id);
@@ -358,7 +460,7 @@ class Softphone implements SipUaHelperListener {
     answerCall(call);
   }
 
-  _callKeepDidReceiveStartCall(CallKeepDidReceiveStartCallAction event) {
+  _callKeepDidReceivStartCall(CallKeepDidReceiveStartCallAction event) {
     print("did recevie start call action");
     print(event);
   }
@@ -402,10 +504,17 @@ class Softphone implements SipUaHelperListener {
   }
 
   _didDisplayCall() {
-    print("call did display");
+    print("call did display...");
   }
 
   _removeCall(Call call) {
+    if (Platform.isIOS) {
+      print("pushplatformendcall");
+      _callKit.invokeMethod(
+          "endCall",
+          [_uuidFor(call)]);
+    }
+
     if (call == activeCall) {
       activeCall = null;
     }
