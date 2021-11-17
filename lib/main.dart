@@ -210,11 +210,12 @@ Future<void> main() async {
 //  }
   registerNotifications();
 
-  await SentryFlutter.init(
+  /*await SentryFlutter.init(
     (options) => options.dsn =
         'https://91be6ab841f64100a3698952bbc577c2@o68456.ingest.sentry.io/6019626',
     appRunner: () => runApp(MaterialApp(home: MyApp())),
-  );
+  );*/
+  runApp(MaterialApp(home: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
