@@ -90,11 +90,11 @@ class ProviderDelegate: NSObject {
 
 extension ProviderDelegate: CXProviderDelegate {
     func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {
-        callkitChannel.invokeMethod("muteButtonPressed", arguments: [action.uuid.uuidString, action.isMuted])
+        callkitChannel.invokeMethod("muteButtonPressed", arguments: [action.callUUID.uuidString, action.isMuted])
     }
     
     func provider(_ provider: CXProvider, perform action: CXPlayDTMFCallAction) {
-        callkitChannel.invokeMethod("dtmfPressed", arguments: [action.uuid.uuidString, action.digits])
+        callkitChannel.invokeMethod("dtmfPressed", arguments: [action.callUUID.uuidString, action.digits])
     }
     
   func providerDidReset(_ provider: CXProvider) {
@@ -103,7 +103,7 @@ extension ProviderDelegate: CXProviderDelegate {
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
     print("answercall actoin provider");
-    callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.uuid.uuidString]);
+    callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
     // answer the call here
   }
   
@@ -119,20 +119,20 @@ extension ProviderDelegate: CXProviderDelegate {
     print("provider", action.isComplete)
     print("provider", action.observationInfo)
     if (action.isComplete) {
-        callkitChannel.invokeMethod("endButtonPressed", arguments: [action.uuid.uuidString])
+        callkitChannel.invokeMethod("endButtonPressed", arguments: [action.callUUID.uuidString])
     }
     // end call
   }
   
   func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
-    callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.uuid.uuidString, action.isOnHold])
+    callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
     print("sethold provider")
     // set hold here
   }
   
   func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
     print("start call action here")
-    callkitChannel.invokeMethod("startCall", arguments: [action.uuid.uuidString, action.handle.value, action.contactIdentifier])
+    callkitChannel.invokeMethod("startCall", arguments: [action.callUUID.uuidString, action.handle.value, action.contactIdentifier])
     //  start call action here
   }
 }
