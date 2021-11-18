@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:callkeep/callkeep.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +17,6 @@ import '../../main.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
 
-
 class Softphone implements SipUaHelperListener {
   String outputDevice = "Phone";
   MediaStream _localStream;
@@ -27,8 +27,10 @@ class Softphone implements SipUaHelperListener {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       registerNotifications();
 
-  final _callKit = MethodChannel('net.fusioncomm.ios/callkit');
+  MethodChannel _callKit;
+  MethodChannel _telecom;
 
+  FlutterCallkeep _callKeep;
   Map<String, Map<String, dynamic>> callData = {};
   List<Call> calls = [];
   Call activeCall;
@@ -41,7 +43,12 @@ class Softphone implements SipUaHelperListener {
   bool _savedOutput = false;
 
   Softphone(this._fusionConnection) {
+    if (Platform.isIOS)
+      _callKit = MethodChannel('net.fusioncomm.ios/callkit');
+    else if (Platform.isAndroid)
+      _telecom = MethodChannel('net.fusioncomm.android/telecom');
     setup();
+
     outboundRingtone.setAsset("assets/audio/outbound.mp3");
     outboundRingtone.setLoopMode(LoopMode.one);
 
@@ -56,16 +63,27 @@ class Softphone implements SipUaHelperListener {
 
   setup() {
     print("setting up");
-
-    //FlutterVoipKit.init(
-//        callStateChangeHandler: callStateChangeHandler,
-    //      callActionHandler: callActionHandler);
-
     setupPermissions();
-//    setupCallKeep();
-  //  print(_callKeep);
+
     if (Platform.isIOS)
       _setupCallKit();
+    else if (Platform.isAndroid) {
+      _callKeep = FlutterCallkeep();
+      setupCallKeep();
+    }
+  }
+
+  _setupTelecom() {
+    _telecom.setMethodCallHandler(_telecomHandler);
+  }
+
+  Future<dynamic> _telecomHandler(MethodCall methodCall) async {
+    switch (methodCall.method) {
+      case 'setPushToken':
+        String token = methodCall.arguments[0] as String;
+        _fusionConnection.setPushkitToken(token);
+        return;
+    }
   }
 
   _setupCallKit() {
@@ -73,8 +91,60 @@ class Softphone implements SipUaHelperListener {
     _callKit.setMethodCallHandler(_callKitHandler);
   }
 
+  setupCallKeep() {
+    _callKeep.on(
+        CallKeepDidDisplayIncomingCall(), _callKeepDidDisplayIncomingCall);
+    _callKeep.on(CallKeepPerformAnswerCallAction(), _callKeepAnswerCall);
+    _callKeep.on(CallKeepDidPerformDTMFAction(), _callKeepDTMFPerformed);
+    _callKeep.on(CallKeepDidToggleHoldAction(), _callKeepDidToggleHold);
+    _callKeep.on(
+        CallKeepDidPerformSetMutedCallAction(), _callKeepDidPerformSetMuted);
+    _callKeep.on(CallKeepPerformEndCallAction(), _callKeepPerformEndCall);
+    _callKeep.on(CallKeepPushKitToken(), _callKeepPushkitToken);
+
+    final callSetup = <String, dynamic>{
+      'ios': {
+        'appName': 'Fusion Mobile',
+      },
+      'android': {
+        'alertTitle': 'Permissions required',
+        'alertDescription':
+        'This application needs to access your phone accounts',
+        'cancelButton': 'Cancel',
+        'okButton': 'ok',
+        'foregroundService': {
+          'channelId': 'net.fusioncomm.flutter_app',
+          'channelName': 'Foreground service for my app',
+          'notificationTitle': 'My app is running on background',
+          'notificationIcon': 'Path to the resource icon of the notification',
+        },
+      },
+    };
+
+    _callKeep.setup(null, callSetup);
+
+    if (Platform.isAndroid) {
+      //if (isIOS) iOS_Permission();
+      //  _firebaseMessaging.requestNotificationPermissions();
+
+      FirebaseMessaging.instance.getToken().then((token) {
+        print('[FCM] token => ' + token);
+      });
+
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        RemoteNotification notification = message.notification;
+        print("got message");
+        print(message);
+        print(message);
+      });
+    }
+  }
+
   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
-    print("callkithandling provider:" + methodCall.method + ":" + methodCall.arguments[0].toString());
+    print("callkithandling provider:" +
+        methodCall.method +
+        ":" +
+        methodCall.arguments[0].toString());
     print("callkithandlingcalls:" + calls.toString());
     switch (methodCall.method) {
       case 'setPushToken':
@@ -85,7 +155,8 @@ class Softphone implements SipUaHelperListener {
       case 'answerButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
         print("callkithandlinganswer:" + callUuid);
-        print("callkithandlinganswercall:" + _getCallByUuid(callUuid).toString());
+        print(
+            "callkithandlinganswercall:" + _getCallByUuid(callUuid).toString());
         print("callkithandling:" + callData.toString());
         answerCall(_getCallByUuid(callUuid));
         return;
@@ -125,15 +196,16 @@ class Softphone implements SipUaHelperListener {
             callIdFound = true;
           }
         }
-print("callidfound call did:" + callUuid);
+        print("callidfound call did:" + callUuid);
         if (!callIdFound) {
-          int time = DateTime
-              .now()
-              .millisecondsSinceEpoch;
+          int time = DateTime.now().millisecondsSinceEpoch;
           bool matched = false;
           for (String tempUUID in _tempUUIDs.keys) {
             if (time - _tempUUIDs[tempUUID] < 10 * 1000) {
-              print("provider replace temp uuid call did:" + callUuid + ":" + tempUUID);
+              print("provider replace temp uuid call did:" +
+                  callUuid +
+                  ":" +
+                  tempUUID);
               _replaceTempUUID(tempUUID, callUuid);
               matched = debugInstrumentationEnabled;
             }
@@ -152,14 +224,13 @@ print("callidfound call did:" + callUuid);
     }
   }
 
-   Future<void> _reportOutgoingCall(String uuid) async {
-     try {
-       await _callKit.invokeMethod('reportOutgoingCall', uuid);
-     } on PlatformException catch (e) {
-       print("iosplatform exception");
-     }
-   }
-
+  Future<void> _reportOutgoingCall(String uuid) async {
+    try {
+      await _callKit.invokeMethod('reportOutgoingCall', uuid);
+    } on PlatformException catch (e) {
+      print("iosplatform exception");
+    }
+  }
 
   /*Future<bool> callStateChangeHandler(call) async {
     print("widget call state changed lisener: $call");
@@ -234,8 +305,18 @@ print("callidfound call did:" + callUuid);
     });
   }
 
-
   makeCall(String destination) async {
+    //  if (Platform.isIOS) {
+    doMakeCall(destination);
+    /*}
+    else if (Platform.isAndroid) {
+      String uuid = Uuid().v4();
+      _awaitingCall = uuid;
+      _telecom.invokeMethod('placeCall', [uuid, destination]);
+    }*/
+  }
+
+  doMakeCall(String destination) async {
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     helper.setVideo(false);
     MediaStream mediaStream;
@@ -250,18 +331,19 @@ print("callidfound call did:" + callUuid);
     print("makeactive");
     print(call);
     activeCall = call;
-    //_callKeep.setCurrentCallActive(_uuidFor(call));
+    if (Platform.isAndroid) {
+      _callKeep.setCurrentCallActive(_uuidFor(call));
+    }
     call.unmute();
     call.unhold();
 
-    if (_getCallDataValue(call.id, "isReported") != true && call.direction == "outbound") {
+    if (_getCallDataValue(call.id, "isReported") != true &&
+        call.direction == "outbound") {
       if (Platform.isIOS) {
         print("pushplatform make active call");
         _setCallDataValue(call.id, "isReported", true);
         _callKit.invokeMethod("reportOutgoingCall",
-            [_uuidFor(call),
-              getCallerNumber(call),
-              getCallerName(call)]);
+            [_uuidFor(call), getCallerNumber(call), getCallerName(call)]);
       }
     }
 
@@ -315,7 +397,9 @@ print("callidfound call did:" + callUuid);
   }
 
   sendDtmf(Call call, String tone) {
-  //  _callKeep.sendDTMF(_uuidFor(call), tone);
+    if (Platform.isAndroid) {
+      _callKeep.sendDTMF(_uuidFor(call), tone);
+    }
     call.sendDTMF(tone);
   }
 
@@ -397,14 +481,16 @@ print("callidfound call did:" + callUuid);
     MediaStream mediaStream;
     mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
     call.answer(helper.buildCallOptions(), mediaStream: mediaStream);
-    //_callKeep.answerIncomingCall(_uuidFor(call));
+    if (Platform.isAndroid) {
+      _callKeep.answerIncomingCall(_uuidFor(call));
+    }
     makeActiveCall(call);
     _setCallDataValue(call.id, "answerTime", DateTime.now());
     print("answering");
   }
 
   backToForeground() {
-    //_callKeep.backToForeground();
+    _callKeep.backToForeground();
   }
 
   Future<void> handleIncomingCall(String uuid) async {
@@ -412,7 +498,7 @@ print("callidfound call did:" + callUuid);
     String contactName = getCallerName(call);
   }
 
-  /*_callKeepDidDisplayIncomingCall(CallKeepDidDisplayIncomingCall event) {
+  _callKeepDidDisplayIncomingCall(CallKeepDidDisplayIncomingCall event) {
     print("did display call callkeep");
     print(event);
 
@@ -438,7 +524,7 @@ print("callidfound call did:" + callUuid);
       }
     }
     print("_call did display: " + callUuid + " - " + _awaitingCall);
-  }*/
+  }
 
   _replaceTempUUID(String tempUuid, String callKeepUuid) {
     _tempUUIDs.remove(tempUuid);
@@ -452,7 +538,7 @@ print("callidfound call did:" + callUuid);
     }
   }
 
-  /*_callKeepDTMFPerformed(CallKeepDidPerformDTMFAction event) {
+  _callKeepDTMFPerformed(CallKeepDidPerformDTMFAction event) {
     sendDtmf(_getCallByUuid(event.callUUID), event.digits);
   }
 
@@ -485,7 +571,7 @@ print("callidfound call did:" + callUuid);
 
   _callKeepPushkitToken(CallKeepPushKitToken event) {
     _fusionConnection.setPushkitToken(event.token);
-  }*/
+  }
 
   _getCallByUuid(String uuid) {
     for (String id in callData.keys) {
@@ -513,9 +599,7 @@ print("callidfound call did:" + callUuid);
   _removeCall(Call call) {
     if (Platform.isIOS) {
       print("pushplatformendcall");
-      _callKit.invokeMethod(
-          "endCall",
-          [_uuidFor(call)]);
+      _callKit.invokeMethod("endCall", [_uuidFor(call)]);
     }
 
     if (call == activeCall) {
@@ -549,7 +633,7 @@ print("callidfound call did:" + callUuid);
   _uuidFor(Call call) {
     Map<String, dynamic> data = _getCallDataById(call.id);
     if (data.containsKey('uuid')) {
-      print("call did get uuid:"+data['uuid']);
+      print("call did get uuid:" + data['uuid']);
       return data['uuid'];
     } else {
       String uuid = Uuid().v4();
@@ -612,9 +696,13 @@ print("callidfound call did:" + callUuid);
   }
 
   _addCall(Call call) async {
+    print("timetoaddcall");
+    print(call);
     if (!_callIsAdded(call)) {
-      /*_callKeep.startCall(
-          _uuidFor(call), call.remote_identity, call.remote_display_name);*/
+      if (Platform.isAndroid) {
+        _callKeep.startCall(
+            _uuidFor(call), call.remote_identity, call.remote_display_name);
+      }
       calls.add(call);
       _linkUuidFor(call);
       if (activeCall == null) makeActiveCall(call);
@@ -624,39 +712,46 @@ print("callidfound call did:" + callUuid);
       else
         outboundRingtone.play();
 
-      //final bool hasPhoneAccount = await _callKeep.hasPhoneAccount();
+      if (Platform.isAndroid) {
+        final bool hasPhoneAccount = await _callKeep.hasPhoneAccount();
 
-      //if (!hasPhoneAccount) {
-   /*     await _callKeep.hasDefaultPhoneAccount(_context, <String, dynamic>{
-          'alertTitle': 'Permissions required',
-          'alertDescription':
-              'This application needs to access your phone accounts',
-          'cancelButton': 'Cancel',
-          'okButton': 'ok',
-          'foregroundService': {
-            'channelId': 'net.fusioncomm.flutter_app',
-            'channelName': 'Foreground service for my app',
-            'notificationTitle': 'My app is running on background',
-            'notificationIcon': 'Path to the resource icon of the notification',
-          },
-        });*/
-     // }
+        if (!hasPhoneAccount) {
+          await _callKeep.hasDefaultPhoneAccount(_context, <String, dynamic>{
+            'alertTitle': 'Permissions required',
+            'alertDescription':
+                'This application needs to access your phone accounts',
+            'cancelButton': 'Cancel',
+            'okButton': 'ok',
+            'foregroundService': {
+              'channelId': 'net.fusioncomm.android',
+              'channelName': 'Foreground service for my app',
+              'notificationTitle': 'My app is running on background',
+              'notificationIcon':
+                  'Path to the resource icon of the notification',
+            },
+          });
+        }
+      }
       print("getting callpop info " + call.remote_identity);
       _fusionConnection.callpopInfos.lookupPhone(call.remote_identity,
           (CallpopInfo data) {
-       /* _callKeep.updateDisplay(_uuidFor(call),
-            displayName: data.getName(defaul: call.remote_display_name),
-            handle: call.remote_identity);*/
-            if (call.direction == "outbound" || call.direction == "outgoing")
-        //      _callKit.reportConnectedOutgoingCallWithUUID(_uuidFor(call));
-            _setCallDataValue(call.id, "callPopInfo", data);
-            print("got callpop info");
-            print(data);
+        if (Platform.isAndroid) {
+          _callKeep.updateDisplay(_uuidFor(call),
+              displayName: data.getName(defaul: call.remote_display_name),
+              handle: call.remote_identity);
+        }
+        if (call.direction == "outbound" || call.direction == "outgoing")
+          //      _callKit.reportConnectedOutgoingCallWithUUID(_uuidFor(call));
+          _setCallDataValue(call.id, "callPopInfo", data);
+        print("got callpop info");
+        print(data);
       });
 
       _setCallDataValue(call.id, "startTime", DateTime.now());
-      //    _callKeep.displayIncomingCall(_uuidFor(call), call.remote_identity,
-      //        handleType: 'number', hasVideo: false);
+      if (Platform.isAndroid) {
+        _callKeep.displayIncomingCall(_uuidFor(call), call.remote_identity,
+            handleType: 'number', hasVideo: false);
+      }
     }
   }
 
@@ -901,11 +996,15 @@ print("callidfound call did:" + callUuid);
         break;
       case CallStateEnum.UNMUTED:
         _setCallDataValue(call.id, "muted", false);
-        //_callKeep.setMutedCall(_uuidFor(call), false);
+        if (Platform.isAndroid) {
+          _callKeep.setMutedCall(_uuidFor(call), false);
+        }
         break;
       case CallStateEnum.MUTED:
         _setCallDataValue(call.id, "muted", true);
-        //_callKeep.setMutedCall(_uuidFor(call), true);
+        if (Platform.isAndroid) {
+          _callKeep.setMutedCall(_uuidFor(call), true);
+        }
         break;
       case CallStateEnum.CONNECTING:
         print("playaudio");
@@ -925,21 +1024,28 @@ print("callidfound call did:" + callUuid);
         _setCallDataValue(call.id, "answerTime", DateTime.now());
         if (!isIncoming(call)) {
           print("_call connecting out going" + _uuidFor(call));
-       //   _callKit.reportConnectedOutgoingCallWithUUID(_uuidFor(call));
-          //_callKeep.reportConnectedOutgoingCallWithUUID(_uuidFor(call));
+
+          if (Platform.isAndroid) {
+            _callKeep.reportConnectedOutgoingCallWithUUID(_uuidFor(call));
+          }
         } else {
           print("_call connecting incoming " + _uuidFor(call));
-          //_callKeep.answerIncomingCall(_uuidFor(call));
-
+          if (Platform.isAndroid) {
+            _callKeep.answerIncomingCall(_uuidFor(call));
+          }
         }
         break;
       case CallStateEnum.HOLD:
         _setCallDataValue(call.id, "onHold", true);
-        //_callKeep.setOnHold(_uuidFor(call), true);
+        if (Platform.isAndroid) {
+          _callKeep.setOnHold(_uuidFor(call), true);
+        }
         break;
       case CallStateEnum.UNHOLD:
         _setCallDataValue(call.id, "onHold", false);
-        //_callKeep.setOnHold(_uuidFor(call), false);
+        if (Platform.isAndroid) {
+          _callKeep.setOnHold(_uuidFor(call), false);
+        }
         setCallOutput(call, getCallOutput(call));
         break;
       case CallStateEnum.NONE:
@@ -972,5 +1078,4 @@ print("callidfound call did:" + callUuid);
     print(state);
     // TODO: implement transportStateChanged
   }
-
 }

@@ -1,4 +1,4 @@
-/*package net.fusioncomm.flutter_app;
+/*package net.fusioncomm.android;
 
 import android.content.Intent;
 import androidx.annotation.NonNull;

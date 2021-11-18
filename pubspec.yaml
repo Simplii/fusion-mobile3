@@ -57,6 +57,8 @@ dependencies:
   shared_preferences:
   all_sensors:
   wakelock:
+  callkeep:
+    path: ../callkeep
 
 dev_dependencies:
   flutter_test:
