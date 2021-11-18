@@ -115,6 +115,11 @@ class FusionConnection {
       apiV1Call("delete", "/clients/device_token",
           {"token": token, "pn_tok": _pushkitToken}, callback: (data) {
         apiV1Call("get", "/log_out", {}, callback: (data) {
+          SharedPreferences.getInstance().then((SharedPreferences prefs) {
+            prefs.setString("sub_login", "");
+            prefs.setString("auth_key", "");
+            prefs.setString("aor", "");
+          });
           _username = '';
           _password = '';
           _onLogOut();
@@ -374,6 +379,23 @@ class FusionConnection {
     return _domain;
   }
 
+  _postLoginSetup(Function(bool) callback) {
+    settings.lookupSubscriber();
+        coworkers.getCoworkers((data) {});
+        setupSocket();
+
+        if (callback != null) {
+          callback(true);
+        }
+
+        smsDepartments.getDepartments((List<SMSDepartment> lis) {});
+
+        FirebaseMessaging.instance.getToken().then((token) {
+          apiV1Call("post", "/clients/device_token",
+              {"token": token, "pn_tok": _pushkitToken});
+        });
+  }
+
   login(String username, String password, Function(bool) callback) {
     apiV1Call(
         "get",
@@ -394,17 +416,7 @@ class FusionConnection {
         _domain = _username.split('@')[1];
         _extension = _username.split('@')[0];
         settings.setOptions(response);
-        settings.lookupSubscriber();
-        coworkers.getCoworkers((data) {});
-        setupSocket();
-        callback(true);
-
-        smsDepartments.getDepartments((List<SMSDepartment> lis) {});
-
-        FirebaseMessaging.instance.getToken().then((token) {
-          apiV1Call("post", "/clients/device_token",
-              {"token": token, "pn_tok": _pushkitToken});
-        });
+        _postLoginSetup(callback);
       } else {
         callback(false);
       }
@@ -465,5 +477,27 @@ class FusionConnection {
 
   void setAPNSConnector(PushConnector connector) {
     _connector = connector;
+  }
+
+  void autoLogin(String username, String domain) {
+    _domain = domain;
+    _username = username.split('@')[0] + '@' + domain;
+    _domain = _username.split('@')[1];
+    _extension = _username.split('@')[0];
+
+    apiV1Call(
+        "get",
+        "/clients/lookup_options",
+        {"username": username},
+        callback: (Map<String, dynamic> response) {
+          if (response.containsKey("access_key")) {
+            settings.setOptions(response);
+          }
+          else {
+            logOut();
+          }
+        });
+
+    _postLoginSetup((bool success) {});
   }
 }
