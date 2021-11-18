@@ -15,6 +15,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_view.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:uuid/uuid.dart';
 
@@ -108,8 +109,8 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
             ticker: 'ticker');
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
-    flutterLocalNotificationsPlugin.show(
-        id, callerName, callerNumber + ' Incoming phone call', platformChannelSpecifics,
+    flutterLocalNotificationsPlugin.show(id, callerName,
+        callerNumber + ' Incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
 
     /*AwesomeNotifications().createNotification(
@@ -139,7 +140,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
       print("gotevent" + event.toString());
     });
 */
- /*   if (false) {
+    /*   if (false) {
       print("callkeep");
       print(__callKeep);
       __callKeep.on(CallKeepPerformAnswerCallAction(),
@@ -186,17 +187,17 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
         __callKeepInited = true;
       }*/
 
-   //   print('backgroundMessage: displayIncomingCall ($callerName)');
+    //   print('backgroundMessage: displayIncomingCall ($callerName)');
     //  __callKeep.displayIncomingCall(callUUID, callerName,
     //      localizedCallerName: callerName, hasVideo: false);
-  //    __callKeep.backToForeground();
+    //    __callKeep.backToForeground();
 
     //  final SendPort send = IsolateNameServer.lookupPortByName('fusion_port');
     //  send.send(true);
 
-      // NavigationService.pushVideoView();
+    // NavigationService.pushVideoView();
 
-   // }
+    // }
   }
 }
 
@@ -315,6 +316,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String receivedMsg;
   List<Call> calls;
   Call activeCall;
+  bool _isRegistering = false;
   bool _logged_in = false;
   bool _callInProgress = false;
 
@@ -336,7 +338,7 @@ class _MyHomePageState extends State<MyHomePage> {
       print(softphone.calls);
       setState(() {});
     });
-    _register();
+    _autoLogin();
 
     _setupFirebase();
   }
@@ -381,8 +383,37 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  _autoLogin() {
+    print("autologcheck");
+    SharedPreferences.getInstance().then((SharedPreferences prefs) {
+      String username = prefs.getString("username");
+      String domain = prefs.getString("domain");
+      String sub_login = prefs.getString("sub_login");
+      String aor = prefs.getString("aor");
+      String auth_key = prefs.getString("auth_key");
+
+      if (auth_key != null && auth_key != "") {
+        print("isautologin");
+        fusionConnection.autoLogin(username, domain);
+        setState(() {
+          _sub_login = sub_login;
+          _auth_key = auth_key;
+          _aor = aor;
+          _logged_in = true;
+          _isRegistering = true;
+        });
+
+        softphone.register(sub_login, auth_key, aor.replaceAll('sip:', ''));
+      } else {
+        print("isnotautologin");
+      }
+    });
+  }
+
   Future<void> _register() async {
-    if (_sub_login != "") {
+    if (_isRegistering) {
+      return;
+    } else if (_sub_login != "") {
       softphone.register(_sub_login, _auth_key, _aor.replaceAll('sip:', ''));
     } else {
       fusionConnection.nsApiCall('device', 'read', {
@@ -395,6 +426,12 @@ class _MyHomePageState extends State<MyHomePage> {
         _sub_login = device['sub_login'];
         _auth_key = device['authentication_key'];
         _aor = device['aor'];
+
+        SharedPreferences.getInstance().then((SharedPreferences prefs) {
+          prefs.setString("sub_login", _sub_login);
+          prefs.setString("auth_key", _auth_key);
+          prefs.setString("aor", _aor);
+        });
 
         softphone.register(device['sub_login'], device['authentication_key'],
             device['aor'].replaceAll('sip:', ''));
