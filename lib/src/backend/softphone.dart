@@ -617,7 +617,12 @@ class Softphone implements SipUaHelperListener {
 
     for (Call c in toRemove) calls.remove(c);
 
-    if (calls.length > 0) makeActiveCall(calls[0]);
+    if (calls.length > 0) {
+      makeActiveCall(calls[0]);
+    }
+    else {
+      setCallOutput(call, "phone");
+    }
 
     _updateListeners();
     if (Platform.isAndroid) {
@@ -1015,10 +1020,10 @@ class Softphone implements SipUaHelperListener {
       case CallStateEnum.ACCEPTED:
         outboundRingtone.stop();
         inboundRingtone.stop();
-        setCallOutput(call, "phone");
+        setCallOutput(call, getCallOutput(call));
         break;
       case CallStateEnum.CONFIRMED:
-        setCallOutput(call, 'phone');
+        setCallOutput(call, getCallOutput(call));
         outboundRingtone.stop();
         inboundRingtone.stop();
         _setCallDataValue(call.id, "answerTime", DateTime.now());
@@ -1052,6 +1057,7 @@ class Softphone implements SipUaHelperListener {
         break;
       case CallStateEnum.CALL_INITIATION:
         _addCall(call);
+        setCallOutput(call, getCallOutput(call));
         break;
       case CallStateEnum.REFER:
         break;
