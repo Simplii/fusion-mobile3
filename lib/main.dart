@@ -97,7 +97,6 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
     flutterLocalNotificationsPlugin.show(id, callerName,
         callerNumber + ' Incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
-
   }
 }
 
@@ -145,8 +144,7 @@ class MyApp extends StatelessWidget {
 
   bool _listenerHasBeenSetup = false;
 
-  _setupListener() async {
-  }
+  _setupListener() async {}
 
   // This widget is the root of your application.
   @override
@@ -220,6 +218,44 @@ class _MyHomePageState extends State<MyHomePage> {
     _setupFirebase();
   }
 
+  checkForInitialMessage() async {
+    await Firebase.initializeApp();
+    RemoteMessage initialMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
+
+    if (initialMessage != null) {
+      checkForIMNotification(initialMessage.data);
+    }
+  }
+
+  checkForIMNotification(Map<String, dynamic> data) {
+    if (data.containsKey('to_number')) {
+      fusionConnection.contacts.search(data['from_number'], 10, 0,
+          (contacts, fromServer) {
+        if (fromServer) {
+          fusionConnection.integratedContacts.search(
+              data['from_number'], 10, 0, (crmContacts, fromServer) {
+            if (fromServer) {
+              contacts.addAll(crmContacts);
+              showModalBottomSheet(
+                  context: context,
+                  backgroundColor: Colors.transparent,
+                  isScrollControlled: true,
+                  builder: (context) => SMSConversationView(
+                      fusionConnection,
+                      softphone,
+                      SMSConversation.build(
+                          contacts: contacts,
+                          crmContacts: [],
+                          myNumber: data['to_number'],
+                          number: data['from_number'])));
+            }
+          });
+        }
+      });
+    }
+  }
+
   _setupFirebase() {
     print("fbsetup");
     FirebaseMessaging.onMessage.listen((event) {
@@ -232,31 +268,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     FirebaseMessaging.onMessageOpenedApp.listen((event) {
       print("gotfbmessageandopened:" + event.data.toString());
-      if (event.data.containsKey('to_number')) {
-        fusionConnection.contacts.search(event.data['from_number'], 10, 0,
-            (contacts, fromServer) {
-          if (fromServer) {
-            fusionConnection.integratedContacts.search(
-                event.data['from_number'], 10, 0, (crmContacts, fromServer) {
-              if (fromServer) {
-                contacts.addAll(crmContacts);
-                showModalBottomSheet(
-                    context: context,
-                    backgroundColor: Colors.transparent,
-                    isScrollControlled: true,
-                    builder: (context) => SMSConversationView(
-                        fusionConnection,
-                        softphone,
-                        SMSConversation.build(
-                            contacts: contacts,
-                            crmContacts: [],
-                            myNumber: event.data['to_number'],
-                            number: event.data['from_number'])));
-              }
-            });
-          }
-        });
-      }
+      checkForIMNotification(event.data);
     });
   }
 
@@ -281,6 +293,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
 
         softphone.register(sub_login, auth_key, aor.replaceAll('sip:', ''));
+        checkForInitialMessage();
       } else {
         print("isnotautologin");
       }
@@ -351,6 +364,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _logged_in = true;
     });
     _register();
+    checkForInitialMessage();
   }
 
   _getFloatingButton() {
