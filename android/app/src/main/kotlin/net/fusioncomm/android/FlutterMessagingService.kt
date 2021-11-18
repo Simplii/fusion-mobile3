@@ -1,4 +1,4 @@
-package net.fusioncomm.flutter_app
+package net.fusioncomm.android
 import com.tekartik.sqflite.SqflitePlugin;
 
 import androidx.annotation.NonNull;

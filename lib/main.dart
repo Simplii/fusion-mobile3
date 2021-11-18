@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:callkeep/callkeep.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -31,7 +32,7 @@ import 'src/messages/sms_conversation_view.dart';
 import 'src/styles.dart';
 import 'src/utils.dart';
 
-//FlutterCallkeep __callKeep = FlutterCallkeep();
+FlutterCallkeep __callKeep = FlutterCallkeep();
 bool __callKeepInited = false;
 
 class NavigationService {
@@ -64,22 +65,6 @@ registerNotifications() {
     print("gotonoticication" + s);
   });
   return flutterLocalNotificationsPlugin;
-  AwesomeNotifications().initialize(null, [
-    NotificationChannel(
-        channelKey: 'basic_channel',
-        channelName: 'Fusion Notifications',
-        channelDescription: 'Notification channel for incoming calls',
-        defaultColor: Color(0xFF9D50DD),
-        ledColor: Colors.white)
-  ]);
-
-  AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-    if (!isAllowed) {
-      // Insert here your friendly dialog box before call the request method
-      // This is very important to not harm the user experience
-      AwesomeNotifications().requestPermissionToSendNotifications();
-    }
-  });
 }
 
 Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
@@ -113,102 +98,14 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
         callerNumber + ' Incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
 
-    /*AwesomeNotifications().createNotification(
-      content: NotificationContent(
-
-          id: 0,
-          channelKey: 'basic_channel',
-          title: callerName,
-          body: 'Incoming call',
-        showWhen: true,
-        autoCancel: true,
-        notificationLayout: NotificationLayout.BigText
-      ),
-      actionButtons: [
-        NotificationActionButton(
-          key: 'accept',
-          label: 'Answer',
-        ),
-        NotificationActionButton(
-          key: 'cancel',
-          label: 'Decline',
-        ),
-      ],
-    );
-
-    AwesomeNotifications().actionStream.listen((event) {
-      print("gotevent" + event.toString());
-    });
-*/
-    /*   if (false) {
-      print("callkeep");
-      print(__callKeep);
-      __callKeep.on(CallKeepPerformAnswerCallAction(),
-          (CallKeepPerformAnswerCallAction event) {
-        print(
-            'backgroundMessage: CallKeepPerformAnswerCallAction ${event.callUUID}');
-        __callKeep.startCall(event.callUUID, callerName, callerName);
-
-        Timer(const Duration(seconds: 1), () {
-          print('[setCurrentCallActive] $callUUID, callerName: $callerName');
-          __callKeep.setCurrentCallActive(callUUID);
-        });
-        //_callKeep.endCall(event.callUUID);
-      });
-
-      __callKeep.on(CallKeepPerformEndCallAction(),
-          (CallKeepPerformEndCallAction event) {
-        print(
-            'backgroundMessage: CallKeepPerformEndCallAction ${event.callUUID}');
-      });
-
-      if (!__callKeepInited) {
-        final callSetup = <String, dynamic>{
-          'ios': {
-            'appName': 'Fusion Mobile',
-          },
-          'android': {
-            'alertTitle': 'Permissions required',
-            'alertDescription':
-                'This application needs to access your phone accounts',
-            'cancelButton': 'Cancel',
-            'okButton': 'ok',
-            'foregroundService': {
-              'channelId': 'net.fusioncomm.flutter_app',
-              'channelName': 'Foreground service for my app',
-              'notificationTitle': 'My app is running on background',
-              'notificationIcon':
-                  'Path to the resource icon of the notification',
-            },
-          },
-        };
-
-        __callKeep.setup(null, callSetup);
-        __callKeepInited = true;
-      }*/
-
-    //   print('backgroundMessage: displayIncomingCall ($callerName)');
-    //  __callKeep.displayIncomingCall(callUUID, callerName,
-    //      localizedCallerName: callerName, hasVideo: false);
-    //    __callKeep.backToForeground();
-
-    //  final SendPort send = IsolateNameServer.lookupPortByName('fusion_port');
-    //  send.send(true);
-
-    // NavigationService.pushVideoView();
-
-    // }
   }
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // if (Platform.isAndroid) {
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(backgroundMessageHandler); // }
-  //else {
-//     Firebase.initializeApp();
-//  }
+
   registerNotifications();
 
   /*await SentryFlutter.init(
@@ -249,26 +146,6 @@ class MyApp extends StatelessWidget {
   bool _listenerHasBeenSetup = false;
 
   _setupListener() async {
-    /*ReceivePort _port = ReceivePort();
-    IsolateNameServer.registerPortWithName(
-        _port.sendPort, 'fusion_port');
-    _port.listen((dynamic data) {
-      print("portstuff");
-      print(data);
-      NavigationService.pushVideoView();
-      _softphone.backToForeground();
-    });
-    print("willcheck");
-    if (LocalPlatform().isAndroid) {
-      print("postintent");
-      AndroidIntent intent = AndroidIntent(
-        action: 'action_manage_overlay_permission_request_code',
-        data: '',
-        arguments: {},
-      );
-      print(intent);
-      await intent.launch();
-    }*/
   }
 
   // This widget is the root of your application.

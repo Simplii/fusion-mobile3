@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="net.fusioncomm.flutter_app">
+    package="net.fusioncomm.android">
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
@@ -17,6 +17,7 @@
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
 
     <!-- These require runtime permissions on M -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -33,7 +34,7 @@
 
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="flutter_app"
+        android:label="fusion"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
@@ -80,19 +81,18 @@
         <!--<action android:name="android.telecom.ConnectionService" />-->
         <!--</intent-filter>-->
         <!--</service>-->
-<!--        <service android:name="net.fusioncomm.flutter_app.FlutterMessagingService">-->
+<!--        <service android:name="net.fusioncomm.android.FlutterMessagingService">-->
 <!--            <intent-filter>-->
 <!--                <action android:name="com.google.firebase.MESSAGING_EVENT" />-->
 <!--            </intent-filter>-->
 <!--        </service>-->
-        <service
-            android:name="io.wazo.callkeep.VoiceConnectionService"
-            android:foregroundServiceType="camera|microphone"
-            android:label="Wazo"
-            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE">
-            <intent-filter>
-                <action android:name="android.telecom.ConnectionService" />
-            </intent-filter>
+       <service android:name="io.wazo.callkeep.VoiceConnectionService"
+          android:label="Wazo"
+          android:foregroundServiceType="camera|microphone"
+          android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE">
+          <intent-filter>
+              <action android:name="android.telecom.ConnectionService" />
+          </intent-filter>
         </service>
     </application>
 </manifest>
