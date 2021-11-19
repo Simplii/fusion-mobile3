@@ -276,13 +276,16 @@ class _MyHomePageState extends State<MyHomePage> {
     print("autologcheck");
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
       String username = prefs.getString("username");
-      String domain = prefs.getString("domain");
+      String domain = username.split('@')[1];
       String sub_login = prefs.getString("sub_login");
       String aor = prefs.getString("aor");
       String auth_key = prefs.getString("auth_key");
 
       if (auth_key != null && auth_key != "") {
         print("isautologin");
+        print(username);
+        print(domain);
+        print(auth_key);
         fusionConnection.autoLogin(username, domain);
         setState(() {
           _sub_login = sub_login;

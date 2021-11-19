@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart' as Aps;
 import 'package:callkeep/callkeep.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -38,9 +39,16 @@ class Softphone implements SipUaHelperListener {
   Map<String, int> _tempUUIDs = {};
   final FusionConnection _fusionConnection;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  AudioPlayer outboundRingtone = AudioPlayer();
-  AudioPlayer inboundRingtone = AudioPlayer();
   bool _savedOutput = false;
+  Aps.AudioPlayer _playingAudio;
+
+  final Aps.AudioCache _audioCache = Aps.AudioCache(
+    fixedPlayer: Aps.AudioPlayer()..setReleaseMode(Aps.ReleaseMode.LOOP),
+  );
+  final _outboundAudioPath = "audio/outbound.mp3";
+  final _inboundAudioPath = "audio/inbound.mp3";
+  Aps.AudioPlayer _outboundPlayer;
+  Aps.AudioPlayer _inboundPlayer;
 
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
@@ -49,11 +57,40 @@ class Softphone implements SipUaHelperListener {
       _telecom = MethodChannel('net.fusioncomm.android/telecom');
     setup();
 
-    outboundRingtone.setAsset("assets/audio/outbound.mp3");
-    outboundRingtone.setLoopMode(LoopMode.one);
+    _audioCache.load(_outboundAudioPath);
+    _audioCache.load(_inboundAudioPath);
+  }
 
-    inboundRingtone.setAsset("assets/audio/inbound.mp3");
-    inboundRingtone.setLoopMode(LoopMode.one);
+  _playAudio(String path) {
+    print("playingaudio:" + path);
+    Aps.AudioCache cache = Aps.AudioCache();
+    if (path == _outboundAudioPath) {
+      cache.loop(_outboundAudioPath)
+        .then((Aps.AudioPlayer playing) {
+          _outboundPlayer = playing;
+          _outboundPlayer.earpieceOrSpeakersToggle();
+        });
+    }
+    else if (path == _inboundAudioPath) {
+      cache.loop(_inboundAudioPath)
+        .then((Aps.AudioPlayer playing) {
+          _inboundPlayer = playing;
+        });
+    }
+  }
+
+  stopOutbound() {
+    print("stopoutboundplaying");
+    if (_outboundPlayer != null) {
+      _outboundPlayer.stop();
+    }
+  }
+
+  stopInbound() {
+    print("stopinboundplaying");
+    if (_inboundPlayer != null) {
+      _inboundPlayer.stop();
+    }
   }
 
   setContext(BuildContext context) {
@@ -109,7 +146,7 @@ class Softphone implements SipUaHelperListener {
       'android': {
         'alertTitle': 'Permissions required',
         'alertDescription':
-        'This application needs to access your phone accounts',
+            'This application needs to access your phone accounts',
         'cancelButton': 'Cancel',
         'okButton': 'ok',
         'foregroundService': {
@@ -322,7 +359,8 @@ class Softphone implements SipUaHelperListener {
     MediaStream mediaStream;
     mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
 
-    outboundRingtone.play();
+    _playAudio(_outboundAudioPath);
+    print("playoutbound");
 
     return helper.call(destination, voiceonly: true, mediaStream: mediaStream);
   }
@@ -619,8 +657,7 @@ class Softphone implements SipUaHelperListener {
 
     if (calls.length > 0) {
       makeActiveCall(calls[0]);
-    }
-    else {
+    } else {
       setCallOutput(call, "phone");
     }
 
@@ -705,17 +742,17 @@ class Softphone implements SipUaHelperListener {
     print(call);
     if (!_callIsAdded(call)) {
       if (Platform.isAndroid) {
-        _callKeep.startCall(
-            _uuidFor(call), call.remote_identity, call.remote_display_name);
+/*        _callKeep.startCall(
+            _uuidFor(call), call.remote_identity, call.remote_display_name);*/
       }
       calls.add(call);
       _linkUuidFor(call);
       if (activeCall == null) makeActiveCall(call);
 
-      if (call.direction == "INCOMING")
-        inboundRingtone.play();
-      else
-        outboundRingtone.play();
+      if (call.direction == "INCOMING") {
+        // inboundRingtone.play();
+        _playAudio(_inboundAudioPath);
+      }
 
       if (Platform.isAndroid) {
         final bool hasPhoneAccount = await _callKeep.hasPhoneAccount();
@@ -754,8 +791,8 @@ class Softphone implements SipUaHelperListener {
 
       _setCallDataValue(call.id, "startTime", DateTime.now());
       if (Platform.isAndroid) {
-        _callKeep.displayIncomingCall(_uuidFor(call), call.remote_identity,
-            handleType: 'number', hasVideo: false);
+        //_callKeep.displayIncomingCall(_uuidFor(call), call.remote_identity,
+//            handleType: 'number', hasVideo: false);
       }
     }
   }
@@ -989,13 +1026,13 @@ class Softphone implements SipUaHelperListener {
         _handleStreams(callState);
         break;
       case CallStateEnum.ENDED:
-        outboundRingtone.stop();
-        inboundRingtone.stop();
+        stopOutbound();
+        stopInbound();
         _removeCall(call);
         break;
       case CallStateEnum.FAILED:
-        outboundRingtone.stop();
-        inboundRingtone.stop();
+        stopOutbound();
+        stopInbound();
 
         _removeCall(call);
         break;
@@ -1012,20 +1049,21 @@ class Softphone implements SipUaHelperListener {
         }
         break;
       case CallStateEnum.CONNECTING:
-        print("playaudio");
+        // print("playaudio");
+        //  inboundRingtone.play();
         break;
       case CallStateEnum.PROGRESS:
-        print("playoutbound");
+        //print("playoutbound");
+        //outboundRingtone.play();
         break;
       case CallStateEnum.ACCEPTED:
-        outboundRingtone.stop();
-        inboundRingtone.stop();
         setCallOutput(call, getCallOutput(call));
         break;
       case CallStateEnum.CONFIRMED:
+        print("confirmed");
+        stopOutbound();
+        stopInbound();
         setCallOutput(call, getCallOutput(call));
-        outboundRingtone.stop();
-        inboundRingtone.stop();
         _setCallDataValue(call.id, "answerTime", DateTime.now());
         if (!isIncoming(call)) {
           print("_call connecting out going" + _uuidFor(call));
