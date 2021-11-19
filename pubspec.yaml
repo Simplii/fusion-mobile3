@@ -31,7 +31,9 @@ dependencies:
   websocket_manager:
   flutter_gravatar: any
   awesome_notifications:
-  sip_ua: ^0.3.7
+  sip_ua:
+    git:
+      url: "https://github.com/davidkarn/dart-sip-ua.git"
   http: ^0.13.3
   keyboard_attachable:
   web_socket_channel: ^2.1.0
@@ -58,7 +60,8 @@ dependencies:
   all_sensors:
   wakelock:
   callkeep:
-    path: ../callkeep
+    git:
+      url: "https://github.com/davidkarn/callkeep.git"
 
 dev_dependencies:
   flutter_test:
