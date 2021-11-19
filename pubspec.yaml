@@ -51,7 +51,7 @@ dependencies:
   just_audio:
   dotted_border:
   sentry_flutter:
-
+  audioplayers:
   ringtone_player:
   cookie_jar:
   shared_preferences:
