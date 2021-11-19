@@ -122,6 +122,7 @@ class FusionConnection {
           });
           _username = '';
           _password = '';
+          _softphone.close();
           _onLogOut();
           _cookies.deleteAll();
         });
