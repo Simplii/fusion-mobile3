@@ -199,6 +199,11 @@ class _MyHomePageState extends State<MyHomePage> {
     print("logging out");
     Navigator.of(context).popUntil((route) => route.isFirst);
     this.setState(() {
+      _isRegistering = false;
+      _sub_login = "";
+      _aor = "";
+      _auth_key = "";
+      _callInProgress = false;
       _logged_in = false;
     });
   }

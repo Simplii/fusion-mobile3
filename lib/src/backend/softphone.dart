@@ -61,6 +61,14 @@ class Softphone implements SipUaHelperListener {
     _audioCache.load(_inboundAudioPath);
   }
 
+  close() {
+    try {
+      helper.unregister(true);
+      helper.stop();
+      helper.terminateSessions({}); }
+    catch (e) { print("error closing"); }
+  }
+
   _playAudio(String path) {
     print("playingaudio:" + path);
     Aps.AudioCache cache = Aps.AudioCache();
