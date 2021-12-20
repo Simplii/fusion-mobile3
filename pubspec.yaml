@@ -57,7 +57,6 @@ dependencies:
   cookie_jar:
   shared_preferences:
   all_sensors:
-  wakelock:
   callkeep:
     git:
       url: "https://github.com/davidkarn/callkeep.git"

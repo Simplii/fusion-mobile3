@@ -3,7 +3,9 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:all_sensors/all_sensors.dart';
 import 'package:callkeep/callkeep.dart';
+import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -112,6 +114,10 @@ Future<void> main() async {
         'https://91be6ab841f64100a3698952bbc577c2@o68456.ingest.sentry.io/6019626',
     appRunner: () => runApp(MaterialApp(home: MyApp())),
   );*/
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown
+  ]);
   runApp(MaterialApp(home: MyApp()));
 }
 
@@ -194,6 +200,9 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isRegistering = false;
   bool _logged_in = false;
   bool _callInProgress = false;
+  bool _isInProximity;
+  bool _isProximityListening = false;
+  StreamSubscription<ProximityEvent> _proximitySub;
 
   _logOut() {
     print("logging out");
@@ -219,6 +228,17 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {});
     });
     _autoLogin();
+
+/*
+    proximityEvents.listen((ProximityEvent event) {
+      print("isinproximity");
+      setState(() {
+        // event.getValue return true or false
+        setState(() {
+          _isInProximity = event.getValue();
+        });
+      });
+    });*/
 
     _setupFirebase();
   }
@@ -405,6 +425,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (softphone.activeCall != null && !_isProximityListening) {
+      _isProximityListening = true;
+      _proximitySub = proximityEvents.listen((ProximityEvent event) {
+        setState(() {
+          // event.getValue return true or false
+          _isInProximity = event.getValue();
+        });
+      });
+    } else if (softphone.activeCall == null && _isProximityListening) {
+      _proximitySub.cancel();
+    }
+
     if (!_logged_in) {
       return Container(
           decoration: BoxDecoration(
@@ -424,7 +456,8 @@ class _MyHomePageState extends State<MyHomePage> {
         decoration: BoxDecoration(
             image: DecorationImage(
                 image: AssetImage("assets/fill.jpg"), fit: BoxFit.cover)),
-        child: Scaffold(
+        child: Stack(
+            children: [Scaffold(
             drawer: Menu(fusionConnection),
             backgroundColor: bgBlend,
             body: SafeArea(
@@ -517,6 +550,15 @@ class _MyHomePageState extends State<MyHomePage> {
                       ],
                     )
                   ],
-                ))));
+                ))),
+              if (softphone.activeCall != null && _isInProximity)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.red
+                  ),
+                    width:   MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height
+                )
+            ]));
   }
 }
