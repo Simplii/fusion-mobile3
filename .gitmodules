@@ -1,0 +1,3 @@
+[submodule "dart-sip-ua"]
+	path = dart-sip-ua
+	url = https://github.com/flutter-webrtc/dart-sip-ua.git

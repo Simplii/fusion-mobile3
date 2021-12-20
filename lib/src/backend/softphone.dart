@@ -672,7 +672,7 @@ class Softphone implements SipUaHelperListener {
     _updateListeners();
     if (Platform.isAndroid) {
       String number = getCallerNumber(call);
-      flutterLocalNotificationsPlugin.cancel(int.parse(number.onlyNumbers()));
+      flutterLocalNotificationsPlugin.cancel((int.parse(number.onlyNumbers()) / 100).round());
     }
   }
 

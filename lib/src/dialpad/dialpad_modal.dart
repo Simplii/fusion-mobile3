@@ -196,6 +196,9 @@ class _DialPadModalState extends State<DialPadModal>
 
   Widget _callView() {
     CallpopInfo info = _softphone.getCallpopInfo(_activeCall.id);
+    if (info == null)
+      return Container();
+    else
     return Container(
       padding: EdgeInsets.only(left: 18, right: 18, bottom: 18),
       child: Row(
