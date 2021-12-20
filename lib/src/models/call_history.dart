@@ -58,10 +58,14 @@ class CallHistoryStore extends FusionStore<CallHistory> {
         {'limit': limit, 'offset': offset},
         callback: (List<dynamic> datas) {
           List<CallHistory> response = [];
-
+          print("recentcallsresponse");
+          print(datas);
           for (Map<String, dynamic> item in datas) {
             CallHistory obj = CallHistory(item);
             obj.coworker = fusionConnection.coworkers.lookupCoworker(obj.to);
+            print("obj");
+            print(obj.to);
+            print(obj.coworker);
             storeRecord(obj);
             response.add(obj);
           }

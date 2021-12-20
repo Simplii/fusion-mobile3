@@ -314,7 +314,7 @@ class Softphone implements SipUaHelperListener {
     UaSettings settings = UaSettings();
 
     settings.webSocketSettings.allowBadCertificate = true;
-    //settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
+   // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
     settings.webSocketUrl = "ws://164.90.154.80:8080";
     settings.uri = aor;
     settings.authorizationUser = login;
@@ -398,7 +398,7 @@ class Softphone implements SipUaHelperListener {
       if (c.id != call.id) {
         print("holding:" + c.id);
         setHold(c, true);
-        c.mute();
+        //c.mute();
         print("held:" + c.id);
       }
     }
@@ -476,7 +476,7 @@ class Softphone implements SipUaHelperListener {
     print("serttingonhold:" + setOnHold.toString());
     _setCallDataValue(call.id, "onHold", setOnHold);
     if (setOnHold) {
-      print("holding");
+      print("holding...,");
       helper.setVideo(true);
       call.hold();
       var future = new Future.delayed(const Duration(milliseconds: 2000), () {
