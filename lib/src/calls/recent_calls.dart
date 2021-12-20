@@ -257,6 +257,18 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   CallHistory get _historyItem => widget._historyItem;
   bool _expanded = false;
 
+  initState() {
+    super.initState();
+
+    if (_historyItem.coworker == null) {
+      var matchingCoworker = _fusionConnection.coworkers.lookupCoworker(_historyItem.to);
+      print("coworkersearch");
+      print(_historyItem.to);
+      print(matchingCoworker);
+      _historyItem.coworker = matchingCoworker;
+    }
+  }
+
   List<Contact> _contacts() {
     if (_historyItem.contact != null) {
       return [_historyItem.contact];
@@ -280,14 +292,14 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _name() {
-    if (_historyItem.contact != null) {
-      return _historyItem.contact.name;
-    } else if (_historyItem.crmContact != null) {
-      return _historyItem.crmContact.name;
-    } else if (_historyItem.coworker != null) {
+    if (_historyItem.coworker != null) {
       return _historyItem.coworker.firstName +
           ' ' +
           _historyItem.coworker.lastName;
+    } else if (_historyItem.contact != null) {
+      return _historyItem.contact.name;
+    } else if (_historyItem.crmContact != null) {
+      return _historyItem.crmContact.name;
     } else {
       return _historyItem.toDid;
     }

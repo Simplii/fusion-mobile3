@@ -2,7 +2,7 @@ import '../backend/fusion_connection.dart';
 import 'contact.dart';
 
 class UserSettings {
-  Map<String, dynamic> options = {};
+  Map<String, dynamic> options = {"avatars": {}};
   Map<String, dynamic> subscriber = {};
   final FusionConnection _fusionConnection;
 
