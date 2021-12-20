@@ -665,11 +665,9 @@ packages:
   sip_ua:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "0a3d12e7b62243afee2c78cb9b80c1c6ae6fc734"
-      url: "https://github.com/davidkarn/dart-sip-ua.git"
-    source: git
+      path: dart-sip-ua
+      relative: true
+    source: path
     version: "0.4.0"
   sky_engine:
     dependency: transitive

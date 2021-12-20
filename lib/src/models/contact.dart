@@ -152,7 +152,9 @@ class Contact extends FusionModel {
     this.updatedAt = CarbonDate(contactObject['updated_at']);
     this.crmUrl = contactObject['crm_url'];
     this.crmName = contactObject['crm_name'];
-    this.crmId = contactObject['crm_id'];
+    this.crmId = contactObject['crm_id'].runtimeType == int
+        ? contactObject['crm_id'].toString()
+        : contactObject['crm_id'];
   }
 
   Map<String, dynamic> serverPayload() {
