@@ -559,7 +559,8 @@ print("Expanded rendering");
                 borderRadius: BorderRadius.all(Radius.circular(16))),
             padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
             child: Stack(children: [
-              Column(
+              Container(
+                  child:Column(
                 children: [
                   Expanded(
                       child: _isSpinning()
@@ -572,7 +573,7 @@ print("Expanded rendering");
                                         SliverChildListDelegate(_historyList()))
                               ])))
                 ],
-              ),
+              )),
               Container(
                   alignment: Alignment.topLeft,
                   decoration: BoxDecoration(

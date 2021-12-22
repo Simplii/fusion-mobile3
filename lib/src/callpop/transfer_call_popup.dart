@@ -56,7 +56,7 @@ class _TransferCallpopState extends State<TransferCallPopup> {
               margin: EdgeInsets.only(top: 8),
               child: Center(child: popupHandle())),
           if (_query == "")
-            Container(
+            Expanded(child:Container(
                 child: ContactsList(_fusionConnection, widget._softphone,
                     "Recent Coworkers", "coworkers",
                     onSelect: (Contact contact, CrmContact crmContact) {
@@ -67,7 +67,7 @@ class _TransferCallpopState extends State<TransferCallPopup> {
                 if (crmContact.firstNumber() != null)
                   _doTransfer(crmContact.firstNumber());
               }
-            })),
+            }))),
           if (_query != "")
             Container(
                 child: ContactsSearchList(_fusionConnection, widget._softphone,
