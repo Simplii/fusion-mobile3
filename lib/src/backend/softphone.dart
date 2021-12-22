@@ -91,6 +91,7 @@ class Softphone implements SipUaHelperListener {
     print("stopoutboundplaying");
     if (_outboundPlayer != null) {
       _outboundPlayer.stop();
+      _outboundPlayer.release();
     }
   }
 
@@ -98,6 +99,7 @@ class Softphone implements SipUaHelperListener {
     print("stopinboundplaying");
     if (_inboundPlayer != null) {
       _inboundPlayer.stop();
+      _inboundPlayer.release();
     }
   }
 

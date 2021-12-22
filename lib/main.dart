@@ -124,28 +124,13 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   FusionConnection _fusionConnection;
   Softphone _softphone;
+  RemoteMessage _launchMessage;
 
   MyApp() {
     _fusionConnection = FusionConnection();
     _softphone = Softphone(_fusionConnection);
     _fusionConnection.setSoftphone(_softphone);
 
-    final connector = createPushConnector();
-    connector.configure(
-        onLaunch: _onLaunch, onResume: _onResume, onMessage: _onMessage);
-    _fusionConnection.setAPNSConnector(connector);
-  }
-
-  Future<void> _onLaunch(RemoteMessage m) {
-    print("onloaunch");
-  }
-
-  Future<void> _onResume(RemoteMessage m) {
-    print("onresume");
-  }
-
-  Future<void> _onMessage(RemoteMessage m) {
-    print("onmessage");
   }
 
   bool _listenerHasBeenSetup = false;
@@ -176,11 +161,12 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title, this.softphone, this.fusionConnection})
+  MyHomePage({Key key, this.title, this.softphone, this.fusionConnection, this.launchMessage})
       : super(key: key);
   final Softphone softphone;
   final FusionConnection fusionConnection;
   final String title;
+  final RemoteMessage launchMessage;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -197,6 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String receivedMsg;
   List<Call> calls;
   Call activeCall;
+  RemoteMessage _launchMessage;
   bool _isRegistering = false;
   bool _logged_in = false;
   bool _callInProgress = false;
@@ -229,24 +216,36 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     _autoLogin();
 
-/*
-    proximityEvents.listen((ProximityEvent event) {
-      print("isinproximity");
-      setState(() {
-        // event.getValue return true or false
-        setState(() {
-          _isInProximity = event.getValue();
-        });
-      });
-    });*/
+    final connector = createPushConnector();
+    connector.configure(
+        onLaunch: _onLaunch, onResume: _onResume, onMessage: _onMessage);
+    fusionConnection.setAPNSConnector(connector);
 
     _setupFirebase();
+  }
+
+  Future<void> _onLaunch(RemoteMessage m) {
+    print("onloaunch");
+    _launchMessage = m;
+  }
+
+  Future<void> _onResume(RemoteMessage m) {
+    print("onresume");
+  }
+
+  Future<void> _onMessage(RemoteMessage m) {
+    print("onmessage");
   }
 
   checkForInitialMessage() async {
     await Firebase.initializeApp();
     RemoteMessage initialMessage =
         await FirebaseMessaging.instance.getInitialMessage();
+
+    if (initialMessage == null && _launchMessage != null) {
+      initialMessage = _launchMessage;
+      _launchMessage = null;
+    }
 
     if (initialMessage != null) {
       checkForIMNotification(initialMessage.data);
