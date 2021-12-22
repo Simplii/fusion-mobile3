@@ -17,7 +17,7 @@ class FusionSIPUAHelper extends SIPUAHelper {
     //if (_settingVideo == true) {
     if (Platform.isIOS) {
       ((options['rtcOfferConstraints'] as Map<String, Object>)['mandatory']
-      as Map<String, dynamic>)['OfferToReceiveVideo'] = true;
+      as Map<String, dynamic>)['OfferToReceiveVideo'] = false;
     }
     //}
     print("builtoptions");
