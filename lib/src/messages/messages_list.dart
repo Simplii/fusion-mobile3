@@ -42,7 +42,8 @@ class _MessagesTabState extends State<MessagesTab> {
       _loaded = true;
     }
     _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
-      this.setState(() {
+      if (!mounted) return;
+        this.setState(() {
         _loaded = true;
       });
     });
@@ -55,6 +56,7 @@ class _MessagesTabState extends State<MessagesTab> {
     children = [
       SearchMessagesView(_fusionConnection, (List<SMSConversation> convos,
           List<CrmContact> crmContacts, List<Contact> contacts) {
+        if (!mounted) return;
         this.setState(() {
           showingResults = true;
           _convos = convos;
@@ -62,6 +64,7 @@ class _MessagesTabState extends State<MessagesTab> {
           _contacts = contacts;
         });
       }, () {
+        if (!mounted) return;
         this.setState(() {
           showingResults = false;
         });
@@ -115,7 +118,8 @@ class _MessagesListState extends State<MessagesList> {
     _fusionConnection.conversations
         .getConversations(_selectedGroupId, 100, _page * 100,
             (List<SMSConversation> convos, bool fromServer) {
-      this.setState(() {
+              if (!mounted) return;
+         this.setState(() {
         if (fromServer != null && fromServer) {
           lookupState = 2;
         }

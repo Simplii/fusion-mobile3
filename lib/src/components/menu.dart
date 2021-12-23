@@ -31,6 +31,14 @@ class _MenuState extends State<Menu> {
 
   _header() {
     UserSettings settings = _fusionConnection.settings;
+    print("thesettings");
+    print(settings.subscriber);
+    var callid = settings.subscriber.containsKey('callid_nmbr')
+        ? settings.subscriber['callid_nmbr']
+        : '';
+    var user = settings.subscriber.containsKey('user')
+        ? settings.subscriber['user']
+        : '';
     return Container(
       alignment: Alignment.centerLeft,
       decoration: BoxDecoration(color: bgBlend),
@@ -60,8 +68,8 @@ class _MenuState extends State<Menu> {
             alignment: Alignment.centerLeft,
             margin: EdgeInsets.only(top: 0, bottom: 12),
             child: Text(
-                ("" + settings.subscriber['callid_nmbr'] ).formatPhone()
-                  + " " + mDash + " x" + settings.subscriber['user'],
+                ("" + callid ).formatPhone()
+                  + " " + mDash + " x" + user,
                 style: TextStyle(
                     color: translucentWhite(0.6),
                     fontSize: 14,

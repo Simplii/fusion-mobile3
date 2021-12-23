@@ -70,13 +70,15 @@ class CallpopInfoStore extends FusionStore<CallpopInfo> {
       List<CrmContact> leads = [];
       List<Contact> contacts = [];
 
-      for (Map<String, dynamic> obj in data['contacts']) {
-        contacts.add(Contact(obj));
-      }
+      if (data['contacts'] != null)
+        for (Map<String, dynamic> obj in data['contacts']) {
+          contacts.add(Contact(obj));
+        }
 
-      for (Map<String, dynamic> obj in data['leads']) {
-        leads.add(CrmContact(obj));
-      }
+      if (data['leads'] != null)
+        for (Map<String, dynamic> obj in data['leads']) {
+          leads.add(CrmContact(obj));
+        }
 
       CallpopInfo info = CallpopInfo({
         'phone_number': phoneNumber,

@@ -258,7 +258,7 @@ class _MyHomePageState extends State<MyHomePage> {
           (contacts, fromServer) {
         if (fromServer) {
           fusionConnection.integratedContacts.search(
-              data['from_number'], 10, 0, (crmContacts, fromServer) {
+              data['from_number'], 10, 0, (crmContacts, fromServer, hasMore) {
             if (fromServer) {
               contacts.addAll(crmContacts);
               showModalBottomSheet(

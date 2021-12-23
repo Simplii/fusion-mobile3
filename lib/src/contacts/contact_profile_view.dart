@@ -61,7 +61,8 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             .toList()
             .cast<String>(), (List<TimelineItem> items, bool fromServer) {
       print("got itemstimeline" + items.toString());
-      this.setState(() {
+      if (!mounted) return;
+        this.setState(() {
         if (fromServer) {
           lookupState = 2;
         }

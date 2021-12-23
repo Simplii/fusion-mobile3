@@ -169,6 +169,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       _fusionConnection.contacts.search(_query, 100, _page * 100,
           (List<Contact> contacts, bool fromServer) {
         if (thisLookup != _lookedUpQuery) return;
+        if (!mounted) return;
+
         this.setState(() {
           if (fromServer) {
             lookupState = 2;
@@ -194,13 +196,16 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     } else if (_typeFilter == 'Integrated Contacts') {
       if (_page == -1) return;
       _fusionConnection.integratedContacts.search(_query, 100, _page * 100,
-          (List<Contact> contacts, bool fromServer) {
+          (List<Contact> contacts, bool fromServer, bool hasMore) {
         if (thisLookup != _lookedUpQuery) return;
+        if (!mounted) return;
+
         this.setState(() {
           if (fromServer) {
             lookupState = 2;
           }
-
+          print("gotcrmcontactsresponse");
+          print(contacts.length);
           if (_page == 0) {
             _contacts = contacts;
           } else {
@@ -214,7 +219,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             _contacts = list.values.toList().cast<Contact>();
           }
 
-          if (contacts.length < 100 && fromServer) {
+          if (hasMore == false) {
             _page = -1;
           }
 
@@ -235,6 +240,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                 })
                 .toList()
                 .cast<String>(), (List<Coworker> coworkers) {
+          if (!mounted) return;
+
           this.setState(() {
             _contacts = coworkers
                 .map((Coworker c) {
@@ -312,10 +319,17 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
   _sortList(List<Contact> list) {
     _contacts.sort((a, b) {
-      return (a.firstName + a.lastName)
-          .trim()
-          .toLowerCase()
-          .compareTo((b.firstName + b.lastName).trim().toLowerCase());
+      if (_typeFilter == 'Integrated Contacts')
+        return (a.name)
+            .trim()
+            .toLowerCase()
+            .compareTo((b.name).trim().toLowerCase());
+
+      else
+        return (a.firstName + a.lastName)
+            .trim()
+            .toLowerCase()
+            .compareTo((b.firstName + b.lastName).trim().toLowerCase());
     });
   }
 
@@ -335,7 +349,10 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   }
 
   _letterFor(Contact item) {
-    return (item.firstName + item.lastName).trim()[0].toLowerCase();
+    if (_typeFilter == 'Integrated Contacts')
+      return (item.name).trim()[0].toLowerCase();
+    else
+      return (item.firstName + item.lastName).trim()[0].toLowerCase();
   }
 
   _spinner() {
@@ -417,6 +434,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                               : translucentWhite(0.0)
                         ]),
                   ),
+                                    width: MediaQuery.of(context).size.width,
+
                   padding: EdgeInsets.only(
                       left: 12, top: _embedded ? 0 : 12, bottom: 32),
                   child: Text(
@@ -481,6 +500,8 @@ class _ContactsListState extends State<ContactsList> {
 
     _subscriptionKey =
         _fusionConnection.coworkers.subscribe(null, (List<Coworker> coworkers) {
+          if (!mounted) return;
+
       this.setState(() {
         for (Coworker c in coworkers) {
           _coworkers[c.uid] = c;
@@ -490,6 +511,8 @@ class _ContactsListState extends State<ContactsList> {
 
     _fusionConnection.callHistory.getRecentHistory(300, 0,
         (List<CallHistory> history, bool fromServer) {
+          if (!mounted) return;
+
       this.setState(() {
         if (fromServer) {
           lookupState = 2;
@@ -585,6 +608,8 @@ print("Expanded rendering");
                           stops: [0.5, 1.0],
                           colors: [Colors.white, translucentWhite(0.0)])),
                   height: 60,
+                  width: MediaQuery.of(context).size.width,
+
                   padding: EdgeInsets.only(
                     bottom: 24,
                     top: 12,
