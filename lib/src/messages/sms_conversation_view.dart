@@ -79,7 +79,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       _loaded = true;
     }
     _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
-      this.setState(() {
+      if (!mounted) return;
+        this.setState(() {
         _loaded = true;
       });
     });
@@ -595,7 +596,8 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     _clearSubscription();
     _subscriptionKey = _fusionConnection.messages.subscribe(_conversation,
         (List<SMSMessage> messages) {
-      this.setState(() {
+          if (!mounted) return;
+        this.setState(() {
         for (SMSMessage m in messages) {
           _addMessage(m);
         }
@@ -603,7 +605,8 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     });
     _fusionConnection.messages.getMessages(_conversation, 200, 0,
         (List<SMSMessage> messages, fromServer) {
-      this.setState(() {
+          if (!mounted) return;
+        this.setState(() {
         if (fromServer) lookupState = 2;
         print("gotfromserver " +
             messages.length.toString() +
@@ -788,15 +791,16 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                             bottomLeft: Radius.circular(8),
                             bottomRight: Radius.circular(8)),
                         child: FittedBox(
-                            /*constraints: BoxConstraints(
-                                minHeight: 100,
-                                maxWidth: maxWidth,
-                                maxHeight: 600),
-                            decoration: BoxDecoration(
+                          child: Container(
+                            constraints: BoxConstraints(
+                              minWidth: 1,
+                              minHeight: 1,
+                            ),
+                            /*decoration: BoxDecoration(
                                 image: DecorationImage(
                                     fit: BoxFit.fitWidth,
                                     image: */
-                            child: Image.network(_message.message))))//))
+                            child: Image.network(_message.message)))))//))
                 : Container(
                     constraints: BoxConstraints(maxWidth: maxWidth),
                     margin: EdgeInsets.only(top: 2),

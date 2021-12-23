@@ -43,7 +43,10 @@ class TimelineItem extends FusionModel {
     else {
       callLog = CallLog();
       callLog.startTime = time;
-      callLog.endTime = DateTime.fromMillisecondsSinceEpoch(int.parse(obj['time_end'].toString()) * 1000);
+      if (obj['time_end'] != null)
+        callLog.endTime = DateTime.fromMillisecondsSinceEpoch(int.parse(obj['time_end'].toString()) * 1000);
+      else
+        callLog.endTime = time;
       callLog.duration = int.parse(obj['length']);
       callLog.type = obj['type'];
       callLog.from = obj['from'];

@@ -21,7 +21,7 @@ class ContactField extends FusionModel {
     type = type.toLowerCase();
     fieldLabel = obj['field_label'];
     fieldName = obj['field_name'];
-    crmFields = obj['crm_fields'];
+    crmFields = obj['crm_fields'] as List<Map<String, dynamic>>;
   }
 
   @override

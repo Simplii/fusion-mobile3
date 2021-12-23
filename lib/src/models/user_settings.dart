@@ -3,7 +3,7 @@ import 'contact.dart';
 
 class UserSettings {
   Map<String, dynamic> options = {"avatars": {}};
-  Map<String, dynamic> subscriber = {};
+  Map<String, dynamic> subscriber = {'callid_nmbr': '', 'user': ''};
   final FusionConnection _fusionConnection;
 
   UserSettings(this._fusionConnection);
@@ -59,7 +59,7 @@ class UserSettings {
         callback: (Map<String, dynamic> data) {
           print("subscriberresponse");
           print(data);
-          if (data.containsKey('subscriber')) {
+          if (data.containsKey('subscriber') && data['subscriber'].containsKey('user')) {
             subscriber = data['subscriber'];
             if (subscriber['callid_nmbr'] == null)
               subscriber['callid_nmbr'] = '';

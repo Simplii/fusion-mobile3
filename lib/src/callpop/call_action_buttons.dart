@@ -82,7 +82,7 @@ class _CallActionButtonsState extends State<CallActionButtons> {
                 title: 'Conf',
                 icon: Image.asset("assets/icons/call_view/conference.png",
                     width: 24, height: 24),
-                disabled: onHold || widget.isOnConference),
+                disabled: true), //onHold || widget.isOnConference),
           ],
         ),
         Row(

@@ -143,13 +143,16 @@ class _CallViewState extends State<CallView> {
   _onVidBtnPress() {}
 
   _onTextBtnPress() {
+    var callPopInfo = _softphone.getCallpopInfo(_activeCall.id);
     SMSConversationView.openConversation(
         context,
         _fusionConnection,
-        _softphone.getCallpopInfo(_activeCall.id).contacts,
-        _softphone.getCallpopInfo(_activeCall.id).crmContacts,
+        callPopInfo != null ? callPopInfo.contacts : [],
+        callPopInfo != null ? callPopInfo.crmContacts: [],
         _softphone,
-        _softphone.getCallpopInfo(_activeCall.id).phoneNumber);
+        callPopInfo != null
+            ? callPopInfo.phoneNumber
+            : _softphone.getCallerNumber(_softphone.activeCall));
   }
 
   _onAudioBtnPress() {

@@ -64,6 +64,7 @@ _spinner() {
     _lookupState = 1;
     _fusionConnection.parkLines
         .getParks((List<ParkLine> lines, bool fromServer) {
+      if (!mounted) return;
       setState(() {
         _parkLines = lines;
       });

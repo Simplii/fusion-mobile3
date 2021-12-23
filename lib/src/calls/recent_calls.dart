@@ -108,7 +108,8 @@ class _RecentCallsListState extends State<RecentCallsList> {
 
     _subscriptionKey =
         _fusionConnection.coworkers.subscribe(null, (List<Coworker> coworkers) {
-      this.setState(() {
+          if (!mounted) return;
+        this.setState(() {
         for (Coworker c in coworkers) {
           _coworkers[c.uid] = c;
         }
@@ -117,7 +118,8 @@ class _RecentCallsListState extends State<RecentCallsList> {
 
     _fusionConnection.callHistory.getRecentHistory(300, 0,
         (List<CallHistory> history, bool fromServer) {
-      this.setState(() {
+          if (!mounted) return;
+        this.setState(() {
         if (fromServer) {
           lookupState = 2;
         }
@@ -262,9 +264,6 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
 
     if (_historyItem.coworker == null) {
       var matchingCoworker = _fusionConnection.coworkers.lookupCoworker(_historyItem.to);
-      print("coworkersearch");
-      print(_historyItem.to);
-      print(matchingCoworker);
       _historyItem.coworker = matchingCoworker;
     }
   }
@@ -348,12 +347,17 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _openProfile() {
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => ContactProfileView(
-            _fusionConnection, _softphone, _historyItem.contact));
+    Contact contact = _historyItem.contact;
+    if (contact == null && _historyItem.coworker != null)
+      contact = _historyItem.coworker.toContact();
+
+    if (contact != null)
+      showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (context) => ContactProfileView(
+              _fusionConnection, _softphone, contact));
   }
 
   @override

@@ -11,7 +11,7 @@ class IntegratedContactsStore extends FusionStore<Contact> {
       : super(fusionConnection);
 
   search(
-      String query, int limit, int offset, Function(List<Contact>, bool) callback) {
+      String query, int limit, int offset, Function(List<Contact>, bool, bool) callback) {
     query = query.toLowerCase();
     List<Contact> matched = getRecords()
         .where((Contact c) {
@@ -22,7 +22,7 @@ class IntegratedContactsStore extends FusionStore<Contact> {
 
     if (matched.length > 0) {
       var future = new Future.delayed(const Duration(milliseconds: 10), () {
-        callback(matched, false);
+        callback(matched, false, true);
       });
     }
 
@@ -44,7 +44,9 @@ class IntegratedContactsStore extends FusionStore<Contact> {
         storeRecord(contact);
       });
 
-      callback(response, true);
+      bool hasMore = datas['agg']['count'] > (limit + offset);
+
+      callback(response, true, hasMore);
     });
   }
 }

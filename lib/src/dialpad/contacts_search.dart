@@ -52,13 +52,14 @@ class _ContactsSearchState extends State<ContactsSearch> {
 
     _fusionConnection.callHistory.getRecentHistory(300, 0,
             (List<CallHistory> history, bool fromServer) {
-          this.setState(() {
-            if (fromServer) {
-              lookupState = 2;
-            }
-            _history = history;
-          });
-        });
+              if (!mounted) return;
+              this.setState(() {
+                if (fromServer) {
+                  lookupState = 2;
+                }
+                _history = history;
+              });
+            });
   }
 
   _historyList() {
