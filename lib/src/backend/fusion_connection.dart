@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert' as convert;
 import 'dart:convert';
 import 'dart:core';
@@ -84,13 +85,21 @@ class FusionConnection {
     getDatabase();
   }
 
-  _getCookies({Function callback}) {
+  _getCookies({Function callback}) async {
     getApplicationDocumentsDirectory().then((directory) {
+      print("cookiesdir");
+      print(directory.path);
       _cookies = PersistCookieJar(
-          ignoreExpires: true, storage: FileStorage(directory.path));
+          persistSession: true,
+          ignoreExpires: true,
+          storage: FileStorage(directory.path));
+      print(_cookies);
+      print(_cookies.persistSession);
       if (callback != null) {
         callback();
       }
+    }).onError((er, err) {
+      callback();
     });
   }
 
@@ -199,11 +208,9 @@ class FusionConnection {
     }
   }
 
-  _cookieHeaders(url) async {
-    if (_cookies == null) {
-      _getCookies();
-      return [];
-    } else {
+  Future<Map<String, String>> _cookieHeaders(url) async {
+    Completer<Map<String, String>> c = new Completer<Map<String, String>>();
+    var runIt = () async {
       List<Cookie> cookies = await _cookies.loadForRequest(url);
       String cookiesHeader = "";
       Map<String, String> headers = {};
@@ -213,8 +220,15 @@ class FusionConnection {
       }
       print("cookeis header:" + cookiesHeader);
       headers['cookie'] = cookiesHeader;
-      return headers;
+      c.complete(headers);
+    };
+
+    if (_cookies == null) {
+      _getCookies(callback: runIt);
+    } else {
+      runIt();
     }
+    return c.future;
   }
 
   nsApiCall(String object, String action, Map<String, dynamic> data,
@@ -342,7 +356,9 @@ class FusionConnection {
 
       Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
-      _cookieHeaders(url).forEach((k, v) => request.headers[k] = v);
+      (await _cookieHeaders(url))
+          .forEach(
+              (k, v) => request.headers[k] = v);
 
       for (String key in data.keys) {
         request.fields[key] = data[key].toString();
