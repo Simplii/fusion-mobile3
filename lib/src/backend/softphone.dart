@@ -325,13 +325,16 @@ class Softphone implements SipUaHelperListener {
 
     settings.userAgent = 'Fusion Mobile - Dart';
     settings.dtmfMode = DtmfMode.RFC2833;
+    print("iceregistering");
+    print(_fusionConnection.settings.options);
+    settings.iceGatheringTimeout = 1000;
     settings.iceServers = [
-      {'url': 'stun:stun.l.google.com:19302'},
-      {
-        'urls': "turn:143.110.144.174",
-        'username': "fuser",
-        'credential': "fwebphoneuser"
-      }
+      {"urls": "stun:stun.l.google.com:19305"},
+      {"urls": "stun:stun.l.google.com:19302"},
+      {"urls": "stun:srvfusturn.fusioncomm.net"},
+      {"urls":"turn:srvfusturn.fusioncomm.net",
+        "username":"fuser",
+        "credential":"fpassword"}
     ];
 
     helper.start(settings);
