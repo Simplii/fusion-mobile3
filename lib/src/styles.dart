@@ -55,6 +55,7 @@ TextStyle headerTextStyle = TextStyle(
     color: coal, fontSize: 16, fontWeight: FontWeight.w700, height: 1.4);
 
 String mDash = "\u2014";
+String nDash = "\u2013";
 
 TextStyle subHeaderTextStyle = TextStyle(
     color: coal, fontSize: 12, height: 1.4, fontWeight: FontWeight.w400);

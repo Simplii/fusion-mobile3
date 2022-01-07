@@ -81,4 +81,15 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
   allDepartments() {
     return getRecords();
   }
+
+  SMSDepartment getDepartmentByPhoneNumber(number) {
+    List<SMSDepartment> departments = allDepartments();
+    print(number);
+    for (SMSDepartment dept in departments) {
+      print(dept.numbers);
+      if (dept.numbers.contains(number))
+        return dept;
+    }
+    return null;
+  }
 }
