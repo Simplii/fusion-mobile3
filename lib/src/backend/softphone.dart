@@ -473,7 +473,9 @@ class Softphone implements SipUaHelperListener {
   setSpeaker(bool useSpeaker) {
     _savedOutput = useSpeaker;
     print("set speaker:" + useSpeaker.toString());
-    _localStream.getAudioTracks()[0].enableSpeakerphone(useSpeaker);
+    if (_localStream != null) {
+      _localStream.getAudioTracks()[0].enableSpeakerphone(useSpeaker);
+    }
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
   }
 
