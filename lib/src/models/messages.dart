@@ -118,14 +118,6 @@ class SMSMessageSubscription {
   SMSMessageSubscription(this._conversation, this._callback);
 
   testMatches(SMSMessage message) {
-    print("subscription test" +
-        message.from +
-        " " +
-        message.to +
-        " / " +
-        _conversation.number +
-        " " +
-        _conversation.myNumber);
     return ((message.from == _conversation.number &&
             message.to == _conversation.myNumber) ||
         (message.to == _conversation.number &&
@@ -134,7 +126,7 @@ class SMSMessageSubscription {
 
   sendMatching(List<SMSMessage> items) {
     List<SMSMessage> list = [];
-    print("send matching" + items.toString());
+
     for (SMSMessage item in items) {
       if (testMatches(item)) {
         list.add(item);
@@ -194,7 +186,6 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
   }
 
   sendMediaMessage(XFile file, SMSConversation conversation) async {
-    print("sendmediamessage");
     fusionConnection.apiV1Multipart("POST", "/chat/send_sms", {
       'number': conversation.myNumber,
       'schedule': 'false',
@@ -212,7 +203,7 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
           filename: basename(file.path),
           contentType: MediaType.parse(lookupMimeType(file.path)))
     ], callback: (Map<String, dynamic> data) {
-      print("gotresponse" + data.toString());
+
       SMSMessage message = SMSMessage(data);
       storeRecord(message);
     });
@@ -250,10 +241,6 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
     List<Contact> matchedContacts = [];
 
     Function() _sendFromPersisted = () {
-      print("sending persisted" +
-          matchedConversations.toString() +
-          " " +
-          matchedContacts.toString());
       callback(matchedConversations, matchedCrmContacts, matchedContacts);
     };
 
@@ -321,7 +308,6 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
         }
       }
 
-      print("calling callback " + fullConversations.toString());
       callback(fullConversations, crmContacts.values.toList(),
           contacts.values.toList());
     });
@@ -359,7 +345,7 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
       'group_id': -2
     }, callback: (Map<String, dynamic> data) {
       List<SMSMessage> messages = [];
-      print(data);
+
       for (Map<String, dynamic> item in data['items']) {
         SMSMessage message = SMSMessage(item);
         storeRecord(message);

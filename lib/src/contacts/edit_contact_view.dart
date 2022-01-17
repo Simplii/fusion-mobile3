@@ -47,7 +47,6 @@ class _EditContactViewState extends State<EditContactView> {
   }
 
   _startEditingIfNotStared() {
-    print(_edited);
     if (_edited == null) {
       setState(() {
         _edited = Contact.copy(_contact);

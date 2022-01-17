@@ -39,7 +39,6 @@ class _TransferCallpopState extends State<TransferCallPopup> {
   String _query = "";
 
   _doTransfer(String to) {
-    print("to " + to);
     widget._onTransfer(to, "blind");
   }
 
@@ -83,7 +82,6 @@ class _TransferCallpopState extends State<TransferCallPopup> {
             })),
           DialPad(_fusionConnection, widget._softphone,
               onPlaceCall: (String number) {
-                print("doing xfer" + number);
                   _doTransfer(number);
               },
               onQueryChange: (String query) {

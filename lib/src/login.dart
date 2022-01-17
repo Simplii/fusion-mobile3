@@ -134,15 +134,6 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     List<Widget> children = [
-      /*Row(children: [
-        Expanded(
-            child: Container(
-                margin: EdgeInsets.only(top: 8, bottom: 18),
-                child: Text("Sign in to your account",
-                    style: TextStyle(
-                        color: ash,
-                        fontSize: 14))))
-      ]),*/
       Container(margin: EdgeInsets.only(top:12, bottom: 6),
         alignment: Alignment.centerLeft,
         child: Text(

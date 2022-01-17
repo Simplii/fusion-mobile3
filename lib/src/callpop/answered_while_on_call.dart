@@ -59,7 +59,6 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
       if (!isMerged)
         GestureDetector(
             onTap: () {
-              print("merging");
               softphone.mergeCalls(activeCall, call);
             },
             child: Container(

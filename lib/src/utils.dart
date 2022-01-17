@@ -1,5 +1,34 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:uuid/uuid.dart';
+
+uuidFromString(String str) {
+  if (str.length == 0)
+    return Uuid().v4();
+
+  else {
+    List<int> numbers = [];
+    int strIndex = 0;
+
+    for (var i = 0; i < 16; i++) {
+      if (strIndex > str.length)
+        strIndex = 0;
+
+      numbers.add(str.codeUnitAt(strIndex));
+      strIndex += 1;
+    }
+
+    return Uuid().v4(options: {'random': numbers});
+  }
+}
+
+intIdForString(String str) {
+  int id = 1;
+  for (var i = 0; i < str.length; i++) {
+    id += i * 256 + str.codeUnitAt(i);
+  }
+  return id;
+}
 
 extension durations on int {
   String printDuration() {

@@ -87,14 +87,10 @@ class FusionConnection {
 
   _getCookies({Function callback}) async {
     getApplicationDocumentsDirectory().then((directory) {
-      print("cookiesdir");
-      print(directory.path);
       _cookies = PersistCookieJar(
           persistSession: true,
           ignoreExpires: true,
           storage: FileStorage(directory.path));
-      print(_cookies);
-      print(_cookies.persistSession);
       if (callback != null) {
         callback();
       }
@@ -182,10 +178,8 @@ class FusionConnection {
           );
           '''));
       }).then((Database db) {
-        print("gotdatabase" + db.toString());
         this.db = db;
       }).catchError((error) {
-        print("databasegettingerror" + error.toString());
       });
     });
   }
@@ -196,12 +190,9 @@ class FusionConnection {
   }
 
   _saveCookie(Response response) {
-    print("savecookie:"+ response.headers.toString());
     if (response.headers.containsKey('set-cookie')) {
       List<String> cookieStrings = response.headers['set-cookie'].split("HttpOnly,");
-      print("cookies:" + response.headers['set-cookie']);
       for (String cookieString in cookieStrings) {
-        print("cookiestr:" + cookieString);
         Cookie cookie = Cookie.fromSetCookieValue(cookieString);
         _cookies.saveFromResponse(response.request.url, [cookie]);
       }
@@ -218,7 +209,6 @@ class FusionConnection {
       for (Cookie c in cookies) {
         cookiesHeader += c.name + "=" + c.value + "; ";
       }
-      print("cookeis header:" + cookiesHeader);
       headers['cookie'] = cookiesHeader;
       c.complete(headers);
     };
@@ -238,8 +228,7 @@ class FusionConnection {
       data['action'] = action;
       data['object'] = object;
       data['username'] = await _getUsername();
-      //data['password'] = _password;
-      print("cookie");
+
       Uri url = Uri.parse(
           'https://fusioncomm.net/api/v1/clients/api_request?username=' +
               data['username']);
@@ -254,7 +243,7 @@ class FusionConnection {
         jsonResponse =
             convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
       } catch (e) {}
-      print("apicall:" + data.toString() + ":" + jsonResponse.toString());
+
       client.close();
       callback(jsonResponse);
     } finally {
@@ -266,7 +255,6 @@ class FusionConnection {
       {Function callback}) async {
     var client = http.Client();
     try {
-      print("apiv1:" + route + ":" + data.toString());
       data['username'] = await _getUsername();
 
       Function fn = {
@@ -293,11 +281,7 @@ class FusionConnection {
       }
       args[#headers] = headers;
 
-      print(url);
-      print(args);
-      print(headers.toString());
       var uriResponse = await Function.apply(fn, [url], args);
-      print(uriResponse.body);
       _saveCookie(uriResponse);
       var jsonResponse = convert.jsonDecode(uriResponse.body);
       client.close();
@@ -337,7 +321,6 @@ class FusionConnection {
       }
 
       args[#headers] = headers;
-      print(url);
       var uriResponse = await Function.apply(fn, [url], args);
       _saveCookie(uriResponse);
       var jsonResponse = convert.jsonDecode(uriResponse.body);
@@ -470,7 +453,6 @@ class FusionConnection {
     int messageNum = 0;
     _socket = WebsocketManager("wss://fusioncomm.net:8443/");
     _socket.onClose((dynamic message) {
-      print('close');
     });
     _socket.onMessage((dynamic messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
