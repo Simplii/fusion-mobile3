@@ -64,7 +64,6 @@ registerNotifications() {
       macOS: initializationSettingsMacOS);
   flutterLocalNotificationsPlugin.initialize(initializationSettings,
       onSelectNotification: (String s) {
-    print("gotonoticication" + s);
   });
   return flutterLocalNotificationsPlugin;
 }
@@ -74,16 +73,12 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
   print('backgroundMessage: message => ${message.data.toString()}');
 
   var data = message.data;
-  print('thedata');
-  print(data);
 
   if (data.containsKey("fusion_call") && data['fusion_call'] == "true") {
     var callerName = data['caller_name'] as String;
     var callerNumber = data['caller_number'] as String;
-    final callUUID = Uuid().v4();
-    String callerNums = data['call_id'] as String;
-    callerNums = callerNums.onlyNumbers();
-    var id = int.parse(callerNums.substring(callerNums.length - 9));
+    final callUUID = uuidFromString(data['call_id']);
+    var id = intIdForString(data['call_id']);
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
         registerNotifications();
 
@@ -193,7 +188,6 @@ class _MyHomePageState extends State<MyHomePage> {
   StreamSubscription<ProximityEvent> _proximitySub;
 
   _logOut() {
-    print("logging out");
     Navigator.of(context).popUntil((route) => route.isFirst);
     this.setState(() {
       _isRegistering = false;
@@ -211,8 +205,6 @@ class _MyHomePageState extends State<MyHomePage> {
     receivedMsg = "";
     fusionConnection.onLogOut(_logOut);
     softphone.onUpdate(() {
-      print("_call_ updated");
-      print(softphone.calls);
       setState(() {});
     });
     _autoLogin();
@@ -226,16 +218,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _onLaunch(RemoteMessage m) {
-    print("onloaunch");
     _launchMessage = m;
   }
 
   Future<void> _onResume(RemoteMessage m) {
-    print("onresume");
   }
 
   Future<void> _onMessage(RemoteMessage m) {
-    print("onmessage");
   }
 
   checkForInitialMessage() async {
@@ -282,12 +271,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _setupFirebase() {
-    print("fbsetup");
     FirebaseMessaging.onMessage.listen((event) {
       print("gotfbmessage:" + event.data.toString());
       event.data;
       setState(() {
-        print("gotfbmessage:" + event.toString());
       });
     });
 
@@ -298,7 +285,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _autoLogin() {
-    print("autologcheck");
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
       String username = prefs.getString("username");
       String domain = username.split('@')[1];
@@ -307,10 +293,6 @@ class _MyHomePageState extends State<MyHomePage> {
       String auth_key = prefs.getString("auth_key");
 
       if (auth_key != null && auth_key != "") {
-        print("isautologin");
-        print(username);
-        print(domain);
-        print(auth_key);
         fusionConnection.autoLogin(username, domain);
         setState(() {
           _sub_login = sub_login;
@@ -323,7 +305,6 @@ class _MyHomePageState extends State<MyHomePage> {
         softphone.register(sub_login, auth_key, aor.replaceAll('sip:', ''));
         checkForInitialMessage();
       } else {
-        print("isnotautologin");
       }
     });
   }

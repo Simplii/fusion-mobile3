@@ -51,14 +51,11 @@ class UserSettings {
   }
 
   lookupSubscriber() {
-    print("lookupsubscriuber");
     _fusionConnection.nsApiCall(
         'subscriber',
         'read',
         {'uid': _fusionConnection.getUid()},
         callback: (Map<String, dynamic> data) {
-          print("subscriberresponse");
-          print(data);
           if (data.containsKey('subscriber') && data['subscriber'].containsKey('user')) {
             subscriber = data['subscriber'];
             if (subscriber['callid_nmbr'] == null)

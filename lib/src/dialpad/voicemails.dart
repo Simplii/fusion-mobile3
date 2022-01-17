@@ -43,8 +43,6 @@ class _VoicemailsState extends State<Voicemails> {
       });
     });
     _audioPlayer.playerStateStream.listen((event) {
-      print("playstream");
-      print(event);
       if (event.playing) {
         setState(() {
           _isPlaying = true;
@@ -103,7 +101,6 @@ class _VoicemailsState extends State<Voicemails> {
       _audioPlayer.setUrl(url);
       _playingUrl = url;
     }
-    print("playing" + url);
     _audioPlayer.play();
   }
 
@@ -241,7 +238,6 @@ class _VoicemailsState extends State<Voicemails> {
                                     children: [
                                       GestureDetector(
                                           onTap: () {
-                                            print("tappedit");
                                             if (_isPlaying)
                                               _pause();
                                             else
