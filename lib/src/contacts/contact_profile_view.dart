@@ -50,7 +50,6 @@ class _ContactProfileViewState extends State<ContactProfileView> {
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
 
   _lookupTimeline() {
-    print("lookuptimeline");
     if (lookupState == 1) return;
     lookupState = 1;
 
@@ -60,7 +59,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             .where((number) => number.length >= 10)
             .toList()
             .cast<String>(), (List<TimelineItem> items, bool fromServer) {
-      print("got itemstimeline" + items.toString());
+
       if (!mounted) return;
         this.setState(() {
         if (fromServer) {
@@ -134,7 +133,6 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     crms = crms.sublist(0, min(crms.length, 5));
 
     for (ContactCrmReference crmRef in crms) {
-      print("addingotchildren" + crmRef.icon);
       children.add(GestureDetector(
           onTap: () {
             launch(crmRef.url);
@@ -186,7 +184,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     List<List<String>> settingOptions = [
 
     ];
-print("contactid:" + _contact.id);
+
     if (new RegExp(r"^[0-9]+$").hasMatch(_contact.id)) {
       settingOptions.add(["Edit", "edit"]);
     }
@@ -196,7 +194,6 @@ print("contactid:" + _contact.id);
     for (ContactCrmReference ref in crms) {
       settingOptions.add(["Open in " + ref.crmName, "open:" + ref.url]);
     }
-    print(_contact.contacts);
 
     return Column(children: [
       Container(margin: EdgeInsets.all(8), child: Center(child: popupHandle())),
@@ -263,7 +260,6 @@ print("contactid:" + _contact.id);
   }
 
   _getFieldGroups() {
-    print("contact" + _contact.toString());
     List<Widget> phones = [];
     List<Widget> emails = [];
 
@@ -498,7 +494,6 @@ print("contactid:" + _contact.id);
 
         if (item.callLog.duration < 60 * 60) duration = duration.substring(3);
 
-        print("itemcallog" + item.callLog.from.toString());
         list.add(SMSMessageView(
             _fusionConnection,
             SMSMessage({

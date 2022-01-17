@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
 import '../styles.dart';
+import '../utils.dart';
 
 class RecentCallsTab extends StatefulWidget {
   final FusionConnection _fusionConnection;
@@ -432,12 +433,15 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                                   left: 6, right: 6, top: 2, bottom: 2),
                               child: Row(children: [
                                 Image.asset(_icon(), width: 12, height: 12),
-                                Text(
+                                Text(" " +
+                                    (_historyItem.direction == "outbound"
+                                        ? _historyItem.fromDid.formatPhone()
+                                        : _historyItem.toDid.formatPhone()) +
                                     " " +
-                                        mDash +
-                                        " " +
-                                        DateFormat.jm()
-                                            .format(_historyItem.startTime),
+                                    mDash +
+                                    " " +
+                                    DateFormat.jm()
+                                        .format(_historyItem.startTime),
                                     style: TextStyle(
                                         color:
                                             _isMissed() ? crimsonLight : coal,

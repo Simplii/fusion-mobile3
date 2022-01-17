@@ -359,19 +359,6 @@ class ContactsStore extends FusionStore<Contact> {
     query = query.toLowerCase();
 
     searchPersisted(query, limit, offset, callback);
-    /*  List<Contact> matched = getRecords()
-        .where((Contact c) {
-          return (c.name + " " + c.company).toLowerCase().contains(query);
-        })
-        .toList()
-        .cast<Contact>();
-
-    if (matched.length > 0) {
-      var future = new Future.delayed(const Duration(milliseconds: 10), () {
-
-        callback(matched, false);
-      });
-    }*/
 
     fusionConnection.apiV1Call("get", "/clients/filtered_contacts", {
       'length': offset + limit,

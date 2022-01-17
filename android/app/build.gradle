@@ -47,6 +47,7 @@ android {
         applicationId "net.fusioncomm.android"
         minSdkVersion 23
         targetSdkVersion 31
+        multiDexEnabled true
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
@@ -63,7 +64,8 @@ android {
             signingConfig signingConfigs.debug
 
 
-            minifyEnabled true
+            minifyEnabled false
+            shrinkResources false
             useProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 

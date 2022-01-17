@@ -5,7 +5,6 @@ class FusionSIPUAHelper extends SIPUAHelper {
   bool _settingVideo = false;
 
   setVideo(bool settingVideo) {
-    print("settingvideo:"+_settingVideo.toString());
     _settingVideo = settingVideo;
   }
 
@@ -20,8 +19,6 @@ class FusionSIPUAHelper extends SIPUAHelper {
       as Map<String, dynamic>)['OfferToReceiveVideo'] = false;
     }
     //}
-    print("builtoptions");
-    print(options);
     return options;
   }
 }
