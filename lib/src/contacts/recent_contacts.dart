@@ -347,10 +347,17 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   }
 
   _letterFor(Contact item) {
-    if (_typeFilter == 'Integrated Contacts')
-      return (item.name).trim()[0].toLowerCase();
-    else
-      return (item.firstName + item.lastName).trim()[0].toLowerCase();
+    if (_typeFilter == 'Integrated Contacts') {
+      if (item.name.trim().length == 0)
+        return " ";
+      else
+        return (item.name).trim()[0].toLowerCase();
+    } else {
+      if ((item.firstName + item.lastName).trim().length == 0)
+        return " ";
+      else
+        return (item.firstName + item.lastName).trim()[0].toLowerCase();
+    }
   }
 
   _spinner() {
@@ -369,6 +376,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
   @override
   Widget build(BuildContext context) {
+    String origType = _typeFilter;
     if (_defaultTab == 'coworkers')
       _typeFilter = 'Coworkers';
     else if (_defaultTab == 'all')
@@ -376,6 +384,10 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     else if (_defaultTab == 'integrated')
       _typeFilter = 'Integrated Contacts';
     else if (_defaultTab == 'fusion') _typeFilter = 'Fusion Contacts';
+
+    if (_typeFilter != origType) {
+      _contacts = [];
+    }
 
     if (_lookedUpQuery != _typeFilter + _query) {
       _page = 0;
