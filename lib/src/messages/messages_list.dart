@@ -113,6 +113,21 @@ class _MessagesListState extends State<MessagesList> {
     }
   }
 
+  _getDepartmentName(convo) {
+    if (_selectedGroupId != "-2")
+      return "";
+    else {
+      SMSDepartment department = _fusionConnection
+          .smsDepartments
+      .getDepartmentByPhoneNumber(convo.myNumber);
+
+      if (department != null)
+        return department.groupName;
+      else
+        return "";
+    }
+  }
+
   _lookupMessages() {
     lookupState = 1;
     _fusionConnection.conversations
@@ -146,7 +161,11 @@ class _MessagesListState extends State<MessagesList> {
 
   _messagesList() {
     return _convos.map((convo) {
-      return SMSConversationSummaryView(_fusionConnection, _softphone, convo);
+      return SMSConversationSummaryView(
+          _fusionConnection,
+          _softphone,
+          convo,
+          _getDepartmentName(convo));
     }).toList();
   }
 
@@ -218,7 +237,8 @@ class _MessagesListState extends State<MessagesList> {
                                 return Container(height: 30);
                               } else if (_convos.length > index + 1) {
                                 return SMSConversationSummaryView(
-                                    _fusionConnection, _softphone, _convos[index - 1]);
+                                    _fusionConnection, _softphone, _convos[index - 1],
+                                _getDepartmentName(_convos[index - 1]));
                               } else {
                                 return Container();
                               }
@@ -272,8 +292,10 @@ class SMSConversationSummaryView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
   final SMSConversation _convo;
+  final String _departmentName;
 
-  SMSConversationSummaryView(this._fusionConnection, this._softphone, this._convo, {Key key})
+  SMSConversationSummaryView(this._fusionConnection, this._softphone,
+      this._convo, this._departmentName, {Key key})
       : super(key: key);
 
   @override
@@ -284,6 +306,7 @@ class _SMSConversationSummaryViewState
     extends State<SMSConversationSummaryView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   Softphone get _softphone => widget._softphone;
+  String get _departmentName => widget._departmentName;
 
   SMSConversation get _convo => widget._convo;
   final _searchInputController = TextEditingController();
@@ -329,6 +352,7 @@ class _SMSConversationSummaryViewState
                                 left: 6, right: 6, top: 2, bottom: 2),
                             child: Text(
                                 DateFormat("MMM d").format(date) +
+                                    (_departmentName != "" ? " " + nDash + " " + _departmentName : "") +
                                     " \u2014 " +
                                     _convo.message.message,
                                 style: smallTextStyle,

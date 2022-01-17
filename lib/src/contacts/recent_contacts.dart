@@ -204,8 +204,6 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
           if (fromServer) {
             lookupState = 2;
           }
-          print("gotcrmcontactsresponse");
-          print(contacts.length);
           if (_page == 0) {
             _contacts = contacts;
           } else {
@@ -574,7 +572,7 @@ class _ContactsListState extends State<ContactsList> {
     if (lookupState == 0) {
       _lookupHistory();
     }
-print("Expanded rendering");
+
     return Container(
         child: Container(
             decoration: BoxDecoration(
@@ -660,8 +658,6 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _expand() {
-    print("expanding");
-    print(_historyItem);
     this.setState(() {
       _expanded = !_expanded;
     });
@@ -771,8 +767,6 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   _topPart() {
     return GestureDetector(
         onTap: () {
-          print("expanding");
-          print(_historyItem);
           if (widget.onSelect != null)
             widget.onSelect();
           else

@@ -49,17 +49,12 @@ class _CallFooterDetailsState extends State<CallFooterDetails> {
     List<List<String>> options = [];
     CallpopInfo info = widget._softphone.getCallpopInfo(widget._activeCall.id);
 
-    print("info" + info.toString());
     if (info == null)
       return options;
     else {
       List<Map<String, dynamic>> dispositionGroups = info.dispositionGroups.cast<Map<String, dynamic>>();
-      print( "dispogroups");
-      print(dispositionGroups);
       for (Map<String, dynamic> group in dispositionGroups) {
         options.add([group["name"], "group"]);
-        print("agroup");
-        print(group);
         for (Map<String, dynamic> dispo in group["dispositions"]) {
           options.add(["  " + dispo["label"], dispo["id"]]);
         }

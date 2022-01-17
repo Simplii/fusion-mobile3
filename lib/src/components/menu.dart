@@ -31,8 +31,6 @@ class _MenuState extends State<Menu> {
 
   _header() {
     UserSettings settings = _fusionConnection.settings;
-    print("thesettings");
-    print(settings.subscriber);
     var callid = settings.subscriber.containsKey('callid_nmbr')
         ? settings.subscriber['callid_nmbr']
         : '';

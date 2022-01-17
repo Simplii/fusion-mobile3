@@ -69,7 +69,7 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
                                       'uses_dynamic_outbound': false,
                                       'primary_user': null
                                     }));
-          print("department numbers" + allDepartments().toString());
+
           callback(allDepartments());
         });
   }
@@ -80,5 +80,14 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
 
   allDepartments() {
     return getRecords();
+  }
+
+  SMSDepartment getDepartmentByPhoneNumber(number) {
+    List<SMSDepartment> departments = allDepartments();
+    for (SMSDepartment dept in departments) {
+      if (dept.numbers.contains(number))
+        return dept;
+    }
+    return null;
   }
 }

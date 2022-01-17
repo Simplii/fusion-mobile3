@@ -33,7 +33,6 @@ class IntegratedContactsStore extends FusionStore<Contact> {
       'search_query': query,
       'sort_by': 'name',
     }, callback: (Map<String, dynamic> datas) {
-      print("gotinfo" + datas.toString());
       List<Contact> response = [];
 
       datas['items'].forEach((dynamic c) {

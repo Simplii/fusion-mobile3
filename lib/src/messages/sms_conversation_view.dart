@@ -114,8 +114,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
 
     PageController pageController = PageController(initialPage: currentPage);
 
-    print("messageslength" + galleryItems.length.toString());
-
     return BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
         child: Container(
@@ -155,7 +153,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               backgroundDecoration: BoxDecoration(color: Colors.transparent),
               pageController: pageController,
               onPageChanged: (int page) {
-                print("page changed" + page.toString());
               },
             )));
   }
@@ -196,7 +193,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         FusionDropdown(
             onChange: (String chosen) {
               if (chosen == "contactprofile") {
-                print("contactprofile");
                 Future.delayed(Duration(milliseconds: 10), () {
                   showModalBottomSheet(
                       context: context,
@@ -608,10 +604,6 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
           if (!mounted) return;
         this.setState(() {
         if (fromServer) lookupState = 2;
-        print("gotfromserver " +
-            messages.length.toString() +
-            " - " +
-            (fromServer.toString()));
         _messages = messages;
         widget._onPulledMessages(_messages);
       });
@@ -648,8 +640,6 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
       return m1.unixtime > m2.unixtime ? -1 : 1;
     });
 
-    print("allmessages" + _messages.length.toString());
-
     for (SMSMessage msg in _messages) {
       DateTime thisTime =
           DateTime.fromMillisecondsSinceEpoch(msg.unixtime * 1000);
@@ -685,12 +675,6 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
 
   @override
   Widget build(BuildContext context) {
-    print("building here " +
-        lookupState.toString() +
-        ":" +
-        _lookedupNumber.toString() +
-        ":" +
-        _lookedupMyNumber.toString());
     if (lookupState != 0 &&
         (_conversation.number != _lookedupNumber ||
             _conversation.myNumber != _lookedupMyNumber)) {
@@ -744,22 +728,14 @@ class _SMSMessageViewState extends State<SMSMessageView> {
 
     int start = 0;
     List<TextSpan> texts = [];
-    print("urlmatches" + urlMatches.toString());
 
     for (RegExpMatch urlMatch in urlMatches) {
-      print("urlmatch" +
-          urlMatch.toString() +
-          ":" +
-          urlMatch.start.toString() +
-          ":" +
-          urlMatch.end.toString());
       if (urlMatch.start > start) {
         texts.add(TextSpan(
             text: message.substring(start, urlMatch.start), style: style));
       }
       TapGestureRecognizer recognizer = new TapGestureRecognizer();
       recognizer.onTap = () {
-        print("launching :" + message.substring(urlMatch.start, urlMatch.end));
         launch(message.substring(urlMatch.start, urlMatch.end));
       };
       texts.add(TextSpan(
