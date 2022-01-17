@@ -1,9 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'contact.dart';
 import 'coworkers.dart';
 import 'crm_contact.dart';
 import 'fusion_model.dart';
 import 'fusion_store.dart';
+import '../utils.dart';
 
 class CallHistory extends FusionModel {
   String id;
@@ -19,6 +21,21 @@ class CallHistory extends FusionModel {
   CrmContact crmContact;
   bool missed;
   String direction;
+
+  isInternal(String domain) {
+    if (direction == 'inbound')
+      return to.substring(to.length - domain.length)
+          .toLowerCase() == domain.toLowerCase();
+    else
+      return from.substring(from.length - domain.length)
+          .toLowerCase() == domain.toLowerCase();
+  }
+
+  getOtherNumber(String domain) {
+    return isInternal(domain)
+        ? (direction == "inbound" ? from : to)
+        : (direction == "inbound" ? fromDid : toDid);
+  }
 
   CallHistory(Map<String, dynamic> obj) {
     id = obj['id'].toString();

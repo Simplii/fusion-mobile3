@@ -310,12 +310,17 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _icon() {
-    if (_historyItem.direction == 'outbound') {
-      return "assets/icons/phone_outgoing.png";
-    } else if (_isMissed()) {
-      return "assets/icons/phone_missed_red.png";
+    print([_historyItem.toDid, _historyItem.to,
+        _historyItem.fromDid, _historyItem.from,
+        _historyItem.direction, _historyItem.missed, _historyItem.duration].join(' , '));
+    if (_historyItem.direction == 'inbound') {
+      if (_isMissed()) {
+        return "assets/icons/phone_missed_red.png";
+      } else  {
+        return "assets/icons/phone_incoming.png";
+      }
     } else {
-      return "assets/icons/phone_incoming.png";
+      return "assets/icons/phone_outgoing.png";
     }
   }
 
@@ -336,15 +341,14 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                     ? [_historyItem.crmContact]
                     : [],
                 myNumber: number,
-                number: _historyItem.direction == "outbound"
-                    ? _historyItem.toDid
-                    : _historyItem.fromDid)));
+                number: _historyItem.getOtherNumber(
+                    _fusionConnection.getDomain()))));
   }
 
   _makeCall() {
-    _softphone.makeCall(_historyItem.direction == "inbound"
-        ? _historyItem.fromDid
-        : _historyItem.toDid);
+    _softphone.makeCall(
+        _historyItem.getOtherNumber(
+            _fusionConnection.getDomain()));
   }
 
   _openProfile() {
@@ -434,9 +438,9 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                               child: Row(children: [
                                 Image.asset(_icon(), width: 12, height: 12),
                                 Text(" " +
-                                    (_historyItem.direction == "outbound"
-                                        ? _historyItem.fromDid.formatPhone()
-                                        : _historyItem.toDid.formatPhone()) +
+                                    ("" + _historyItem.getOtherNumber(
+                                        _fusionConnection.getDomain()))
+                                        .formatPhone() +
                                     " " +
                                     mDash +
                                     " " +
