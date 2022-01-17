@@ -458,6 +458,11 @@ class Softphone implements SipUaHelperListener {
     }
     makeActiveCall(call);
     _setCallDataValue(call.id, "answerTime", DateTime.now());
+
+    if (Platform.isAndroid) {
+      flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
+      flutterLocalNotificationsPlugin.cancelAll();
+    }
   }
 
   backToForeground() {
@@ -583,7 +588,6 @@ class Softphone implements SipUaHelperListener {
 
     _updateListeners();
     if (Platform.isAndroid) {
-      String number = getCallerNumber(call);
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
     }
   }
