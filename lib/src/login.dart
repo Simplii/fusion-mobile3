@@ -41,7 +41,8 @@ class _LoginViewState extends State<LoginView> {
                         _usernameController.value.text,
                         null);
                   }
-                  this.setState(() {});
+                  if (mounted)
+                    this.setState(() {});
                 });
       }
     });
