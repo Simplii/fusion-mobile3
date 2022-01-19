@@ -96,11 +96,13 @@ extension ProviderDelegate: CXProviderDelegate {
     func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {
     print("callkit mute pressed")
         callkitChannel.invokeMethod("muteButtonPressed", arguments: [action.callUUID.uuidString, action.isMuted])
+        action.fulfill()
     }
     
     func provider(_ provider: CXProvider, perform action: CXPlayDTMFCallAction) {
     print("callkit dtmf pressed")
         callkitChannel.invokeMethod("dtmfPressed", arguments: [action.callUUID.uuidString, action.digits])
+        action.fulfill()
     }
     
   func providerDidReset(_ provider: CXProvider) {
@@ -108,15 +110,16 @@ extension ProviderDelegate: CXProviderDelegate {
   }
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
-    print("answercall actoin provider callkit");
+    print("answercall actoin provider callkittttttttt");
     callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
+    action.fulfill();
     // answer the call here
   }
   
   func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
 //    callkitChannel.invokeMethod("activatedSession", arguments: [.uuid]);
 
-    print("didactivate here provider")
+    print("didactivate here provider audiosession callkit", audioSession)
   }
   
   func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
@@ -126,19 +129,21 @@ extension ProviderDelegate: CXProviderDelegate {
     print("provider", action.observationInfo)
     if (action.isComplete) {
         callkitChannel.invokeMethod("endButtonPressed", arguments: [action.callUUID.uuidString])
+        action.fulfill()
     }
     // end call
   }
   
   func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
     callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
-    print("sethold provider")
+    print("sethold provider callkit")
+    action.fulfill()
     // set hold here
   }
   
   func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
-    print("start call action here")
+    print("start call action here callkit")
     callkitChannel.invokeMethod("startCall", arguments: [action.callUUID.uuidString, action.handle.value, action.contactIdentifier])
-    //  start call action here
+    action.fulfill()
   }
 }

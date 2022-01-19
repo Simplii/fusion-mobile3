@@ -191,6 +191,8 @@ class Softphone implements SipUaHelperListener {
 
       case 'answerButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
+        print("callkit toanswer" + callUuid);
+        print("callkitgettingthecall" + _getCallByUuid(callUuid).toString());
         answerCall(_getCallByUuid(callUuid));
         return;
 
@@ -460,6 +462,7 @@ class Softphone implements SipUaHelperListener {
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     MediaStream mediaStream;
     mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+    print("answering the call callkit");
     call.answer(helper.buildCallOptions(), mediaStream: mediaStream);
     if (Platform.isAndroid) {
       _callKeep.answerIncomingCall(_uuidFor(call));
