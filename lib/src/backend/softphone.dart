@@ -180,6 +180,9 @@ class Softphone implements SipUaHelperListener {
   }
 
   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
+    print("callkitmethod:" + methodCall.method);
+    print(methodCall.method);
+    print(methodCall);
     switch (methodCall.method) {
       case 'setPushToken':
         String token = methodCall.arguments[0] as String;
@@ -249,8 +252,10 @@ class Softphone implements SipUaHelperListener {
 
   Future<void> _reportOutgoingCall(String uuid) async {
     try {
+      print("callkit reporting outgoing");
       await _callKit.invokeMethod('reportOutgoingCall', uuid);
     } on PlatformException catch (e) {
+      print("callkit outgoing error");
     }
   }
 
@@ -300,6 +305,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   doMakeCall(String destination) async {
+    print("making call not callkit");
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     helper.setVideo(false);
     MediaStream mediaStream;
@@ -317,10 +323,12 @@ class Softphone implements SipUaHelperListener {
     }
     call.unmute();
     call.unhold();
+    print("making active callkit call:" + call.id + ":" + call.direction);
 
     if (_getCallDataValue(call.id, "isReported") != true &&
-        call.direction == "outbound") {
+        call.direction == "OUTGOING") {
       if (Platform.isIOS) {
+        print("reportoing outging call callkit");
         _setCallDataValue(call.id, "isReported", true);
         _callKit.invokeMethod("reportOutgoingCall",
             [_uuidFor(call), getCallerNumber(call), getCallerName(call)]);
@@ -697,7 +705,7 @@ class Softphone implements SipUaHelperListener {
               displayName: data.getName(defaul: call.remote_display_name),
               handle: call.remote_identity);
         }
-        if (call.direction == "outbound" || call.direction == "outgoing")
+        if (call.direction == "outbound" || call.direction == "OUTGOING")
           _setCallDataValue(call.id, "callPopInfo", data);
       });
 

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
@@ -177,11 +176,11 @@ class _CallActionButtonsState extends State<CallActionButtons> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Spacer(flex: 3),
-          if (Platform.isAndroid || !widget.isIncoming) 
+          
           Container(child:_hangupButton(), margin: EdgeInsets.only(bottom: 8)),
-          if (widget.isRinging && widget.isIncoming && Platform.isAndroid)
+          if (widget.isRinging && widget.isIncoming)
             Spacer(flex: 1),
-          if (widget.isRinging && widget.isIncoming && Platform.isAndroid)
+          if (widget.isRinging && widget.isIncoming)
             Container(child:_answerButton(), margin: EdgeInsets.only(bottom: 8)),
           if (widget.isRinging)
             Spacer(flex: 3),

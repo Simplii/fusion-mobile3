@@ -14,7 +14,10 @@ class ProviderDelegate: NSObject {
         
         callkitChannel.setMethodCallHandler({ [self]
           (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+            print("callkit method hanlder", call.method)
+            
             if (call.method == "reportOutgoingCall") {
+                print("report outgoing call callkit")
                 let args = call.arguments as! [Any]
                 let phoneNumber = args[1] as! String
                 let uuid = args[0] as! String
@@ -29,6 +32,7 @@ class ProviderDelegate: NSObject {
                 self.requestTransaction(transaction)
             }
             else if (call.method == "endCall") {
+                print("end call callkit")
                 let args = call.arguments as! [Any]
                 let uuid = args[0] as! String
 
@@ -38,7 +42,7 @@ class ProviderDelegate: NSObject {
 
             }
         })
-        print("providerpush set delegate")
+        print("providerpush set delegate callkit")
         provider.setDelegate(self, queue: nil)
     }
   
@@ -77,9 +81,9 @@ class ProviderDelegate: NSObject {
     
         provider.reportNewIncomingCall(with: uuid, update: update) { error in
             if error == nil {
-                print("call reported no error provider")
+                print("call reported no error provider callkit")
             } else {
-                print("provider call reported and error")
+                print("provider call reported and error callkit")
                 print(error!)
             }
             completion?(error)
@@ -90,19 +94,21 @@ class ProviderDelegate: NSObject {
 
 extension ProviderDelegate: CXProviderDelegate {
     func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {
+    print("callkit mute pressed")
         callkitChannel.invokeMethod("muteButtonPressed", arguments: [action.callUUID.uuidString, action.isMuted])
     }
     
     func provider(_ provider: CXProvider, perform action: CXPlayDTMFCallAction) {
+    print("callkit dtmf pressed")
         callkitChannel.invokeMethod("dtmfPressed", arguments: [action.callUUID.uuidString, action.digits])
     }
     
   func providerDidReset(_ provider: CXProvider) {
-    print("provider didreset");
+    print("provider didreset callkit");
   }
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
-    print("answercall actoin provider");
+    print("answercall actoin provider callkit");
     callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
     // answer the call here
   }

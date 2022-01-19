@@ -77,7 +77,7 @@ import PushKit
     func pushRegistry(_ registry: PKPushRegistry,
                         didReceiveIncomingPushWith payload: PKPushPayload,
                         for type: PKPushType, completion: @escaping () -> Void) {
-        print("didrecproviderpush", payload, payload.dictionaryPayload  )
+        print("didrecproviderpush callkit", payload, payload.dictionaryPayload  )
   
       if let uuidString = payload.dictionaryPayload["uuid"] as? String,
           let identifier = payload.dictionaryPayload["caller_name"] as? String,
