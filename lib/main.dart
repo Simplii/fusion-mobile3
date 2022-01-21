@@ -75,7 +75,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
   var data = message.data;
 
   if (data.containsKey("fusion_call") && data['fusion_call'] == "true") {
-    var callerName = data['caller_name'] as String;
+    var callerName = data['caller_id'] as String;
     var callerNumber = data['caller_number'] as String;
     final callUUID = uuidFromString(data['call_id']);
     var id = intIdForString(data['call_id']);
@@ -91,8 +91,9 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
             ticker: 'ticker');
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
+    print("showing notification");
     flutterLocalNotificationsPlugin.show(id, callerName,
-        callerNumber + ' Incoming phone call', platformChannelSpecifics,
+       callerNumber + ' incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
   }
 }
