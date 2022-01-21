@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="net.fusioncomm.android">
+    package="net.fusioncomm.android"
+    xmlns:tools="http://schemas.android.com/tools">
+
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
@@ -18,6 +20,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
 
 
     <!-- These require runtime permissions on M -->
@@ -45,6 +48,7 @@
             android:theme="@style/LaunchTheme"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
+            android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
@@ -74,6 +78,7 @@
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
             android:name="flutterEmbedding"
+            android:exported="true"
             android:value="2" />
         <!--<service android:name="com.example.flutter_voip_kit.VoipConnectionService"-->
         <!--android:label="VoipConnectionService"-->
@@ -89,6 +94,7 @@
 <!--        </service>-->
        <service android:name="io.wazo.callkeep.VoiceConnectionService"
           android:label="Wazo"
+           android:exported="true"
           android:foregroundServiceType="camera|microphone"
           android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE">
           <intent-filter>
