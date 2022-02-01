@@ -43,10 +43,19 @@ class _FusionDropdownState extends State<FusionDropdown> {
 
   Widget get _button => widget.button;
 
+  _dismissKeyboard() {
+    FocusScopeNode currentFocus = FocusScope.of(context);
+    if (!currentFocus.hasPrimaryFocus) {
+      currentFocus.unfocus();
+    }
+  }
+
   _openPopup() {
     double maxHeight = MediaQuery.of(context).size.height * 0.5;
     double contentHeight = _options.length * 60.0;
     if (contentHeight > 0 && contentHeight < maxHeight) maxHeight = contentHeight;
+
+    _dismissKeyboard();
 
     showModalBottomSheet(
         context: context,
