@@ -66,6 +66,7 @@ class FusionConnection {
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
 
   FusionConnection() {
+    print("gonna get cookies");
     _getCookies();
     crmContacts = CrmContactsStore(this);
     integratedContacts = IntegratedContactsStore(this);
@@ -90,11 +91,21 @@ class FusionConnection {
       _cookies = PersistCookieJar(
           persistSession: true,
           ignoreExpires: true,
-          storage: FileStorage(directory.path));
+          storage: FileStorage(directory.path)
+      );
+
+      print("got cookies");
+      print(_cookies.domainCookies);
+      print(_cookies.hostCookies);
+      print(_cookies.storage.toString());
+
       if (callback != null) {
         callback();
       }
     }).onError((er, err) {
+      print("cookie error");
+      print(er);
+      print(err);
       callback();
     });
   }
