@@ -1,6 +1,7 @@
 
 import AVFoundation
 import CallKit
+import Sentry
 
 class ProviderDelegate: NSObject {
     private let controller = CXCallController()
@@ -76,7 +77,8 @@ class ProviderDelegate: NSObject {
     ) {
         let update = CXCallUpdate()
         update.localizedCallerName = callerName
-        update.remoteHandle = CXHandle(type: .phoneNumber, value: handle)
+        print("thehandle", handle)
+        update.remoteHandle = CXHandle(type: .generic, value:  handle)
         update.hasVideo = hasVideo
     
         provider.reportNewIncomingCall(with: uuid, update: update) { error in
@@ -87,8 +89,9 @@ class ProviderDelegate: NSObject {
                 print(error!)
             }
             completion?(error)
+        
+            self.callkitChannel.invokeMethod("startCall", arguments: [uuid.uuidString, handle, callerName])
         }
-        callkitChannel.invokeMethod("startCall", arguments: [uuid.uuidString, handle, callerName])
     }
 }
 
@@ -127,10 +130,8 @@ extension ProviderDelegate: CXProviderDelegate {
     print("provider", action)
     print("provider", action.isComplete)
     print("provider", action.observationInfo)
-    if (action.isComplete) {
-        callkitChannel.invokeMethod("endButtonPressed", arguments: [action.callUUID.uuidString])
-        action.fulfill()
-    }
+    callkitChannel.invokeMethod("endButtonPressed", arguments: [action.callUUID.uuidString])
+    action.fulfill()
     // end call
   }
   
