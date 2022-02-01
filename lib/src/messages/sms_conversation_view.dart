@@ -329,9 +329,11 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     final ImagePicker _picker = ImagePicker();
     if (source == "camera") {
       _picker.pickImage(source: ImageSource.camera).then((XFile file) {
-        this.setState(() {
-          _mediaToSend.add(file);
-        });
+        if (file != null) {
+          this.setState(() {
+            _mediaToSend.add(file);
+          });
+        }
       });
     } else {
       _picker.pickMultiImage().then((List<XFile> images) {
