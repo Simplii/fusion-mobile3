@@ -461,6 +461,7 @@ class Softphone implements SipUaHelperListener {
 
     if (Platform.isAndroid) {
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
+      flutterLocalNotificationsPlugin.cancel(intIdForString(_getCallDataValue(call.id, "apiTermId")));
       flutterLocalNotificationsPlugin.cancelAll();
     }
   }
@@ -589,6 +590,15 @@ class Softphone implements SipUaHelperListener {
     _updateListeners();
     if (Platform.isAndroid) {
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
+      flutterLocalNotificationsPlugin.cancel(intIdForString(_getCallDataValue(call.id, "apiTermId")));
+      print("cancel callpopp");
+      print(call.id);
+      print(intIdForString(call.id));
+            print(_getCallDataValue(call.id, "apiTermId"));
+      print(intIdForString(_getCallDataValue(call.id, "apiTermId")));
+      print(_getCallDataById(call.id));
+      flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
+      flutterLocalNotificationsPlugin.cancelAll();
     }
   }
 
