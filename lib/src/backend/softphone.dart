@@ -61,11 +61,13 @@ class Softphone implements SipUaHelperListener {
     _audioCache.load(_inboundAudioPath);
   }
 
-  close() {
+  close() async {
     try {
-      helper.unregister(true);
-      helper.stop();
-      helper.terminateSessions({}); }
+      print("unregistering");
+     // helper.unregister(true);
+      await helper.stop();
+      //helper.terminateSessions({});
+      }
     catch (e) { print("error closing"); }
   }
 
@@ -121,6 +123,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   Future<dynamic> _telecomHandler(MethodCall methodCall) async {
+    print("telecommessage:" + methodCall.method);
     switch (methodCall.method) {
       case 'setPushToken':
         String token = methodCall.arguments[0] as String;
@@ -459,6 +462,8 @@ class Softphone implements SipUaHelperListener {
   }
 
   answerCall(Call call) async {
+    if (call == null) return;
+
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     MediaStream mediaStream;
     mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
