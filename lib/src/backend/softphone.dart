@@ -409,7 +409,14 @@ class Softphone implements SipUaHelperListener {
   setSpeaker(bool useSpeaker) {
     _savedOutput = useSpeaker;
     if (_localStream != null) {
-      _localStream.getAudioTracks()[0].enableSpeakerphone(useSpeaker);
+      var tracks = _localStream.getAudioTracks();
+      for (var track in tracks) {
+        if (Platform.isIOS) {
+          track.enableSpeakerphone(useSpeaker);
+        } else {
+          track.enableSpeakerphone(useSpeaker);
+        }
+      }
     }
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
   }
@@ -889,6 +896,15 @@ class Softphone implements SipUaHelperListener {
     switch (callState.state) {
       case CallStateEnum.STREAM:
         _handleStreams(callState);
+        if (Platform.isIOS) {
+          // for some reason ios defaults to speakerphone and wont let me change
+          // that until after this event.
+          for (var i = 1250; i < 10000; i += 1500) {
+            var future = new Future.delayed(Duration(milliseconds: i), () {
+              setCallOutput(call, getCallOutput(call));
+            });
+          }
+        }
         break;
       case CallStateEnum.ENDED:
         stopOutbound();
@@ -918,12 +934,16 @@ class Softphone implements SipUaHelperListener {
       case CallStateEnum.PROGRESS:
         break;
       case CallStateEnum.ACCEPTED:
-        setCallOutput(call, getCallOutput(call));
+        if (Platform.isAndroid) {
+          setCallOutput(call, getCallOutput(call));
+        }
         break;
       case CallStateEnum.CONFIRMED:
         stopOutbound();
         stopInbound();
-        setCallOutput(call, getCallOutput(call));
+        if (Platform.isAndroid) {
+          setCallOutput(call, getCallOutput(call));
+        }
         _setCallDataValue(call.id, "answerTime", DateTime.now());
 
         if (!isIncoming(call)) {
@@ -947,13 +967,17 @@ class Softphone implements SipUaHelperListener {
         if (Platform.isAndroid) {
           _callKeep.setOnHold(_uuidFor(call), false);
         }
-        setCallOutput(call, getCallOutput(call));
+        if (Platform.isAndroid) {
+          setCallOutput(call, getCallOutput(call));
+        }
         break;
       case CallStateEnum.NONE:
         break;
       case CallStateEnum.CALL_INITIATION:
         _addCall(call);
-        setCallOutput(call, getCallOutput(call));
+        if (Platform.isAndroid) {
+          setCallOutput(call, getCallOutput(call));
+        }
         break;
       case CallStateEnum.REFER:
         break;
