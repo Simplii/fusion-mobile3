@@ -210,6 +210,7 @@ class _CallViewState extends State<CallView> {
                     children: options.map((List<String> option) {
                       return GestureDetector(
                           onTap: () {
+                            print("setting output from gesture");
                             _softphone.setCallOutput(_activeCall, option[2]);
                             Navigator.pop(context);
                           },
