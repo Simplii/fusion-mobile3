@@ -7,6 +7,7 @@ import 'package:all_sensors/all_sensors.dart';
 import 'package:callkeep/callkeep.dart';
 import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -21,6 +22,7 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:uuid/uuid.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'src/backend/fusion_connection.dart';
 import 'src/backend/softphone.dart';
@@ -130,6 +132,11 @@ class MyApp extends StatelessWidget {
     _softphone = Softphone(_fusionConnection);
     _fusionConnection.setSoftphone(_softphone);
 
+    getApplicationDocumentsDirectory().then((Directory directory) {
+      print("got app dir gotappdir");
+      print(directory.absolute);
+      print(directory.listSync(recursive: true, followLinks: false));
+    });
   }
 
   bool _listenerHasBeenSetup = false;
@@ -216,8 +223,25 @@ class _MyHomePageState extends State<MyHomePage> {
     connector.configure(
         onLaunch: _onLaunch, onResume: _onResume, onMessage: _onMessage);
     fusionConnection.setAPNSConnector(connector);
-
+    _setupPermissions();
     _setupFirebase();
+  }
+
+  _setupPermissions() {
+    print("gonna get permissions");
+    [
+      Permission.phone,
+      Permission.bluetoothConnect,
+      Permission.bluetooth,
+    ].request().then((Map<Permission, PermissionStatus> statuses) {
+      print('status1 permission');
+      print(statuses[Permission.phone]);
+      print('status2 permission');
+      print(statuses[Permission.bluetooth]);
+      print('status3 permission');
+      print(statuses[Permission.bluetoothConnect]);
+    });
+
   }
 
   Future<void> _onLaunch(RemoteMessage m) {

@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dtmf/flutter_dtmf.dart';
+import 'package:flutter_dtmf/dtmf.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad_key.dart';
 import 'package:sip_ua/sip_ua.dart';
@@ -25,7 +25,7 @@ class _CallDialPadState extends State<CallDialPad> {
       dialedNumber += key;
     });
     widget._softphone.sendDtmf(widget._activeCall, key);
-    FlutterDtmf.playTone(digits: key, durationMs: 300);
+    Dtmf.playTone(digits: key, durationMs: 300);
   }
 
   void removeLastDigit() {

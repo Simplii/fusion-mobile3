@@ -11,6 +11,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:uuid/uuid.dart';
 import 'package:ringtone_player/ringtone_player.dart';
@@ -155,19 +156,34 @@ class Softphone implements SipUaHelperListener {
         'cancelButton': 'Cancel',
         'okButton': 'ok',
         'foregroundService': {
-          'channelId': 'net.fusioncomm.flutter_app',
+          'channelId': 'net.fusioncomm.android',
           'channelName': 'Foreground service for my app',
           'notificationTitle': 'My app is running on background',
           'notificationIcon': 'Path to the resource icon of the notification',
         },
       },
     };
+    print("sertupcallkeep");
+/*
+    [
+      Permission.phone,
+    ].request().then((Map<Permission, PermissionStatus> statuses) {
+      print('status1');
+      print(statuses[Permission.phone]);
+    });
 
-    _callKeep.setup(null, callSetup);
+    [
+      Permission.bluetooth,
+    ].request().then((Map<Permission, PermissionStatus> statuses) {
+      print('status2');
+      print(statuses[Permission.bluetooth]);
+    });*/
+
+    _callKeep.setup(_context, callSetup);
 
     if (Platform.isAndroid) {
       //if (isIOS) iOS_Permission();
-      //  _firebaseMessaging.requestNotificationPermissions();
+     //_firebaseMessaging.requestNotificationPermissions();
 
       FirebaseMessaging.instance.getToken().then((token) {
         print('[FCM] token => ' + token);
@@ -304,8 +320,6 @@ class Softphone implements SipUaHelperListener {
     helper.setVideo(false);
     MediaStream mediaStream;
     mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
-
-    _playAudio(_outboundAudioPath);
 
     return helper.call(destination, voiceonly: true, mediaStream: mediaStream);
   }
@@ -677,6 +691,9 @@ class Softphone implements SipUaHelperListener {
 
       if (call.direction == "INCOMING") {
         _playAudio(_inboundAudioPath);
+      }
+      else {
+        _playAudio(_outboundAudioPath);
       }
 
       if (Platform.isAndroid) {
