@@ -338,7 +338,9 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     } else {
       _picker.pickMultiImage().then((List<XFile> images) {
         this.setState(() {
-          _mediaToSend = images;
+          if (images != null) {
+            _mediaToSend = images;
+          }
         });
       });
     }
@@ -405,7 +407,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                           height: 18, width: 22)))),
           Expanded(
               child: Stack(children: [
-            if (_mediaToSend.length > 0)
+            if (_mediaToSend != null && _mediaToSend.length > 0)
               Container(
                   height: 120,
                   padding: EdgeInsets.all(8),
