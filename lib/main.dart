@@ -76,6 +76,15 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
 
   var data = message.data;
 
+  if (data.containsKey("remove_fusion_call")) {
+    final callUUID = uuidFromString(data['call_id']);
+    var id = intIdForString(data['call_id']);
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        registerNotifications();
+
+    flutterLocalNotificationsPlugin.cancel(id);
+    }
+
   if (data.containsKey("fusion_call") && data['fusion_call'] == "true") {
     var callerName = data['caller_id'] as String;
     var callerNumber = data['caller_number'] as String;
@@ -99,6 +108,11 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
     flutterLocalNotificationsPlugin.show(id, callerName,
        callerNumber + ' incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
+
+    var timer = Timer(Duration(seconds: 40),
+            () {
+              flutterLocalNotificationsPlugin.cancel(id);
+            });
   }
 }
 
@@ -249,6 +263,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _onResume(RemoteMessage m) {
+    softphone.reregister();
   }
 
   Future<void> _onMessage(RemoteMessage m) {
@@ -536,7 +551,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               "assets/icons/phone_filled_white.png",
                               width: 18,
                               height: 18),
-                          label: "Calls",
+                          label: "Calls (" + (softphone.helper.connected ? "C" :"c") + (softphone.helper.registered ? "R" : "r") + ")",
                         ),
                         BottomNavigationBarItem(
                           icon: Opacity(

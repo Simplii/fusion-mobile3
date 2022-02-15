@@ -32,6 +32,9 @@ class Softphone implements SipUaHelperListener {
   MethodChannel _callKit;
   MethodChannel _telecom;
 
+  bool registered = false;
+  bool connected = false;
+
   FlutterCallkeep _callKeep;
   Map<String, Map<String, dynamic>> callData = {};
   List<Call> calls = [];
@@ -295,6 +298,12 @@ class Softphone implements SipUaHelperListener {
 
     helper.start(settings);
     helper.addSipUaHelperListener(this);
+
+  }
+
+  reregister() {
+    print("reregistering");
+    helper.register();
   }
 
   setupPermissions() {
@@ -978,7 +987,15 @@ class Softphone implements SipUaHelperListener {
 
   @override
   void registrationStateChanged(RegistrationState state) {
+    connected = this.helper.connected;
+    registered = this.helper.registered;
     _updateListeners();
+    if (!connected) {
+      this.reregister();
+    }
+    else if (!registered) {
+      this.reregister();
+    }
   }
 
   @override
