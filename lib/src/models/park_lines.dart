@@ -17,6 +17,7 @@ class ParkLine extends FusionModel {
 
   ParkLine(Map<String, dynamic> obj) {
     parkLine = obj['parkLine'];
+    print(obj['parkLine']);
     if (obj['phone'] != null) this.phone = obj['phone'];
     if (obj['notes'] != null) this.notes = obj['notes'];
     if (obj['disposition'] != null) this.disposition = obj['disposition'];
@@ -60,7 +61,8 @@ class ParkLineStore extends FusionStore<ParkLine> {
         .apiV2Call("get", "/calls/parkLines", {},
             callback: (Map<String, dynamic> datas) {
       List<ParkLine> response = [];
-
+      print('parklineresponse');
+      print(datas);
       for (Map<String, dynamic> item in datas['items']) {
         ParkLine obj = ParkLine(item);
         storeRecord(obj);
