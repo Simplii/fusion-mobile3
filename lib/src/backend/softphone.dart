@@ -277,7 +277,12 @@ class Softphone implements SipUaHelperListener {
 
     settings.userAgent = 'Fusion Mobile - Dart';
     settings.dtmfMode = DtmfMode.RFC2833;
-    settings.iceGatheringTimeout = 1000;
+    if (Platform.isIOS) {
+      settings.iceGatheringTimeout = 500;
+    }
+    else if (Platform.isAndroid) {
+      settings.iceGatheringTimeout = 1000;
+    }
     settings.iceServers = [
       {"urls": "stun:stun.l.google.com:19305"},
       {"urls": "stun:stun.l.google.com:19302"},
