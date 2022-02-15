@@ -126,7 +126,7 @@ packages:
       name: dart_webrtc
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.2"
+    version: "1.0.4"
   dbus:
     dependency: transitive
     description:
@@ -306,10 +306,10 @@ packages:
   flutter_webrtc:
     dependency: transitive
     description:
-      name: flutter_webrtc
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.8.1"
+      path: flutter-webrtc
+      relative: true
+    source: path
+    version: "0.8.2"
   http:
     dependency: "direct main"
     description:
@@ -853,7 +853,7 @@ packages:
       name: webrtc_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.1"
+    version: "1.0.2"
   websocket_manager:
     dependency: "direct main"
     description:
