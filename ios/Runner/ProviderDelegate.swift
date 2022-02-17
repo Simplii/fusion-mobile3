@@ -91,26 +91,24 @@ class ProviderDelegate: NSObject {
             completion?(error)
         
             self.callkitChannel.invokeMethod("startCall", arguments: [uuid.uuidString, handle, callerName])
-            self.startRingingTimer(for: uuid.uuidString)
+            self.startRingingTimer(uuid: uuid.uuidString)
         }
     }
     
-    private func startRingingTimer(for: uuid )
+    private func startRingingTimer(uuid: String )
     {
         let vTimer = Timer(
-            timeInterval: 40, 
+            timeInterval: 40,
             repeats: false,
             block: { [weak self] _ in
-                self?.ringingDidTimeout(uuid)
+                self?.ringingDidTimeout(uuid: uuid)
             })
         vTimer.tolerance = 0.5
         RunLoop.current.add(vTimer, forMode: .common)
-        ringingTimer = vTimer
     }
 
-    private func ringingDidTimeout(for: uuid)
-    {
-        self.callkitChannel.reportCall(with: uuid, endedAt: nil, reason: .unanswered)
+    private func ringingDidTimeout(uuid: String) {
+        self.provider.reportCall(with: UUID.init(uuidString: uuid)!, endedAt: nil, reason: .unanswered)
     }
 }
 

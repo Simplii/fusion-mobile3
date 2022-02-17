@@ -440,6 +440,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                                 Text(" " +
                                     ("" + _historyItem.getOtherNumber(
                                         _fusionConnection.getDomain()))
+                                        .toString()
                                         .formatPhone() +
                                     " " +
                                     mDash +
