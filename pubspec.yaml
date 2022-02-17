@@ -24,7 +24,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_apns:
-  firebase_messaging:
+  firebase_messaging: ^11.2.6
   firebase_core:
   flutter_dtmf:
   android_intent_plus:
@@ -59,8 +59,6 @@ dependencies:
   shared_preferences:
   all_sensors:
   callkeep:
-    git:
-      url: "https://github.com/davidkarn/callkeep.git"
 
 dev_dependencies:
   flutter_test:

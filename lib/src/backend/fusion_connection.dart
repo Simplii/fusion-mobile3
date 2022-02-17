@@ -400,8 +400,12 @@ class FusionConnection {
         }
 
         smsDepartments.getDepartments((List<SMSDepartment> lis) {});
-
+print("getting token");
+print(_pushkitToken);
         FirebaseMessaging.instance.getToken().then((token) {
+          print("got token");
+          print(token);
+          print(_pushkitToken);
           apiV1Call("post", "/clients/device_token",
               {"token": token, "pn_tok": _pushkitToken});
         });

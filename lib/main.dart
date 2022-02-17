@@ -263,6 +263,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _onResume(RemoteMessage m) {
+    print("resumed");
     softphone.reregister();
   }
 

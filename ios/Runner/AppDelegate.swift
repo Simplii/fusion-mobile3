@@ -2,6 +2,7 @@ import UIKit
 import CallKit
 import Flutter
 import PushKit
+import Sentry
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate{
@@ -32,6 +33,15 @@ import PushKit
                         guard let _ = self else {return}
                         guard granted else { return }
                         self?.getNotificationSettings() }
+        
+        
+/*        do {
+            Client()
+          Client.shared = try Client(dsn: "https://6ac1552d08264600966c0ec85516dbd9@o68456.ingest.sentry.io/146230")
+                try Client.shared?.startCrashHandler()
+        } catch let error {
+            print("\(error)")
+        }*/
         
       return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
@@ -66,6 +76,11 @@ import PushKit
             for type: PKPushType) {
         print("didpudategreds providerpush")
         print(pushCredentials)
+        let deviceToken: String = pushCredentials.token.map { String(format: "%02x", $0) }.joined();
+
+        if (callkitChannel != nil) {
+            callkitChannel.invokeMethod("setPushToken", arguments: [deviceToken]);
+        }
     }
     
     func pushRegistry(_ registry: PKPushRegistry,
@@ -77,8 +92,8 @@ import PushKit
     func pushRegistry(_ registry: PKPushRegistry,
                         didReceiveIncomingPushWith payload: PKPushPayload,
                         for type: PKPushType, completion: @escaping () -> Void) {
-        print("didrecproviderpush", payload, payload.dictionaryPayload  )
-  
+        print("didrecproviderpush callkit", payload, payload.dictionaryPayload)
+        
       if let uuidString = payload.dictionaryPayload["uuid"] as? String,
           let identifier = payload.dictionaryPayload["caller_name"] as? String,
           let handle = payload.dictionaryPayload["caller_id"] as? String,
@@ -93,7 +108,21 @@ import PushKit
 
         };
             
-      }
+      } else if let identifier = payload.dictionaryPayload["caller_name"] as? String,
+                let handle = payload.dictionaryPayload["caller_id"] as? String{
+        let uuid = UUID()
+              providerDelegate.reportNewIncomingCall(
+                    uuid: uuid,
+                    handle: handle,
+                    callerName: identifier,
+                  hasVideo: false) { (e: Error?) in
+                  print("completion2")
+	
+              };
+                  
+            }
+    else {
+        providerDelegate.reportNewIncomingCall(uuid: UUID(), handle: "Unknown", callerName: "Unknown") {(e: Error?) in print("completion3"); };
+        }
     }
 }
-

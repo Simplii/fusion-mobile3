@@ -329,14 +329,18 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     final ImagePicker _picker = ImagePicker();
     if (source == "camera") {
       _picker.pickImage(source: ImageSource.camera).then((XFile file) {
-        this.setState(() {
-          _mediaToSend.add(file);
-        });
+        if (file != null) {
+          this.setState(() {
+            _mediaToSend.add(file);
+          });
+        }
       });
     } else {
       _picker.pickMultiImage().then((List<XFile> images) {
         this.setState(() {
-          _mediaToSend = images;
+          if (images != null) {
+            _mediaToSend = images;
+          }
         });
       });
     }
@@ -403,7 +407,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                           height: 18, width: 22)))),
           Expanded(
               child: Stack(children: [
-            if (_mediaToSend.length > 0)
+            if (_mediaToSend != null && _mediaToSend.length > 0)
               Container(
                   height: 120,
                   padding: EdgeInsets.all(8),
