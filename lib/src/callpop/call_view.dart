@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -209,6 +210,7 @@ class _CallViewState extends State<CallView> {
                     children: options.map((List<String> option) {
                       return GestureDetector(
                           onTap: () {
+                            print("setting output from gesture");
                             _softphone.setCallOutput(_activeCall, option[2]);
                             Navigator.pop(context);
                           },
@@ -370,6 +372,29 @@ class _CallViewState extends State<CallView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (Platform.isIOS && isIncoming && isRinging)
+                        CallActionButtons(
+                            actions: actions,
+                            isRinging: isRinging,
+                            isIncoming: isIncoming,
+                            dialPadOpen: dialpadVisible,
+                            isOnConference:
+                                _softphone.isCallMerged(_activeCall),
+                            setDialpad: (bool isOpen) {
+                              setState(() {
+                                print("isopen" +
+                                    isOpen.toString() +
+                                    dialpadVisible.toString());
+                                dialpadVisible = isOpen;
+                                print("isopen" +
+                                    isOpen.toString() +
+                                    dialpadVisible.toString());
+                              });
+                            },
+                            callIsRecording:
+                                _softphone.getRecordState(_activeCall),
+                            callIsMuted: _softphone.getMuted(_activeCall),
+                            callOnHold: _softphone.getHoldState(_activeCall)),
                         CallHeaderDetails(
                             callerName: callerName,
                             companyName: companyName,
@@ -385,6 +410,7 @@ class _CallViewState extends State<CallView> {
                         if (!_softphone.getHoldState(_activeCall) &&
                             dialpadVisible)
                           CallDialPad(_softphone, _activeCall),
+                        if (!Platform.isIOS || !isIncoming || !isRinging)
                         CallActionButtons(
                             actions: actions,
                             isRinging: isRinging,

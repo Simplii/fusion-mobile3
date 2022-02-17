@@ -176,6 +176,7 @@ class _CallActionButtonsState extends State<CallActionButtons> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Spacer(flex: 3),
+          
           Container(child:_hangupButton(), margin: EdgeInsets.only(bottom: 8)),
           if (widget.isRinging && widget.isIncoming)
             Spacer(flex: 1),

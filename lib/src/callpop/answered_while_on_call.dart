@@ -44,19 +44,19 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
         fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white);
     bool isMerged = softphone.isCallMerged(call);
 
-    return Row(children: [
-      switchGestureDetector(
+    return switchGestureDetector(
+        Row(children: [
+
           ContactCircle.withDiameterAndMargin(info != null ? info.contacts : [],
               info != null ? info.crmContacts : [], 24, 8),
-          call),
-      switchGestureDetector(
-          Text(softphone.getCallerName(call), style: textStyle), call),
+
+          Text(softphone.getCallerName(call), style: textStyle),
       Expanded(child: switchGestureDetector(Container(), call)),
       if (softphone.getHoldState(call))
-        switchGestureDetector(Text("Hold", style: textStyle), call),
+        Text("Hold", style: textStyle),
       Text(" " + mDash + " " + softphone.getCallRunTimeString(call),
           style: textStyle),
-      if (!isMerged)
+      if (!isMerged && false) // disabing until we can support conference calling
         GestureDetector(
             onTap: () {
               softphone.mergeCalls(activeCall, call);
@@ -66,7 +66,7 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
                 padding: EdgeInsets.only(left: 12, top: 2, bottom: 2),
                 child: Image.asset("assets/icons/call_view/merge.png",
                     width: 20, height: 20))),
-    ]);
+    ]),call);
   }
 
   _hangupButton(call) {

@@ -65,11 +65,13 @@ class Softphone implements SipUaHelperListener {
     _audioCache.load(_inboundAudioPath);
   }
 
-  close() {
+  close() async {
     try {
-      helper.unregister(true);
-      helper.stop();
-      helper.terminateSessions({}); }
+      print("unregistering");
+     // helper.unregister(true);
+      await helper.stop();
+      //helper.terminateSessions({});
+      }
     catch (e) { print("error closing"); }
   }
 
@@ -125,6 +127,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   Future<dynamic> _telecomHandler(MethodCall methodCall) async {
+    print("telecommessage:" + methodCall.method);
     switch (methodCall.method) {
       case 'setPushToken':
         String token = methodCall.arguments[0] as String;
@@ -190,6 +193,9 @@ class Softphone implements SipUaHelperListener {
   }
 
   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
+    print("callkitmethod:" + methodCall.method);
+    print(methodCall.method);
+    print(methodCall);
     switch (methodCall.method) {
       case 'setPushToken':
         String token = methodCall.arguments[0] as String;
@@ -198,6 +204,8 @@ class Softphone implements SipUaHelperListener {
 
       case 'answerButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
+        print("callkit toanswer" + callUuid);
+        print("callkitgettingthecall" + _getCallByUuid(callUuid).toString());
         answerCall(_getCallByUuid(callUuid));
         return;
 
@@ -259,8 +267,10 @@ class Softphone implements SipUaHelperListener {
 
   Future<void> _reportOutgoingCall(String uuid) async {
     try {
+      print("callkit reporting outgoing");
       await _callKit.invokeMethod('reportOutgoingCall', uuid);
     } on PlatformException catch (e) {
+      print("callkit outgoing error");
     }
   }
 
@@ -277,7 +287,12 @@ class Softphone implements SipUaHelperListener {
 
     settings.userAgent = 'Fusion Mobile - Dart';
     settings.dtmfMode = DtmfMode.RFC2833;
-    settings.iceGatheringTimeout = 1000;
+    if (Platform.isIOS) {
+      settings.iceGatheringTimeout = 500;
+    }
+    else if (Platform.isAndroid) {
+      settings.iceGatheringTimeout = 1000;
+    }
     settings.iceServers = [
       {"urls": "stun:stun.l.google.com:19305"},
       {"urls": "stun:stun.l.google.com:19302"},
@@ -293,7 +308,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   reregister() {
-    print("reregistering");
+    print("reregistering...");
     helper.register();
   }
 
@@ -316,6 +331,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   doMakeCall(String destination) async {
+    print("making call not callkit");
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     helper.setVideo(false);
     MediaStream mediaStream;
@@ -331,10 +347,12 @@ class Softphone implements SipUaHelperListener {
     }
     call.unmute();
     call.unhold();
+    print("making active callkit call:" + call.id + ":" + call.direction);
 
     if (_getCallDataValue(call.id, "isReported") != true &&
-        call.direction == "outbound") {
+        call.direction == "OUTGOING") {
       if (Platform.isIOS) {
+        print("reportoing outging call callkit");
         _setCallDataValue(call.id, "isReported", true);
         _callKit.invokeMethod("reportOutgoingCall",
             [_uuidFor(call), getCallerNumber(call), getCallerName(call)]);
@@ -412,7 +430,14 @@ class Softphone implements SipUaHelperListener {
   setSpeaker(bool useSpeaker) {
     _savedOutput = useSpeaker;
     if (_localStream != null) {
-      _localStream.getAudioTracks()[0].enableSpeakerphone(useSpeaker);
+      var tracks = _localStream.getAudioTracks();
+      for (var track in tracks) {
+        if (Platform.isIOS) {
+          track.enableSpeakerphone(useSpeaker);
+        } else {
+          track.enableSpeakerphone(useSpeaker);
+        }
+      }
     }
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
   }
@@ -467,9 +492,12 @@ class Softphone implements SipUaHelperListener {
   }
 
   answerCall(Call call) async {
+    if (call == null) return;
+
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     MediaStream mediaStream;
     mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+    print("answering the call callkit");
     call.answer(helper.buildCallOptions(), mediaStream: mediaStream);
     if (Platform.isAndroid) {
       _callKeep.answerIncomingCall(_uuidFor(call));
@@ -736,7 +764,7 @@ class Softphone implements SipUaHelperListener {
               displayName: data.getName(defaul: call.remote_display_name),
               handle: call.remote_identity);
         }
-        if (call.direction == "outbound" || call.direction == "outgoing")
+        if (call.direction == "outbound" || call.direction == "OUTGOING")
           _setCallDataValue(call.id, "callPopInfo", data);
       });
 
@@ -912,6 +940,15 @@ class Softphone implements SipUaHelperListener {
     switch (callState.state) {
       case CallStateEnum.STREAM:
         _handleStreams(callState);
+        if (Platform.isIOS) {
+          // for some reason ios defaults to speakerphone and wont let me change
+          // that until after this event.
+          for (var i = 1250; i < 10000; i += 1500) {
+            var future = new Future.delayed(Duration(milliseconds: i), () {
+              setCallOutput(call, getCallOutput(call));
+            });
+          }
+        }
         break;
       case CallStateEnum.ENDED:
         stopOutbound();
@@ -944,12 +981,16 @@ class Softphone implements SipUaHelperListener {
       case CallStateEnum.PROGRESS:
         break;
       case CallStateEnum.ACCEPTED:
-        setCallOutput(call, getCallOutput(call));
+        if (Platform.isAndroid) {
+          setCallOutput(call, getCallOutput(call));
+        }
         break;
       case CallStateEnum.CONFIRMED:
         stopOutbound();
         stopInbound();
-        setCallOutput(call, getCallOutput(call));
+        if (Platform.isAndroid) {
+          setCallOutput(call, getCallOutput(call));
+        }
         _setCallDataValue(call.id, "answerTime", DateTime.now());
 
         if (!isIncoming(call)) {
@@ -973,13 +1014,17 @@ class Softphone implements SipUaHelperListener {
         if (Platform.isAndroid) {
           _callKeep.setOnHold(_uuidFor(call), false);
         }
-        setCallOutput(call, getCallOutput(call));
+        if (Platform.isAndroid) {
+          setCallOutput(call, getCallOutput(call));
+        }
         break;
       case CallStateEnum.NONE:
         break;
       case CallStateEnum.CALL_INITIATION:
         _addCall(call);
-        setCallOutput(call, getCallOutput(call));
+        if (Platform.isAndroid) {
+          setCallOutput(call, getCallOutput(call));
+        }
         break;
       case CallStateEnum.REFER:
         break;
