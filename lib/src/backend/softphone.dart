@@ -346,6 +346,8 @@ class Softphone implements SipUaHelperListener {
         setHold(c, true);
       }
     }
+    print("madeactive");
+    print(call);
   }
 
   _setApiIds(call, termId, origId) {
@@ -452,10 +454,12 @@ class Softphone implements SipUaHelperListener {
 
   transfer(Call call, String destination) {
     call.refer(destination);
+    print("transfercall");print(call);
     _removeCall(call);
   }
 
   hangUp(Call call) {
+    print("hangupcall");print(call);
     try {
       call.hangup();
     } catch (e) {}
@@ -595,7 +599,15 @@ class Softphone implements SipUaHelperListener {
 
     for (Call c in toRemove) calls.remove(c);
 
+    print('removingcall');
+    print(call);
+    print(toRemove);
+    print(toRemove.length);
+    print(calls.length);
+
     if (calls.length > 0) {
+      print('tehcallleft');
+      print(calls[0]);
       makeActiveCall(calls[0]);
     } else {
       setCallOutput(call, "phone");
@@ -904,12 +916,15 @@ class Softphone implements SipUaHelperListener {
       case CallStateEnum.ENDED:
         stopOutbound();
         stopInbound();
+        print("callended");
+        print(call);
         _removeCall(call);
         break;
       case CallStateEnum.FAILED:
         stopOutbound();
         stopInbound();
-
+        print("callfailed");
+        print(call);
         _removeCall(call);
         break;
       case CallStateEnum.UNMUTED:
