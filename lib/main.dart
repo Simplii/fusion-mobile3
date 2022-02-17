@@ -242,7 +242,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _setupPermissions() {
-    print("gonna get permissions");
+    print("gonna get permissionssertup");
     [
       Permission.phone,
       Permission.bluetoothConnect,

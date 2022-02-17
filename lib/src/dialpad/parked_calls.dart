@@ -34,6 +34,7 @@ class _ParkedCallsState extends State<ParkedCalls> {
   Timer _timer;
 
   initState() {
+    print("initing park state");
     super.initState();
     _timer = new Timer.periodic(
       Duration(seconds: 1),
@@ -48,7 +49,7 @@ class _ParkedCallsState extends State<ParkedCalls> {
     super.dispose();
   }
 
-_spinner() {
+  _spinner() {
     return Container(
         alignment: Alignment.center,
         padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
@@ -69,6 +70,11 @@ _spinner() {
         _parkLines = lines;
       });
     });
+  }
+
+  _refresh() {
+    _lookupState = 0;
+    _lookup();
   }
 
   Widget _parkRow(ParkLine line, int index) {
@@ -133,6 +139,7 @@ _spinner() {
             _softphone.transfer(
                 _activeCall,
                 "sip:park_" + line.parkLine.toString() + "@" + _fusionConnection.getDomain());
+            _refresh();
           }
 
           Navigator.pop(context);

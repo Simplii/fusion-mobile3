@@ -56,7 +56,7 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
         switchGestureDetector(Text("Hold", style: textStyle), call),
       Text(" " + mDash + " " + softphone.getCallRunTimeString(call),
           style: textStyle),
-      if (!isMerged)
+      if (!isMerged && false) // disabing until we can support conference calling
         GestureDetector(
             onTap: () {
               softphone.mergeCalls(activeCall, call);
