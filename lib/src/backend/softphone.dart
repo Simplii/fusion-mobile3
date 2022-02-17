@@ -991,10 +991,15 @@ class Softphone implements SipUaHelperListener {
     registered = this.helper.registered;
     _updateListeners();
     if (!connected) {
-      this.reregister();
+
+      var future = new Future.delayed(const Duration(milliseconds: 10000), () {
+        this.reregister();
+      });
     }
     else if (!registered) {
-      this.reregister();
+      var future = new Future.delayed(const Duration(milliseconds: 10000), () {
+        this.reregister();
+      });
     }
   }
 
