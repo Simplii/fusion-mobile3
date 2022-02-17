@@ -34,6 +34,7 @@ class Softphone implements SipUaHelperListener {
 
   bool registered = false;
   bool connected = false;
+  bool _settingupcallkeep = false;
 
   FlutterCallkeep _callKeep;
   Map<String, Map<String, dynamic>> callData = {};
@@ -59,7 +60,6 @@ class Softphone implements SipUaHelperListener {
       _callKit = MethodChannel('net.fusioncomm.ios/callkit');
     else if (Platform.isAndroid)
       _telecom = MethodChannel('net.fusioncomm.android/telecom');
-    setup();
 
     _audioCache.load(_outboundAudioPath);
     _audioCache.load(_inboundAudioPath);
@@ -116,7 +116,7 @@ class Softphone implements SipUaHelperListener {
       _setupCallKit();
     else if (Platform.isAndroid) {
       _callKeep = FlutterCallkeep();
-      setupCallKeep();
+      _setupCallKeep();
     }
   }
 
@@ -137,7 +137,7 @@ class Softphone implements SipUaHelperListener {
     _callKit.setMethodCallHandler(_callKitHandler);
   }
 
-  setupCallKeep() {
+  _setupCallKeep() {
     _callKeep.on(
         CallKeepDidDisplayIncomingCall(), _callKeepDidDisplayIncomingCall);
     _callKeep.on(CallKeepPerformAnswerCallAction(), _callKeepAnswerCall);
@@ -167,22 +167,13 @@ class Softphone implements SipUaHelperListener {
       },
     };
     print("sertupcallkeep");
-/*
-    [
-      Permission.phone,
-    ].request().then((Map<Permission, PermissionStatus> statuses) {
-      print('status1');
-      print(statuses[Permission.phone]);
-    });
+    print(_settingupcallkeep);
 
-    [
-      Permission.bluetooth,
-    ].request().then((Map<Permission, PermissionStatus> statuses) {
-      print('status2');
-      print(statuses[Permission.bluetooth]);
-    });*/
-
-    _callKeep.setup(_context, callSetup);
+    if (!_settingupcallkeep) {
+      _settingupcallkeep = true;
+      print("serting up callkeep");
+      _callKeep.setup(_context, callSetup);
+    }
 
     if (Platform.isAndroid) {
       //if (isIOS) iOS_Permission();
@@ -987,18 +978,28 @@ class Softphone implements SipUaHelperListener {
 
   @override
   void registrationStateChanged(RegistrationState state) {
-    connected = this.helper.connected;
-    registered = this.helper.registered;
-    _updateListeners();
-    if (!connected) {
+    print("registrationstate");
+    print(state.state);
+    print(state.cause.cause);
+    print(state.cause.reason_phrase);
 
-      var future = new Future.delayed(const Duration(milliseconds: 10000), () {
-        this.reregister();
-      });
+    if (state.state == RegistrationStateEnum.UNREGISTERED) {
+      registered = false;
+    } else if (state.state == RegistrationStateEnum.REGISTRATION_FAILED) {
+      registered = false;
+    } else if (state.state == RegistrationStateEnum.NONE) {
+      print("itsnone");
+      registered = this.helper.registered;
+    } else if (state.state == RegistrationStateEnum.REGISTERED) {
+      registered = true;
     }
-    else if (!registered) {
+    connected = this.helper.connected;
+    _updateListeners();
+
+    if (!registered) {
       var future = new Future.delayed(const Duration(milliseconds: 10000), () {
-        this.reregister();
+        if (!this.helper.registered)
+          this.reregister();
       });
     }
   }
