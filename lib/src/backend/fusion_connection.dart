@@ -334,6 +334,11 @@ class FusionConnection {
       args[#headers] = headers;
       var uriResponse = await Function.apply(fn, [url], args);
       _saveCookie(uriResponse);
+      print("apirequest");
+      print(route);
+      print(urlParams);
+      print(data);
+      print(uriResponse.body);
       var jsonResponse = convert.jsonDecode(uriResponse.body);
       if (callback != null) callback(jsonResponse);
     } finally {

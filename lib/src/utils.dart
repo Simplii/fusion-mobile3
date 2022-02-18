@@ -23,11 +23,16 @@ uuidFromString(String str) {
 }
 
 intIdForString(String str) {
-  int id = 1;
-  for (var i = 0; i < str.length; i++) {
-    id += i * 256 + str.codeUnitAt(i);
+  if (str == null)
+    return 0;
+
+  else {
+    int id = 1;
+    for (var i = 0; i < str.length; i++) {
+      id += i * 256 + str.codeUnitAt(i);
+    }
+    return id;
   }
-  return id;
 }
 
 extension durations on int {

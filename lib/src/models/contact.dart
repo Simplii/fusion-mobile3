@@ -45,6 +45,7 @@ class Contact extends FusionModel {
   List<dynamic> phoneNumbers;
   List<dynamic> pictures;
   List<dynamic> socials;
+  List<dynamic> externalReferences = [];
   Map<String, dynamic> lastCommunication;
   String type;
   String uid;
@@ -155,6 +156,48 @@ class Contact extends FusionModel {
     this.crmId = contactObject['crm_id'].runtimeType == int
         ? contactObject['crm_id'].toString()
         : contactObject['crm_id'];
+  }
+
+  Contact.fromV2(Map<String, dynamic> contactObject) {
+    addresses = [];
+    var address;
+    for (address in contactObject['addresses']) {
+      address['zip-2'] = address['zipPart2'];
+      addresses.add([
+        address
+      ]);
+    }
+    this.addresses = contactObject['addresses'];
+    this.company = contactObject['company'];
+    this.externalReferences = contactObject['externalReferences'];
+    this.createdAt = CarbonDate.fromDate(contactObject['createdAt']);
+    this.deleted = false;
+    this.emails = contactObject['emails'];
+    this.firstName = contactObject['firstName'];
+    this.groups = contactObject['tags'].cast<String>();
+    this.id = contactObject['id'];
+    this.jobTitle = contactObject['jobTitle'];
+    this.lastName = contactObject['lastName'];
+    this.name = contactObject['firstName'] + ' ' + contactObject['lastName'];
+    this.owner = contactObject['owner'];
+    this.phoneNumbers = [];
+    for (var number in contactObject['phoneNumbers']) {
+      this.phoneNumbers.add({
+        "number": number['number'],
+        "sms_capable": number['smsCapable'],
+        "type": number['type']
+      });
+    }
+    this.pictures = contactObject['pictures'];
+    this.socials = contactObject['socials'];
+    this.type = contactObject['type'];
+    this.updatedAt = CarbonDate.fromDate(contactObject['updatedAt']);
+
+    if (this.externalReferences.length > 0) {
+      this.crmUrl = externalReferences[0]['url'];
+      this.crmName = externalReferences[0]['network'];
+      this.crmId = externalReferences[0]['externalId'];
+    }
   }
 
   Map<String, dynamic> serverPayload() {
