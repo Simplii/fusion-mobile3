@@ -13,6 +13,12 @@ class CarbonDate {
     });
   }
 
+  CarbonDate.fromDate(String date) {
+    this.date = date;
+    this.timezone = 'UTC';
+    this.timezone_type = 1;
+  }
+
   CarbonDate.unserialize(String data) {
     Map<String, dynamic> obj = convert.jsonDecode(data);
     this.date = obj['date'];

@@ -8,14 +8,13 @@ import 'fusion_store.dart';
 
 class CallpopInfo extends FusionModel {
   String phoneNumber;
-  List<CrmContact> crmContacts;
+  List<CrmContact> crmContacts = [];
   List<Contact> contacts;
   List<dynamic> dispositionGroups;
   String _id = 'phoneNumber';
 
   CallpopInfo(Map<String, dynamic> map) {
     this.phoneNumber = map['phone_number'];
-    this.crmContacts = map['crm_contacts'];
     this.contacts = map['contacts'];
     this.dispositionGroups = map['dispositions'];
   }
@@ -64,31 +63,32 @@ class CallpopInfoStore extends FusionStore<CallpopInfo> {
       getRecord(phoneNumber, callback);
     }
 
-    fusionConnection.apiV1Call(
-        "get", "/callpop_info", {'phone_number': phoneNumber, 'group_id': -1},
+    fusionConnection.apiV2Call(
+        "get",
+        "/calls/callpopInfo",
+        {'phoneNumber': phoneNumber,
+          'dialerGroupId': -1,
+          'origination': super.fusionConnection.getUid(),
+          'destination': phoneNumber},
+
         callback: (Map<String, dynamic> data) {
-      List<CrmContact> leads = [];
-      List<Contact> contacts = [];
+          List<Contact> contacts = [];
 
-      if (data['contacts'] != null)
-        for (Map<String, dynamic> obj in data['contacts']) {
-          contacts.add(Contact(obj));
+          if (data['contacts'] != null)
+            for (Map<String, dynamic> obj in data['contacts']) {
+              contacts.add(Contact.fromV2(obj));
+            }
+
+          CallpopInfo info = CallpopInfo({
+            'phone_number': phoneNumber,
+            'crm_contacts': [],
+            'contacts': contacts,
+            'dispositions': data['dispositionGroups']
+          });
+
+          storeRecord(info);
+          callback(info);
         }
-
-      if (data['leads'] != null)
-        for (Map<String, dynamic> obj in data['leads']) {
-          leads.add(CrmContact(obj));
-        }
-
-      CallpopInfo info = CallpopInfo({
-        'phone_number': phoneNumber,
-        'crm_contacts': leads,
-        'contacts': contacts,
-        'dispositions': data['dispositions']
-      });
-
-      storeRecord(info);
-      callback(info);
-    });
+    );
   }
 }
