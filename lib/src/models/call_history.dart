@@ -78,7 +78,8 @@ class CallHistoryStore extends FusionStore<CallHistory> {
 
           for (Map<String, dynamic> item in datas) {
             CallHistory obj = CallHistory(item);
-            obj.coworker = fusionConnection.coworkers.lookupCoworker(obj.to);
+            obj.coworker = fusionConnection.coworkers.lookupCoworker(
+                obj.direction == 'inbound' ? obj.from : obj.to);
 
             storeRecord(obj);
             response.add(obj);
