@@ -35,9 +35,10 @@ class _CrmLeadsRowState extends State<CrmLeadsRow> {
                     child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.network(
+                          c.icon != null ? Image.network(
                             c.icon,
-                            height: 22, width: 22),
+                            height: 22, width: 22)
+                              : Container(width: 22, height: 22),
                           Container(height: 6),
                           Text((c.module.substring(c.module.length - 1) == "s"
                               ? c.module.substring(0, c.module.length - 1)
