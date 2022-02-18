@@ -17,6 +17,36 @@ class CallpopInfo extends FusionModel {
     this.phoneNumber = map['phone_number'];
     this.contacts = map['contacts'];
     this.dispositionGroups = map['dispositions'];
+    var added = {};
+    this.contacts.forEach((contact) {
+      List<String> emails = [];
+      contact.emails.forEach((email) {
+        emails.add(email['email']);
+      });
+      contact.externalReferences.forEach((extRef) {
+        var key = extRef['network_id'] + ':' + extRef['network'];
+        if (!added.containsKey(key)) {
+          added[key] = true;
+          print("icon");
+          print(extRef['icon']);
+          this.crmContacts.add(CrmContact(
+              {
+                "crm": extRef['network'],
+                "emails": emails,
+                "icon": extRef['icon'],
+                "id": extRef['network_id'],
+                "nid": extRef['network_id'],
+                "label": extRef['name'] != null ? extRef['name'] : contact.name,
+                "name": extRef['name'] != null ? extRef['name'] : contact.name,
+                "module": extRef['module'],
+                "url": extRef['url'],
+                "phone_number": map['phone_number'],
+                "company": contact.company
+              }
+          ));
+        }
+      });
+    });
   }
 
   String getId() => this.phoneNumber;
