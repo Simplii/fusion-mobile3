@@ -490,7 +490,7 @@ class _MyHomePageState extends State<MyHomePage> {
             floatingActionButton: _getFloatingButton(),
             bottomNavigationBar: Container(
                 height: Platform.isAndroid ? 60 : 60.0,
-                margin: EdgeInsets.only(top: 0, left: 16, right: 16, bottom: 0),
+                margin: EdgeInsets.only(top: 0, left: 16, right: 16, bottom: iphoneIsLarge() ? 12 : 0),
                 child: Column(
                   children: [
                     Row(children: [
