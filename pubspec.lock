@@ -736,7 +736,7 @@ packages:
       path: dart-sip-ua
       relative: true
     source: path
-    version: "0.4.0"
+    version: "0.5.1"
   sky_engine:
     dependency: transitive
     description: flutter
