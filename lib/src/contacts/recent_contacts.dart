@@ -227,10 +227,13 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     } else if (_typeFilter == 'Coworkers') {
       _fusionConnection.coworkers.search(_query, (List<Contact> contacts) {
         if (thisLookup != _lookedUpQuery) return;
+        if (!mounted) return;
+
         this.setState(() {
           lookupState = 2;
           _contacts = contacts;
         });
+
         _subscribeCoworkers(
             contacts
                 .map((Contact c) {
