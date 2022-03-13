@@ -35,6 +35,7 @@ import 'src/messages/new_message_popup.dart';
 import 'src/messages/sms_conversation_view.dart';
 import 'src/styles.dart';
 import 'src/utils.dart';
+import 'package:flutter_background/flutter_background.dart';
 
 FlutterCallkeep __callKeep = FlutterCallkeep();
 bool __callKeepInited = false;
@@ -263,7 +264,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _onResume(RemoteMessage m) {
-    print("resumed");
+    print("resumed reregister");
     softphone.reregister();
   }
 
@@ -330,29 +331,44 @@ class _MyHomePageState extends State<MyHomePage> {
   _autoLogin() {
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
       String username = prefs.getString("username");
-      String domain = username.split('@')[1];
-      String sub_login = prefs.getString("sub_login");
-      String aor = prefs.getString("aor");
-      String auth_key = prefs.getString("auth_key");
+      if (username != null) {
+        String domain = username.split('@')[1];
+        String sub_login = prefs.getString("sub_login");
+        String aor = prefs.getString("aor");
+        String auth_key = prefs.getString("auth_key");
 
-      if (auth_key != null && auth_key != "") {
-        fusionConnection.autoLogin(username, domain);
-        setState(() {
-          _sub_login = sub_login;
-          _auth_key = auth_key;
-          _aor = aor;
-          _logged_in = true;
-          _isRegistering = true;
-        });
+        if (auth_key != null && auth_key != "") {
+          fusionConnection.autoLogin(username, domain);
+          setState(() {
+            _sub_login = sub_login;
+            _auth_key = auth_key;
+            _aor = aor;
+            _logged_in = true;
+            _isRegistering = true;
+          });
 
-        softphone.register(sub_login, auth_key, aor.replaceAll('sip:', ''));
-        checkForInitialMessage();
-      } else {
+          softphone.register(sub_login, auth_key, aor.replaceAll('sip:', ''));
+          checkForInitialMessage();
+        } else {
+        }
       }
     });
   }
 
   Future<void> _register() async {
+
+        final androidConfig = FlutterBackgroundAndroidConfig(
+          enableWifiLock: true,
+          notificationTitle: "Fusion Mobile",
+          notificationText: "Active call with Fusion Mobile.",
+          notificationImportance: AndroidNotificationImportance.Default,
+          //notificationIcon: AndroidResource(name: 'app_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
+        );
+        FlutterBackground.initialize(androidConfig: androidConfig)
+            .then((value) => print("initalizefbvalue" + value.toString()));
+        print("fbcheck");
+
+
     if (_isRegistering) {
       return;
     } else if (_sub_login != "") {
@@ -450,6 +466,9 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     if (softphone.activeCall != null && !_isProximityListening) {
+      print("goingtoenablebgexecution");
+      FlutterBackground.enableBackgroundExecution().then((value) => print("enablebgexecutionvalue" + value.toString()));
+
       _isProximityListening = true;
       _proximitySub = proximityEvents.listen((ProximityEvent event) {
         setState(() {
@@ -458,7 +477,10 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       });
     } else if (softphone.activeCall == null && _isProximityListening) {
+      print("goingtodisablebgexecution");
+      _isProximityListening = false;
       _proximitySub.cancel();
+      FlutterBackground.disableBackgroundExecution().then((value) => print("disablebgexecutionvalue" + value.toString()));
     }
 
     if (!_logged_in) {

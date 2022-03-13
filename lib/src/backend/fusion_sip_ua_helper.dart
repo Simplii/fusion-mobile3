@@ -8,6 +8,7 @@ class FusionSIPUAHelper extends SIPUAHelper {
     _settingVideo = settingVideo;
   }
 
+
   @override
   Map<String, Object> buildCallOptions([bool voiceonly = false]) {
     var options = super.buildCallOptions(voiceonly);
