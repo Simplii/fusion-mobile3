@@ -3,16 +3,21 @@ import AVFoundation
 import CallKit
 import Sentry
 
-class ProviderDelegate: NSObject {
+class ProviderDelegate: NSObject, CXCallObserverDelegate {
     private let controller = CXCallController()
     private let provider: CXProvider
     private let callkitChannel: FlutterMethodChannel!
+    private var answeredUuids: [String: Bool] = [:]
+    private let theCallObserver = CXCallObserver()
+
 
     public init(channel: FlutterMethodChannel) {
         provider = CXProvider(configuration: ProviderDelegate.providerConfiguration)
+
         callkitChannel = channel
         super.init()
-        
+        theCallObserver.setDelegate(self, queue: nil)
+
         callkitChannel.setMethodCallHandler({ [self]
           (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             print("callkit method hanlder", call.method)
@@ -47,6 +52,14 @@ class ProviderDelegate: NSObject {
         provider.setDelegate(self, queue: nil)
     }
   
+    func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
+        if call.hasConnected == true {
+            print("marking answered", call.uuid.uuidString)
+            answeredUuids[call.uuid.uuidString] = true
+            print(answeredUuids)
+        }
+    }
+    
     private func requestTransaction(_ transaction: CXTransaction) {
         controller.request(transaction) { error in
             if let error = error {
@@ -108,7 +121,14 @@ class ProviderDelegate: NSObject {
     }
 
     private func ringingDidTimeout(uuid: String) {
-        self.provider.reportCall(with: UUID.init(uuidString: uuid)!, endedAt: nil, reason: .unanswered)
+        print("checking ring", uuid, answeredUuids)
+        if (answeredUuids.keys.contains(uuid) && answeredUuids[uuid] != true) {
+            print("removing unanswered")
+            self.provider.reportCall(with: UUID.init(uuidString: uuid)!,
+                                     endedAt: nil,
+                                     reason: .unanswered)
+            answeredUuids.removeValue(forKey: uuid)
+        }
     }
 }
 
