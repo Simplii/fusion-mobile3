@@ -294,6 +294,10 @@ class FusionConnection {
 
       var uriResponse = await Function.apply(fn, [url], args);
       _saveCookie(uriResponse);
+      print(url);
+      print(uriResponse.body);
+      print(data);
+      print(urlParams);
       var jsonResponse = convert.jsonDecode(uriResponse.body);
       client.close();
       if (callback != null) callback(jsonResponse);

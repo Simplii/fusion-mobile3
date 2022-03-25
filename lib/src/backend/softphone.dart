@@ -76,19 +76,23 @@ class Softphone implements SipUaHelperListener {
   }
 
   _playAudio(String path) {
-    Aps.AudioCache cache = Aps.AudioCache();
-    if (path == _outboundAudioPath) {
-      cache.loop(_outboundAudioPath)
-        .then((Aps.AudioPlayer playing) {
+    if (Platform.isIOS)
+      return;
+    else {
+      Aps.AudioCache cache = Aps.AudioCache();
+      if (path == _outboundAudioPath) {
+        cache.loop(_outboundAudioPath)
+            .then((Aps.AudioPlayer playing) {
           _outboundPlayer = playing;
           _outboundPlayer.earpieceOrSpeakersToggle();
         });
-    }
-    else if (path == _inboundAudioPath) {
-      cache.loop(_inboundAudioPath)
-        .then((Aps.AudioPlayer playing) {
+      }
+      else if (path == _inboundAudioPath) {
+        cache.loop(_inboundAudioPath)
+            .then((Aps.AudioPlayer playing) {
           _inboundPlayer = playing;
         });
+      }
     }
   }
 
@@ -279,8 +283,8 @@ class Softphone implements SipUaHelperListener {
 
     settings.webSocketSettings.allowBadCertificate = true;
    // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
-    //   settings.webSocketUrl = "ws://164.90.154.80:8080";
-       settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
+    settings.webSocketUrl = "ws://164.90.154.80:8080";
+    //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
     settings.uri = aor;
     settings.authorizationUser = login;
     settings.password = password;

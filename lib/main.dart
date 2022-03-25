@@ -129,8 +129,9 @@ Future<void> main() async {
   ]);
 
   await SentryFlutter.init(
-    (options) => options.dsn =
-        'https://91be6ab841f64100a3698952bbc577c2@o68456.ingest.sentry.io/6019626',
+
+    (options) => options.dsn = 'http://43e5e335ad71435ca826501a5ce9f14e@35.162.241.73:9000/2',
+
     appRunner: () => runApp(MaterialApp(home: MyApp())),
   );
    // runApp(MaterialApp(home: MyApp()));
