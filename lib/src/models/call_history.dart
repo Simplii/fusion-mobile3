@@ -39,7 +39,7 @@ class CallHistory extends FusionModel {
 
   CallHistory(Map<String, dynamic> obj) {
     id = obj['id'].toString();
-    startTime = DateTime.fromMillisecondsSinceEpoch(int.parse(obj['starttime']) * 1000);
+    startTime = DateTime.parse(obj['startTime']);
     toDid = obj['to_did'];
     fromDid = obj['from_did'];
     to = obj['to'];
@@ -68,7 +68,6 @@ class CallHistoryStore extends FusionStore<CallHistory> {
 
   getRecentHistory(int limit, int offset,
                    Function(List<CallHistory>, bool) callback) {
-    callback(getRecords(), false);
     fusionConnection.apiV2Call(
         "get",
         "/calls/recent",
