@@ -68,6 +68,7 @@ class CallHistoryStore extends FusionStore<CallHistory> {
 
   getRecentHistory(int limit, int offset,
                    Function(List<CallHistory>, bool) callback) {
+    callback(getRecords(), false);
     fusionConnection.apiV2Call(
         "get",
         "/calls/recent",
