@@ -69,14 +69,14 @@ class CallHistoryStore extends FusionStore<CallHistory> {
   getRecentHistory(int limit, int offset,
                    Function(List<CallHistory>, bool) callback) {
     callback(getRecords(), false);
-    fusionConnection.apiV1Call(
+    fusionConnection.apiV2Call(
         "get",
         "/calls/recent",
         {'limit': limit, 'offset': offset},
-        callback: (List<dynamic> datas) {
+        callback: (Map<String, dynamic> datas) {
           List<CallHistory> response = [];
 
-          for (Map<String, dynamic> item in datas) {
+          for (Map<String, dynamic> item in datas['items']) {
             CallHistory obj = CallHistory(item);
             obj.coworker = fusionConnection.coworkers.lookupCoworker(
                 obj.direction == 'inbound' ? obj.from : obj.to);
