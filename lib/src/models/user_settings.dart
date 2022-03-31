@@ -129,4 +129,13 @@ class UserSettings {
 
     return numbers;
   }
+
+  setOutboundDid(String newDid) {
+    _fusionConnection.apiV2Call("post", "/clients/new_outbound_did/" + newDid, {},
+        callback: (Map<String, dynamic> datas) {
+          Map<String, dynamic> oldSubscriber = subscriber;
+          oldSubscriber['callid_nmbr'] = newDid;
+          setSubscriber(oldSubscriber);
+        });
+  }
 }

@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:uuid/uuid.dart';
+import 'dart:ui' as ui;
 
 uuidFromString(String str) {
   if (str.length == 0)
@@ -78,4 +80,21 @@ randomString(int len) {
   var random = Random.secure();
   var values = List<int>.generate(len, (i) => random.nextInt(255));
   return base64UrlEncode(values);
+}
+
+List<int> largeSizes = [
+  1792, // 11, XR
+  2436, // 11 pro, XS, X
+  2532, // 13, 13 pro, 12, 12 pro
+  2688, // 11 pro max, XS max
+  2778, // 12, 13 pro max
+];
+
+bool iphoneIsLarge() {
+  if (Platform.isIOS) {
+    int phoneHeight = ui.window.physicalSize.height.toInt();
+    return largeSizes.contains(phoneHeight);
+  } else {
+    return false;
+  }
 }

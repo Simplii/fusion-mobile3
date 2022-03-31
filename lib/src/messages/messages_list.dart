@@ -33,7 +33,7 @@ class _MessagesTabState extends State<MessagesTab> {
   List<SMSConversation> _convos = [];
   List<CrmContact> _crmContacts = [];
   List<Contact> _contacts = [];
-  String _myNumber = "8014569812";
+  String _myNumber = "";
   bool _loaded = false;
 
   initState() {

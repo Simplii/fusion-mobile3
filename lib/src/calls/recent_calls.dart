@@ -118,7 +118,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
       });
     });
 
-    _fusionConnection.callHistory.getRecentHistory(300, 0,
+    _fusionConnection.callHistory.getRecentHistory(50, 0,
         (List<CallHistory> history, bool fromServer) {
           if (!mounted) return;
         this.setState(() {
@@ -403,6 +403,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _topPart() {
+    final recentDateFormat = new DateFormat("MM/dd hh:mm a");
+
     return GestureDetector(
         onTap: () {
           if (widget.onSelect != null)
@@ -419,7 +421,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                   child: Column(children: [
                     Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(_name(),
+                        child: Text(_name() != null ? _name() : "Unknown",
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 16))),
                     Align(
@@ -446,7 +448,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                                     " " +
                                     mDash +
                                     " " +
-                                    DateFormat.jm()
+                                    recentDateFormat
                                         .format(_historyItem.startTime),
                                     style: TextStyle(
                                         color:
