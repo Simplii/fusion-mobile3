@@ -68,6 +68,7 @@ class CrmContact extends FusionModel {
     if (contactObject['email'] != null && contactObject['email'].trim() != '') {
       this.emails.add(contactObject['email']);
     }
+
     if (contactObject['email2'] != null &&
         contactObject['email2'].trim() != '') {
       this.emails.add(contactObject['email2']);

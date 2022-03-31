@@ -187,7 +187,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               height: 20,
             )),
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop
+                (context);
               widget._softphone.makeCall(_conversation.number);
             }),
         FusionDropdown(
