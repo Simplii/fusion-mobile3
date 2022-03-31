@@ -38,10 +38,8 @@ class _MessageSearchResults extends State<MessageSearchResults> {
 
   List<CrmContact> get _crmContacts => widget._crmContacts;
 
-  String get _myNumber => widget._myNumber;
-
   _openConvo(List<Contact> contacts, List<CrmContact> crmContacts) {
-    String theirNumber = null;
+    String theirNumber = "";
     for (Contact c in contacts) {
       for (Map<String, dynamic> phone in c.phoneNumbers) {
         theirNumber = phone['number'];
@@ -52,8 +50,13 @@ class _MessageSearchResults extends State<MessageSearchResults> {
         theirNumber = c.phone_number;
       }
     }
+
+    String myNumber = _fusionConnection.smsDepartments
+        .lookupRecord("-2")
+        .numbers[0];
+
     SMSConversation convo = SMSConversation.build(
-      myNumber: _myNumber,
+      myNumber: myNumber,
       contacts: contacts,
       crmContacts: crmContacts,
       number: theirNumber,

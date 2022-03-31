@@ -93,10 +93,12 @@ class CallpopInfoStore extends FusionStore<CallpopInfo> {
       getRecord(phoneNumber, callback);
     }
 
+    String extOrPN = phoneNumber.length <= 6 ? phoneNumber + "@" + fusionConnection.getDomain(): phoneNumber;
+
     fusionConnection.apiV2Call(
         "get",
         "/calls/callpopInfo",
-        {'phoneNumber': phoneNumber,
+        {'phoneNumber': extOrPN,
           'dialerGroupId': -1,
           'origination': super.fusionConnection.getUid(),
           'destination': phoneNumber},

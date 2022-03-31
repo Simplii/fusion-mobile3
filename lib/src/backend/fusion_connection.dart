@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
+import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:fusion_mobile_revamped/src/models/voicemails.dart';
@@ -55,6 +56,7 @@ class FusionConnection {
   TimelineItemStore timelineItems;
   ParkLineStore parkLines;
   VoicemailStore voicemails;
+  DidStore dids;
   Database db;
   PushConnector _connector;
   String _pushkitToken;
@@ -82,6 +84,7 @@ class FusionConnection {
     contactFields = ContactFieldStore(this);
     voicemails = VoicemailStore(this);
     parkLines = ParkLineStore(this);
+    dids = DidStore(this);
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     getDatabase();
   }
