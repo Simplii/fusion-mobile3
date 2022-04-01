@@ -142,11 +142,11 @@ class _MenuState extends State<Menu> {
          backgroundColor: Colors.transparent,
          isScrollControlled: true,
          builder: (contact) => PopupMenu(
-             label: "Outbound DID",
+             label: "Manage Outbound DID",
              bottomChild: Container(
                  constraints: BoxConstraints(
-                     minHeight: 24,
-                     maxHeight: 100,
+                     minHeight: 100,
+                     maxHeight: MediaQuery.of(context).size.height - 50,
                      minWidth: 90,
                      maxWidth: MediaQuery.of(context).size.width),
                  child: ListView(
@@ -166,15 +166,26 @@ class _MenuState extends State<Menu> {
                                        bottom: BorderSide(
                                            color: lightDivider, width: 1.0))),
                                child: Row(children: [
-                                 Text(option.did + " " + option.notes,
-                                     style: TextStyle(
-                                         color: Colors.white,
-                                         fontSize: 18,
-                                         fontWeight: FontWeight.w700)),
+                                 Column(
+                                   children: [
+                                     Text(option.did,
+                                         style: TextStyle(
+                                             color: Colors.white,
+                                             fontSize: 18,
+                                             fontWeight: FontWeight.w700)),
+                                     Text(option.notes,
+                                         maxLines: 1,
+                                         overflow: TextOverflow.ellipsis,
+                                         style: TextStyle(
+                                             color: Colors.white60,
+                                             fontSize: 12,
+                                             fontWeight: FontWeight.w500))
+                                   ],
+                                 ),
                                  Spacer(),
                                  if (option.did == _fusionConnection.settings.subscriber["callid_nmbr"])
                                    Image.asset(
-                                       "assets/icons/call_view/check.png",
+                                       "assets/icons/check_white.png",
                                        width: 16,
                                        height: 11)
                                ])));
@@ -183,7 +194,7 @@ class _MenuState extends State<Menu> {
 
   _body() {
     List<Widget> response =  [
-      _row("phone_outgoing", "Outbound DID", "Dynamic Dialing", () { _openOutboundDIDMenu(); }),
+      _row("phone_outgoing", "Manage Outbound DID", "Dynamic Dialing", () { _openOutboundDIDMenu(); }),
       // _row("gear_light", "Settings", "Coming soon", () {}),
       _line(),
       _row("moon_light", "Log Out", "", () { _fusionConnection.logOut(); })
