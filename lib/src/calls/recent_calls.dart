@@ -402,9 +402,23 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
         child: Column(children: children));
   }
 
-  _topPart() {
-    final recentDateFormat = new DateFormat("MM/dd hh:mm a");
+  _relativeDateFormatted(calcDate) {
+    final todayAndYesterdayFmt = new DateFormat("h:mm a");
+    final olderThanYesterdayFmt = new DateFormat("M/d h:mm a");
 
+    DateTime today = DateTime.now();
+    int dayDiff = calcDate.difference(DateTime(today.year, today.month, today.day)).inDays;
+
+    if (dayDiff == 0) {
+      return todayAndYesterdayFmt.format(calcDate);
+    } else if (dayDiff == -1) {
+      return "Yesterday " + todayAndYesterdayFmt.format(calcDate);
+    } else {
+      return olderThanYesterdayFmt.format(calcDate);
+    }
+  }
+
+  _topPart() {
     return GestureDetector(
         onTap: () {
           if (widget.onSelect != null)
@@ -448,8 +462,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                                     " " +
                                     mDash +
                                     " " +
-                                    recentDateFormat
-                                        .format(_historyItem.startTime),
+                                    _relativeDateFormatted(_historyItem.startTime),
                                     style: TextStyle(
                                         color:
                                             _isMissed() ? crimsonLight : coal,
