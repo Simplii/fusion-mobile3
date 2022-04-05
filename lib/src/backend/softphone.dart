@@ -1043,7 +1043,7 @@ class Softphone implements SipUaHelperListener {
 
   @override
   void registrationStateChanged(RegistrationState state) {
-    print("registrationstate");
+    print("registrationstatechanged");
     print(state.state);
     print(state.cause.cause);
     print(state.cause.reason_phrase);
@@ -1061,8 +1061,13 @@ class Softphone implements SipUaHelperListener {
     connected = this.helper.connected;
     _updateListeners();
 
+    print("registrationstatechangedhere");
+    print(registered);
+
     if (!registered) {
+      print("going to reregisterin10");
       var future = new Future.delayed(const Duration(milliseconds: 10000), () {
+        print("willcheckreregisterincallback");
         if (!this.helper.registered)
           this.reregister();
       });

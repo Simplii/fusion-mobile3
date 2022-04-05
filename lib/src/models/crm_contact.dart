@@ -68,6 +68,7 @@ class CrmContact extends FusionModel {
     if (contactObject['email'] != null && contactObject['email'].trim() != '') {
       this.emails.add(contactObject['email']);
     }
+
     if (contactObject['email2'] != null &&
         contactObject['email2'].trim() != '') {
       this.emails.add(contactObject['email2']);
@@ -95,10 +96,25 @@ class CrmContact extends FusionModel {
         contactObject['office_number'].trim() != '') {
       this.phone_number = contactObject['office_number'];
     }
+    if (contactObject['office_phone'] != null &&
+        contactObject['office_phone'] != 0 &&
+        contactObject['office_phone'].trim() != '') {
+      this.phone_number = contactObject['office_phone'];
+    }
     if (contactObject['mobile_number'] != null &&
         contactObject['mobile_number'].trim() != '0' &&
         contactObject['mobile_number'].trim() != '') {
       this.phone_number = contactObject['mobile_number'];
+    }
+    if (contactObject['mobile_phone'] != null &&
+        contactObject['mobile_phone'] != 0 &&
+        contactObject['mobile_phone'].trim() != '') {
+      this.phone_number = contactObject['mobile_phone'];
+    }
+    if (contactObject['home_phone'] != null &&
+        contactObject['home_phone'] != 0 &&
+        contactObject['home_phone'].trim() != '') {
+      this.phone_number = contactObject['home_phone'];
     }
     this.company = contactObject['company'];
   }

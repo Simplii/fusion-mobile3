@@ -1,15 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
-import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
-import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
-import 'package:fusion_mobile_revamped/src/models/contact.dart';
-import 'package:fusion_mobile_revamped/src/models/conversations.dart';
-import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
-import 'package:fusion_mobile_revamped/src/models/messages.dart';
-import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
+import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
+import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
-import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
 import '../styles.dart';
@@ -28,6 +22,16 @@ class Menu extends StatefulWidget {
 class _MenuState extends State<Menu> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
+  List<Did> _dids = [];
+
+
+  initState() {
+    _fusionConnection.dids.getDids((p0, p1) {
+      setState(() {
+        _dids = p0;
+      });
+    });
+  }
 
   _header() {
     UserSettings settings = _fusionConnection.settings;
@@ -132,9 +136,66 @@ class _MenuState extends State<Menu> {
           horizontalLine(12)]));
    }
 
+   _openOutboundDIDMenu() {
+     showModalBottomSheet(
+         context: context,
+         backgroundColor: Colors.transparent,
+         isScrollControlled: true,
+         builder: (contact) => PopupMenu(
+             label: "Manage Outbound DID",
+             bottomChild: Container(
+                 constraints: BoxConstraints(
+                     minHeight: 100,
+                     maxHeight: MediaQuery.of(context).size.height - 50,
+                     minWidth: 90,
+                     maxWidth: MediaQuery.of(context).size.width),
+                 child: ListView(
+                     padding: EdgeInsets.all(8),
+                     children: _dids.map((Did option) {
+                       return GestureDetector(
+                           onTap: () {
+                             _fusionConnection.settings.setOutboundDid(option.did);
+                             Navigator.pop(context);
+                           },
+                           child: Container(
+                               padding: EdgeInsets.only(
+                                   top: 12, bottom: 12, left: 18, right: 18),
+                               decoration: BoxDecoration(
+                                   color: lightHighlight,
+                                   border: Border(
+                                       bottom: BorderSide(
+                                           color: lightDivider, width: 1.0))),
+                               child: Row(children: [
+                                 Column(
+                                   children: [
+                                     Text(option.did,
+                                         style: TextStyle(
+                                             color: Colors.white,
+                                             fontSize: 18,
+                                             fontWeight: FontWeight.w700)),
+                                     Text(option.notes,
+                                         maxLines: 1,
+                                         overflow: TextOverflow.ellipsis,
+                                         style: TextStyle(
+                                             color: Colors.white60,
+                                             fontSize: 12,
+                                             fontWeight: FontWeight.w500))
+                                   ],
+                                 ),
+                                 Spacer(),
+                                 if (option.did == _fusionConnection.settings.subscriber["callid_nmbr"])
+                                   Image.asset(
+                                       "assets/icons/check_white.png",
+                                       width: 16,
+                                       height: 11)
+                               ])));
+                     }).toList()))));
+   }
+
   _body() {
     List<Widget> response =  [
-      _row("gear_light", "Settings", "Coming soon", () {}),
+      _row("phone_outgoing", "Manage Outbound DID", "Dynamic Dialing", () { _openOutboundDIDMenu(); }),
+      // _row("gear_light", "Settings", "Coming soon", () {}),
       _line(),
       _row("moon_light", "Log Out", "", () { _fusionConnection.logOut(); })
     ];

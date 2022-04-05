@@ -118,7 +118,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
       });
     });
 
-    _fusionConnection.callHistory.getRecentHistory(300, 0,
+    _fusionConnection.callHistory.getRecentHistory(50, 0,
         (List<CallHistory> history, bool fromServer) {
           if (!mounted) return;
         this.setState(() {
@@ -402,6 +402,22 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
         child: Column(children: children));
   }
 
+  _relativeDateFormatted(calcDate) {
+    final todayAndYesterdayFmt = new DateFormat("h:mm a");
+    final olderThanYesterdayFmt = new DateFormat("M/d h:mm a");
+
+    DateTime today = DateTime.now();
+    int dayDiff = calcDate.difference(DateTime(today.year, today.month, today.day)).inDays;
+
+    if (dayDiff == 0) {
+      return todayAndYesterdayFmt.format(calcDate);
+    } else if (dayDiff == -1) {
+      return "Yesterday " + todayAndYesterdayFmt.format(calcDate);
+    } else {
+      return olderThanYesterdayFmt.format(calcDate);
+    }
+  }
+
   _topPart() {
     return GestureDetector(
         onTap: () {
@@ -419,7 +435,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                   child: Column(children: [
                     Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(_name(),
+                        child: Text(_name() != null ? _name() : "Unknown",
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 16))),
                     Align(
@@ -446,8 +462,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                                     " " +
                                     mDash +
                                     " " +
-                                    DateFormat.jm()
-                                        .format(_historyItem.startTime),
+                                    _relativeDateFormatted(_historyItem.startTime),
                                     style: TextStyle(
                                         color:
                                             _isMissed() ? crimsonLight : coal,
