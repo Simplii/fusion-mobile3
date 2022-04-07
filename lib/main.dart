@@ -7,6 +7,7 @@ import 'package:all_sensors/all_sensors.dart';
 import 'package:callkeep/callkeep.dart';
 import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
+import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -211,6 +212,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isInProximity;
   bool _isProximityListening = false;
   StreamSubscription<ProximityEvent> _proximitySub;
+  List<Did> _dids = [];
 
   _logOut() {
     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -433,6 +435,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     _register();
     checkForInitialMessage();
+
+    fusionConnection.dids.getDids((p0, p1) {
+      setState(() {
+        _dids = p0;
+      });
+    });
   }
 
   _getFloatingButton() {
@@ -504,7 +512,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 image: AssetImage("assets/fill.jpg"), fit: BoxFit.cover)),
         child: Stack(
             children: [Scaffold(
-            drawer: Menu(fusionConnection),
+            drawer: Menu(fusionConnection, _dids),
             backgroundColor: bgBlend,
             body: SafeArea(
               child: _getTabWidget(),
