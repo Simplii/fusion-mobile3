@@ -11,8 +11,9 @@ import '../utils.dart';
 
 class Menu extends StatefulWidget {
   final FusionConnection _fusionConnection;
+  final List<Did> _dids;
 
-  Menu(this._fusionConnection, {Key key})
+  Menu(this._fusionConnection, this._dids, {Key key})
       : super(key: key);
 
   @override
@@ -22,16 +23,7 @@ class Menu extends StatefulWidget {
 class _MenuState extends State<Menu> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
-  List<Did> _dids = [];
-
-
-  initState() {
-    _fusionConnection.dids.getDids((p0, p1) {
-      setState(() {
-        _dids = p0;
-      });
-    });
-  }
+  List<Did> get _dids => widget._dids;
 
   _header() {
     UserSettings settings = _fusionConnection.settings;
@@ -48,14 +40,12 @@ class _MenuState extends State<Menu> {
       child: Column(
         children: [
           Container(
-              alignment: Alignment.centerLeft,
               child: ContactCircle.withCoworkerAndDiameter(
                   [settings.myContact()],
                   [],
                   _fusionConnection.coworkers.lookupCoworker(_fusionConnection.getUid()),
                   70)),
           Container(
-            alignment: Alignment.centerLeft,
             margin: EdgeInsets.only(top: 18, bottom: 6),
             child: Text(
               settings.myContact().name,
@@ -67,7 +57,6 @@ class _MenuState extends State<Menu> {
             )
           ),
           Container(
-            alignment: Alignment.centerLeft,
             margin: EdgeInsets.only(top: 0, bottom: 12),
             child: Text(
                 ("" + callid ).formatPhone()
@@ -168,18 +157,25 @@ class _MenuState extends State<Menu> {
                                child: Row(children: [
                                  Column(
                                    children: [
-                                     Text(option.did,
-                                         style: TextStyle(
-                                             color: Colors.white,
-                                             fontSize: 18,
-                                             fontWeight: FontWeight.w700)),
-                                     Text(option.notes,
-                                         maxLines: 1,
-                                         overflow: TextOverflow.ellipsis,
-                                         style: TextStyle(
-                                             color: Colors.white60,
-                                             fontSize: 12,
-                                             fontWeight: FontWeight.w500))
+                                     Align(
+                                       alignment: Alignment.centerLeft,
+                                       child: Text(option.did,
+                                           style: TextStyle(
+                                               color: Colors.white,
+                                               fontSize: 18,
+                                               fontWeight: FontWeight.w700)),
+                                     ),
+                                     Align(
+                                       alignment: Alignment.centerLeft,
+                                       child: Text(option.notes,
+                                           maxLines: 1,
+                                           overflow: TextOverflow.ellipsis,
+
+                                           style: TextStyle(
+                                               color: Colors.white60,
+                                               fontSize: 12,
+                                               fontWeight: FontWeight.w500))
+                                     )
                                    ],
                                  ),
                                  Spacer(),

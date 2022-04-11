@@ -183,7 +183,15 @@ class _CallActionButtonsState extends State<CallActionButtons> {
           if (widget.isRinging && widget.isIncoming)
             Container(child:_answerButton(), margin: EdgeInsets.only(bottom: 8)),
           if (widget.isRinging)
-            Spacer(flex: 3),
+            Spacer(flex: 2),
+            Expanded(child: CallActionButton(
+                onPressed: widget.actions['onAudioBtnPress'],
+                title: 'Audio',
+                icon: Image.asset(
+                    widget.callIsMuted
+                        ? "assets/icons/call_view/audio_muted.png"
+                        : "assets/icons/call_view/audio.png",
+                    width: 24, height: 24))),
           if (!widget.isRinging)
           Expanded(
             flex: 3,
