@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -100,7 +101,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
     }
   }
 
-  _lookupHistory() {
+  _lookupHistory([Function() callback]) {
     lookupState = 1;
     _lookedUpTab = _selectedTab;
 
@@ -118,15 +119,22 @@ class _RecentCallsListState extends State<RecentCallsList> {
       });
     });
 
-    _fusionConnection.callHistory.getRecentHistory(50, 0,
-        (List<CallHistory> history, bool fromServer) {
+    _fusionConnection.callHistory
+        .getRecentHistory(50, 0, (List<CallHistory> history, bool fromServer) {
           if (!mounted) return;
-        this.setState(() {
-        if (fromServer) {
-          lookupState = 2;
-        }
-        _history = history;
-      });
+          if (callback != null) callback();
+          this.setState(() {
+            if (fromServer) {
+              lookupState = 2;
+            }
+            _history = history;
+          });
+    });
+  }
+
+  Future _refreshHistoryList() async {
+    _lookupHistory(() {
+      return;
     });
   }
 
@@ -210,11 +218,14 @@ class _RecentCallsListState extends State<RecentCallsList> {
                           ? _spinner()
                           : Container(
                               padding: EdgeInsets.only(top: 00),
-                              child: CustomScrollView(slivers: [
-                                SliverList(
-                                    delegate:
-                                        SliverChildListDelegate(_historyList()))
-                              ])))
+                              child: RefreshIndicator(
+                                onRefresh: () => _refreshHistoryList(),
+                                child: CustomScrollView(slivers: [
+                                  SliverList(
+                                      delegate:
+                                      SliverChildListDelegate(_historyList()))
+                                ]),
+                              )))
                 ],
               ),
               Container(

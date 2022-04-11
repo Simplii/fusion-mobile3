@@ -333,33 +333,52 @@ class _SMSConversationSummaryViewState
                   onTap: () {
                     _openConversation();
                   },
-                  child: Column(children: [
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(_convo.contactName(),
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16))),
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                            margin: EdgeInsets.only(top: 4),
-                            decoration: BoxDecoration(
-                              color: Color.fromARGB(255, 243, 242, 242),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(4)),
-                            ),
-                            padding: EdgeInsets.only(
-                                left: 6, right: 6, top: 2, bottom: 2),
-                            child: Text(
-                                DateFormat("MMM d").format(date) +
-                                    (_departmentName != "" ? " " + nDash + " " + _departmentName : "") +
-                                    " \u2014 " +
-                                    _convo.message.message,
-                                style: smallTextStyle,
-                                maxLines: 2,
-                                softWrap: true,
-                                overflow: TextOverflow.ellipsis)))
-                  ])))
+                  child: Row(
+                    children: [
+                      Expanded(
+                          child: Column(children: [
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(_convo.contactName(),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16))),
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                                margin: EdgeInsets.only(top: 4),
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 243, 242, 242),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(4)),
+                                ),
+                                padding: EdgeInsets.only(
+                                    left: 6, right: 6, top: 2, bottom: 2),
+                                child: Text(
+                                    DateFormat("MMM d").format(date) +
+                                        (_departmentName != ""
+                                            ? " " +
+                                                nDash +
+                                                " " +
+                                                _departmentName
+                                            : "") +
+                                        " \u2014 " +
+                                        _convo.message.message,
+                                    style: smallTextStyle,
+                                    maxLines: 2,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis)))
+                      ])),
+                      if (_convo.unread > 0) Container(
+                        width: 8,
+                        height: 8,
+                        margin: const EdgeInsets.only(left: 8.0),
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(Colors.lightBlue.shade500.value)),
+                      )
+                    ],
+                  )))
         ]));
   }
 }
