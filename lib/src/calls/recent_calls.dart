@@ -431,7 +431,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
 
   _topPart() {
 
-   
+
     return GestureDetector(
         onTap: () {
           if (widget.onSelect != null)
