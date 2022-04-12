@@ -63,12 +63,9 @@ extension PhoneNumbers on String {
     else if (this.length < 10)
       return this;
     else
-      return '(' +
-          this.substring(0, 3) +
-          ") " +
-          this.substring(3, 6) +
-          "-" +
-          this.substring(6, 10);
+      return this.replaceAllMapped(RegExp(r'(\d{3})(\d{3})(\d{4})'), (match) {
+        return '(${match.group(1)}) ${match.group(2)}-${match.group(3)}';
+      });
   }
 
   String onlyNumbers() {
