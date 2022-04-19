@@ -132,7 +132,7 @@ Future<void> main() async {
 
   await SentryFlutter.init(
     (options) => options.dsn =
-        'https://91be6ab841f64100a3698952bbc577c2@o68456.ingest.sentry.io/6019626',
+        'https://62008a087492473a86289c64d827bf87@fusion-sentry.simplii.net/2',
     appRunner: () => runApp(MaterialApp(home: MyApp())),
   );
    // runApp(MaterialApp(home: MyApp()));
@@ -475,7 +475,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     if (softphone.activeCall != null && !_isProximityListening) {
       print("goingtoenablebgexecution");
-      FlutterBackground.enableBackgroundExecution().then((value) => print("enablebgexecutionvalue" + value.toString()));
+      if (Platform.isAndroid)
+        FlutterBackground.enableBackgroundExecution().then((value) => print("enablebgexecutionvalue" + value.toString()));
 
       _isProximityListening = true;
       _proximitySub = proximityEvents.listen((ProximityEvent event) {
@@ -488,7 +489,8 @@ class _MyHomePageState extends State<MyHomePage> {
       print("goingtodisablebgexecution");
       _isProximityListening = false;
       _proximitySub.cancel();
-      FlutterBackground.disableBackgroundExecution().then((value) => print("disablebgexecutionvalue" + value.toString()));
+      if (Platform.isAndroid)
+        FlutterBackground.disableBackgroundExecution().then((value) => print("disablebgexecutionvalue" + value.toString()));
     }
 
     if (!_logged_in) {
