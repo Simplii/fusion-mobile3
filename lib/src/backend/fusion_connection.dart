@@ -259,7 +259,8 @@ class FusionConnection {
         jsonResponse =
             convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
       } catch (e) {}
-
+      print(url);
+      print(jsonResponse);
       client.close();
       callback(jsonResponse);
     } finally {
