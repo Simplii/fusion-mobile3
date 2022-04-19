@@ -44,7 +44,7 @@ class CallHistory extends FusionModel {
     fromDid = obj['from_did'];
     to = obj['to'];
     from = obj['from'];
-    duration = int.parse(obj['duration']);
+    duration = obj['duration'];
     if (obj['call_recording'] != null) {
       recordingUrl = obj['call_recording']['url'];
     }
@@ -75,7 +75,7 @@ class CallHistoryStore extends FusionStore<CallHistory> {
         {'limit': limit, 'offset': offset},
         callback: (Map<String, dynamic> datas) {
           List<CallHistory> response = [];
-
+print("recentdatas");print(datas);
           for (Map<String, dynamic> item in datas['items']) {
             CallHistory obj = CallHistory(item);
             obj.coworker = fusionConnection.coworkers.lookupCoworker(
