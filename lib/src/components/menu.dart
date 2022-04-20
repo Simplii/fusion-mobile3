@@ -38,6 +38,7 @@ class _MenuState extends State<Menu> {
       decoration: BoxDecoration(color: bgBlend),
       padding: EdgeInsets.only(top: 72, left: 18, bottom: 12, right: 18),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
               child: ContactCircle.withCoworkerAndDiameter(
@@ -150,31 +151,30 @@ class _MenuState extends State<Menu> {
                                padding: EdgeInsets.only(
                                    top: 12, bottom: 12, left: 18, right: 18),
                                decoration: BoxDecoration(
-                                   color: lightHighlight,
+                                   color: (option.did == _fusionConnection.settings.subscriber["callid_nmbr"]
+                                       ? lightHighlight : Color.fromARGB(0,0,0,0)),
                                    border: Border(
                                        bottom: BorderSide(
                                            color: lightDivider, width: 1.0))),
                                child: Row(children: [
                                  Column(
+                                   crossAxisAlignment: CrossAxisAlignment.start,
                                    children: [
-                                     Align(
-                                       alignment: Alignment.centerLeft,
-                                       child: Text(option.did,
+                                     Text((option.did + "").formatPhone(),
                                            style: TextStyle(
                                                color: Colors.white,
                                                fontSize: 18,
-                                               fontWeight: FontWeight.w700)),
+                                               fontWeight: FontWeight.w700),
                                      ),
-                                     Align(
-                                       alignment: Alignment.centerLeft,
-                                       child: Text(option.notes,
+                                     Container(height: 6),
+                                     Text(option.notes,
                                            maxLines: 1,
                                            overflow: TextOverflow.ellipsis,
 
                                            style: TextStyle(
                                                color: Colors.white60,
                                                fontSize: 12,
-                                               fontWeight: FontWeight.w500))
+                                               fontWeight: FontWeight.w500)
                                      )
                                    ],
                                  ),
