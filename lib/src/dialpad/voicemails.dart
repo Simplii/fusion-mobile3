@@ -74,6 +74,7 @@ class _VoicemailsState extends State<Voicemails> {
         .getVoicemails((List<Voicemail> vms, bool fromServer) {
       if (!mounted) return;
         setState(() {
+          _lookupState = 2;
         _voicemails = vms;
       });
     });
@@ -359,13 +360,13 @@ class _VoicemailsState extends State<Voicemails> {
                       borderRadius: BorderRadius.all(Radius.circular(8))),
                   child: _isSpinning()
                       ? _spinner()
-                      : ListView.builder(
-                          itemCount: _voicemails.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return _vmRow(_voicemails[index]);
-                          },
-                          padding:
-                              EdgeInsets.only(left: 12, right: 12, top: 12))))
+                      : _voicemails.length > 0 ? ListView.builder(
+                      itemCount: _voicemails.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return _vmRow(_voicemails[index]);
+                      },
+                      padding:
+                      EdgeInsets.only(left: 12, right: 12, top: 12)) : Center(child: Text("No Voicemails", style: TextStyle(fontSize: 18, color: Colors.black54)))))
         ],
       ),
     );

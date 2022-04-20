@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'backend/fusion_connection.dart';
@@ -24,6 +27,7 @@ class _LoginViewState extends State<LoginView> {
   final _passwordController =
       TextEditingController.fromValue(TextEditingValue(text: ""));
   bool _wasSuccessful = null;
+  bool _isPending = false;
 
   @override
   initState() {
@@ -118,6 +122,16 @@ class _LoginViewState extends State<LoginView> {
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
       prefs.setString("username", _usernameController.value.text); });
 
+    this.setState(() {
+      _isPending = true;
+    });
+
+    Timer loginTimeout = Timer(Duration(seconds: 15), () {
+      setState(() {
+        _isPending = false;
+      });
+    });
+
     _fusionConnection
         .login(_usernameController.value.text, _passwordController.value.text,
             (bool success) {
@@ -128,7 +142,10 @@ class _LoginViewState extends State<LoginView> {
       } else {
         _wasSuccessful = false;
       }
-      this.setState(() {});
+      loginTimeout.cancel();
+      this.setState(() {
+        _isPending = false;
+      });
     });
   }
 
@@ -158,7 +175,7 @@ class _LoginViewState extends State<LoginView> {
       children.add(Row(children: [
         Expanded(
             child: Container(
-                margin: EdgeInsets.only(top: 16, bottom: 0),
+                margin: EdgeInsets.only(top: 8, bottom: 0),
                 child: Center(
                     child: Text("Incorrect username or password",
                         style: TextStyle(color: crimsonLight)))))
@@ -167,7 +184,7 @@ class _LoginViewState extends State<LoginView> {
 
     children.add(Row(children: [
       Expanded(
-          child: _loginButton())
+          child: _isPending ? SpinKitWave(color: smoke, size: 25) : _loginButton())
     ]));
 
     return Container(

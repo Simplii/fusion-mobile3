@@ -141,7 +141,9 @@ class FusionConnection {
           });
           _username = '';
           _password = '';
+          _softphone.stopInbound();
           _softphone.close();
+          setSoftphone(null);
           _onLogOut();
           _cookies.deleteAll();
         });
