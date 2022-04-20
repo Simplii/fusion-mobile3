@@ -49,7 +49,7 @@ class _CallFooterDetailsState extends State<CallFooterDetails> {
     List<List<String>> options = [];
     CallpopInfo info = widget._softphone.getCallpopInfo(widget._activeCall.id);
 
-    if (info == null)
+    if (info == null || info.dispositionGroups == null)
       return options;
     else {
       List<Map<String, dynamic>> dispositionGroups = info.dispositionGroups.cast<Map<String, dynamic>>();
