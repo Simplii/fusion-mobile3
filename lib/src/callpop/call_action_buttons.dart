@@ -183,6 +183,7 @@ class _CallActionButtonsState extends State<CallActionButtons> {
             Container(child:_answerButton(), margin: EdgeInsets.only(bottom: 8)),
           if (widget.isRinging)
             Spacer(flex: 2),
+            if (!widget.dialPadOpen)
             CallActionButton(
                 onPressed: widget.actions['onAudioBtnPress'],
                 title: 'Audio',
