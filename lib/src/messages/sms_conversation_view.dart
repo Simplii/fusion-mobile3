@@ -274,7 +274,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     for (Contact c in _conversation.contacts) {
       if (c.phoneNumbers != null) {
         for (Map<String, dynamic> number in c.phoneNumbers) {
-          numbers[("" + number['number']).onlyNumbers()] = number['number'];
+          numbers[("" + number['number'].toString()).onlyNumbers()] = number['number'];
         }
       }
     }

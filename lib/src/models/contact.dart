@@ -136,14 +136,21 @@ class Contact extends FusionModel {
     this.firstContactDate = contactObject['first_contact_date'];
     this.firstName = contactObject['first_name'];
     this.groups = contactObject['groups'].cast<String>();
-    this.id = contactObject['id'];
+    this.id = contactObject['id'].toString();
     this.jobTitle = contactObject['job_title'];
     this.lastName = contactObject['last_name'];
     this.leadCreationDate = contactObject['lead_creation_date'];
     this.name = contactObject['name'];
     this.owner = contactObject['owner'];
-    this.parentId = contactObject['parent_id'];
-    this.phoneNumbers = contactObject['phone_numbers'];
+    this.parentId = contactObject['parent_id'].toString();
+    this.phoneNumbers = [];
+    for (var number in contactObject['phone_numbers']) {
+          this.phoneNumbers.add({
+        "number": number['number'].toString(),
+        "sms_capable": number['sms_capable'],
+        "type": number['type']
+      });
+    }
     this.pictures = contactObject['pictures'];
     this.socials = contactObject['socials'];
     this.type = contactObject['type'];
@@ -183,7 +190,7 @@ class Contact extends FusionModel {
     this.phoneNumbers = [];
     for (var number in contactObject['phoneNumbers']) {
       this.phoneNumbers.add({
-        "number": number['number'],
+        "number": number['number'].toString(),
         "sms_capable": number['smsCapable'],
         "type": number['type']
       });
