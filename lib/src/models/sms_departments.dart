@@ -26,7 +26,7 @@ class SMSDepartment extends FusionModel {
       }
     }
     else {
-      id = obj['id'];
+      id = obj['id'].toString();
       groupName = obj['group_name'];
       for (String n in obj['numbers']) { numbers.add(n); }
       for (String n in obj['mms_numbers']) { mmsNumbers.add(n); }
