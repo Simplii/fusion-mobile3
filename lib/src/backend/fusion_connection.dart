@@ -333,7 +333,7 @@ class FusionConnection {
           urlParams += key + "=" + data[key].toString() + '&';
         }
       }
-      Uri url = Uri.parse('http://fusioncomm.net/api/v2' + route + urlParams);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
