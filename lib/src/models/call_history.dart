@@ -49,6 +49,12 @@ class CallHistory extends FusionModel {
       recordingUrl = obj['call_recording']['url'];
     }
     direction = obj['direction'];
+    if (direction == 'Incoming') {
+      direction = 'inbound';
+    } else if (direction == 'Outgoing') {
+      direction = 'outbound';
+    }
+
     if (obj['lead'] != null && obj['lead'].runtimeType != bool) {
       crmContact = CrmContact.fromExpanded(obj['lead']);
     }
