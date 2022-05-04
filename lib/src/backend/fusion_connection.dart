@@ -498,7 +498,8 @@ print(_pushkitToken);
             message['message']);
       }
 
-      _softphone.checkCallIds(message);
+      if (_softphone != null)
+        _softphone.checkCallIds(message);
     });
     _reconnectSocket();
     _sendHeartbeat();
