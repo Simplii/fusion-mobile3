@@ -47,6 +47,8 @@ class Softphone implements SipUaHelperListener {
   bool _savedOutput = false;
   Aps.AudioPlayer _playingAudio;
 
+  List<String> callIdsAnswered = [];
+
   final Aps.AudioCache _audioCache = Aps.AudioCache(
     fixedPlayer: Aps.AudioPlayer()..setReleaseMode(Aps.ReleaseMode.LOOP),
   );
@@ -210,6 +212,7 @@ class Softphone implements SipUaHelperListener {
         String callUuid = methodCall.arguments[0] as String;
         print("callkit toanswer" + callUuid);
         print("callkitgettingthecall" + _getCallByUuid(callUuid).toString());
+        callIdsAnswered.add(callUuid);
         answerCall(_getCallByUuid(callUuid));
         return;
 
@@ -283,7 +286,7 @@ class Softphone implements SipUaHelperListener {
 
     settings.webSocketSettings.allowBadCertificate = true;
    // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
-    settings.webSocketUrl = "ws://164.90.154.80:8080";
+    settings.webSocketUrl = "ws://164.90.154.80:9002";
     //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
     settings.uri = aor;
     settings.authorizationUser = login;
@@ -497,7 +500,13 @@ class Softphone implements SipUaHelperListener {
   }
 
   answerCall(Call call) async {
+    print("answer call attempt");
+    print(call);
     if (call == null) return;
+
+    if (callIdsAnswered.contains(_uuidFor(call))) {
+      callIdsAnswered.remove(_uuidFor(call));
+    }
 
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     MediaStream mediaStream;
@@ -732,6 +741,7 @@ class Softphone implements SipUaHelperListener {
       }
       calls.add(call);
       _linkUuidFor(call);
+
       if (activeCall == null) makeActiveCall(call);
 
       if (call.direction == "INCOMING") {
@@ -775,6 +785,13 @@ class Softphone implements SipUaHelperListener {
 
       _setCallDataValue(call.id, "startTime", DateTime.now());
     }
+
+    print("testing uuid");
+    print(_uuidFor(call));
+    print(callIdsAnswered);
+    if (callIdsAnswered.contains(_uuidFor(call)))
+      answerCall(call);
+
   }
 
   onUpdate(Function listener) {

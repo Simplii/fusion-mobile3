@@ -131,8 +131,11 @@ Future<void> main() async {
   ]);
 
   await SentryFlutter.init(
-    (options) => options.dsn =
-        'https://62008a087492473a86289c64d827bf87@fusion-sentry.simplii.net/2',
+    (options) {
+      options.diagnosticLevel = SentryLevel.error;
+      options.dsn =
+        'https://62008a087492473a86289c64d827bf87@fusion-sentry.simplii.net/2';
+    },
     appRunner: () => runApp(MaterialApp(home: MyApp())),
   );
    // runApp(MaterialApp(home: MyApp()));
