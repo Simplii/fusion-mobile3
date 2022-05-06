@@ -39,7 +39,7 @@ class CallHistory extends FusionModel {
 
   CallHistory(Map<String, dynamic> obj) {
     id = obj['id'].toString();
-    startTime = DateTime.parse(obj['startTime']);
+    startTime = DateTime.parse(obj['startTime']).toLocal();
     toDid = obj['to_did'];
     fromDid = obj['from_did'];
     to = obj['to'];
