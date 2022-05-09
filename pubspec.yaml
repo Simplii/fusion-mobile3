@@ -60,7 +60,9 @@ dependencies:
   all_sensors:
   callkeep:
   flutter_background:
-
+  flutter_phone_state:
+    git:
+      url: https://github.com/vmeretin/flutter_phone_state.git
 dev_dependencies:
   flutter_test:
     sdk: flutter
