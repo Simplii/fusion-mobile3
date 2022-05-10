@@ -476,7 +476,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (softphone.activeCall != null && !_isProximityListening) {
+    if (softphone.isConnected(softphone.activeCall) != null && !_isProximityListening) {
       print("goingtoenablebgexecution");
       if (Platform.isAndroid)
         FlutterBackground.enableBackgroundExecution().then((value) => print("enablebgexecutionvalue" + value.toString()));
