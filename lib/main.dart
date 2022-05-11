@@ -8,6 +8,7 @@ import 'package:callkeep/callkeep.dart';
 import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
+import 'package:overlay_support/overlay_support.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -476,7 +477,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (softphone.isConnected(softphone.activeCall) != null && !_isProximityListening) {
+    if (softphone.activeCall != null && softphone.isConnected(softphone.activeCall) != null && !_isProximityListening) {
       print("goingtoenablebgexecution");
       if (Platform.isAndroid)
         FlutterBackground.enableBackgroundExecution().then((value) => print("enablebgexecutionvalue" + value.toString()));
