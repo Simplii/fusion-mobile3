@@ -347,7 +347,7 @@ class _CallViewState extends State<CallView> {
         decoration: BoxDecoration(
             image: DecorationImage(
                 image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
-        child: SafeArea(child: Scaffold(
+        child: Scaffold(
           backgroundColor: Colors.transparent,
           body: Stack(
             children: [
@@ -447,6 +447,6 @@ class _CallViewState extends State<CallView> {
                 IncomingWhileOnCall(call: incomingCall, softphone: _softphone)
             ],
           ),
-        )));
+        ));
   }
 }
