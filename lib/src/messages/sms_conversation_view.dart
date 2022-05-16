@@ -80,7 +80,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     }
     _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
       if (!mounted) return;
-        this.setState(() {
+      this.setState(() {
         _loaded = true;
       });
     });
@@ -152,8 +152,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               ),
               backgroundDecoration: BoxDecoration(color: Colors.transparent),
               pageController: pageController,
-              onPageChanged: (int page) {
-              },
+              onPageChanged: (int page) {},
             )));
   }
 
@@ -181,14 +180,15 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                   style: subHeaderTextStyle))
         ])),
         IconButton(
-            icon: Opacity(opacity: 0.66, child: Image.asset(
-              "assets/icons/phone_dark.png",
-              width: 20,
-              height: 20,
-            )),
+            icon: Opacity(
+                opacity: 0.66,
+                child: Image.asset(
+                  "assets/icons/phone_dark.png",
+                  width: 20,
+                  height: 20,
+                )),
             onPressed: () {
-              Navigator.pop
-                (context);
+              Navigator.pop(context);
               widget._softphone.makeCall(_conversation.number);
             }),
         FusionDropdown(
@@ -274,7 +274,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     for (Contact c in _conversation.contacts) {
       if (c.phoneNumbers != null) {
         for (Map<String, dynamic> number in c.phoneNumbers) {
-          numbers[("" + number['number'].toString()).onlyNumbers()] = number['number'];
+          numbers[("" + number['number'].toString()).onlyNumbers()] =
+              number['number'];
         }
       }
     }
@@ -386,7 +387,14 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _sendMessageInput() {
     return Container(
         decoration: BoxDecoration(color: particle),
-        padding: EdgeInsets.only(top: 12, left: 8, bottom: 12, right: 8),
+        padding: EdgeInsets.only(
+            top: 12,
+            left: 8,
+            bottom: (iphoneIsLarge() &&
+                    MediaQuery.of(context).viewInsets.bottom == 0)
+                ? 32
+                : 12,
+            right: 8),
         child: Row(children: [
           FusionDropdown(
               onChange: (String value) {
@@ -597,8 +605,8 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     _clearSubscription();
     _subscriptionKey = _fusionConnection.messages.subscribe(_conversation,
         (List<SMSMessage> messages) {
-          if (!mounted) return;
-        this.setState(() {
+      if (!mounted) return;
+      this.setState(() {
         for (SMSMessage m in messages) {
           _addMessage(m);
         }
@@ -606,8 +614,8 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     });
     _fusionConnection.messages.getMessages(_conversation, 200, 0,
         (List<SMSMessage> messages, fromServer) {
-          if (!mounted) return;
-        this.setState(() {
+      if (!mounted) return;
+      this.setState(() {
         if (fromServer) lookupState = 2;
         _messages = messages;
         widget._onPulledMessages(_messages);
@@ -761,18 +769,18 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         (MediaQuery.of(context).size.width - (isFromMe ? 0 : 40)) * 0.8;
     return Align(
         alignment: isFromMe ? Alignment.centerRight : Alignment.centerLeft,
-        child:
-            _message.mime != null && _message.mime.toString().contains('image')
-                ? GestureDetector(
-                    onTap: _openMedia,
-                    child: ClipRRect(
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(isFromMe ? 8 : 0),
-                            topRight: Radius.circular(isFromMe ? 0 : 8),
-                            bottomLeft: Radius.circular(8),
-                            bottomRight: Radius.circular(8)),
-                        child: FittedBox(
-                          child: Container(
+        child: _message.mime != null &&
+                _message.mime.toString().contains('image')
+            ? GestureDetector(
+                onTap: _openMedia,
+                child: ClipRRect(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(isFromMe ? 8 : 0),
+                        topRight: Radius.circular(isFromMe ? 0 : 8),
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8)),
+                    child: FittedBox(
+                        child: Container(
                             constraints: BoxConstraints(
                               minWidth: 1,
                               minHeight: 1,
@@ -781,27 +789,27 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                                 image: DecorationImage(
                                     fit: BoxFit.fitWidth,
                                     image: */
-                            child: Image.network(_message.message)))))//))
-                : Container(
-                    constraints: BoxConstraints(maxWidth: maxWidth),
-                    margin: EdgeInsets.only(top: 2),
-                    padding:
-                        EdgeInsets.only(left: 16, right: 16, top: 6, bottom: 8),
-                    decoration: BoxDecoration(
-                        color: isFromMe ? particle : coal,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(isFromMe ? 8 : 0),
-                          topRight: Radius.circular(isFromMe ? 0 : 8),
-                          bottomLeft: Radius.circular(8),
-                          bottomRight: Radius.circular(8),
-                        )),
-                    child: _messageText(
-                        _message.message,
-                        TextStyle(
-                            fontSize: 14,
-                            height: 1.4,
-                            fontWeight: FontWeight.w400,
-                            color: isFromMe ? coal : Colors.white))));
+                            child: Image.network(_message.message))))) //))
+            : Container(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                margin: EdgeInsets.only(top: 2),
+                padding:
+                    EdgeInsets.only(left: 16, right: 16, top: 6, bottom: 8),
+                decoration: BoxDecoration(
+                    color: isFromMe ? particle : coal,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(isFromMe ? 8 : 0),
+                      topRight: Radius.circular(isFromMe ? 0 : 8),
+                      bottomLeft: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
+                    )),
+                child: _messageText(
+                    _message.message,
+                    TextStyle(
+                        fontSize: 14,
+                        height: 1.4,
+                        fontWeight: FontWeight.w400,
+                        color: isFromMe ? coal : Colors.white))));
   }
 
   @override
