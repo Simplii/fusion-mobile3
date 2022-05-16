@@ -386,8 +386,7 @@ class _SMSConversationSummaryViewState
                               margin: const EdgeInsets.only(left: 8.0),
                               decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color:
-                                      Color(Colors.lightBlue.shade500.value)),
+                                  color: informationBlue),
                             )
                         ],
                       )))

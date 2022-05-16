@@ -5,13 +5,17 @@ import 'dart:core';
 import 'dart:core';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
+import 'package:fusion_mobile_revamped/src/models/unreads.dart';
 import 'package:fusion_mobile_revamped/src/models/voicemails.dart';
+import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:http/http.dart';
+import 'package:overlay_support/overlay_support.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -57,6 +61,7 @@ class FusionConnection {
   ParkLineStore parkLines;
   VoicemailStore voicemails;
   DidStore dids;
+  UnreadsStore unreadMessages;
   Database db;
   PushConnector _connector;
   String _pushkitToken;
@@ -85,6 +90,7 @@ class FusionConnection {
     voicemails = VoicemailStore(this);
     parkLines = ParkLineStore(this);
     dids = DidStore(this);
+    unreadMessages = UnreadsStore(this);
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     getDatabase();
   }
@@ -490,7 +496,16 @@ print(_pushkitToken);
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
       } else if (message.containsKey('sms_received')) {
-        messages.storeRecord(SMSMessage(message['message_object']));
+        // Receive incoming message platform data
+        SMSMessage newMessage = SMSMessage(message['message_object']);
+
+        unreadMessages.getRecords();
+
+        showSimpleNotification(
+            Text(newMessage.from + " says: " + newMessage.message),
+            background: smoke);
+
+        messages.storeRecord(newMessage);
       } else if (message.containsKey('new_status')) {
         coworkers.storePresence(
             message['user'] + '@' + message['domain'].toString().toLowerCase(),
