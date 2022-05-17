@@ -127,6 +127,7 @@ class _MenuState extends State<Menu> {
    }
 
    _openOutboundDIDMenu() {
+
      showModalBottomSheet(
          context: context,
          backgroundColor: Colors.transparent,
@@ -136,7 +137,7 @@ class _MenuState extends State<Menu> {
              bottomChild: Container(
                  constraints: BoxConstraints(
                      minHeight: 100,
-                     maxHeight: MediaQuery.of(context).size.height - 50,
+                     maxHeight: MediaQuery.of(context).size.height - 250,
                      minWidth: 90,
                      maxWidth: MediaQuery.of(context).size.width),
                  child: ListView(
