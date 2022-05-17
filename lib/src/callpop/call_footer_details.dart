@@ -7,6 +7,7 @@ import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:sip_ua/sip_ua.dart';
 
 class CallFooterDetails extends StatefulWidget {
@@ -90,7 +91,7 @@ class _CallFooterDetailsState extends State<CallFooterDetails> {
 
     return Container(
       color: Colors.white,
-      padding: EdgeInsets.fromLTRB(12, 6, 12, 6),
+      padding: EdgeInsets.fromLTRB(12, 6, 12, iphoneIsLarge() ? 32 : 6),
       alignment: Alignment.center,
       child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         if (!widget._softphone.isConnected(widget._activeCall)) Spacer(),
