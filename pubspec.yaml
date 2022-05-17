@@ -64,6 +64,7 @@ dependencies:
     git:
       url: https://github.com/vmeretin/flutter_phone_state.git
   overlay_support:
+  path_provider:
 dev_dependencies:
   flutter_test:
     sdk: flutter
