@@ -380,7 +380,8 @@ class FusionConnection {
       var uriResponse = await request.send();
       String responseBody =
           await uriResponse.stream.transform(utf8.decoder).join();
-
+print(url);
+print(responseBody);
       var jsonResponse = convert.jsonDecode(responseBody);
 
       callback(jsonResponse);
@@ -455,6 +456,12 @@ print(_pushkitToken);
 
   _reconnectSocket() {
     _socket.connect().then((val) {
+
+      print("connection socket");
+      print(convert.jsonEncode({
+        "simplii_identification": [_extension, _domain],
+        "pwd": _password
+      }));
       _socket.send(convert.jsonEncode({
         "simplii_identification": [_extension, _domain],
         "pwd": _password
@@ -486,7 +493,7 @@ print(_pushkitToken);
     });
     _socket.onMessage((dynamic messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
-
+      print("gotmessage" + message.toString());
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
       } else if (message.containsKey('sms_received')) {

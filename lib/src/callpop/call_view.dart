@@ -343,7 +343,11 @@ class _CallViewState extends State<CallView> {
       else if (c != _activeCall) connectedCalls.add(c);
     }
 
-    return Container(
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+        child: Container(
         decoration: BoxDecoration(
             image: DecorationImage(
                 image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
@@ -447,6 +451,7 @@ class _CallViewState extends State<CallView> {
                 IncomingWhileOnCall(call: incomingCall, softphone: _softphone)
             ],
           ),
-        ));
+        ))
+    );
   }
 }
