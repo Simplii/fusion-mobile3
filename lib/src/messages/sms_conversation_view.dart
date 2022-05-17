@@ -481,6 +481,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       }
       if (_mediaToSend.length > 0) {
         for (XFile file in _mediaToSend) {
+          print("will send media message");
+          print(file);
           _fusionConnection.messages.sendMediaMessage(file, _conversation);
         }
         _mediaToSend = [];
