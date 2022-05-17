@@ -19,7 +19,8 @@ class MessagesTab extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
 
-  MessagesTab(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
+  MessagesTab(this._fusionConnection, this._softphone, {Key key})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _MessagesTabState();
@@ -27,6 +28,7 @@ class MessagesTab extends StatefulWidget {
 
 class _MessagesTabState extends State<MessagesTab> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Softphone get _softphone => widget._softphone;
   SMSConversation openConversation = null;
   bool showingResults = false;
@@ -43,7 +45,7 @@ class _MessagesTabState extends State<MessagesTab> {
     }
     _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
       if (!mounted) return;
-        this.setState(() {
+      this.setState(() {
         _loaded = true;
       });
     });
@@ -92,7 +94,8 @@ class MessagesList extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
 
-  MessagesList(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
+  MessagesList(this._fusionConnection, this._softphone, {Key key})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _MessagesListState();
@@ -100,6 +103,7 @@ class MessagesList extends StatefulWidget {
 
 class _MessagesListState extends State<MessagesList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Softphone get _softphone => widget._softphone;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
@@ -117,9 +121,8 @@ class _MessagesListState extends State<MessagesList> {
     if (_selectedGroupId != "-2")
       return "";
     else {
-      SMSDepartment department = _fusionConnection
-          .smsDepartments
-      .getDepartmentByPhoneNumber(convo.myNumber);
+      SMSDepartment department = _fusionConnection.smsDepartments
+          .getDepartmentByPhoneNumber(convo.myNumber);
 
       if (department != null)
         return department.groupName;
@@ -133,8 +136,8 @@ class _MessagesListState extends State<MessagesList> {
     _fusionConnection.conversations
         .getConversations(_selectedGroupId, 100, _page * 100,
             (List<SMSConversation> convos, bool fromServer) {
-              if (!mounted) return;
-         this.setState(() {
+      if (!mounted) return;
+      this.setState(() {
         if (fromServer != null && fromServer) {
           lookupState = 2;
         }
@@ -149,7 +152,10 @@ class _MessagesListState extends State<MessagesList> {
         }
 
         _convos.sort((SMSConversation a, SMSConversation b) {
-          return DateTime.parse(a.lastContactTime).isAfter(DateTime.parse(b.lastContactTime)) ? -1 : 1;
+          return DateTime.parse(a.lastContactTime)
+                  .isAfter(DateTime.parse(b.lastContactTime))
+              ? -1
+              : 1;
         });
 
         if (convos.length < 100 && fromServer) {
@@ -162,10 +168,7 @@ class _MessagesListState extends State<MessagesList> {
   _messagesList() {
     return _convos.map((convo) {
       return SMSConversationSummaryView(
-          _fusionConnection,
-          _softphone,
-          convo,
-          _getDepartmentName(convo));
+          _fusionConnection, _softphone, convo, _getDepartmentName(convo));
     }).toList();
   }
 
@@ -195,11 +198,10 @@ class _MessagesListState extends State<MessagesList> {
   }
 
   _spinner() {
-    return
-      Container(
-          alignment: Alignment.center,
-          padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
-          child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
+    return Container(
+        alignment: Alignment.center,
+        padding: EdgeInsets.only(bottom: 24, top: 24, left: 48, right: 48),
+        child: Center(child: SpinKitThreeBounce(color: smoke, size: 50)));
   }
 
   _isSpinning() {
@@ -237,8 +239,10 @@ class _MessagesListState extends State<MessagesList> {
                                 return Container(height: 30);
                               } else if (_convos.length > index + 1) {
                                 return SMSConversationSummaryView(
-                                    _fusionConnection, _softphone, _convos[index - 1],
-                                _getDepartmentName(_convos[index - 1]));
+                                    _fusionConnection,
+                                    _softphone,
+                                    _convos[index - 1],
+                                    _getDepartmentName(_convos[index - 1]));
                               } else {
                                 return Container();
                               }
@@ -295,7 +299,8 @@ class SMSConversationSummaryView extends StatefulWidget {
   final String _departmentName;
 
   SMSConversationSummaryView(this._fusionConnection, this._softphone,
-      this._convo, this._departmentName, {Key key})
+      this._convo, this._departmentName,
+      {Key key})
       : super(key: key);
 
   @override
@@ -305,7 +310,9 @@ class SMSConversationSummaryView extends StatefulWidget {
 class _SMSConversationSummaryViewState
     extends State<SMSConversationSummaryView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+
   Softphone get _softphone => widget._softphone;
+
   String get _departmentName => widget._departmentName;
 
   SMSConversation get _convo => widget._convo;
@@ -316,7 +323,8 @@ class _SMSConversationSummaryViewState
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => SMSConversationView(_fusionConnection, _softphone, _convo));
+        builder: (context) =>
+            SMSConversationView(_fusionConnection, _softphone, _convo));
   }
 
   @override
@@ -324,62 +332,65 @@ class _SMSConversationSummaryViewState
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(_convo.message.unixtime * 1000);
 
-    return Container(
-        margin: EdgeInsets.only(bottom: 18, left: 16, right: 16),
-        child: Row(children: [
-          ContactCircle(_convo.contacts, _convo.crmContacts),
-          Expanded(
-              child: GestureDetector(
-                  onTap: () {
-                    _openConversation();
-                  },
-                  child: Row(
-                    children: [
-                      Expanded(
-                          child: Column(children: [
-                        Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(_convo.contactName(),
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16))),
-                        Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                                margin: EdgeInsets.only(top: 4),
-                                decoration: BoxDecoration(
-                                  color: Color.fromARGB(255, 243, 242, 242),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(4)),
-                                ),
-                                padding: EdgeInsets.only(
-                                    left: 6, right: 6, top: 2, bottom: 2),
-                                child: Text(
-                                    DateFormat("MMM d").format(date) +
-                                        (_departmentName != ""
-                                            ? " " +
-                                                nDash +
-                                                " " +
-                                                _departmentName
-                                            : "") +
-                                        " \u2014 " +
-                                        _convo.message.message,
-                                    style: smallTextStyle,
-                                    maxLines: 2,
-                                    softWrap: true,
-                                    overflow: TextOverflow.ellipsis)))
-                      ])),
-                      if (_convo.unread > 0) Container(
-                        width: 8,
-                        height: 8,
-                        margin: const EdgeInsets.only(left: 8.0),
-                        decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(Colors.lightBlue.shade500.value)),
-                      )
-                    ],
-                  )))
-        ]));
+    return GestureDetector(
+        onTap: () {
+          _openConversation();
+        },
+        child: Container(
+            margin: EdgeInsets.only(bottom: 18, left: 16, right: 16),
+            child: Row(children: [
+              ContactCircle(_convo.contacts, _convo.crmContacts),
+              Expanded(
+                  child: Container(
+                      decoration: BoxDecoration(color: Colors.transparent),
+                      child: Row(
+                        children: [
+                          Expanded(
+                              child: Column(children: [
+                            Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(_convo.contactName(),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16))),
+                            Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                    margin: EdgeInsets.only(top: 4),
+                                    decoration: BoxDecoration(
+                                      color: Color.fromARGB(255, 243, 242, 242),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(4)),
+                                    ),
+                                    padding: EdgeInsets.only(
+                                        left: 6, right: 6, top: 2, bottom: 2),
+                                    child: Text(
+                                        DateFormat("MMM d").format(date) +
+                                            (_departmentName != ""
+                                                ? " " +
+                                                    nDash +
+                                                    " " +
+                                                    _departmentName
+                                                : "") +
+                                            " \u2014 " +
+                                            _convo.message.message,
+                                        style: smallTextStyle,
+                                        maxLines: 2,
+                                        softWrap: true,
+                                        overflow: TextOverflow.ellipsis)))
+                          ])),
+                          if (_convo.unread > 0)
+                            Container(
+                              width: 8,
+                              height: 8,
+                              margin: const EdgeInsets.only(left: 8.0),
+                              decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: informationBlue),
+                            )
+                        ],
+                      )))
+            ])));
   }
 }
 

@@ -1,29 +1,27 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:all_sensors/all_sensors.dart';
 import 'package:callkeep/callkeep.dart';
-import 'package:flutter/services.dart';
-import 'package:fusion_mobile_revamped/src/models/conversations.dart';
-import 'package:fusion_mobile_revamped/src/models/dids.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_apns/flutter_apns.dart';
+import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_view.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:fusion_mobile_revamped/src/models/conversations.dart';
+import 'package:fusion_mobile_revamped/src/models/dids.dart';
+import 'package:overlay_support/overlay_support.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sip_ua/sip_ua.dart';
-import 'package:uuid/uuid.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'src/backend/fusion_connection.dart';
 import 'src/backend/softphone.dart';
@@ -36,7 +34,6 @@ import 'src/messages/new_message_popup.dart';
 import 'src/messages/sms_conversation_view.dart';
 import 'src/styles.dart';
 import 'src/utils.dart';
-import 'package:flutter_background/flutter_background.dart';
 
 FlutterCallkeep __callKeep = FlutterCallkeep();
 bool __callKeepInited = false;
@@ -67,8 +64,7 @@ registerNotifications() {
       iOS: initializationSettingsIOS,
       macOS: initializationSettingsMacOS);
   flutterLocalNotificationsPlugin.initialize(initializationSettings,
-      onSelectNotification: (String s) {
-  });
+      onSelectNotification: (String s) {});
   return flutterLocalNotificationsPlugin;
 }
 
@@ -85,7 +81,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
         registerNotifications();
 
     flutterLocalNotificationsPlugin.cancel(id);
-    }
+  }
 
   if (data.containsKey("fusion_call") && data['fusion_call'] == "true") {
     var callerName = data['caller_id'] as String;
@@ -108,13 +104,12 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
     print(id);
     print(data);
     flutterLocalNotificationsPlugin.show(id, callerName,
-       callerNumber + ' incoming phone call', platformChannelSpecifics,
+        callerNumber + ' incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
 
-    var timer = Timer(Duration(seconds: 40),
-            () {
-              flutterLocalNotificationsPlugin.cancel(id);
-            });
+    var timer = Timer(Duration(seconds: 40), () {
+      flutterLocalNotificationsPlugin.cancel(id);
+    });
   }
 }
 
@@ -125,20 +120,19 @@ Future<void> main() async {
 
   registerNotifications();
 
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown
-  ]);
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
   await SentryFlutter.init(
     (options) {
       options.diagnosticLevel = SentryLevel.error;
       options.dsn =
-        'https://62008a087492473a86289c64d827bf87@fusion-sentry.simplii.net/2';
+          'https://62008a087492473a86289c64d827bf87@fusion-sentry.simplii.net/2';
     },
-    appRunner: () => runApp(MaterialApp(home: MyApp())),
+    appRunner: () =>
+        runApp(OverlaySupport.global(child: MaterialApp(home: MyApp()))),
   );
-   // runApp(MaterialApp(home: MyApp()));
+  // runApp(MaterialApp(home: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -186,7 +180,12 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title, this.softphone, this.fusionConnection, this.launchMessage})
+  MyHomePage(
+      {Key key,
+      this.title,
+      this.softphone,
+      this.fusionConnection,
+      this.launchMessage})
       : super(key: key);
   final Softphone softphone;
   final FusionConnection fusionConnection;
@@ -261,7 +260,6 @@ class _MyHomePageState extends State<MyHomePage> {
       print('status3 permission');
       print(statuses[Permission.bluetoothConnect]);
     });
-
   }
 
   Future<void> _onLaunch(RemoteMessage m) {
@@ -273,8 +271,7 @@ class _MyHomePageState extends State<MyHomePage> {
     softphone.reregister();
   }
 
-  Future<void> _onMessage(RemoteMessage m) {
-  }
+  Future<void> _onMessage(RemoteMessage m) {}
 
   checkForInitialMessage() async {
     await Firebase.initializeApp();
@@ -296,8 +293,8 @@ class _MyHomePageState extends State<MyHomePage> {
       fusionConnection.contacts.search(data['from_number'], 10, 0,
           (contacts, fromServer) {
         if (fromServer) {
-          fusionConnection.integratedContacts.search(
-              data['from_number'], 10, 0, (crmContacts, fromServer, hasMore) {
+          fusionConnection.integratedContacts.search(data['from_number'], 10, 0,
+              (crmContacts, fromServer, hasMore) {
             if (fromServer) {
               contacts.addAll(crmContacts);
               showModalBottomSheet(
@@ -323,8 +320,7 @@ class _MyHomePageState extends State<MyHomePage> {
     FirebaseMessaging.onMessage.listen((event) {
       print("gotfbmessage:" + event.data.toString());
       event.data;
-      setState(() {
-      });
+      setState(() {});
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((event) {
@@ -354,25 +350,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
           softphone.register(sub_login, auth_key, aor.replaceAll('sip:', ''));
           checkForInitialMessage();
-        } else {
-        }
+        } else {}
       }
     });
   }
 
   Future<void> _register() async {
-
-        final androidConfig = FlutterBackgroundAndroidConfig(
-          enableWifiLock: true,
-          notificationTitle: "Fusion Mobile",
-          notificationText: "Active call with Fusion Mobile.",
-          notificationImportance: AndroidNotificationImportance.Default,
-          //notificationIcon: AndroidResource(name: 'app_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
-        );
-        FlutterBackground.initialize(androidConfig: androidConfig)
-            .then((value) => print("initalizefbvalue" + value.toString()));
-        print("fbcheck");
-
+    final androidConfig = FlutterBackgroundAndroidConfig(
+      enableWifiLock: true,
+      notificationTitle: "Fusion Mobile",
+      notificationText: "Active call with Fusion Mobile.",
+      notificationImportance: AndroidNotificationImportance.Default,
+      //notificationIcon: AndroidResource(name: 'app_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
+    );
+    FlutterBackground.initialize(androidConfig: androidConfig)
+        .then((value) => print("initalizefbvalue" + value.toString()));
+    print("fbcheck");
 
     if (_isRegistering) {
       return;
@@ -476,10 +469,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (softphone.activeCall != null && !_isProximityListening) {
+    if (softphone.activeCall != null &&
+        softphone.isConnected(softphone.activeCall) != null &&
+        !_isProximityListening) {
       print("goingtoenablebgexecution");
       if (Platform.isAndroid)
-        FlutterBackground.enableBackgroundExecution().then((value) => print("enablebgexecutionvalue" + value.toString()));
+        FlutterBackground.enableBackgroundExecution().then(
+            (value) => print("enablebgexecutionvalue" + value.toString()));
 
       _isProximityListening = true;
       _proximitySub = proximityEvents.listen((ProximityEvent event) {
@@ -493,7 +489,8 @@ class _MyHomePageState extends State<MyHomePage> {
       _isProximityListening = false;
       _proximitySub.cancel();
       if (Platform.isAndroid)
-        FlutterBackground.disableBackgroundExecution().then((value) => print("disablebgexecutionvalue" + value.toString()));
+        FlutterBackground.disableBackgroundExecution().then(
+            (value) => print("disablebgexecutionvalue" + value.toString()));
     }
 
     if (!_logged_in) {
@@ -516,108 +513,125 @@ class _MyHomePageState extends State<MyHomePage> {
             image: DecorationImage(
                 image: AssetImage("assets/fill.jpg"), fit: BoxFit.cover)),
         child: Stack(
-            children: [Scaffold(
-            drawer: Menu(fusionConnection, _dids),
-            backgroundColor: bgBlend,
-            body: SafeArea(
-              child: _getTabWidget(),
-            ),
-            floatingActionButton: _getFloatingButton(),
-            bottomNavigationBar: Container(
-                height: Platform.isAndroid ? 60 : 60.0,
-                margin: EdgeInsets.only(top: 0, left: 16, right: 16, bottom: iphoneIsLarge() ? 12 : 0),
-                child: Column(
-                  children: [
-                    Row(children: [
-                      Expanded(
-                          child: Container(
-                              height: 4,
-                              decoration: BoxDecoration(
-                                  color: _currentIndex == 0
-                                      ? crimsonLight
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(2),
-                                    bottomRight: Radius.circular(2),
-                                  )))),
-                      Expanded(
-                          child: Container(
-                              height: 4,
-                              decoration: BoxDecoration(
-                                  color: _currentIndex == 1
-                                      ? crimsonLight
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(2),
-                                    bottomRight: Radius.circular(2),
-                                  )))),
-                      Expanded(
-                          child: Container(
-                              height: 4,
-                              decoration: BoxDecoration(
-                                  color: _currentIndex == 2
-                                      ? crimsonLight
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(2),
-                                    bottomRight: Radius.circular(2),
-                                  )))),
-                    ]),
-                    BottomNavigationBar(
-                      elevation: 0,
-                      backgroundColor: Colors.transparent,
-                      selectedItemColor: Colors.white,
-                      unselectedItemColor: smoke,
-                      onTap: onTabTapped,
-                      currentIndex: _currentIndex,
-                      iconSize: 20,
-                      selectedLabelStyle: TextStyle(
-                          height: 1.8,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800),
-                      unselectedLabelStyle: TextStyle(
-                          height: 1.8,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800),
-                      items: [
-                        BottomNavigationBarItem(
-                          icon: Image.asset("assets/icons/phone_btmbar.png",
-                              width: 18, height: 18),
-                          activeIcon: Image.asset(
-                              "assets/icons/phone_filled_white.png",
-                              width: 18,
-                              height: 18),
-                          label: "Calls (" + (softphone.helper.connected ? "C" :"c") + (softphone.helper.registered ? "R" : "r") + ")",
-                        ),
-                        BottomNavigationBarItem(
-                          icon: Opacity(
-                              child: Image.asset("assets/icons/people.png",
-                                  width: 18, height: 18),
-                              opacity: 0.5),
-                          activeIcon: Image.asset("assets/icons/people.png",
-                              width: 18, height: 18),
-                          label: "People",
-                        ),
-                        BottomNavigationBarItem(
-                            icon: Image.asset("assets/icons/message_btmbar.png",
-                                width: 18, height: 18),
-                            activeIcon: Image.asset(
-                                "assets/icons/message_filled_white.png",
-                                width: 18,
-                                height: 18),
-                            label: 'Messages')
-                      ],
-                    )
-                  ],
-                ))),
+          children: [
+            Container(color: bgBlend),
+            SafeArea(
+                child: Stack(children: [
+              Scaffold(
+                  drawer: Menu(fusionConnection, _dids),
+                  backgroundColor: Colors.transparent,
+                  body: _getTabWidget(),
+                  floatingActionButton: _getFloatingButton(),
+                  bottomNavigationBar: Container(
+                      height: Platform.isAndroid ? 60 : 60.0,
+                      margin: EdgeInsets.only(top: 0, left: 16, right: 16),
+                      child: Column(
+                        children: [
+                          Row(children: [
+                            Expanded(
+                                child: Container(
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                        color: _currentIndex == 0
+                                            ? crimsonLight
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.only(
+                                          bottomLeft: Radius.circular(2),
+                                          bottomRight: Radius.circular(2),
+                                        )))),
+                            Expanded(
+                                child: Container(
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                        color: _currentIndex == 1
+                                            ? crimsonLight
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.only(
+                                          bottomLeft: Radius.circular(2),
+                                          bottomRight: Radius.circular(2),
+                                        )))),
+                            Expanded(
+                                child: Container(
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                        color: _currentIndex == 2
+                                            ? crimsonLight
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.only(
+                                          bottomLeft: Radius.circular(2),
+                                          bottomRight: Radius.circular(2),
+                                        )))),
+                          ]),
+                          BottomNavigationBar(
+                            elevation: 0,
+                            backgroundColor: Colors.transparent,
+                            selectedItemColor: Colors.white,
+                            unselectedItemColor: smoke,
+                            onTap: onTabTapped,
+                            currentIndex: _currentIndex,
+                            iconSize: 20,
+                            selectedLabelStyle: TextStyle(
+                                height: 1.8,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800),
+                            unselectedLabelStyle: TextStyle(
+                                height: 1.8,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800),
+                            items: [
+                              BottomNavigationBarItem(
+                                icon: Image.asset(
+                                    "assets/icons/phone_btmbar.png",
+                                    width: 18,
+                                    height: 18),
+                                activeIcon: Image.asset(
+                                    "assets/icons/phone_filled_white.png",
+                                    width: 18,
+                                    height: 18),
+                                label: "Calls (" +
+                                    (softphone.helper.connected ? "C" : "c") +
+                                    (softphone.helper.registered ? "R" : "r") +
+                                    ")",
+                              ),
+                              BottomNavigationBarItem(
+                                icon: Opacity(
+                                    child: Image.asset(
+                                        "assets/icons/people.png",
+                                        width: 18,
+                                        height: 18),
+                                    opacity: 0.5),
+                                activeIcon: Image.asset(
+                                    "assets/icons/people.png",
+                                    width: 18,
+                                    height: 18),
+                                label: "People",
+                              ),
+                              BottomNavigationBarItem(
+                                  icon: fusionConnection.unreadMessages.hasUnread()
+                                      ? Image.asset(
+                                          "assets/icons/message_btmbar_notif.png",
+                                          width: 18,
+                                          height: 18)
+                                      : Image.asset(
+                                          "assets/icons/message_btmbar.png",
+                                          width: 18,
+                                          height: 18),
+                                  activeIcon: Image.asset(
+                                      "assets/icons/message_filled_white.png",
+                                      width: 18,
+                                      height: 18),
+                                  label: 'Messages')
+                            ],
+                          )
+                        ],
+                      ))),
               if (softphone.activeCall != null && _isInProximity)
                 Container(
-                  decoration: BoxDecoration(
-                    color: Colors.red
-                  ),
-                    width:   MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height
-                )
-            ]));
+                    decoration: BoxDecoration(color: Colors.red),
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height)
+            ]))
+          ],
+        ));
   }
 }
