@@ -67,8 +67,7 @@ registerNotifications() {
       iOS: initializationSettingsIOS,
       macOS: initializationSettingsMacOS);
   flutterLocalNotificationsPlugin.initialize(initializationSettings,
-      onSelectNotification: (String s) {
-  });
+      onSelectNotification: (String s) {});
   return flutterLocalNotificationsPlugin;
 }
 
@@ -85,7 +84,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
         registerNotifications();
 
     flutterLocalNotificationsPlugin.cancel(id);
-    }
+  }
 
   if (data.containsKey("fusion_call") && data['fusion_call'] == "true") {
     var callerName = data['caller_id'] as String;
@@ -108,13 +107,12 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
     print(id);
     print(data);
     flutterLocalNotificationsPlugin.show(id, callerName,
-       callerNumber + ' incoming phone call', platformChannelSpecifics,
+        callerNumber + ' incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
 
-    var timer = Timer(Duration(seconds: 40),
-            () {
-              flutterLocalNotificationsPlugin.cancel(id);
-            });
+    var timer = Timer(Duration(seconds: 40), () {
+      flutterLocalNotificationsPlugin.cancel(id);
+    });
   }
 }
 
@@ -125,17 +123,15 @@ Future<void> main() async {
 
   registerNotifications();
 
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown
-  ]);
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
   await SentryFlutter.init(
     (options) => options.dsn =
         'https://62008a087492473a86289c64d827bf87@fusion-sentry.simplii.net/2',
     appRunner: () => runApp(MaterialApp(home: MyApp())),
   );
-   // runApp(MaterialApp(home: MyApp()));
+  // runApp(MaterialApp(home: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -183,7 +179,12 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title, this.softphone, this.fusionConnection, this.launchMessage})
+  MyHomePage(
+      {Key key,
+      this.title,
+      this.softphone,
+      this.fusionConnection,
+      this.launchMessage})
       : super(key: key);
   final Softphone softphone;
   final FusionConnection fusionConnection;
@@ -258,7 +259,6 @@ class _MyHomePageState extends State<MyHomePage> {
       print('status3 permission');
       print(statuses[Permission.bluetoothConnect]);
     });
-
   }
 
   Future<void> _onLaunch(RemoteMessage m) {
@@ -270,8 +270,7 @@ class _MyHomePageState extends State<MyHomePage> {
     softphone.reregister();
   }
 
-  Future<void> _onMessage(RemoteMessage m) {
-  }
+  Future<void> _onMessage(RemoteMessage m) {}
 
   checkForInitialMessage() async {
     await Firebase.initializeApp();
@@ -293,8 +292,8 @@ class _MyHomePageState extends State<MyHomePage> {
       fusionConnection.contacts.search(data['from_number'], 10, 0,
           (contacts, fromServer) {
         if (fromServer) {
-          fusionConnection.integratedContacts.search(
-              data['from_number'], 10, 0, (crmContacts, fromServer, hasMore) {
+          fusionConnection.integratedContacts.search(data['from_number'], 10, 0,
+              (crmContacts, fromServer, hasMore) {
             if (fromServer) {
               contacts.addAll(crmContacts);
               showModalBottomSheet(
@@ -320,8 +319,7 @@ class _MyHomePageState extends State<MyHomePage> {
     FirebaseMessaging.onMessage.listen((event) {
       print("gotfbmessage:" + event.data.toString());
       event.data;
-      setState(() {
-      });
+      setState(() {});
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((event) {
@@ -351,25 +349,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
           softphone.register(sub_login, auth_key, aor.replaceAll('sip:', ''));
           checkForInitialMessage();
-        } else {
-        }
+        } else {}
       }
     });
   }
 
   Future<void> _register() async {
-
-        final androidConfig = FlutterBackgroundAndroidConfig(
-          enableWifiLock: true,
-          notificationTitle: "Fusion Mobile",
-          notificationText: "Active call with Fusion Mobile.",
-          notificationImportance: AndroidNotificationImportance.Default,
-          //notificationIcon: AndroidResource(name: 'app_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
-        );
-        FlutterBackground.initialize(androidConfig: androidConfig)
-            .then((value) => print("initalizefbvalue" + value.toString()));
-        print("fbcheck");
-
+    final androidConfig = FlutterBackgroundAndroidConfig(
+      enableWifiLock: true,
+      notificationTitle: "Fusion Mobile",
+      notificationText: "Active call with Fusion Mobile.",
+      notificationImportance: AndroidNotificationImportance.Default,
+      //notificationIcon: AndroidResource(name: 'app_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
+    );
+    FlutterBackground.initialize(androidConfig: androidConfig)
+        .then((value) => print("initalizefbvalue" + value.toString()));
+    print("fbcheck");
 
     if (_isRegistering) {
       return;
@@ -476,7 +471,8 @@ class _MyHomePageState extends State<MyHomePage> {
     if (softphone.activeCall != null && !_isProximityListening) {
       print("goingtoenablebgexecution");
       if (Platform.isAndroid)
-        FlutterBackground.enableBackgroundExecution().then((value) => print("enablebgexecutionvalue" + value.toString()));
+        FlutterBackground.enableBackgroundExecution().then(
+            (value) => print("enablebgexecutionvalue" + value.toString()));
 
       _isProximityListening = true;
       _proximitySub = proximityEvents.listen((ProximityEvent event) {
@@ -490,7 +486,8 @@ class _MyHomePageState extends State<MyHomePage> {
       _isProximityListening = false;
       _proximitySub.cancel();
       if (Platform.isAndroid)
-        FlutterBackground.disableBackgroundExecution().then((value) => print("disablebgexecutionvalue" + value.toString()));
+        FlutterBackground.disableBackgroundExecution().then(
+            (value) => print("disablebgexecutionvalue" + value.toString()));
     }
 
     if (!_logged_in) {
@@ -509,11 +506,11 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     return Container(
-        decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage("assets/fill.jpg"), fit: BoxFit.cover)),
-        child: Stack(
-            children: [Scaffold(
+      decoration: BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage("assets/fill.jpg"), fit: BoxFit.cover)),
+      child: Stack(children: [
+        Scaffold(
             drawer: Menu(fusionConnection, _dids),
             backgroundColor: bgBlend,
             body: SafeArea(
@@ -522,7 +519,11 @@ class _MyHomePageState extends State<MyHomePage> {
             floatingActionButton: _getFloatingButton(),
             bottomNavigationBar: Container(
                 height: Platform.isAndroid ? 60 : 60.0,
-                margin: EdgeInsets.only(top: 0, left: 16, right: 16, bottom: iphoneIsLarge() ? 12 : 0),
+                margin: EdgeInsets.only(
+                    top: 0,
+                    left: 16,
+                    right: 16,
+                    bottom: iphoneIsLarge() ? 12 : 0),
                 child: Column(
                   children: [
                     Row(children: [
@@ -584,7 +585,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               "assets/icons/phone_filled_white.png",
                               width: 18,
                               height: 18),
-                          label: "Calls (" + (softphone.helper.connected ? "C" :"c") + (softphone.helper.registered ? "R" : "r") + ")",
+                          label: "Calls (" +
+                              (softphone.helper.connected ? "C" : "c") +
+                              (softphone.helper.registered ? "R" : "r") +
+                              ")",
                         ),
                         BottomNavigationBarItem(
                           icon: Opacity(
@@ -607,14 +611,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     )
                   ],
                 ))),
-              if (softphone.activeCall != null && _isInProximity)
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.red
-                  ),
-                    width:   MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height
-                )
-            ]));
+        if (softphone.activeCall != null && _isInProximity)
+          Container(
+              decoration: BoxDecoration(color: Colors.red),
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height)
+      ]),
+    );
   }
 }

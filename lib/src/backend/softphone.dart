@@ -68,11 +68,12 @@ class Softphone implements SipUaHelperListener {
   close() async {
     try {
       print("unregistering");
-     // helper.unregister(true);
+      // helper.unregister(true);
       await helper.stop();
       //helper.terminateSessions({});
-      }
-    catch (e) { print("error closing"); }
+    } catch (e) {
+      print("error closing");
+    }
   }
 
   _playAudio(String path) {
@@ -81,15 +82,12 @@ class Softphone implements SipUaHelperListener {
     else {
       Aps.AudioCache cache = Aps.AudioCache();
       if (path == _outboundAudioPath) {
-        cache.loop(_outboundAudioPath)
-            .then((Aps.AudioPlayer playing) {
+        cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
           _outboundPlayer = playing;
           _outboundPlayer.earpieceOrSpeakersToggle();
         });
-      }
-      else if (path == _inboundAudioPath) {
-        cache.loop(_inboundAudioPath)
-            .then((Aps.AudioPlayer playing) {
+      } else if (path == _inboundAudioPath) {
+        cache.loop(_inboundAudioPath).then((Aps.AudioPlayer playing) {
           _inboundPlayer = playing;
         });
       }
@@ -184,7 +182,7 @@ class Softphone implements SipUaHelperListener {
 
     if (Platform.isAndroid) {
       //if (isIOS) iOS_Permission();
-     //_firebaseMessaging.requestNotificationPermissions();
+      //_firebaseMessaging.requestNotificationPermissions();
 
       FirebaseMessaging.instance.getToken().then((token) {
         print('[FCM] token => ' + token);
@@ -282,7 +280,7 @@ class Softphone implements SipUaHelperListener {
     UaSettings settings = UaSettings();
 
     settings.webSocketSettings.allowBadCertificate = true;
-   // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
+    // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
     settings.webSocketUrl = "ws://164.90.154.80:8080";
     //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
     settings.uri = aor;
@@ -294,22 +292,22 @@ class Softphone implements SipUaHelperListener {
     settings.dtmfMode = DtmfMode.RFC2833;
     if (Platform.isIOS) {
       settings.iceGatheringTimeout = 500;
-    }
-    else if (Platform.isAndroid) {
+    } else if (Platform.isAndroid) {
       settings.iceGatheringTimeout = 1000;
     }
     settings.iceServers = [
       {"urls": "stun:stun.l.google.com:19305"},
       {"urls": "stun:stun.l.google.com:19302"},
       {"urls": "stun:srvfusturn.fusioncomm.net"},
-      {"urls":"turn:srvfusturn.fusioncomm.net",
-        "username":"fuser",
-        "credential":"fpassword"}
+      {
+        "urls": "turn:srvfusturn.fusioncomm.net",
+        "username": "fuser",
+        "credential": "fpassword"
+      }
     ];
 
     helper.start(settings);
     helper.addSipUaHelperListener(this);
-
   }
 
   reregister() {
@@ -484,12 +482,14 @@ class Softphone implements SipUaHelperListener {
 
   transfer(Call call, String destination) {
     call.refer(destination);
-    print("transfercall");print(call);
+    print("transfercall");
+    print(call);
     _removeCall(call);
   }
 
   hangUp(Call call) {
-    print("hangupcall");print(call);
+    print("hangupcall");
+    print(call);
     try {
       call.hangup();
     } catch (e) {}
@@ -512,7 +512,8 @@ class Softphone implements SipUaHelperListener {
 
     if (Platform.isAndroid) {
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
-      flutterLocalNotificationsPlugin.cancel(intIdForString(_getCallDataValue(call.id, "apiTermId")));
+      flutterLocalNotificationsPlugin
+          .cancel(intIdForString(_getCallDataValue(call.id, "apiTermId")));
       flutterLocalNotificationsPlugin.cancelAll();
     }
   }
@@ -569,8 +570,7 @@ class Softphone implements SipUaHelperListener {
     answerCall(call);
   }
 
-  _callKeepDidReceivStartCall(CallKeepDidReceiveStartCallAction event) {
-  }
+  _callKeepDidReceivStartCall(CallKeepDidReceiveStartCallAction event) {}
 
   _callKeepDidPerformSetMuted(CallKeepDidPerformSetMutedCallAction event) {
     setMute(_getCallByUuid(event.callUUID), event.muted);
@@ -610,8 +610,7 @@ class Softphone implements SipUaHelperListener {
     }
   }
 
-  _didDisplayCall() {
-  }
+  _didDisplayCall() {}
 
   _removeCall(Call call) {
     if (Platform.isIOS) {
@@ -649,11 +648,12 @@ class Softphone implements SipUaHelperListener {
     _updateListeners();
     if (Platform.isAndroid) {
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
-      flutterLocalNotificationsPlugin.cancel(intIdForString(_getCallDataValue(call.id, "apiTermId")));
+      flutterLocalNotificationsPlugin
+          .cancel(intIdForString(_getCallDataValue(call.id, "apiTermId")));
       print("cancel callpopp");
       print(call.id);
       print(intIdForString(call.id));
-            print(_getCallDataValue(call.id, "apiTermId"));
+      print(_getCallDataValue(call.id, "apiTermId"));
       print(intIdForString(_getCallDataValue(call.id, "apiTermId")));
       print(_getCallDataById(call.id));
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
@@ -728,16 +728,14 @@ class Softphone implements SipUaHelperListener {
 
   _addCall(Call call) async {
     if (!_callIsAdded(call)) {
-      if (Platform.isAndroid) {
-      }
+      if (Platform.isAndroid) {}
       calls.add(call);
       _linkUuidFor(call);
       if (activeCall == null) makeActiveCall(call);
 
       if (call.direction == "INCOMING") {
         _playAudio(_inboundAudioPath);
-      }
-      else {
+      } else {
         _playAudio(_outboundAudioPath);
       }
 
@@ -882,10 +880,8 @@ class Softphone implements SipUaHelperListener {
   }
 
   mergeCalls(Call call, Call call2) {
-    call2.peerConnection.getLocalDescription().then((value) {
-    });
-    call.peerConnection.getLocalDescription().then((value) {
-    });
+    call2.peerConnection.getLocalDescription().then((value) {});
+    call.peerConnection.getLocalDescription().then((value) {});
     MediaStream call2Remote = call2.peerConnection.getRemoteStreams()[1];
     call.peerConnection.getRemoteStreams().map((MediaStream m) {
       call2.peerConnection.addStream(m);
@@ -1038,8 +1034,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   @override
-  void onNewMessage(SIPMessageRequest msg) {
-  }
+  void onNewMessage(SIPMessageRequest msg) {}
 
   @override
   void registrationStateChanged(RegistrationState state) {
@@ -1068,13 +1063,16 @@ class Softphone implements SipUaHelperListener {
       print("going to reregisterin10");
       var future = new Future.delayed(const Duration(milliseconds: 10000), () {
         print("willcheckreregisterincallback");
-        if (!this.helper.registered)
-          this.reregister();
+        if (!this.helper.registered) this.reregister();
       });
     }
   }
 
   @override
-  void transportStateChanged(TransportState state) {
+  void transportStateChanged(TransportState state) {}
+
+  @override
+  void onNewNotify(Notify ntf) {
+    // TODO: implement onNewNotify
   }
 }
