@@ -5,13 +5,17 @@ import 'dart:core';
 import 'dart:core';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
+import 'package:fusion_mobile_revamped/src/models/unreads.dart';
 import 'package:fusion_mobile_revamped/src/models/voicemails.dart';
+import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:http/http.dart';
+import 'package:overlay_support/overlay_support.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -57,6 +61,7 @@ class FusionConnection {
   ParkLineStore parkLines;
   VoicemailStore voicemails;
   DidStore dids;
+  UnreadsStore unreadMessages;
   Database db;
   PushConnector _connector;
   String _pushkitToken;
@@ -85,6 +90,7 @@ class FusionConnection {
     voicemails = VoicemailStore(this);
     parkLines = ParkLineStore(this);
     dids = DidStore(this);
+    unreadMessages = UnreadsStore(this);
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     getDatabase();
   }
@@ -131,6 +137,10 @@ class FusionConnection {
 
   logOut() {
     FirebaseMessaging.instance.getToken().then((token) {
+      if (_pushkitToken != null) {
+        apiV1Call("delete", "/clients/device_token",
+          {"token":  _pushkitToken});
+      }
       apiV1Call("delete", "/clients/device_token",
           {"token": token, "pn_tok": _pushkitToken}, callback: (data) {
         apiV1Call("get", "/log_out", {}, callback: (data) {
@@ -333,7 +343,7 @@ class FusionConnection {
           urlParams += key + "=" + data[key].toString() + '&';
         }
       }
-      Uri url = Uri.parse('http://fusioncomm.net/api/v2' + route + urlParams);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -380,7 +390,8 @@ class FusionConnection {
       var uriResponse = await request.send();
       String responseBody =
           await uriResponse.stream.transform(utf8.decoder).join();
-
+print(url);
+print(responseBody);
       var jsonResponse = convert.jsonDecode(responseBody);
 
       callback(jsonResponse);
@@ -455,6 +466,12 @@ print(_pushkitToken);
 
   _reconnectSocket() {
     _socket.connect().then((val) {
+
+      print("connection socket");
+      print(convert.jsonEncode({
+        "simplii_identification": [_extension, _domain],
+        "pwd": _password
+      }));
       _socket.send(convert.jsonEncode({
         "simplii_identification": [_extension, _domain],
         "pwd": _password
@@ -486,11 +503,20 @@ print(_pushkitToken);
     });
     _socket.onMessage((dynamic messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
-
+      print("gotmessage" + message.toString());
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
       } else if (message.containsKey('sms_received')) {
-        messages.storeRecord(SMSMessage(message['message_object']));
+        // Receive incoming message platform data
+        SMSMessage newMessage = SMSMessage(message['message_object']);
+
+        unreadMessages.getRecords();
+
+        showSimpleNotification(
+            Text(newMessage.from + " says: " + newMessage.message),
+            background: smoke);
+
+        messages.storeRecord(newMessage);
       } else if (message.containsKey('new_status')) {
         coworkers.storePresence(
             message['user'] + '@' + message['domain'].toString().toLowerCase(),
@@ -498,7 +524,8 @@ print(_pushkitToken);
             message['message']);
       }
 
-      _softphone.checkCallIds(message);
+      if (_softphone != null)
+        _softphone.checkCallIds(message);
     });
     _reconnectSocket();
     _sendHeartbeat();

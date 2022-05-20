@@ -416,13 +416,12 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   _relativeDateFormatted(calcDate) {
     final todayAndYesterdayFmt = new DateFormat("h:mm a");
     final olderThanYesterdayFmt = new DateFormat("M/d h:mm a");
+    final today = DateTime.now();
+    final lastMidnight = new DateTime(today.year, today.month, today.day);
 
-    DateTime today = DateTime.now();
-    int dayDiff = calcDate.difference(DateTime(today.year, today.month, today.day)).inDays;
-
-    if (dayDiff == 0) {
+    if (lastMidnight.isBefore(calcDate)) {
       return todayAndYesterdayFmt.format(calcDate);
-    } else if (dayDiff == -1) {
+    } else if (lastMidnight.subtract(new Duration(days: 1)).isBefore(calcDate)) {
       return "Yesterday " + todayAndYesterdayFmt.format(calcDate);
     } else {
       return olderThanYesterdayFmt.format(calcDate);

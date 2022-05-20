@@ -7,14 +7,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_phone_state/flutter_phone_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:sip_ua/sip_ua.dart';
-import 'package:uuid/uuid.dart';
-import 'package:ringtone_player/ringtone_player.dart';
+import 'package:audio_session/audio_session.dart';
 import '../../main.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
@@ -25,6 +23,7 @@ class Softphone implements SipUaHelperListener {
   MediaStream _remoteStream;
   final FusionSIPUAHelper helper = FusionSIPUAHelper();
   List<Function> _listeners = [];
+  bool interrupted = false;
   BuildContext _context;
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       registerNotifications();
@@ -46,6 +45,8 @@ class Softphone implements SipUaHelperListener {
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   bool _savedOutput = false;
   Aps.AudioPlayer _playingAudio;
+
+  List<String> callIdsAnswered = [];
 
   final Aps.AudioCache _audioCache = Aps.AudioCache(
     fixedPlayer: Aps.AudioPlayer()..setReleaseMode(Aps.ReleaseMode.LOOP),
@@ -121,6 +122,10 @@ class Softphone implements SipUaHelperListener {
     else if (Platform.isAndroid) {
       _callKeep = FlutterCallkeep();
       _setupCallKeep();
+      FlutterPhoneState.rawPhoneEvents.forEach((element) {
+        if (element.type == RawEventType.connected && activeCall != null)
+          activeCall.hold();
+      });
     }
   }
 
@@ -208,6 +213,7 @@ class Softphone implements SipUaHelperListener {
         String callUuid = methodCall.arguments[0] as String;
         print("callkit toanswer" + callUuid);
         print("callkitgettingthecall" + _getCallByUuid(callUuid).toString());
+        callIdsAnswered.add(callUuid);
         answerCall(_getCallByUuid(callUuid));
         return;
 
@@ -281,7 +287,7 @@ class Softphone implements SipUaHelperListener {
 
     settings.webSocketSettings.allowBadCertificate = true;
     // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
-    settings.webSocketUrl = "ws://164.90.154.80:8080";
+    settings.webSocketUrl = "ws://164.90.154.80:9002";
     //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
     settings.uri = aor;
     settings.authorizationUser = login;
@@ -497,7 +503,13 @@ class Softphone implements SipUaHelperListener {
   }
 
   answerCall(Call call) async {
+    print("answer call attempt");
+    print(call);
     if (call == null) return;
+
+    if (callIdsAnswered.contains(_uuidFor(call))) {
+      callIdsAnswered.remove(_uuidFor(call));
+    }
 
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     MediaStream mediaStream;
@@ -731,6 +743,7 @@ class Softphone implements SipUaHelperListener {
       if (Platform.isAndroid) {}
       calls.add(call);
       _linkUuidFor(call);
+
       if (activeCall == null) makeActiveCall(call);
 
       if (call.direction == "INCOMING") {
@@ -773,6 +786,11 @@ class Softphone implements SipUaHelperListener {
 
       _setCallDataValue(call.id, "startTime", DateTime.now());
     }
+
+    print("testing uuid");
+    print(_uuidFor(call));
+    print(callIdsAnswered);
+    if (callIdsAnswered.contains(_uuidFor(call))) answerCall(call);
   }
 
   onUpdate(Function listener) {
@@ -1070,9 +1088,4 @@ class Softphone implements SipUaHelperListener {
 
   @override
   void transportStateChanged(TransportState state) {}
-
-  @override
-  void onNewNotify(Notify ntf) {
-    // TODO: implement onNewNotify
-  }
 }

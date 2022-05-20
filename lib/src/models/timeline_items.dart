@@ -28,7 +28,7 @@ class TimelineItem extends FusionModel {
 
   TimelineItem(Map<String, dynamic> obj) {
       time = obj.containsKey('time')
-        ? DateTime.parse(obj['time']['date'])
+        ? DateTime.parse(obj['time']['date']).toLocal()
         : (obj.containsKey('time_start')
         ? DateTime.fromMillisecondsSinceEpoch(int.parse(obj['time_start']) * 1000)
         : DateTime.fromMillisecondsSinceEpoch(0));

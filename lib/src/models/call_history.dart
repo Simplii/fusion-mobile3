@@ -39,7 +39,7 @@ class CallHistory extends FusionModel {
 
   CallHistory(Map<String, dynamic> obj) {
     id = obj['id'].toString();
-    startTime = DateTime.parse(obj['startTime']);
+    startTime = DateTime.parse(obj['startTime']).toLocal();
     toDid = obj['to_did'];
     fromDid = obj['from_did'];
     to = obj['to'];
@@ -49,6 +49,12 @@ class CallHistory extends FusionModel {
       recordingUrl = obj['call_recording']['url'];
     }
     direction = obj['direction'];
+    if (direction == 'Incoming') {
+      direction = 'inbound';
+    } else if (direction == 'Outgoing') {
+      direction = 'outbound';
+    }
+
     if (obj['lead'] != null && obj['lead'].runtimeType != bool) {
       crmContact = CrmContact.fromExpanded(obj['lead']);
     }
@@ -75,7 +81,6 @@ class CallHistoryStore extends FusionStore<CallHistory> {
         {'limit': limit, 'offset': offset},
         callback: (Map<String, dynamic> datas) {
           List<CallHistory> response = [];
-print("recentdatas");print(datas);
           for (Map<String, dynamic> item in datas['items']) {
             CallHistory obj = CallHistory(item);
             obj.coworker = fusionConnection.coworkers.lookupCoworker(

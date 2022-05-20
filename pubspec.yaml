@@ -1,6 +1,6 @@
 name: fusion_mobile_revamped
 description: Fusion Mobile
-version: 1.0.25+134
+version: 1.1.2+153
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -60,7 +60,11 @@ dependencies:
   all_sensors:
   callkeep:
   flutter_background:
-
+  flutter_phone_state:
+    git:
+      url: https://github.com/vmeretin/flutter_phone_state.git
+  overlay_support:
+  path_provider:
 dev_dependencies:
   flutter_test:
     sdk: flutter
