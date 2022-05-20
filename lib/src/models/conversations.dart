@@ -151,7 +151,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       'groupName': record.groupName,
       'isGroup': record.isGroup ? 1 : 0,
       'lastContactTime':
-          DateTime.parse(record.lastContactTime).millisecondsSinceEpoch / 1000,
+          DateTime.parse(record.lastContactTime).toLocal().millisecondsSinceEpoch / 1000,
       'searchString': record.searchString(),
       'number': record.number,
       'myNumber': record.myNumber,

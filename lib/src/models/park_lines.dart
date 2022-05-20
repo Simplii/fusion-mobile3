@@ -23,7 +23,7 @@ class ParkLine extends FusionModel {
     if (obj['disposition'] != null) this.disposition = obj['disposition'];
     if (obj['parkedBy'] != null) this.parkedBy = obj['parkedBy'];
     if (obj['timeParked'] != null)
-      this.timeParked = DateTime.parse(obj['timeParked']);
+      this.timeParked = DateTime.parse(obj['timeParked']).toLocal();
     if (obj['isActive'] != null)
       isActive = obj['isActive'];
     else

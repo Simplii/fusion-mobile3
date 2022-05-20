@@ -20,7 +20,7 @@ class Voicemail extends FusionModel {
     this.path = obj['audioSrc'];
     this.phoneNumber = obj['callerNumber'];
     this.duration = obj['duration'];
-    this.time = DateTime.parse(obj['callTime']);
+    this.time = DateTime.parse(obj['callTime']).toLocal();
     this.contacts = obj['fusionContact'] == null ? [] : [Contact(obj['fusionContact'])];
   }
 

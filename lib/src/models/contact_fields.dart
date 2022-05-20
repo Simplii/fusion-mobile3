@@ -15,7 +15,8 @@ class ContactField extends FusionModel {
     id = obj['id'].toString();
     type = obj['type'];
     if (type.substring(0, 4).toLowerCase() == 'enum') {
-      options = convert.jsonDecode(type.substring(4));
+      List<dynamic> optionsList = convert.jsonDecode(type.substring(4));
+      options = optionsList.cast<String>();
       type = type.substring(0, 4);
     }
     type = type.toLowerCase();
