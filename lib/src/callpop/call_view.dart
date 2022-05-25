@@ -35,11 +35,8 @@ class CallView extends StatefulWidget {
 
 class _CallViewState extends State<CallView> {
   Softphone get _softphone => widget._softphone;
-
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
   Call get _activeCall => _softphone.activeCall;
-
   List<Call> get _allCalls => _softphone.calls;
 
   bool dialpadVisible = false;
@@ -66,8 +63,8 @@ class _CallViewState extends State<CallView> {
   }
 
   _onResumeBtnPress() {
-    print("resuming");
-    _softphone.setHold(_activeCall, false);
+    if (!_softphone.isCellPhoneCallActive)
+      _softphone.setHold(_activeCall, false);
   }
 
   _makeXferUrl(String url) {
@@ -284,13 +281,14 @@ class _CallViewState extends State<CallView> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        if (!_softphone.isCellPhoneCallActive)
                         Container(
                             margin: EdgeInsets.only(right: 8),
                             child: Image.asset(
                                 "assets/icons/call_view/play.png",
                                 width: 12,
                                 height: 16)),
-                        Text('RESUME',
+                        Text(_softphone.isCellPhoneCallActive ? 'Mobile Call Active' : 'RESUME',
                             style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -382,6 +380,7 @@ class _CallViewState extends State<CallView> {
                               isRinging: isRinging,
                               isIncoming: isIncoming,
                               dialPadOpen: dialpadVisible,
+                              resumeDisabled: _softphone.isCellPhoneCallActive,
                               isOnConference:
                               _softphone.isCallMerged(_activeCall),
                               setDialpad: (bool isOpen) {

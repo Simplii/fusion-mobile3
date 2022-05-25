@@ -1,4 +1,7 @@
 package net.fusioncomm.android
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import com.tekartik.sqflite.SqflitePlugin;
@@ -11,6 +14,8 @@ import io.flutter.plugins.GeneratedPluginRegistrant
 class MainActivity: FlutterFragmentActivity() {
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine);
+
+
 /*
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Log.d("btpermission2", "2");
@@ -39,4 +44,5 @@ class MainActivity: FlutterFragmentActivity() {
                 }
             }*/
     }
+
 }
