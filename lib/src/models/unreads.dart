@@ -3,46 +3,45 @@ import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'fusion_model.dart';
 import 'fusion_store.dart';
 
-class UnreadMessage extends FusionModel {
-  String id;
+class DepartmentUnreadRecord extends FusionModel {
+  int departmentId;
   int unread;
   String inq;
   String to;
   List<String> numbers;
 
-  UnreadMessage(Map<String, dynamic> obj) {
-    this.id = obj['id'];
+  DepartmentUnreadRecord(Map<String, dynamic> obj) {
+    this.departmentId = obj['id'];
     this.unread = obj['unread'];
     this.inq = obj['inq'];
-    this.to = obj['to'];
-    this.numbers = obj['numbers'];
   }
 }
 
-class UnreadsStore extends FusionStore<UnreadMessage> {
+class UnreadsStore extends FusionStore<DepartmentUnreadRecord> {
   String id_field = "id";
-
   UnreadsStore(FusionConnection fusionConnection) : super(fusionConnection);
 
-  getUnreads(Function(List<UnreadMessage>, bool) callback) {
+  getUnreads(Function(List<DepartmentUnreadRecord>, bool) callback) {
     fusionConnection.apiV2Call("get", "/messaging/unread", {},
-        callback: (Map<String, dynamic> datas) {
-          List<UnreadMessage> response = [];
-
-          for (Map<String, dynamic> item in datas['items']) {
-            UnreadMessage obj = UnreadMessage(item);
+        callback: (List<dynamic> datas) {
+          List<DepartmentUnreadRecord> response = [];
+          clearRecords();
+          for (Map<String, dynamic> item in datas.cast<Map<String, dynamic>>()) {
+            DepartmentUnreadRecord obj = DepartmentUnreadRecord(item);
             storeRecord(obj);
             response.add(obj);
           }
+            callback(response, true);
 
-          callback(response, true);
         });
   }
 
   hasUnread() {
-    print("UNREAD COUNT" + this.getRecords().length.toString());
-    return false;
-
-    return this.getRecords().length > 0;
+    List<DepartmentUnreadRecord> records = this.getRecords();
+    int count = 0;
+    for (DepartmentUnreadRecord record in records) {
+      count += record.unread;
+    }
+    return count > 0;
   }
 }
