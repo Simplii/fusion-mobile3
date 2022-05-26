@@ -319,6 +319,7 @@ class _SMSConversationSummaryViewState
   final _searchInputController = TextEditingController();
 
   _openConversation() {
+    _fusionConnection.conversations.markRead(_convo);
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
