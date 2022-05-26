@@ -45,6 +45,7 @@ class Softphone implements SipUaHelperListener {
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   bool _savedOutput = false;
   Aps.AudioPlayer _playingAudio;
+  bool isCellPhoneCallActive = false;
 
   List<String> callIdsAnswered = [];
 
@@ -123,8 +124,13 @@ class Softphone implements SipUaHelperListener {
       _callKeep = FlutterCallkeep();
       _setupCallKeep();
       FlutterPhoneState.rawPhoneEvents.forEach((element) {
-        if (element.type == RawEventType.connected && activeCall != null)
+        if (element.type == RawEventType.connected && activeCall != null) {
+          isCellPhoneCallActive = true;
           activeCall.hold();
+        }
+        else if (element.type == RawEventType.disconnected) {
+          isCellPhoneCallActive = false;
+        }
       });
     }
   }
@@ -288,7 +294,7 @@ class Softphone implements SipUaHelperListener {
 
     settings.webSocketSettings.allowBadCertificate = true;
     // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
-    settings.webSocketUrl = "ws://164.90.154.80:9002";
+    settings.webSocketUrl = "ws://164.90.154.80:8080";
     //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
     settings.uri = aor;
     settings.authorizationUser = login;

@@ -22,6 +22,14 @@ class FusionStore<T extends FusionModel> {
     return _records.containsKey(id);
   }
 
+  removeRecord(String id) {
+    _records.remove(id);
+  }
+
+  clearRecords() {
+    _records.clear();
+  }
+
   getRecord(String id, Function(T) callback) {
     if (_records.containsKey(id)) {
       callback(_records[id]);

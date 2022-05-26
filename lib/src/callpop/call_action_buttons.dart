@@ -18,7 +18,8 @@ class CallActionButtons extends StatefulWidget {
         this.isRinging,
         this.callIsRecording,
         this.isOnConference,
-        this.callOnHold})
+        this.callOnHold,
+        this.resumeDisabled})
       : super(key: key);
 
   final Map<String, Function()> actions;
@@ -29,6 +30,7 @@ class CallActionButtons extends StatefulWidget {
   final bool callIsRecording;
   final bool dialPadOpen;
   final bool callIsMuted;
+  final bool resumeDisabled;
   Function(bool) setDialpad;
 
   @override
@@ -53,7 +55,8 @@ class _CallActionButtonsState extends State<CallActionButtons> {
                   onPressed: widget.actions['onResumeBtnPress'],
                   title: 'Resume',
                   icon: Image.asset("assets/icons/call_view/play.png",
-                      width: 24, height: 24))
+                      width: 24, height: 24),
+              disabled: widget.resumeDisabled)
             else
               CallActionButton(
                   onPressed: widget.actions['onHoldBtnPress'],

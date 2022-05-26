@@ -104,28 +104,8 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                         alignment: Alignment.topCenter,
                         padding: EdgeInsets.only(top: 0, bottom: 10),
                         width: MediaQuery.of(context).size.width - 24,
-                        child: Stack(
-                          alignment: Alignment.centerLeft,
+                        child: Row(
                           children: [
-                            Container(
-                                height: 40,
-                                alignment: Alignment.topCenter,
-                                width: MediaQuery.of(context).size.width - 48,
-                                child: ListView(
-                                    scrollDirection: Axis.horizontal,
-                                    children: [
-                                      Container(
-                                          alignment: Alignment.topCenter,
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width -
-                                              48,
-                                          child: Text(dialedNumber,
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  fontSize: 36,
-                                                  color: Colors.white)))
-                                    ])),
                             GestureDetector(
                                 onTap: pasteNumber,
                                 child: Opacity(
@@ -137,8 +117,8 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                             top: 10,
                                             bottom: 10,
                                             left: 0,
-                                            right: 40),
-                                        width: 80,
+                                            right: 20),
+                                        width: 46,
                                         child: Container(
                                             width: 22,
                                             height: 16,
@@ -146,6 +126,26 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                                 "assets/icons/paste_white.png",
                                                 width: 22,
                                                 height: 16))))),
+                            Container(
+                                height: 40,
+                                alignment: Alignment.topCenter,
+                                width: MediaQuery.of(context).size.width - 122,
+                                child: ListView(
+                                    scrollDirection: Axis.horizontal,
+                                    children: [
+                                      Container(
+                                          alignment: Alignment.topCenter,
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width -
+                                              122,
+                                          child: Text(dialedNumber,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                  fontSize: 36,
+                                                  color: Colors.white)))
+                                    ])),
+
                             if (dialedNumber != '')
                               GestureDetector(
                                   onTap: removeLastDigit,
@@ -157,15 +157,15 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                           padding: EdgeInsets.only(
                                               top: 10,
                                               bottom: 10,
-                                              left: 40,
+                                              left: 20,
                                               right: 0),
-                                          width: 80,
+                                          width: 46,
                                           child: Container(
-                                              width: 22,
+                                              width: 20,
                                               height: 16,
                                               child: Image.asset(
                                                   "assets/icons/call_view/backspace.png",
-                                                  width: 22,
+                                                  width: 20,
                                                   height: 16)))))
                           ],
                         ),
