@@ -420,7 +420,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     final lastMidnight = new DateTime(today.year, today.month, today.day);
 
     if (lastMidnight.isBefore(calcDate)) {
-      return todayAndYesterdayFmt.format(calcDate);
+      return "Today " + todayAndYesterdayFmt.format(calcDate);
     } else if (lastMidnight.subtract(new Duration(days: 1)).isBefore(calcDate)) {
       return "Yesterday " + todayAndYesterdayFmt.format(calcDate);
     } else {
