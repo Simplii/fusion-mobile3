@@ -68,6 +68,8 @@ class FusionConnection {
   Softphone _softphone;
   PersistCookieJar _cookies;
   Function _onLogOut = () {};
+  Function _refreshUi = () {};
+  Map<String, bool> received_smses = {};
 
   String serverRoot = "http://fusioncomm.net";
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
@@ -92,7 +94,14 @@ class FusionConnection {
     dids = DidStore(this);
     unreadMessages = UnreadsStore(this);
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
+    refreshUnreads();
     getDatabase();
+  }
+
+  refreshUnreads() {
+    unreadMessages.getUnreads((List<DepartmentUnreadRecord> messages, bool fromServer) {
+      _refreshUi();
+    });
   }
 
   _getCookies({Function callback}) async {
@@ -102,11 +111,6 @@ class FusionConnection {
           ignoreExpires: true,
           storage: FileStorage(directory.path)
       );
-
-      print("got cookies");
-      print(_cookies.domainCookies);
-      print(_cookies.hostCookies);
-      print(_cookies.storage.toString());
 
       if (callback != null) {
         callback();
@@ -355,7 +359,7 @@ class FusionConnection {
       var uriResponse = await Function.apply(fn, [url], args);
       _saveCookie(uriResponse);
       print("apirequest");
-      print(route);
+      print(url);
       print(urlParams);
       print(data);
       print(uriResponse.body);
@@ -509,14 +513,17 @@ print(_pushkitToken);
       } else if (message.containsKey('sms_received')) {
         // Receive incoming message platform data
         SMSMessage newMessage = SMSMessage(message['message_object']);
+        if (!received_smses.containsKey(newMessage.id)) {
+          received_smses[newMessage.id] = true;
+          refreshUnreads();
+          unreadMessages.getRecords();
 
-        unreadMessages.getRecords();
+          showSimpleNotification(
+              Text(newMessage.from + " says: " + newMessage.message),
+              background: smoke);
 
-        showSimpleNotification(
-            Text(newMessage.from + " says: " + newMessage.message),
-            background: smoke);
-
-        messages.storeRecord(newMessage);
+          messages.storeRecord(newMessage);
+        }
       } else if (message.containsKey('new_status')) {
         coworkers.storePresence(
             message['user'] + '@' + message['domain'].toString().toLowerCase(),
@@ -555,5 +562,9 @@ print(_pushkitToken);
         });
 
     _postLoginSetup((bool success) {});
+  }
+
+  void setRefreshUi( Function() callback) {
+    _refreshUi = callback;
   }
 }
