@@ -244,6 +244,11 @@ class _MyHomePageState extends State<MyHomePage> {
     fusionConnection.setAPNSConnector(connector);
     _setupPermissions();
     _setupFirebase();
+    fusionConnection.setRefreshUi(() {
+      this.setState(() {
+
+      });
+    });
   }
 
   _setupPermissions() {
@@ -253,11 +258,8 @@ class _MyHomePageState extends State<MyHomePage> {
       Permission.bluetoothConnect,
       Permission.bluetooth,
     ].request().then((Map<Permission, PermissionStatus> statuses) {
-      print('status1 permission');
       print(statuses[Permission.phone]);
-      print('status2 permission');
       print(statuses[Permission.bluetooth]);
-      print('status3 permission');
       print(statuses[Permission.bluetoothConnect]);
     });
   }
@@ -267,7 +269,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _onResume(RemoteMessage m) {
-    print("resumed reregister");
     softphone.reregister();
   }
 
@@ -318,13 +319,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _setupFirebase() {
     FirebaseMessaging.onMessage.listen((event) {
-      print("gotfbmessage:" + event.data.toString());
       event.data;
       setState(() {});
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((event) {
-      print("gotfbmessageandopened:" + event.data.toString());
       checkForIMNotification(event.data);
     });
   }
@@ -617,7 +616,12 @@ class _MyHomePageState extends State<MyHomePage> {
                                           "assets/icons/message_btmbar.png",
                                           width: 18,
                                           height: 18),
-                                  activeIcon: Image.asset(
+                                  activeIcon: fusionConnection.unreadMessages.hasUnread()
+                                      ? Image.asset(
+                                      "assets/icons/message_filled_white_notif.png",
+                                      width: 18,
+                                      height: 18)
+                                      : Image.asset(
                                       "assets/icons/message_filled_white.png",
                                       width: 18,
                                       height: 18),
