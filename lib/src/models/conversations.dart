@@ -1,4 +1,5 @@
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:fusion_mobile_revamped/src/models/unreads.dart';
 import 'dart:convert' as convert;
 
 import '../backend/fusion_connection.dart';
@@ -225,6 +226,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     List<String> numbers = department.numbers;
 
     getPersisted(groupId, limit, offset, callback);
+    fusionConnection.refreshUnreads();
 
     fusionConnection.apiV1Call("get", "/chat/conversations_with/with_message", {
       'numbers': numbers.join(","),
@@ -260,4 +262,16 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       callback(convos, true);
     });
   }
+
+  void markRead(SMSConversation convo) {
+    print("markRead");
+    var future = new Future.delayed(const Duration(milliseconds: 2000), () {
+      print("thefutureran");
+      fusionConnection.refreshUnreads();
+    });
+    convo.unread = 0;
+    storeRecord(convo);
+  }
+
+
 }
