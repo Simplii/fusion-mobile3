@@ -355,15 +355,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _register() async {
-    final androidConfig = FlutterBackgroundAndroidConfig(
-      enableWifiLock: true,
-      notificationTitle: "Fusion Mobile",
-      notificationText: "Active call with Fusion Mobile.",
-      notificationImportance: AndroidNotificationImportance.Default,
-      //notificationIcon: AndroidResource(name: 'app_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
-    );
-    FlutterBackground.initialize(androidConfig: androidConfig)
-        .then((value) => print("initalizefbvalue" + value.toString()));
+    if (Platform.isAndroid) {
+      final androidConfig = FlutterBackgroundAndroidConfig(
+        enableWifiLock: true,
+        notificationTitle: "Fusion Mobile",
+        notificationText: "Active call with Fusion Mobile.",
+        notificationImportance: AndroidNotificationImportance.Default,
+        //notificationIcon: AndroidResource(name: 'app_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
+      );
+      FlutterBackground.initialize(androidConfig: androidConfig)
+          .then((value) => print("initalizefbvalue" + value.toString()));
+    }
     print("fbcheck");
 
     if (_isRegistering) {
