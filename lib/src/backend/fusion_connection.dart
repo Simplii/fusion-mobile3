@@ -318,9 +318,13 @@ class FusionConnection {
       print(uriResponse.body);
       print(data);
       print(urlParams);
-      var jsonResponse = convert.jsonDecode(uriResponse.body);
-      client.close();
-      if (callback != null) callback(jsonResponse);
+      if (uriResponse.body == '{"error":"invalid_login"}')
+        return;
+      else {
+        var jsonResponse = convert.jsonDecode(uriResponse.body);
+        client.close();
+        if (callback != null) callback(jsonResponse);
+      }
     } finally {
       client.close();
     }
