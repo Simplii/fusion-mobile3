@@ -218,6 +218,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       for (Map<String, dynamic> item in data['items']) {
         List<CrmContact> leads = [];
         List<Contact> contacts = [];
+
         if (item.containsKey('contacts') && item['contacts'] != null) {
           for (Map<String, dynamic> obj in item['contacts']) {
             contacts.add(Contact(obj));
