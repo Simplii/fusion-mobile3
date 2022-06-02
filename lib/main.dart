@@ -366,7 +366,6 @@ class _MyHomePageState extends State<MyHomePage> {
       FlutterBackground.initialize(androidConfig: androidConfig)
           .then((value) => print("initalizefbvalue" + value.toString()));
     }
-    print("fbcheck");
 
     if (_isRegistering) {
       return;
