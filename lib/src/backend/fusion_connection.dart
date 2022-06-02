@@ -155,10 +155,14 @@ class FusionConnection {
           });
           _username = '';
           _password = '';
-          _softphone.stopInbound();
-          _softphone.close();
-          setSoftphone(null);
-          _onLogOut();
+          try {
+            if (_softphone != null) {
+              _softphone.stopInbound();
+              _softphone.close();
+              setSoftphone(null);
+            }
+            _onLogOut();
+          } catch (e) {}
           _cookies.deleteAll();
         });
       });
