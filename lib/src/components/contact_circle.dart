@@ -41,8 +41,15 @@ class _ContactCircleState extends State<ContactCircle> {
   double get _diameter => widget._diameter;
   double get _margin => widget._margin;
 
-  _gravatarUrl(String email) {
-    return Gravatar(email).imageUrl();
+  _gravatarUrl(String email, String firstName, String lastName) {
+    print(email + firstName + lastName);
+    firstName = firstName.replaceAll(r"/[^a-zA-Z]/", '');
+    lastName = lastName.replaceAll(r"/[^a-zA-Z]/", '');
+    return Gravatar(email).imageUrl(
+        size: 120,
+        defaultImage: Uri.encodeComponent("https://fusioncomm.net/api/v2/client/"
+        + "nameAvatar/${firstName}/${lastName}")
+    );
   }
 
   @override
@@ -58,7 +65,10 @@ class _ContactCircleState extends State<ContactCircle> {
         if (contact.emails != null) {
           for (Map<String, dynamic> email in contact.emails) {
             try {
-              imageUrl = _gravatarUrl(email['email']);
+              print("grav");
+              print(contact);
+              imageUrl = _gravatarUrl(email['email'], contact.firstName, contact.lastName);
+              print(imageUrl);
             } catch (e) {}
           }
         }
@@ -69,7 +79,12 @@ class _ContactCircleState extends State<ContactCircle> {
         if (contact.emails != null) {
           for (String email in contact.emails) {
             try {
-              imageUrl = _gravatarUrl(email);
+              print("grav2");print(contact);
+              imageUrl = _gravatarUrl(
+                email,
+                contact.name.split(' ')[0],
+                contact.name.split(' ')[1],
+              );
             } catch (e) {}
           }
         }
