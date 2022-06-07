@@ -168,6 +168,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
           'sms_conversation',
           limit: limit,
           offset: offset,
+          orderBy: 'lastContactTime DESC',
           where: 'myNumber in ("' + group.numbers.join('","') + '")')
           .then((List<Map<String, dynamic>> results) {
         List<SMSConversation> list = [];
