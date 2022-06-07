@@ -294,7 +294,7 @@ class Softphone implements SipUaHelperListener {
 
     settings.webSocketSettings.allowBadCertificate = true;
     // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
-    settings.webSocketUrl = "ws://164.90.154.80:8080"; 
+    settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
     //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
     settings.uri = aor;
     settings.authorizationUser = login;
