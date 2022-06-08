@@ -46,6 +46,8 @@ class Softphone implements SipUaHelperListener {
   bool _savedOutput = false;
   Aps.AudioPlayer _playingAudio;
   bool isCellPhoneCallActive = false;
+  AudioSession _audioSession;
+  bool _isAudioSessionActive = false;
 
   List<String> callIdsAnswered = [];
 
@@ -65,6 +67,63 @@ class Softphone implements SipUaHelperListener {
 
     _audioCache.load(_outboundAudioPath);
     _audioCache.load(_inboundAudioPath);
+  }
+
+  _syncAudioSession() {
+    if (Platform.isIOS) {
+      if (activeCall != null && !_isAudioSessionActive) {
+        _createAudioSession();
+        _startAudioSession();
+      }
+      else if (activeCall != null && _isAudioSessionActive) {
+        _endAudioSession();
+      }
+    }
+  }
+
+  _endAudioSession() async {
+    await _audioSession.setActive(false);
+  }
+
+  _startAudioSession() async {
+    await _audioSession.setActive(true);
+  }
+
+  _createAudioSession() async {
+    if (_audioSession == null) {
+      _audioSession = await AudioSession.instance;
+      await _audioSession.configure(AudioSessionConfiguration(
+        avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions
+            .allowBluetooth,
+        avAudioSessionMode: AVAudioSessionMode.voiceChat,
+        avAudioSessionRouteSharingPolicy: AVAudioSessionRouteSharingPolicy
+            .defaultPolicy,
+        avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+      ));
+      _audioSession.interruptionEventStream.listen((event) {
+        if (event.begin) {
+          switch (event.type) {
+            case AudioInterruptionType.duck:
+            case AudioInterruptionType.pause:
+            case AudioInterruptionType.unknown:
+            this.setHold(this.activeCall, true);
+            break;
+          }
+        } else {
+          switch (event.type) {
+            case AudioInterruptionType.duck:
+            // The interruption ended and we should unduck.
+              break;
+            case AudioInterruptionType.pause:
+            // The interruption ended and we should resume.
+            case AudioInterruptionType.unknown:
+          // The interruption ended but we should not resume.
+            break;
+          }
+        }
+      });
+    }
   }
 
   close() async {
@@ -295,6 +354,7 @@ class Softphone implements SipUaHelperListener {
     settings.webSocketSettings.allowBadCertificate = true;
     // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
     settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
+    settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
     //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
     settings.uri = aor;
     settings.authorizationUser = login;
@@ -382,6 +442,7 @@ class Softphone implements SipUaHelperListener {
     }
     print("madeactive");
     print(call);
+    _syncAudioSession();
   }
 
   _setApiIds(call, termId, origId) {
@@ -678,6 +739,8 @@ class Softphone implements SipUaHelperListener {
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
       flutterLocalNotificationsPlugin.cancelAll();
     }
+
+    _syncAudioSession();
   }
 
   _linkUuidFor(Call call) {
