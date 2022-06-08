@@ -1158,4 +1158,10 @@ class Softphone implements SipUaHelperListener {
 
   @override
   void transportStateChanged(TransportState state) {}
+
+  @override
+  void onNewNotify(Notify ntf) {
+    print("new notify");
+    print(ntf);
+  }
 }
