@@ -521,16 +521,20 @@ print(_pushkitToken);
       } else if (message.containsKey('sms_received')) {
         // Receive incoming message platform data
         SMSMessage newMessage = SMSMessage(message['message_object']);
+
         if (!received_smses.containsKey(newMessage.id)) {
           received_smses[newMessage.id] = true;
-          refreshUnreads();
-          unreadMessages.getRecords();
 
-          showSimpleNotification(
-              Text(newMessage.from + " says: " + newMessage.message),
-              background: smoke);
+          if (!newMessage.fromMe) {
+            refreshUnreads();
+            unreadMessages.getRecords();
 
-          messages.storeRecord(newMessage);
+            showSimpleNotification(
+                Text(newMessage.from + " says: " + newMessage.message),
+                background: smoke);
+
+            messages.storeRecord(newMessage);
+          }
         }
       } else if (message.containsKey('new_status')) {
         coworkers.storePresence(
