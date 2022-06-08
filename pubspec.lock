@@ -127,6 +127,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.4"
+  dart_webrtc:
+    dependency: transitive
+    description:
+      name: dart_webrtc
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.6"
   dbus:
     dependency: transitive
     description:
@@ -325,7 +332,7 @@ packages:
       name: flutter_webrtc
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.6.10+hotfix.1"
+    version: "0.8.9"
   html:
     dependency: transitive
     description:
@@ -766,7 +773,7 @@ packages:
       path: dart-sip-ua
       relative: true
     source: path
-    version: "0.4.0"
+    version: "0.5.1"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -975,6 +982,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.2.0"
+  webrtc_interface:
+    dependency: transitive
+    description:
+      name: webrtc_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.5"
   websocket_manager:
     dependency: "direct main"
     description:
