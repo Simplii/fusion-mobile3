@@ -100,9 +100,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
             ticker: 'ticker');
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
-    print("showing notification");
-    print(id);
-    print(data);
+
     flutterLocalNotificationsPlugin.show(id, callerName,
         callerNumber + ' incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
@@ -145,11 +143,6 @@ class MyApp extends StatelessWidget {
     _softphone = Softphone(_fusionConnection);
     _fusionConnection.setSoftphone(_softphone);
 
-    getApplicationDocumentsDirectory().then((Directory directory) {
-      print("got app dir gotappdir");
-      print(directory.absolute);
-      print(directory.listSync(recursive: true, followLinks: false));
-    });
   }
 
   bool _listenerHasBeenSetup = false;
@@ -252,7 +245,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _setupPermissions() {
-    print("gonna get permissionssertup");
     [
       Permission.phone,
       Permission.bluetoothConnect,
@@ -485,7 +477,6 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       });
     } else if (softphone.activeCall == null && _isProximityListening) {
-      print("goingtodisablebgexecution");
       _isProximityListening = false;
       _proximitySub.cancel();
       if (Platform.isAndroid)
