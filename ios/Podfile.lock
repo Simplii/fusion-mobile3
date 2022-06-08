@@ -53,10 +53,9 @@ PODS:
     - Flutter
   - flutter_local_notifications (0.0.1):
     - Flutter
-  - flutter_webrtc (0.2.2):
+  - flutter_webrtc (0.7.1):
     - Flutter
-    - Libyuv (= 1703)
-    - WebRTC-SDK (= 92.4515.07)
+    - WebRTC-SDK (= 97.4692.05)
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/standard (2.7.5)
@@ -85,7 +84,6 @@ PODS:
     - Flutter
   - just_audio (0.0.1):
     - Flutter
-  - Libyuv (1703)
   - nanopb (2.30908.0):
     - nanopb/decode (= 2.30908.0)
     - nanopb/encode (= 2.30908.0)
@@ -117,7 +115,7 @@ PODS:
     - Flutter
   - video_player_avfoundation (0.0.1):
     - Flutter
-  - WebRTC-SDK (92.4515.07)
+  - WebRTC-SDK (97.4692.05)
   - websocket_manager (0.0.1):
     - Flutter
     - Starscream (~> 3.1.1)
@@ -159,7 +157,6 @@ SPEC REPOS:
     - FMDB
     - GoogleDataTransport
     - GoogleUtilities
-    - Libyuv
     - nanopb
     - PromisesObjC
     - Sentry
@@ -236,13 +233,12 @@ SPEC CHECKSUMS:
   flutter_dtmf: d86aaec3002a172abba756dc179aaf786bb82215
   flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
-  flutter_webrtc: 6b71a1fc1d931a3dfe879e578ea10e2e6cd84f53
+  flutter_webrtc: c4d09b864e7a8e93ad931bb84eed0ceb1ed51444
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   GoogleDataTransport: 5fffe35792f8b96ec8d6775f5eccd83c998d5a3b
   GoogleUtilities: e0913149f6b0625b553d70dae12b49fc62914fd1
   image_picker_ios: b786a5dcf033a8336a657191401bfdf12017dabb
   just_audio: baa7252489dbcf47a4c7cc9ca663e9661c99aafa
-  Libyuv: 5f79ced0ee66e60a612ca97de1e6ccacd187a437
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   package_info_plus: 6c92f08e1f853dc01228d6f553146438dafcd14e
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
@@ -256,7 +252,7 @@ SPEC CHECKSUMS:
   Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
   url_launcher_ios: 839c58cdb4279282219f5e248c3321761ff3c4de
   video_player_avfoundation: e489aac24ef5cf7af82702979ed16f2a5ef84cff
-  WebRTC-SDK: 540a44f2e30e89c75e331d5c4a372253ba668233
+  WebRTC-SDK: a6ee40bda0e3f7dba057907c3897374005c5715b
   websocket_manager: cadb93f3b88cf3f5d60fca8629824c1b50f30e1b
 
 PODFILE CHECKSUM: 1a3d1302d20332da748c302cae640b844a94ff3b
