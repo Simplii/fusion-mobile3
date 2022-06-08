@@ -322,9 +322,6 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _icon() {
-    print([_historyItem.toDid, _historyItem.to,
-        _historyItem.fromDid, _historyItem.from,
-        _historyItem.direction, _historyItem.missed, _historyItem.duration].join(' , '));
     if (_historyItem.direction == 'inbound') {
       if (_isMissed()) {
         return "assets/icons/phone_missed_red.png";

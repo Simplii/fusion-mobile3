@@ -42,7 +42,6 @@ class _ContactCircleState extends State<ContactCircle> {
   double get _margin => widget._margin;
 
   _gravatarUrl(String email, String firstName, String lastName) {
-    print(email + firstName + lastName);
     firstName = firstName.replaceAll(r"/[^a-zA-Z]/", '');
     lastName = lastName.replaceAll(r"/[^a-zA-Z]/", '');
     return Gravatar(email).imageUrl(
@@ -65,10 +64,7 @@ class _ContactCircleState extends State<ContactCircle> {
         if (contact.emails != null) {
           for (Map<String, dynamic> email in contact.emails) {
             try {
-              print("grav");
-              print(contact);
               imageUrl = _gravatarUrl(email['email'], contact.firstName, contact.lastName);
-              print(imageUrl);
             } catch (e) {}
           }
         }
@@ -79,7 +75,6 @@ class _ContactCircleState extends State<ContactCircle> {
         if (contact.emails != null) {
           for (String email in contact.emails) {
             try {
-              print("grav2");print(contact);
               imageUrl = _gravatarUrl(
                 email,
                 contact.name.split(' ')[0],
