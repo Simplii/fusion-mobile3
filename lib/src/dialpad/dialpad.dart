@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -28,11 +30,23 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
   Softphone get _softphone => widget._softphone;
 
   var dialedNumber = '';
+  final _dialEntryController = ScrollController();
+
+  void _scrollToEnd() {
+    _dialEntryController.animateTo(
+      _dialEntryController.position.maxScrollExtent,
+      duration: Duration(milliseconds:200 ),
+      curve: Curves.fastOutSlowIn,
+    );
+  }
 
   void handleDialPadKeyPress(String key) {
     setState(() {
       dialedNumber += key;
       if (widget.onQueryChange != null) widget.onQueryChange(dialedNumber);
+      Future.delayed(const Duration(milliseconds: 50), () {
+        _scrollToEnd();
+      });
     });
   }
 
@@ -81,6 +95,19 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final scaleFactor = MediaQuery.of(context).textScaleFactor;
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(
+          text: dialedNumber,
+          style: TextStyle(
+              fontSize: 36 * scaleFactor,
+              color: Colors.white)),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout(minWidth: 0, maxWidth: double.infinity);
+
+    final textWidth = textPainter.size.width.ceil();
+
     return Container(
         decoration: BoxDecoration(
             color: darkGrey,
@@ -95,7 +122,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Container(
-                height: 69,
+                height: 69 * scaleFactor,
                 child: Column(
                     key: ValueKey<String>(
                         dialedNumber == "" ? "emptykey" : "enteredkey"),
@@ -127,18 +154,20 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                                 width: 22,
                                                 height: 16))))),
                             Container(
-                                height: 40,
+                                height: 40 * MediaQuery.of(context).textScaleFactor,
                                 alignment: Alignment.topCenter,
                                 width: MediaQuery.of(context).size.width - 122,
                                 child: ListView(
                                     scrollDirection: Axis.horizontal,
+                                    controller: _dialEntryController,
                                     children: [
                                       Container(
                                           alignment: Alignment.topCenter,
-                                          width: MediaQuery.of(context)
+                                          width: max(MediaQuery.of(context)
                                                   .size
                                                   .width -
                                               122,
+                                          textWidth.toDouble()),
                                           child: Text(dialedNumber,
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
