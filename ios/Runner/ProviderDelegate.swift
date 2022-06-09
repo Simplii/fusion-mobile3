@@ -47,6 +47,48 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 self.requestTransaction(transaction)
 
             }
+            else if (call.method == "setUnhold") {
+                print("set unhold call callkit")
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let unHoldAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
+                                                       onHold: false)
+                let transaction = CXTransaction(action: unHoldAction)
+                self.requestTransaction(transaction)
+            }
+            else if (call.method == "setHold") {
+                print("sethold call callkit")
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let holdAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
+                                                       onHold: true)
+                let transaction = CXTransaction(action: holdAction)
+                self.requestTransaction(transaction)
+            }
+            else if (call.method == "answerCall") {
+                print("answer call callkit")
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let answerAction = CXAnswerCallAction(call:  UUID(uuidString: uuid)!)
+                let transaction = CXTransaction(action: answerAction)
+                self.requestTransaction(transaction)
+            }
+            else if (call.method == "muteCall") {
+                print("mute call callkit")
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let action = CXSetMutedCallAction(call:  UUID(uuidString: uuid)!, muted: true)
+                let transaction = CXTransaction(action: action)
+                self.requestTransaction(transaction)
+            }
+            else if (call.method == "unMuteCall") {
+                print("unmute call callkit")
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let action = CXSetMutedCallAction(call:  UUID(uuidString: uuid)!, muted: true)
+                let transaction = CXTransaction(action: action)
+                self.requestTransaction(transaction)
+            }
         })
         print("providerpush set delegate callkit")
         provider.setDelegate(self, queue: nil)
