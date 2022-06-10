@@ -32,7 +32,7 @@ class CallHistory extends FusionModel {
   }
 
   getOtherNumber(String domain) {
-    return isInternal(domain)
+    return isInternal(domain) && to != "abandoned"
         ? (direction == "inbound" ? from : to).toString()
         : (direction == "inbound" ? fromDid : toDid).toString();
   }
@@ -40,14 +40,12 @@ class CallHistory extends FusionModel {
   CallHistory(Map<String, dynamic> obj) {
     id = obj['id'].toString();
     startTime = DateTime.parse(obj['startTime']).toLocal();
-    toDid = obj['to_did'];
-    fromDid = obj['from_did'];
+    toDid = obj['toDid'];
+    fromDid = obj['fromDid'];
     to = obj['to'];
     from = obj['from'];
     duration = obj['duration'];
-    if (obj['call_recording'] != null) {
-      recordingUrl = obj['call_recording']['url'];
-    }
+    recordingUrl = obj['recordingUrl'];
     direction = obj['direction'];
     if (direction == 'Incoming') {
       direction = 'inbound';
@@ -61,7 +59,14 @@ class CallHistory extends FusionModel {
     if (obj['contact'] != null && obj['contact'].runtimeType != bool) {
       contact = Contact(obj['contact']);
     }
-    missed = obj['abandoned'] == "1";
+
+    if (obj['contacts'] != null) {
+      List list = obj['contacts'];
+      if (list.length > 0) {
+        contact = Contact.fromV2(list[0]);
+      }
+    }
+    missed = obj['to'] == "abandoned";
   }
 
   @override

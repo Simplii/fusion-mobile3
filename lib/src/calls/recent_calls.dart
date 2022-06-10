@@ -318,16 +318,14 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _isMissed() {
-    return _historyItem.missed && _historyItem.direction == "inbound";
+    return _historyItem.missed;
   }
 
   _icon() {
-    if (_historyItem.direction == 'inbound') {
-      if (_isMissed()) {
-        return "assets/icons/phone_missed_red.png";
-      } else  {
-        return "assets/icons/phone_incoming.png";
-      }
+    if (_isMissed()) {
+      return "assets/icons/phone_missed_red.png";
+    } else if (_historyItem.direction == 'inbound') {
+      return "assets/icons/phone_incoming.png";
     } else {
       return "assets/icons/phone_outgoing.png";
     }
@@ -459,10 +457,12 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(4)),
                               ),
+                              alignment: Alignment.topLeft,
                               padding: EdgeInsets.only(
                                   left: 6, right: 6, top: 2, bottom: 2),
                               child: Row(children: [
                                 Image.asset(_icon(), width: 12, height: 12),
+                                Container(width: 2),
                                 Text(" " +
                                     ("" + _historyItem.getOtherNumber(
                                         _fusionConnection.getDomain()))
@@ -474,7 +474,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                                     _relativeDateFormatted(_historyItem.startTime),
                                     style: TextStyle(
                                         color:
-                                            _isMissed() ? crimsonLight : coal,
+                                            _isMissed() ? crimsonDarker : coal,
                                         fontSize: 12,
                                         height: 1.4,
                                         fontWeight: FontWeight.w400))
