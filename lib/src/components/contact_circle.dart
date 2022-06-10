@@ -46,9 +46,33 @@ class _ContactCircleState extends State<ContactCircle> {
     lastName = lastName.replaceAll(r"/[^a-zA-Z]/", '');
     return Gravatar(email).imageUrl(
         size: 120,
-        defaultImage: Uri.encodeComponent("https://fusioncomm.net/api/v2/client/"
-        + "nameAvatar/${firstName}/${lastName}")
+        defaultImage: Uri.encodeComponent(_avatarUrl(firstName, lastName))
     );
+  }
+
+  _firstName() {
+    if (_contacts.length > 0) {
+      return _contacts[0].firstName;
+    } else if (_crmContacts.length > 0) {
+      return _crmContacts[0].name.split(" ")[0];
+    } else {
+      return "Unknown";
+    }
+  }
+
+  _lastName() {
+    if (_contacts.length > 0) {
+      return _contacts[0].lastName;
+    } else if (_crmContacts.length > 0) {
+      return _crmContacts[0].name.split(" ")[1];
+    } else {
+      return "Unknown";
+    }
+  }
+
+  _avatarUrl(String firstName, String lastName) {
+    return "https://fusioncomm.net/api/v2/client/"
+        + "nameAvatar/${firstName}/${lastName}";
   }
 
   @override
@@ -92,6 +116,11 @@ class _ContactCircleState extends State<ContactCircle> {
       presence = coworker.presence;
     }
 
+    if (imageUrl == null
+        && (_contacts.length > 0 || _crmContacts.length > 0)) {
+      imageUrl = _avatarUrl(_firstName(), _lastName());
+    }
+
     Widget contactImage = ClipRRect(
         borderRadius: BorderRadius.circular((_diameter - 4) / 2),
         child: Container(
@@ -103,7 +132,6 @@ class _ContactCircleState extends State<ContactCircle> {
                   image: (imageUrl != null
                       ? NetworkImage(imageUrl)
                       : AssetImage("assets/blank_avatar.png"))))));
-
 
     Color borderColor = Colors.transparent;
     if (presence == "open") borderColor = Color.fromARGB(255, 0, 204, 136);
