@@ -245,9 +245,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
   }
 
   void markRead(SMSConversation convo) {
-    print("markRead");
     var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-      print("thefutureran");
       fusionConnection.refreshUnreads();
     });
     convo.unread = 0;

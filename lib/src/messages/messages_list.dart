@@ -213,10 +213,6 @@ class _MessagesListState extends State<MessagesList> {
     if (lookupState == 0) {
       _lookupMessages();
     }
-print("render convos");
-    print(_convos);
-    print(_convos.length);
-    print(_page);
     return Expanded(
         child: Container(
             decoration: BoxDecoration(
@@ -234,10 +230,6 @@ print("render convos");
                                 ? _convos.length + 2
                                 : _convos.length + 2,
                             itemBuilder: (BuildContext context, int index) {
-                              print('build');
-                              print(index);
-                              print(_convos.length);
-
                               if (index == 0) {
                                 return Container(height: 60);
                               } else if (index - 1 > _convos.length &&
@@ -245,7 +237,6 @@ print("render convos");
                                 _loadMore();
                                 return Container(height: 30);
                               } else if (_convos.length > index - 1) {
-                                print(_convos[index - 1]);
                                 return SMSConversationSummaryView(
                                     _fusionConnection,
                                     _softphone,

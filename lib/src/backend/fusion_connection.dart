@@ -75,7 +75,6 @@ class FusionConnection {
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
 
   FusionConnection() {
-    print("gonna get cookies");
     _getCookies();
     crmContacts = CrmContactsStore(this);
     integratedContacts = IntegratedContactsStore(this);
@@ -118,7 +117,6 @@ class FusionConnection {
     }).onError((er, err) {
       print("cookie error");
       print(er);
-      print(err);
       callback();
     });
   }
@@ -438,8 +436,6 @@ print(responseBody);
         }
 
         smsDepartments.getDepartments((List<SMSDepartment> lis) {});
-print("getting token");
-print(_pushkitToken);
         FirebaseMessaging.instance.getToken().then((token) {
           print("got token");
           print(token);
@@ -478,12 +474,6 @@ print(_pushkitToken);
 
   _reconnectSocket() {
     _socket.connect().then((val) {
-
-      print("connection socket");
-      print(convert.jsonEncode({
-        "simplii_identification": [_extension, _domain],
-        "pwd": _password
-      }));
       _socket.send(convert.jsonEncode({
         "simplii_identification": [_extension, _domain],
         "pwd": _password
@@ -515,7 +505,6 @@ print(_pushkitToken);
     });
     _socket.onMessage((dynamic messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
-      print("gotmessage" + message.toString());
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
       } else if (message.containsKey('sms_received')) {
