@@ -69,7 +69,6 @@ class Softphone implements SipUaHelperListener {
 
   close() async {
     try {
-      print("unregistering");
       // helper.unregister(true);
       await helper.stop();
       //helper.terminateSessions({});
@@ -182,12 +181,9 @@ class Softphone implements SipUaHelperListener {
         },
       },
     };
-    print("sertupcallkeep");
-    print(_settingupcallkeep);
 
     if (!_settingupcallkeep) {
       _settingupcallkeep = true;
-      print("serting up callkeep");
       _callKeep.setup(_context, callSetup);
     }
 
@@ -217,8 +213,6 @@ class Softphone implements SipUaHelperListener {
 
       case 'answerButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
-        print("callkit toanswer" + callUuid);
-        print("callkitgettingthecall" + _getCallByUuid(callUuid).toString());
         callIdsAnswered.add(callUuid);
         answerCall(_getCallByUuid(callUuid));
         return;
@@ -281,7 +275,6 @@ class Softphone implements SipUaHelperListener {
 
   Future<void> _reportOutgoingCall(String uuid) async {
     try {
-      print("callkit reporting outgoing");
       await _callKit.invokeMethod('reportOutgoingCall', uuid);
     } on PlatformException catch (e) {
       print("callkit outgoing error");
@@ -293,7 +286,7 @@ class Softphone implements SipUaHelperListener {
 
     settings.webSocketSettings.allowBadCertificate = true;
     // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
-    settings.webSocketUrl = "ws://164.90.154.80:8080";
+    settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
     //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
     settings.uri = aor;
     settings.authorizationUser = login;
@@ -346,7 +339,6 @@ class Softphone implements SipUaHelperListener {
   }
 
   doMakeCall(String destination) async {
-    print("making call not callkit");
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     helper.setVideo(false);
     MediaStream mediaStream;
@@ -379,8 +371,6 @@ class Softphone implements SipUaHelperListener {
         setHold(c, true);
       }
     }
-    print("madeactive");
-    print(call);
   }
 
   _setApiIds(call, termId, origId) {
@@ -494,14 +484,10 @@ class Softphone implements SipUaHelperListener {
 
   transfer(Call call, String destination) {
     call.refer(destination);
-    print("transfercall");
-    print(call);
     _removeCall(call);
   }
 
   hangUp(Call call) {
-    print("hangupcall");
-    print(call);
     try {
       call.hangup();
     } catch (e) {}
@@ -509,8 +495,6 @@ class Softphone implements SipUaHelperListener {
   }
 
   answerCall(Call call) async {
-    print("answer call attempt");
-    print(call);
     if (call == null) return;
 
     if (callIdsAnswered.contains(_uuidFor(call))) {
@@ -520,7 +504,6 @@ class Softphone implements SipUaHelperListener {
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     MediaStream mediaStream;
     mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
-    print("answering the call callkit");
     call.answer(helper.buildCallOptions(), mediaStream: mediaStream);
     if (Platform.isAndroid) {
       _callKeep.answerIncomingCall(_uuidFor(call));
@@ -649,15 +632,7 @@ class Softphone implements SipUaHelperListener {
 
     for (Call c in toRemove) calls.remove(c);
 
-    print('removingcall');
-    print(call);
-    print(toRemove);
-    print(toRemove.length);
-    print(calls.length);
-
     if (calls.length > 0) {
-      print('tehcallleft');
-      print(calls[0]);
       makeActiveCall(calls[0]);
     } else {
       setCallOutput(call, "phone");
@@ -668,12 +643,6 @@ class Softphone implements SipUaHelperListener {
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
       flutterLocalNotificationsPlugin
           .cancel(intIdForString(_getCallDataValue(call.id, "apiTermId")));
-      print("cancel callpopp");
-      print(call.id);
-      print(intIdForString(call.id));
-      print(_getCallDataValue(call.id, "apiTermId"));
-      print(intIdForString(_getCallDataValue(call.id, "apiTermId")));
-      print(_getCallDataById(call.id));
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
       flutterLocalNotificationsPlugin.cancelAll();
     }
@@ -793,9 +762,6 @@ class Softphone implements SipUaHelperListener {
       _setCallDataValue(call.id, "startTime", DateTime.now());
     }
 
-    print("testing uuid");
-    print(_uuidFor(call));
-    print(callIdsAnswered);
     if (callIdsAnswered.contains(_uuidFor(call))) answerCall(call);
   }
 
@@ -978,15 +944,11 @@ class Softphone implements SipUaHelperListener {
       case CallStateEnum.ENDED:
         stopOutbound();
         stopInbound();
-        print("callended");
-        print(call);
         _removeCall(call);
         break;
       case CallStateEnum.FAILED:
         stopOutbound();
         stopInbound();
-        print("callfailed");
-        print(call);
         _removeCall(call);
         break;
       case CallStateEnum.UNMUTED:
@@ -1062,17 +1024,12 @@ class Softphone implements SipUaHelperListener {
 
   @override
   void registrationStateChanged(RegistrationState state) {
-    print("registrationstatechanged");
-    print(state.state);
-    print(state.cause.cause);
-    print(state.cause.reason_phrase);
 
     if (state.state == RegistrationStateEnum.UNREGISTERED) {
       registered = false;
     } else if (state.state == RegistrationStateEnum.REGISTRATION_FAILED) {
       registered = false;
     } else if (state.state == RegistrationStateEnum.NONE) {
-      print("itsnone");
       registered = this.helper.registered;
     } else if (state.state == RegistrationStateEnum.REGISTERED) {
       registered = true;
@@ -1080,13 +1037,8 @@ class Softphone implements SipUaHelperListener {
     connected = this.helper.connected;
     _updateListeners();
 
-    print("registrationstatechangedhere");
-    print(registered);
-
     if (!registered) {
-      print("going to reregisterin10");
       var future = new Future.delayed(const Duration(milliseconds: 10000), () {
-        print("willcheckreregisterincallback");
         if (!this.helper.registered) this.reregister();
       });
     }

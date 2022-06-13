@@ -34,7 +34,6 @@ class _ParkedCallsState extends State<ParkedCalls> {
   Timer _timer;
 
   initState() {
-    print("initing park state");
     super.initState();
     _timer = new Timer.periodic(
       Duration(seconds: 1),

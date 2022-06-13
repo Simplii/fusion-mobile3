@@ -75,7 +75,6 @@ class FusionConnection {
   String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
 
   FusionConnection() {
-    print("gonna get cookies");
     _getCookies();
     crmContacts = CrmContactsStore(this);
     integratedContacts = IntegratedContactsStore(this);
@@ -118,7 +117,6 @@ class FusionConnection {
     }).onError((er, err) {
       print("cookie error");
       print(er);
-      print(err);
       callback();
     });
   }
@@ -155,10 +153,14 @@ class FusionConnection {
           });
           _username = '';
           _password = '';
-          _softphone.stopInbound();
-          _softphone.close();
-          setSoftphone(null);
-          _onLogOut();
+          try {
+            if (_softphone != null) {
+              _softphone.stopInbound();
+              _softphone.close();
+              setSoftphone(null);
+            }
+            _onLogOut();
+          } catch (e) {}
           _cookies.deleteAll();
         });
       });
@@ -318,9 +320,13 @@ class FusionConnection {
       print(uriResponse.body);
       print(data);
       print(urlParams);
-      var jsonResponse = convert.jsonDecode(uriResponse.body);
-      client.close();
-      if (callback != null) callback(jsonResponse);
+      if (uriResponse.body == '{"error":"invalid_login"}')
+        return;
+      else {
+        var jsonResponse = convert.jsonDecode(uriResponse.body);
+        client.close();
+        if (callback != null) callback(jsonResponse);
+      }
     } finally {
       client.close();
     }
@@ -430,8 +436,6 @@ print(responseBody);
         }
 
         smsDepartments.getDepartments((List<SMSDepartment> lis) {});
-print("getting token");
-print(_pushkitToken);
         FirebaseMessaging.instance.getToken().then((token) {
           print("got token");
           print(token);
@@ -470,12 +474,6 @@ print(_pushkitToken);
 
   _reconnectSocket() {
     _socket.connect().then((val) {
-
-      print("connection socket");
-      print(convert.jsonEncode({
-        "simplii_identification": [_extension, _domain],
-        "pwd": _password
-      }));
       _socket.send(convert.jsonEncode({
         "simplii_identification": [_extension, _domain],
         "pwd": _password
@@ -507,22 +505,25 @@ print(_pushkitToken);
     });
     _socket.onMessage((dynamic messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
-      print("gotmessage" + message.toString());
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
       } else if (message.containsKey('sms_received')) {
         // Receive incoming message platform data
         SMSMessage newMessage = SMSMessage(message['message_object']);
+
         if (!received_smses.containsKey(newMessage.id)) {
           received_smses[newMessage.id] = true;
-          refreshUnreads();
-          unreadMessages.getRecords();
 
-          showSimpleNotification(
-              Text(newMessage.from + " says: " + newMessage.message),
-              background: smoke);
+          if (!newMessage.fromMe) {
+            refreshUnreads();
+            unreadMessages.getRecords();
 
-          messages.storeRecord(newMessage);
+            showSimpleNotification(
+                Text(newMessage.from + " says: " + newMessage.message),
+                background: smoke);
+
+            messages.storeRecord(newMessage);
+          }
         }
       } else if (message.containsKey('new_status')) {
         coworkers.storePresence(
