@@ -214,7 +214,6 @@ class _MessagesListState extends State<MessagesList> {
     if (lookupState == 0) {
       _lookupMessages();
     }
-
     return Expanded(
         child: Container(
             decoration: BoxDecoration(
@@ -229,16 +228,16 @@ class _MessagesListState extends State<MessagesList> {
                         ? this._spinner()
                         : ListView.builder(
                             itemCount: _page == -1
-                                ? _convos.length
+                                ? _convos.length + 2
                                 : _convos.length + 2,
                             itemBuilder: (BuildContext context, int index) {
                               if (index == 0) {
                                 return Container(height: 60);
-                              } else if (index >= _convos.length &&
+                              } else if (index - 1 > _convos.length &&
                                   lookupState != 1) {
                                 _loadMore();
                                 return Container(height: 30);
-                              } else if (_convos.length > index + 1) {
+                              } else if (_convos.length > index - 1) {
                                 return SMSConversationSummaryView(
                                     _fusionConnection,
                                     _softphone,

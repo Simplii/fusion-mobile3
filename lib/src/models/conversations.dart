@@ -182,11 +182,13 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       Function(List<SMSConversation> conversations, bool fromServer) callback) {
     SMSDepartment group = fusionConnection.smsDepartments.lookupRecord(groupId);
     if (group != null) {
-      fusionConnection.db
-          .query('sms_conversation',
-              limit: limit,
-              offset: offset,
-              where: 'myNumber in ("' + group.numbers.join('","') + '")')
+
+      fusionConnection.db.query(
+          'sms_conversation',
+          limit: limit,
+          offset: offset,
+          orderBy: 'lastContactTime DESC',
+          where: 'myNumber in ("' + group.numbers.join('","') + '")')
           .then((List<Map<String, dynamic>> results) {
         List<SMSConversation> list = [];
         for (Map<String, dynamic> result in results) {
@@ -239,6 +241,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       for (Map<String, dynamic> item in data['items']) {
         List<CrmContact> leads = [];
         List<Contact> contacts = [];
+
         if (item.containsKey('contacts') && item['contacts'] != null) {
           for (Map<String, dynamic> obj in item['contacts']) {
             contacts.add(Contact(obj));
@@ -264,9 +267,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
   }
 
   void markRead(SMSConversation convo) {
-    print("markRead");
     var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-      print("thefutureran");
       fusionConnection.refreshUnreads();
     });
     convo.unread = 0;

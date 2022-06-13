@@ -33,12 +33,11 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
   Softphone get _softphone => widget._softphone;
   SMSConversation openConversation = null;
   bool _showingResults = false;
-  String _selectedTab = 'all';
+  String _selectedTab = 'coworkers';
   String _query = '';
 
   _getTitle() {
     return {
-      'all': 'All Recents',
       'coworkers': 'Coworker Recents',
       'integrated': 'Integrated Recents',
       'fusion': 'Recent Contacts'
@@ -103,12 +102,12 @@ class ContactsSearchList extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
   final String _query;
-  final String _defaultTab;
+  final String selectedTab;
   final Function(Contact contact, CrmContact crmContact) onSelect;
   bool embedded = false;
 
   ContactsSearchList(
-      this._fusionConnection, this._softphone, this._query, this._defaultTab,
+      this._fusionConnection, this._softphone, this._query, this.selectedTab,
       {Key key, this.embedded, this.onSelect})
       : super(key: key);
 
@@ -128,7 +127,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   List<Contact> _contacts = [];
   String _lookedUpQuery;
 
-  String get _defaultTab => widget._defaultTab;
+  String get _selectedTab => widget.selectedTab;
   String _typeFilter = "Fusion Contacts";
   String _subscriptionKey;
   int _page = 0;
@@ -170,6 +169,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
           (List<Contact> contacts, bool fromServer) {
         if (thisLookup != _lookedUpQuery) return;
         if (!mounted) return;
+        if (_typeFilter != 'Fusion Contacts') return;
 
         this.setState(() {
           if (fromServer) {
@@ -199,6 +199,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
           (List<Contact> contacts, bool fromServer, bool hasMore) {
         if (thisLookup != _lookedUpQuery) return;
         if (!mounted) return;
+        if (_typeFilter != 'Integrated Contacts') return;
 
         this.setState(() {
           if (fromServer) {
@@ -228,6 +229,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       _fusionConnection.coworkers.search(_query, (List<Contact> contacts) {
         if (thisLookup != _lookedUpQuery) return;
         if (!mounted) return;
+        if (_typeFilter != 'Coworkers') return;
 
         this.setState(() {
           lookupState = 2;
@@ -380,13 +382,13 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   @override
   Widget build(BuildContext context) {
     String origType = _typeFilter;
-    if (_defaultTab == 'coworkers')
+    if (_selectedTab == 'coworkers')
       _typeFilter = 'Coworkers';
-    else if (_defaultTab == 'all')
+    else if (_selectedTab == 'all')
       _typeFilter = 'Fusion Contacts';
-    else if (_defaultTab == 'integrated')
+    else if (_selectedTab == 'integrated')
       _typeFilter = 'Integrated Contacts';
-    else if (_defaultTab == 'fusion') _typeFilter = 'Fusion Contacts';
+    else if (_selectedTab == 'fusion') _typeFilter = 'Fusion Contacts';
 
     if (_typeFilter != origType) {
       _contacts = [];
