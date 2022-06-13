@@ -107,7 +107,7 @@ class Softphone implements SipUaHelperListener {
             case AudioInterruptionType.duck:
             case AudioInterruptionType.pause:
             case AudioInterruptionType.unknown:
-            this.setHold(this.activeCall, true);
+            this.setHold(this.activeCall, true, false);
             break;
           }
         } else {
@@ -291,7 +291,7 @@ class Softphone implements SipUaHelperListener {
       case 'holdButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
         bool isHold = methodCall.arguments[1] as bool;
-        setHold(_getCallByUuid(callUuid), isHold);
+        setHold(_getCallByUuid(callUuid), isHold, false);
         return;
 
       case 'muteButtonPressed':
@@ -437,7 +437,7 @@ class Softphone implements SipUaHelperListener {
 
     for (Call c in calls) {
       if (c.id != call.id) {
-        setHold(c, true);
+        setHold(c, true, false);
       }
     }
     print("madeactive");
@@ -519,7 +519,7 @@ class Softphone implements SipUaHelperListener {
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
   }
 
-  setHold(Call call, bool setOnHold) {
+  setHold(Call call, bool setOnHold, bool fromUi) async {
     _setCallDataValue(call.id, "onHold", setOnHold);
     if (setOnHold) {
       helper.setVideo(true);
@@ -528,6 +528,13 @@ class Softphone implements SipUaHelperListener {
         helper.setVideo(false);
       });
     } else {
+      if (Platform.isIOS && fromUi) {
+        _callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
+        await _endAudioSession();
+        _audioSession = null;
+        await _createAudioSession();
+        await _startAudioSession();
+      }
       call.unhold();
     }
   }
@@ -659,7 +666,7 @@ class Softphone implements SipUaHelperListener {
   _callKeepDidToggleHold(CallKeepDidToggleHoldAction event) {
     if (_getCallDataValue(_getCallByUuid(event.callUUID).id, "onHold") !=
         event.hold) {
-      setHold(_getCallByUuid(event.callUUID), event.hold);
+      setHold(_getCallByUuid(event.callUUID), event.hold, false);
     }
   }
 

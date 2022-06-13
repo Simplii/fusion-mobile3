@@ -59,12 +59,12 @@ class _CallViewState extends State<CallView> {
   }
 
   _onHoldBtnPress() {
-    _softphone.setHold(_activeCall, true);
+    _softphone.setHold(_activeCall, true,  true);
   }
 
   _onResumeBtnPress() {
     if (!_softphone.isCellPhoneCallActive)
-      _softphone.setHold(_activeCall, false);
+      _softphone.setHold(_activeCall, false, true);
   }
 
   _makeXferUrl(String url) {
