@@ -24,6 +24,7 @@ class UnreadsStore extends FusionStore<DepartmentUnreadRecord> {
   getUnreads(Function(List<DepartmentUnreadRecord>, bool) callback) {
     fusionConnection.apiV2Call("get", "/messaging/unread", {},
         callback: (List<dynamic> datas) {
+      print("urneads");print(datas);
           List<DepartmentUnreadRecord> response = [];
           clearRecords();
           for (Map<String, dynamic> item in datas.cast<Map<String, dynamic>>()) {

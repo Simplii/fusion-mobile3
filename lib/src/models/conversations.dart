@@ -96,8 +96,18 @@ class SMSConversation extends FusionModel {
       'members': members,
       'message': message.serialize(),
       'unread': unread,
-      'crmContacts': crmContacts.map((CrmContact c) { return c.serialize(); }).toList().cast<String>(),
-      'contacts': contacts.map((Contact c) { return c.serialize(); }).toList().cast<String>(),
+      'crmContacts': crmContacts
+          .map((CrmContact c) {
+            return c.serialize();
+          })
+          .toList()
+          .cast<String>(),
+      'contacts': contacts
+          .map((Contact c) {
+            return c.serialize();
+          })
+          .toList()
+          .cast<String>(),
     });
   }
 
@@ -112,14 +122,20 @@ class SMSConversation extends FusionModel {
     this.members = data['members'].cast<String>();
     this.message = SMSMessage.unserialize(data['message']);
     this.unread = data['unread'];
-    this.crmContacts = data['crmContacts'].cast<String>()
+    this.crmContacts = data['crmContacts']
+        .cast<String>()
         .map((String s) {
           return CrmContact.unserialize(s);
-        }).toList().cast<CrmContact>();
-    this.contacts = data['contacts'].cast<String>()
+        })
+        .toList()
+        .cast<CrmContact>();
+    this.contacts = data['contacts']
+        .cast<String>()
         .map((String s) {
           return Contact.unserialize(s);
-        }).toList().cast<Contact>();
+        })
+        .toList()
+        .cast<Contact>();
     this.hash = data['hash'];
   }
 
@@ -144,15 +160,16 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
   }
 
   persist(SMSConversation record) {
-    fusionConnection.db
-        .delete('sms_conversation', where: 'id = ?', whereArgs: [record.getId()]);
+    fusionConnection.db.delete('sms_conversation',
+        where: 'id = ?', whereArgs: [record.getId()]);
     fusionConnection.db.insert('sms_conversation', {
-
       'id': record.getId(),
       'groupName': record.groupName,
       'isGroup': record.isGroup ? 1 : 0,
-      'lastContactTime':
-          DateTime.parse(record.lastContactTime).toLocal().millisecondsSinceEpoch / 1000,
+      'lastContactTime': DateTime.parse(record.lastContactTime)
+              .toLocal()
+              .millisecondsSinceEpoch /
+          1000,
       'searchString': record.searchString(),
       'number': record.number,
       'myNumber': record.myNumber,
@@ -161,9 +178,11 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     });
   }
 
-  getPersisted(String groupId, int limit, int offset, Function(List<SMSConversation> conversations, bool fromServer) callback) {
+  getPersisted(String groupId, int limit, int offset,
+      Function(List<SMSConversation> conversations, bool fromServer) callback) {
     SMSDepartment group = fusionConnection.smsDepartments.lookupRecord(groupId);
     if (group != null) {
+
       fusionConnection.db.query(
           'sms_conversation',
           limit: limit,
@@ -180,16 +199,19 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     }
   }
 
-  searchPersisted(String query, String groupId, int limit, int offset, Function(List<SMSConversation> conversations, bool fromServer) callback) {
+  searchPersisted(String query, String groupId, int limit, int offset,
+      Function(List<SMSConversation> conversations, bool fromServer) callback) {
     SMSDepartment group = fusionConnection.smsDepartments.lookupRecord(groupId);
     if (group != null) {
-      fusionConnection.db.query(
-          'sms_conversation',
+      fusionConnection.db.query('sms_conversation',
           limit: limit,
           offset: offset,
-          where: 'myNumber in ("' + group.numbers.join('","') + '") AND searchString Like ?',
-          whereArgs: ["%" + query + "%"])
-          .then((List<Map<String, dynamic>> results) {
+          where: 'myNumber in ("' +
+              group.numbers.join('","') +
+              '") AND searchString Like ?',
+          whereArgs: [
+            "%" + query + "%"
+          ]).then((List<Map<String, dynamic>> results) {
         List<SMSConversation> list = [];
         for (Map<String, dynamic> result in results) {
           list.add(SMSConversation.unserialize(result['raw']));
@@ -245,9 +267,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
   }
 
   void markRead(SMSConversation convo) {
-    print("markRead");
     var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-      print("thefutureran");
       fusionConnection.refreshUnreads();
     });
     convo.unread = 0;

@@ -85,11 +85,6 @@ class _CallViewState extends State<CallView> {
             }, (String xferTo, String xferType) {
               if (xferType == "blind") {
                 _softphone.transfer(_activeCall, _makeXferUrl(xferTo));
-                print("xferrred" +
-                    ":" +
-                    _makeXferUrl(xferTo) +
-                    ":" +
-                    _activeCall.toString());
               }
               Navigator.pop(context);
             }));
@@ -130,7 +125,6 @@ class _CallViewState extends State<CallView> {
   }
 
   _onRecBtnPress() {
-    print("recbtnpress");
     if (_softphone.getRecordState(_activeCall)) {
       _softphone.stopRecordCall(_activeCall);
     } else {
@@ -207,7 +201,6 @@ class _CallViewState extends State<CallView> {
                     children: options.map((List<String> option) {
                       return GestureDetector(
                           onTap: () {
-                            print("setting output from gesture");
                             _softphone.setCallOutput(_activeCall, option[2]);
                             Navigator.pop(context);
                           },
@@ -385,13 +378,7 @@ class _CallViewState extends State<CallView> {
                               _softphone.isCallMerged(_activeCall),
                               setDialpad: (bool isOpen) {
                                 setState(() {
-                                  print("isopen" +
-                                      isOpen.toString() +
-                                      dialpadVisible.toString());
                                   dialpadVisible = isOpen;
-                                  print("isopen" +
-                                      isOpen.toString() +
-                                      dialpadVisible.toString());
                                 });
                               },
                               callIsRecording:
@@ -423,13 +410,7 @@ class _CallViewState extends State<CallView> {
                               _softphone.isCallMerged(_activeCall),
                               setDialpad: (bool isOpen) {
                                 setState(() {
-                                  print("isopen" +
-                                      isOpen.toString() +
-                                      dialpadVisible.toString());
                                   dialpadVisible = isOpen;
-                                  print("isopen" +
-                                      isOpen.toString() +
-                                      dialpadVisible.toString());
                                 });
                               },
                               callIsRecording:
