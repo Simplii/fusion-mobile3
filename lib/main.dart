@@ -250,9 +250,6 @@ class _MyHomePageState extends State<MyHomePage> {
       Permission.bluetoothConnect,
       Permission.bluetooth,
     ].request().then((Map<Permission, PermissionStatus> statuses) {
-      print(statuses[Permission.phone]);
-      print(statuses[Permission.bluetooth]);
-      print(statuses[Permission.bluetoothConnect]);
     });
   }
 
@@ -464,7 +461,6 @@ class _MyHomePageState extends State<MyHomePage> {
     if (softphone.activeCall != null &&
         softphone.isConnected(softphone.activeCall) != null &&
         !_isProximityListening) {
-      print("goingtoenablebgexecution");
       if (Platform.isAndroid)
         FlutterBackground.enableBackgroundExecution().then(
             (value) => print("enablebgexecutionvalue" + value.toString()));
@@ -598,7 +594,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 label: "People",
                               ),
                               BottomNavigationBarItem(
-                                  icon: fusionConnection.unreadMessages.hasUnread()
+                                  icon: fusionConnection.unreadMessages
+                                          .hasUnread()
                                       ? Image.asset(
                                           "assets/icons/message_btmbar_notif.png",
                                           width: 18,

@@ -46,25 +46,23 @@ class VoicemailStore extends FusionStore<Voicemail> {
   VoicemailStore(FusionConnection fusionConnection) : super(fusionConnection);
 
   getVoicemails(Function(List<Voicemail>, bool) callback) {
-    fusionConnection.apiV2Call(
-        "get",
-        "/user/voicemails",
-        {"limit": 200, "start": 0},
-        callback: (Map<String, dynamic> datas) {
-          List<Voicemail> response = [];
+    fusionConnection
+        .apiV2Call("get", "/user/voicemails", {"limit": 200, "start": 0},
+            callback: (Map<String, dynamic> datas) {
+      List<Voicemail> response = [];
 
-          for (Map<String, dynamic> item in datas['items']) {
-            Voicemail obj = Voicemail(item);
+      for (Map<String, dynamic> item in datas['items']) {
+        Voicemail obj = Voicemail(item);
 
-            if (obj.phoneNumber.length <= 6)
-              obj.coworker = fusionConnection.coworkers.lookupCoworker(obj.phoneNumber
-                  + '@' + fusionConnection.getDomain());
+        if (obj.phoneNumber.length <= 6)
+          obj.coworker = fusionConnection.coworkers.lookupCoworker(
+              obj.phoneNumber + '@' + fusionConnection.getDomain());
 
-            storeRecord(obj);
-            response.add(obj);
-          }
+        storeRecord(obj);
+        response.add(obj);
+      }
 
-          callback(response, true);
-        });
+      callback(response, true);
+    });
   }
 }

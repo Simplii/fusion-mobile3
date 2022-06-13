@@ -8,6 +8,7 @@ import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
@@ -213,10 +214,6 @@ class _MessagesListState extends State<MessagesList> {
     if (lookupState == 0) {
       _lookupMessages();
     }
-print("render convos");
-    print(_convos);
-    print(_convos.length);
-    print(_page);
     return Expanded(
         child: Container(
             decoration: BoxDecoration(
@@ -234,10 +231,6 @@ print("render convos");
                                 ? _convos.length + 2
                                 : _convos.length + 2,
                             itemBuilder: (BuildContext context, int index) {
-                              print('build');
-                              print(index);
-                              print(_convos.length);
-
                               if (index == 0) {
                                 return Container(height: 60);
                               } else if (index - 1 > _convos.length &&
@@ -245,7 +238,6 @@ print("render convos");
                                 _loadMore();
                                 return Container(height: 30);
                               } else if (_convos.length > index - 1) {
-                                print(_convos[index - 1]);
                                 return SMSConversationSummaryView(
                                     _fusionConnection,
                                     _softphone,
@@ -358,7 +350,10 @@ class _SMSConversationSummaryViewState
                               child: Column(children: [
                             Align(
                                 alignment: Alignment.centerLeft,
-                                child: Text(_convo.contactName(),
+                                child: Text(
+                                    _convo.contactName() == "Unknown"
+                                        ? _convo.number.formatPhone()
+                                        : _convo.contactName(),
                                     style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16))),
