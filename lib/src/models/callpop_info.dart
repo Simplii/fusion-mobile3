@@ -27,8 +27,6 @@ class CallpopInfo extends FusionModel {
         var key = extRef['network_id'] + ':' + extRef['network'];
         if (!added.containsKey(key)) {
           added[key] = true;
-          print("icon");
-          print(extRef['icon']);
           this.crmContacts.add(CrmContact(
               {
                 "crm": extRef['network'],
