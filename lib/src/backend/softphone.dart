@@ -1,5 +1,6 @@
 import 'dart:io';
 
+
 import 'package:audioplayers/audioplayers.dart' as Aps;
 import 'package:callkeep/callkeep.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -12,7 +13,6 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:sip_ua/sip_ua.dart';
-import 'package:audio_session/audio_session.dart';
 import '../../main.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
@@ -34,6 +34,7 @@ class Softphone implements SipUaHelperListener {
   bool registered = false;
   bool connected = false;
   bool _settingupcallkeep = false;
+  String couldGetAudioSession = "";
 
   FlutterCallkeep _callKeep;
   Map<String, Map<String, dynamic>> callData = {};
@@ -46,8 +47,9 @@ class Softphone implements SipUaHelperListener {
   bool _savedOutput = false;
   Aps.AudioPlayer _playingAudio;
   bool isCellPhoneCallActive = false;
-  AudioSession _audioSession;
+  //AudioSession _audioSession;
   bool _isAudioSessionActive = false;
+  bool _attemptingToRegainAudio = false;
 
   List<String> callIdsAnswered = [];
 
@@ -59,6 +61,9 @@ class Softphone implements SipUaHelperListener {
   Aps.AudioPlayer _outboundPlayer;
   Aps.AudioPlayer _inboundPlayer;
 
+
+
+
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
       _callKit = MethodChannel('net.fusioncomm.ios/callkit');
@@ -67,63 +72,6 @@ class Softphone implements SipUaHelperListener {
 
     _audioCache.load(_outboundAudioPath);
     _audioCache.load(_inboundAudioPath);
-  }
-
-  _syncAudioSession() {
-    if (Platform.isIOS) {
-      if (activeCall != null && !_isAudioSessionActive) {
-        _createAudioSession();
-        _startAudioSession();
-      }
-      else if (activeCall != null && _isAudioSessionActive) {
-        _endAudioSession();
-      }
-    }
-  }
-
-  _endAudioSession() async {
-    await _audioSession.setActive(false);
-  }
-
-  _startAudioSession() async {
-    await _audioSession.setActive(true);
-  }
-
-  _createAudioSession() async {
-    if (_audioSession == null) {
-      _audioSession = await AudioSession.instance;
-      await _audioSession.configure(AudioSessionConfiguration(
-        avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
-        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions
-            .allowBluetooth,
-        avAudioSessionMode: AVAudioSessionMode.voiceChat,
-        avAudioSessionRouteSharingPolicy: AVAudioSessionRouteSharingPolicy
-            .defaultPolicy,
-        avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-      ));
-      _audioSession.interruptionEventStream.listen((event) {
-        if (event.begin) {
-          switch (event.type) {
-            case AudioInterruptionType.duck:
-            case AudioInterruptionType.pause:
-            case AudioInterruptionType.unknown:
-            this.setHold(this.activeCall, true, false);
-            break;
-          }
-        } else {
-          switch (event.type) {
-            case AudioInterruptionType.duck:
-            // The interruption ended and we should unduck.
-              break;
-            case AudioInterruptionType.pause:
-            // The interruption ended and we should resume.
-            case AudioInterruptionType.unknown:
-          // The interruption ended but we should not resume.
-            break;
-          }
-        }
-      });
-    }
   }
 
   close() async {
@@ -136,8 +84,8 @@ class Softphone implements SipUaHelperListener {
     }
   }
 
-  _playAudio(String path) {
-    if (Platform.isIOS)
+  _playAudio(String path, bool ignore) {
+    if (Platform.isIOS && !ignore)
       return;
     else {
       Aps.AudioCache cache = Aps.AudioCache();
@@ -152,6 +100,22 @@ class Softphone implements SipUaHelperListener {
         });
       }
     }
+  }
+
+  _attemptToRegainAudioSession() async { return;
+     _attemptingToRegainAudio = true;
+    try {
+      await _callKit.invokeMethod('attemptAudioSessionActive');
+    } on PlatformException catch (e) {
+      print("error callkit invoke attempt audio session");
+    }
+    var future = new Future.delayed(const Duration(milliseconds: 10000), () {
+        if (couldGetAudioSession != "") {
+          _attemptToRegainAudioSession();
+        } else {
+          _attemptingToRegainAudio = false;
+        }
+      });
   }
 
   stopOutbound() {
@@ -270,6 +234,19 @@ class Softphone implements SipUaHelperListener {
         _fusionConnection.setPushkitToken(token);
         return;
 
+      case 'setAudioSessionActive':
+        bool status = methodCall.arguments[0] as bool;
+        if (status)
+          couldGetAudioSession = activeCall.id;
+        else
+          couldGetAudioSession = "";
+        if (!status && !_attemptingToRegainAudio)
+          _attemptToRegainAudioSession();
+        else if (status)
+          _attemptingToRegainAudio = true;
+
+        return;
+
       case 'answerButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
         callIdsAnswered.add(callUuid);
@@ -346,7 +323,7 @@ class Softphone implements SipUaHelperListener {
     settings.webSocketSettings.allowBadCertificate = true;
     // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
     settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
-  //  settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
+    settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
     //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
     settings.uri = aor;
     settings.authorizationUser = login;
@@ -518,12 +495,13 @@ class Softphone implements SipUaHelperListener {
     } else {
       if (Platform.isIOS && fromUi) {
         _callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
-        await _endAudioSession();
-        _audioSession = null;
-        await _createAudioSession();
-        await _startAudioSession();
+
       }
+
       call.unhold();
+      couldGetAudioSession = "";
+      var future = new Future.delayed(const Duration(milliseconds: 2000), () {
+          });
     }
   }
 
@@ -714,7 +692,6 @@ class Softphone implements SipUaHelperListener {
       flutterLocalNotificationsPlugin.cancelAll();
     }
 
-    _syncAudioSession();
   }
 
   _linkUuidFor(Call call) {
@@ -791,9 +768,9 @@ class Softphone implements SipUaHelperListener {
       if (activeCall == null) makeActiveCall(call);
 
       if (call.direction == "INCOMING") {
-        _playAudio(_inboundAudioPath);
+        _playAudio(_inboundAudioPath, false);
       } else {
-        _playAudio(_outboundAudioPath);
+        _playAudio(_outboundAudioPath, false);
       }
 
       if (Platform.isAndroid) {
