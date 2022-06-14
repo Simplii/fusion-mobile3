@@ -64,19 +64,19 @@ class _VoicemailsState extends State<Voicemails> {
   }
 
   _isSpinning() {
-    return _lookupState < 2 && _voicemails.length == 0;
+    return _lookupState < 2;
   }
 
   _lookup() {
+    if (!mounted) return;
     if (_lookupState == 1) return;
     _lookupState = 1;
     _fusionConnection.voicemails
         .getVoicemails((List<Voicemail> vms, bool fromServer) {
-      if (!mounted) return;
-        setState(() {
-          _lookupState = 2;
-        _voicemails = vms;
-      });
+          setState(() {
+            _lookupState = 2;
+            _voicemails = vms;
+          });
     });
   }
 
