@@ -63,7 +63,13 @@ class _CallViewState extends State<CallView> {
   }
 
   _onResumeBtnPress() {
-    if (!_softphone.isCellPhoneCallActive)
+    if (Platform.isIOS
+        && _softphone.couldGetAudioSession == _softphone.activeCall.id) {
+      String num = _softphone.getCallerNumber(_softphone.activeCall);
+      _softphone.hangUp(_softphone.activeCall);
+      _softphone.makeCall(num);
+    }
+    else if (!_softphone.isCellPhoneCallActive)
       _softphone.setHold(_activeCall, false, true);
   }
 
@@ -274,14 +280,21 @@ class _CallViewState extends State<CallView> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        if (!_softphone.isCellPhoneCallActive)
+                        if (!_softphone.isCellPhoneCallActive
+                            && !(_softphone.couldGetAudioSession != _softphone.activeCall
+                                && Platform.isIOS))
                         Container(
                             margin: EdgeInsets.only(right: 8),
                             child: Image.asset(
                                 "assets/icons/call_view/play.png",
                                 width: 12,
                                 height: 16)),
-                        Text(_softphone.isCellPhoneCallActive ? 'Mobile Call Active' : 'RESUME',
+                        Text(_softphone.isCellPhoneCallActive
+                            ? 'Mobile Call Active'
+                            : (_softphone.couldGetAudioSession == _softphone.activeCall.id && Platform.isIOS
+                            ? 'Lost audio access, click to restart call.'
+                            : 'RESUME'),
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
