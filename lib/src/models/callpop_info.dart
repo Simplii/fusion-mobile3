@@ -24,7 +24,7 @@ class CallpopInfo extends FusionModel {
         emails.add(email['email']);
       });
       contact.externalReferences.forEach((extRef) {
-        var key = extRef['network_id'] + ':' + extRef['network'];
+        var key = extRef['externalId'] + ':' + extRef['network'];
         if (!added.containsKey(key)) {
           added[key] = true;
           this.crmContacts.add(CrmContact(
@@ -32,8 +32,8 @@ class CallpopInfo extends FusionModel {
                 "crm": extRef['network'],
                 "emails": emails,
                 "icon": extRef['icon'],
-                "id": extRef['network_id'],
-                "nid": extRef['network_id'],
+                "id": extRef['externalId'],
+                "nid": extRef['externalId'],
                 "label": extRef['name'] != null ? extRef['name'] : contact.name,
                 "name": extRef['name'] != null ? extRef['name'] : contact.name,
                 "module": extRef['module'],
