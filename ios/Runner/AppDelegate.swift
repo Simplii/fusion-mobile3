@@ -3,6 +3,7 @@ import CallKit
 import Flutter
 import PushKit
 import Sentry
+import AVFoundation
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate{
@@ -44,6 +45,31 @@ import Sentry
         }*/
         
       return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+    
+    override func applicationDidBecomeActive(_ application: UIApplication) {
+        print("did become active");
+        return;
+        let session = AVAudioSession.sharedInstance()
+        do {
+            // 1) Configure your audio session category, options, and mode
+            // 2) Activate your audio session to enable your custom configuration
+//            try session.setMode(.voiceChat)
+  //          try session.setCategory(.playAndRecord)
+            //try session.setPrefersNoInterruptionsFromSystemAlerts(true)
+            print(session.category)
+            print(session.mode)
+            try session.setActive(true)
+            print("did set audiosessionactive")
+            if (callkitChannel != nil) {
+                callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
+            }
+        } catch let error as NSError {
+            if (callkitChannel != nil) {
+                callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
+            }
+            print("Unable to activate audiosession:  \(error.localizedDescription)")
+        }
     }
     
     func setupCallkitFlutterLink() {
