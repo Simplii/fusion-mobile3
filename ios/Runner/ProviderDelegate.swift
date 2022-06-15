@@ -10,13 +10,66 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     private var answeredUuids: [String: Bool] = [:]
     private let theCallObserver = CXCallObserver()
 
+    @objc func handleInterruption(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+            let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+            let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+                return
+        }
 
+        // Switch over the interruption type.
+        switch type {
+
+        case .began:
+            print("began audiosession interruption")
+            callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
+            break
+            // An interruption began. Update the UI as necessary.
+
+        case .ended:
+            print("ended audiosession interruption")
+            let session = AVAudioSession.sharedInstance()
+            print("try to set audio active")
+            do {
+                print(session.category)
+                print(session.mode)
+                try session.setActive(true)
+                print("did set audiosessionactive")
+                if (callkitChannel != nil) {
+                    callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
+                }
+            } catch let error as NSError {
+                if (callkitChannel != nil) {
+                }
+                print("Unable to activate audiosession:  \(error.localizedDescription)")
+            }
+            guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            print(optionsValue);print(options);
+            if options.contains(.shouldResume) {
+                // An interruption ended. Resume playback.
+            } else {
+                // An interruption ended. Don't resume playback.
+            }
+
+        default: ()
+        }
+    }
+    
     public init(channel: FlutterMethodChannel) {
         provider = CXProvider(configuration: ProviderDelegate.providerConfiguration)
 
         callkitChannel = channel
         super.init()
         theCallObserver.setDelegate(self, queue: nil)
+
+        print("setup audiosesssion observer")
+        
+        let nc = NotificationCenter.default
+          nc.addObserver(self,
+                         selector: #selector(handleInterruption),
+                         name: AVAudioSession.interruptionNotification,
+                         object: AVAudioSession.sharedInstance())
 
         callkitChannel.setMethodCallHandler({ [self]
           (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
@@ -46,6 +99,67 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 let transaction = CXTransaction(action: endCallAction)
                 self.requestTransaction(transaction)
 
+            }
+            else if (call.method == "attemptAudioSessionActive") {
+                return;
+                let session = AVAudioSession.sharedInstance()
+                print("try to set audio active")
+                do {
+                    print(session.category)
+                    print(session.mode)
+                    try session.setActive(true)
+                    print("did set audiosessionactive")
+                    if (callkitChannel != nil) {
+                        callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
+                    }
+                } catch let error as NSError {
+                    if (callkitChannel != nil) {
+                        callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
+                    }
+                    print("Unable to activate audiosession:  \(error.localizedDescription)")
+                }
+            }
+            else if (call.method == "setUnhold") {
+                print("set unhold call callkit")
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let unHoldAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
+                                                       onHold: false)
+                let transaction = CXTransaction(action: unHoldAction)
+                self.requestTransaction(transaction)
+            }
+            else if (call.method == "setHold") {
+                print("sethold call callkit")
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let holdAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
+                                                       onHold: true)
+                let transaction = CXTransaction(action: holdAction)
+                self.requestTransaction(transaction)
+            }
+            else if (call.method == "answerCall") {
+                print("answer call callkit")
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let answerAction = CXAnswerCallAction(call:  UUID(uuidString: uuid)!)
+                let transaction = CXTransaction(action: answerAction)
+                self.requestTransaction(transaction)
+            }
+            else if (call.method == "muteCall") {
+                print("mute call callkit")
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let action = CXSetMutedCallAction(call:  UUID(uuidString: uuid)!, muted: true)
+                let transaction = CXTransaction(action: action)
+                self.requestTransaction(transaction)
+            }
+            else if (call.method == "unMuteCall") {
+                print("unmute call callkit")
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let action = CXSetMutedCallAction(call:  UUID(uuidString: uuid)!, muted: true)
+                let transaction = CXTransaction(action: action)
+                self.requestTransaction(transaction)
             }
         })
         print("providerpush set delegate callkit")
@@ -158,7 +272,6 @@ extension ProviderDelegate: CXProviderDelegate {
   
   func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
 //    callkitChannel.invokeMethod("activatedSession", arguments: [.uuid]);
-
     print("didactivate here provider audiosession callkit", audioSession)
   }
   
@@ -174,9 +287,20 @@ extension ProviderDelegate: CXProviderDelegate {
   
   func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
     callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
-    print("sethold provider callkit")
-    action.fulfill()
-    // set hold here
+      print("sethold provider callkit")
+            print(action.isOnHold)
+      let session = AVAudioSession.sharedInstance()
+      do {
+          if (!action.isOnHold) {
+              try session.setCategory(.playAndRecord, mode: .voiceChat, options: [])
+              try session.setActive(!action.isOnHold)
+              print("setaudiosession active")
+            //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
+          }
+      } catch (let error) {print("adioerror");
+          //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
+      }
+      action.fulfill()
   }
   
   func provider(_ provider: CXProvider, perform action: CXStartCallAction) {

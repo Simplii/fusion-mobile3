@@ -74,7 +74,5 @@
 	<false/>
 	<key>flutter_apns.disable_swizzling</key>
 	<true/>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
 </dict>
 </plist>
