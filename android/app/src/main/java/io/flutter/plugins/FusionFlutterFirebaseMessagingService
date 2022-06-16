@@ -17,7 +17,8 @@ public class FusionFlutterFirebaseMessagingService  extends FirebaseMessagingSer
             //Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
             Intent intent = new Intent(this, MainActvity.class);
             startActivity(intent);
-        } else
+        }
+        else
             super.onMessageReceived(remoteMessage);
     }
 }
