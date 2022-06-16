@@ -130,7 +130,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
     });
 
     _fusionConnection.callHistory
-        .getRecentHistory(50, 0, (List<CallHistory> history, bool fromServer) {
+        .getRecentHistory(200, 0, (List<CallHistory> history, bool fromServer) {
           if (!mounted) return;
           if (callback != null) callback();
           this.setState(() {
