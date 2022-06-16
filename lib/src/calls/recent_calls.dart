@@ -88,6 +88,16 @@ class _RecentCallsListState extends State<RecentCallsList> {
   String _subscriptionKey;
   Map<String, Coworker> _coworkers = {};
   String rand = randomString(10);
+  String expandedId = "";
+
+  expand(item) {
+    setState(() {
+      if (expandedId == item.id)
+        expandedId = "";
+      else
+        expandedId = item.id;
+    });
+  }
 
   initState() {
     super.initState();
@@ -170,6 +180,8 @@ class _RecentCallsListState extends State<RecentCallsList> {
         item.coworker = _coworkers[item.coworker.uid];
       }
       return CallHistorySummaryView(_fusionConnection, _softphone, item,
+          onExpand: () { expand(item); },
+          expanded: item.id == expandedId,
           onSelect: widget.onSelect == null
               ? null
               : () {
@@ -253,11 +265,13 @@ class CallHistorySummaryView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final CallHistory _historyItem;
   final Softphone _softphone;
+  final bool expanded;
   Function() onSelect;
+  Function() onExpand;
 
   CallHistorySummaryView(
       this._fusionConnection, this._softphone, this._historyItem,
-      {Key key, this.onSelect})
+      {Key key, this.onSelect, this.onExpand, this.expanded})
       : super(key: key);
 
   @override
@@ -270,7 +284,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   Softphone get _softphone => widget._softphone;
 
   CallHistory get _historyItem => widget._historyItem;
-  bool _expanded = false;
+  bool get _expanded => widget.expanded;
 
   initState() {
     super.initState();
@@ -298,9 +312,9 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _expand() {
-    this.setState(() {
-      _expanded = !_expanded;
-    });
+    if (widget.onExpand != null) {
+      widget.onExpand();
+    }
   }
 
   _name() {
