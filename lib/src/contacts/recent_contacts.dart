@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
+import 'package:fusion_mobile_revamped/src/calls/recent_calls.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
@@ -492,6 +493,16 @@ class _ContactsListState extends State<ContactsList> {
   String _lookedUpTab;
   String _subscriptionKey;
   Map<String, Coworker> _coworkers = {};
+  String _expandedId = "";
+
+  expand(item) {
+    setState(() {
+      if (_expandedId == item.id)
+        _expandedId = "";
+      else
+        _expandedId = item.id;
+    });
+  }
 
   initState() {
     super.initState();
@@ -532,7 +543,16 @@ class _ContactsListState extends State<ContactsList> {
         if (fromServer) {
           lookupState = 2;
         }
-        _history = history;
+        List<CallHistory> historyList = [];
+        var otherList = {};
+        for (var item in history) {
+          String number = item.getOtherNumber(_fusionConnection.getDomain());
+          if (otherList[number] != true) {
+            otherList[number] = true;
+            historyList.add(item);
+          }
+        }
+        _history = historyList;
       });
     });
   }
@@ -556,6 +576,11 @@ class _ContactsListState extends State<ContactsList> {
         item.coworker = _coworkers[item.coworker.uid];
       }
       return CallHistorySummaryView(_fusionConnection, _softphone, item,
+          expanded: _expandedId == item.id,
+          onExpand: () {
+            if (widget.onSelect == null)
+              expand(item);
+          },
           onSelect: widget.onSelect == null
               ? null
               : () {
@@ -634,7 +659,7 @@ class _ContactsListState extends State<ContactsList> {
             ])));
   }
 }
-
+/*
 class CallHistorySummaryView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final CallHistory _historyItem;
@@ -835,7 +860,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                   ])))
         ]));
   }
-}
+}*/
 
 class SearchContactsBar extends StatefulWidget {
   final FusionConnection _fusionConnection;

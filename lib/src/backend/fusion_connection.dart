@@ -510,11 +510,15 @@ print(responseBody);
       } else if (message.containsKey('sms_received')) {
         // Receive incoming message platform data
         SMSMessage newMessage = SMSMessage(message['message_object']);
-
         if (!received_smses.containsKey(newMessage.id)) {
           received_smses[newMessage.id] = true;
 
-          if (!newMessage.fromMe) {
+          List<SMSDepartment> departments = smsDepartments.allDepartments();
+          List<String> numbers = [];
+          departments.forEach((element) {
+            numbers.addAll(element.numbers);
+          });
+          if (!numbers.contains(newMessage.from)) {
             refreshUnreads();
             unreadMessages.getRecords();
 

@@ -3,6 +3,7 @@ import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/contacts/recent_contacts.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
+import 'package:fusion_mobile_revamped/src/calls/recent_calls.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 
 class ContactsSearch extends StatefulWidget {
