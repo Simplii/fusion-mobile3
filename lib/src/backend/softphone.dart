@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart' as Aps;
 import 'package:callkeep/callkeep.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -12,6 +13,7 @@ import 'package:flutter_phone_state/flutter_phone_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sip_ua/sip_ua.dart';
 import '../../main.dart';
 import '../utils.dart';
@@ -235,16 +237,6 @@ class Softphone implements SipUaHelperListener {
         return;
 
       case 'setAudioSessionActive':
-        bool status = methodCall.arguments[0] as bool;
-        if (status)
-          couldGetAudioSession = activeCall.id;
-        else
-          couldGetAudioSession = "";
-        if (!status && !_attemptingToRegainAudio)
-          _attemptToRegainAudioSession();
-        else if (status)
-          _attemptingToRegainAudio = true;
-
         return;
 
       case 'answerButtonPressed':
@@ -321,10 +313,13 @@ class Softphone implements SipUaHelperListener {
     UaSettings settings = UaSettings();
 
     settings.webSocketSettings.allowBadCertificate = true;
-    // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
     settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
-    settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
-    //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
+
+    if (aor == "9812fm@Simplii1" || aor == "9811fm@Simplii1") {
+      print("using test push proxy 9811/9812 detected");
+      settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
+    }
+
     settings.uri = aor;
     settings.authorizationUser = login;
     settings.password = password;
@@ -495,13 +490,9 @@ class Softphone implements SipUaHelperListener {
     } else {
       if (Platform.isIOS && fromUi) {
         _callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
-
       }
 
       call.unhold();
-      couldGetAudioSession = "";
-      var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-          });
     }
   }
 
@@ -561,6 +552,8 @@ class Softphone implements SipUaHelperListener {
       flutterLocalNotificationsPlugin
           .cancel(intIdForString(_getCallDataValue(call.id, "apiTermId")));
       flutterLocalNotificationsPlugin.cancelAll();
+    } else if (Platform.isIOS) {
+      _callKit.invokeMethod("answerCall", [_uuidFor(call)]);
     }
   }
 
@@ -757,6 +750,28 @@ class Softphone implements SipUaHelperListener {
       }
     }
     return false;
+  }
+
+  checkMicrophoneAccess(BuildContext context)  async {
+    PermissionStatus status = await Permission.microphone.status;
+    if (status != PermissionStatus.granted
+        && status != PermissionStatus.permanentlyDenied) {
+      status = await Permission.microphone.request();
+    }
+    else if (status == PermissionStatus.permanentlyDenied) {
+      showDialog(context: context, builder: (ctx) => AlertDialog(
+        title: Text("Mic access denied"),
+        content: Text("You must give Fusion Mobile microphone access to make calls"),
+        actions: <Widget>[
+          FlatButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+              child: Text("OK")
+          )
+        ]
+      ));
+    }
   }
 
   _addCall(Call call) async {
@@ -978,6 +993,10 @@ class Softphone implements SipUaHelperListener {
       case CallStateEnum.STREAM:
         _handleStreams(callState);
         if (Platform.isIOS) {
+          if (!isIncoming(call)) {
+            _callKit.invokeMethod(
+                "reportConnectedOutgoingCall", [_uuidFor(call)]);
+          }
           // for some reason ios defaults to speakerphone and wont let me change
           // that until after this event.
           for (var i = 1250; i < 10000; i += 1500) {
@@ -1057,6 +1076,10 @@ class Softphone implements SipUaHelperListener {
         _addCall(call);
         if (Platform.isAndroid) {
           setCallOutput(call, getCallOutput(call));
+        }
+        if (!isIncoming(call) && Platform.isIOS) {
+            _callKit.invokeMethod(
+                "reportConnectingOutgoingCall", [_uuidFor(call)]);
         }
         break;
       case CallStateEnum.REFER:

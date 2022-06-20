@@ -86,7 +86,7 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 let startCallAction = CXStartCallAction(call: UUID(uuidString: uuid)!,
                                                         handle: handle)
                 startCallAction.contactIdentifier = name
-                 
+                
                 let transaction = CXTransaction(action: startCallAction)
                 self.requestTransaction(transaction)
             }
@@ -119,23 +119,38 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                     print("Unable to activate audiosession:  \(error.localizedDescription)")
                 }
             }
-            else if (call.method == "setUnhold") {
-                print("set unhold call callkit")
+            else if (call.method == "reportConnectingOutgoingCall") {
                 let args = call.arguments as! [Any]
                 let uuid = args[0] as! String
+                provider.reportOutgoingCall(with: UUID(uuidString: uuid)!,
+                                            connectedAt: Date())
+                print("callkit connecting")
+            }
+            else if (call.method == "reportConnectedOutgoingCall") {
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                provider.reportOutgoingCall(
+                    with: UUID(uuidString: uuid)!,
+                    startedConnectingAt: Date())
+                print("callkit connected outgoing")
+            }
+            else if (call.method == "setUnhold") {
+                print("set unhold call callkit")
+                /*let args = call.arguments as! [Any]
+                                let uuid = args[0] as! String
                 let unHoldAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
                                                        onHold: false)
                 let transaction = CXTransaction(action: unHoldAction)
-                self.requestTransaction(transaction)
+                self.requestTransaction(transaction)*/
             }
             else if (call.method == "setHold") {
                 print("sethold call callkit")
-                let args = call.arguments as! [Any]
+                /*let args = call.arguments as! [Any]
                 let uuid = args[0] as! String
                 let holdAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
                                                        onHold: true)
                 let transaction = CXTransaction(action: holdAction)
-                self.requestTransaction(transaction)
+                self.requestTransaction(transaction)*/
             }
             else if (call.method == "answerCall") {
                 print("answer call callkit")
@@ -276,10 +291,6 @@ extension ProviderDelegate: CXProviderDelegate {
   }
   
   func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
-    print("didend here provider")
-    print("provider", action)
-    print("provider", action.isComplete)
-    print("provider", action.observationInfo)
     callkitChannel.invokeMethod("endButtonPressed", arguments: [action.callUUID.uuidString])
     action.fulfill()
     // end call
@@ -287,8 +298,6 @@ extension ProviderDelegate: CXProviderDelegate {
   
   func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
     callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
-      print("sethold provider callkit")
-            print(action.isOnHold)
       let session = AVAudioSession.sharedInstance()
       do {
           if (!action.isOnHold) {
