@@ -171,7 +171,7 @@ class _CallViewState extends State<CallView> {
               Expanded(
                   child: GestureDetector(
                       onTap: () {
-                        _softphone.setMute(_activeCall, !muted);
+                        _softphone.setMute(_activeCall, !muted, true);
                         Navigator.pop(context);
                       },
                       child: Container(
@@ -240,7 +240,7 @@ class _CallViewState extends State<CallView> {
   }
 
   _onMuteBtnPress() {
-    _softphone.setMute(_activeCall, !_softphone.getMuted(_activeCall));
+    _softphone.setMute(_activeCall, !_softphone.getMuted(_activeCall), true);
   }
 
   _onHangup() {
