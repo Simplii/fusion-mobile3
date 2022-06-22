@@ -23,7 +23,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_incall: ^1.0.0
   flutter_apns:
   firebase_messaging: ^11.2.6
   firebase_core:
@@ -61,8 +60,8 @@ dependencies:
   all_sensors:
   callkeep:
    # path: "./callkeep"
-    git:
-      url: https://github.com/davidkarn/callkeep.git
+ #   git:
+    #  url: https://github.com/davidkarn/callkeep.git
   flutter_background:
   flutter_phone_state:
     git:

@@ -101,22 +101,28 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
 
             }
             else if (call.method == "attemptAudioSessionActive") {
-                return;
                 let session = AVAudioSession.sharedInstance()
                 print("try to set audio active")
                 do {
                     print(session.category)
                     print(session.mode)
+                    try session.setCategory(.playAndRecord)
+                    try session.setMode(.voiceChat)
                     try session.setActive(true)
                     print("did set audiosessionactive")
-                    if (callkitChannel != nil) {
-                        callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
-                    }
                 } catch let error as NSError {
-                    if (callkitChannel != nil) {
-                        callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
-                    }
                     print("Unable to activate audiosession:  \(error.localizedDescription)")
+                }
+            } else if (call.method == "attemptAudioSessionInActive") {
+                let session = AVAudioSession.sharedInstance()
+                print("try to set audio inactive")
+                do {
+                    print(session.category)
+                    print(session.mode)
+                    try session.setActive(false)
+                    print("did set audiosessionactive")
+                } catch let error as NSError {
+                    print("Unable to inactivate audiosession:  \(error.localizedDescription)")
                 }
             }
             else if (call.method == "reportConnectingOutgoingCall") {
@@ -132,25 +138,32 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 provider.reportOutgoingCall(
                     with: UUID(uuidString: uuid)!,
                     startedConnectingAt: Date())
-                print("callkit connected outgoing")
+                print("callkit connectd outgoing")
+                let update = CXCallUpdate()
+                update.hasVideo = false
+                update.supportsHolding = true
+                
+                provider.reportCall(with: UUID(uuidString: uuid)!,
+                                    updated: update)
+                print("callkit connected outgoing set supportsholding")
             }
             else if (call.method == "setUnhold") {
                 print("set unhold call callkit")
-                /*let args = call.arguments as! [Any]
+                let args = call.arguments as! [Any]
                                 let uuid = args[0] as! String
                 let unHoldAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
                                                        onHold: false)
                 let transaction = CXTransaction(action: unHoldAction)
-                self.requestTransaction(transaction)*/
+                self.requestTransaction(transaction)
             }
             else if (call.method == "setHold") {
                 print("sethold call callkit")
-                /*let args = call.arguments as! [Any]
+                let args = call.arguments as! [Any]
                 let uuid = args[0] as! String
                 let holdAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
                                                        onHold: true)
                 let transaction = CXTransaction(action: holdAction)
-                self.requestTransaction(transaction)*/
+                self.requestTransaction(transaction)
             }
             else if (call.method == "answerCall") {
                 print("answer call callkit")
@@ -222,6 +235,7 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
         print("thehandle", handle)
         update.remoteHandle = CXHandle(type: .generic, value:  handle)
         update.hasVideo = hasVideo
+        update.supportsHolding = true
     
         provider.reportNewIncomingCall(with: uuid, update: update) { error in
             if error == nil {
@@ -298,15 +312,19 @@ extension ProviderDelegate: CXProviderDelegate {
   
   func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
     callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
+      
       let session = AVAudioSession.sharedInstance()
       do {
-          if (!action.isOnHold) {
-              try session.setCategory(.playAndRecord, mode: .voiceChat, options: [])
+          print("going to set active audio session")
+          print(!action.isOnHold)
+          try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.interruptSpokenAudioAndMixWithOthers])
+          try session.overrideOutputAudioPort(.speaker)
+              print("settingitactive")
               try session.setActive(!action.isOnHold)
+
               print("setaudiosession active")
-            //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
-          }
-      } catch (let error) {print("adioerror");
+
+      } catch (let error) {print("adioerror");print(error)
           //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
       }
       action.fulfill()
