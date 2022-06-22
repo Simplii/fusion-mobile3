@@ -24,7 +24,10 @@ class _CallDialPadState extends State<CallDialPad> {
     setState(() {
       dialedNumber += key;
     });
-    widget._softphone.sendDtmf(widget._activeCall, key, true);
+    widget._softphone.sendDtmf(
+        widget._activeCall,
+        key,
+        true);
     Dtmf.playTone(digits: key, durationMs: 300);
   }
 

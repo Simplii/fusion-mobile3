@@ -261,19 +261,19 @@ print("audiofocusaddlistener");
       case 'holdButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
         bool isHold = methodCall.arguments[1] as bool;
-        //setHold(_getCallByUuid(callUuid), isHold, false);
+        setHold(_getCallByUuid(callUuid), isHold, false);
         return;
 
       case 'muteButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
         bool isMute = methodCall.arguments[1] as bool;
-        //setMute(_getCallByUuid(callUuid), isMute);
+        setMute(_getCallByUuid(callUuid), isMute, false);
         return;
 
       case 'dtmfPressed':
         String callUuid = methodCall.arguments[0] as String;
         String digits = methodCall.arguments[1] as String;
-        //sendDtmf(_getCallByUuid(callUuid), digits);
+        sendDtmf(_getCallByUuid(callUuid), digits, false);
         return;
 
       case 'startCall':
@@ -496,6 +496,11 @@ print("audiofocusaddlistener");
     if (setOnHold) {
       if (Platform.isAndroid && fromUi) {
           _callKeep.setOnHold(_uuidFor(call), true);
+      } else if (Platform.isIOS && fromUi) {
+        _callKit.invokeMethod("setHold", [_uuidFor(call)]);
+      }
+      if (Platform.isIOS) {
+      //  _callKit.invokeMethod('attemptAudioSessionInActive');
       }
       helper.setVideo(true);
       call.hold();
@@ -509,6 +514,9 @@ print("audiofocusaddlistener");
       else if (Platform.isAndroid && fromUi) {
           _callKeep.setOnHold(_uuidFor(call), false);
       }
+      if (Platform.isIOS) {
+     //   _callKit.invokeMethod('attemptAudioSessionActive');
+      }
 
       call.unhold();
     }
@@ -521,12 +529,20 @@ print("audiofocusaddlistener");
       if (Platform.isAndroid && fromUi) {
         _callKeep.setMutedCall(_uuidFor(call), true);
       }
+      if (Platform.isIOS) {
+        _callKit.invokeMethod('attemptAudioSessionInActive');
+      }
+
     } else {
       _setCallDataValue(call.id, "muted", false);
       call.unmute();
       if (Platform.isAndroid && fromUi) {
         _callKeep.setMutedCall(_uuidFor(call), false);
       }
+      if (Platform.isIOS) {
+        _callKit.invokeMethod('attemptAudioSessionActive');
+      }
+
     }
   }
 
