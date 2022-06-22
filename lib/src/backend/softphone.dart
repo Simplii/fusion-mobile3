@@ -332,7 +332,7 @@ print("audiofocusaddlistener");
     settings.webSocketSettings.allowBadCertificate = true;
     // settings.webSocketUrl = "wss://nms5-slc.simplii.net:9002/";
     settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
-    settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
+    //settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
     //   settings.webSocketUrl = "ws://staging.fusioncomm.net:8081";
     settings.uri = aor;
     settings.authorizationUser = login;
