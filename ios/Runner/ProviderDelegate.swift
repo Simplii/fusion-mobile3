@@ -1,5 +1,6 @@
 
 import AVFoundation
+import AVFAudio
 import CallKit
 import Sentry
 
@@ -28,12 +29,12 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
 
         case .ended:
             print("ended audiosession interruption")
-            let session = AVAudioSession.sharedInstance()
+           let session = AVAudioSession.sharedInstance()
             print("try to set audio active")
             do {
                 print(session.category)
                 print(session.mode)
-                try session.setActive(true)
+               // try session.setActive(true)
                 print("did set audiosessionactive")
                 if (callkitChannel != nil) {
                     callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
@@ -293,15 +294,22 @@ extension ProviderDelegate: CXProviderDelegate {
   }
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
-    print("answercall actoin provider callkittttttttt");
     callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
     action.fulfill();
     // answer the call here
   }
   
   func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
-//    callkitChannel.invokeMethod("activatedSession", arguments: [.uuid]);
+//    https://stackoverflow.com/questions/47416493/callkit-can-reactivate-sound-after-swapping-call
+      //https://bugs.chromium.org/p/webrtc/issues/detail?id=8126
     print("didactivate here provider audiosession callkit", audioSession)
+print("webrtc workaround didactivate")
+      var userInfo: Dictionary<AnyHashable, Any> = [:]
+      userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
+      NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
+                                      object: self, userInfo: userInfo)
+      print("just sent it")
+
   }
   
   func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
@@ -312,7 +320,7 @@ extension ProviderDelegate: CXProviderDelegate {
   
   func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
     callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
-      
+      /*
       let session = AVAudioSession.sharedInstance()
       do {
           print("going to set active audio session")
@@ -321,12 +329,15 @@ extension ProviderDelegate: CXProviderDelegate {
           try session.overrideOutputAudioPort(.speaker)
               print("settingitactive")
               try session.setActive(!action.isOnHold)
-
+          if (!action.isOnHold) {
+              NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
+                                              object: self, userInfo: [:])
+          }
               print("setaudiosession active")
 
       } catch (let error) {print("adioerror");print(error)
           //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
-      }
+      }*/
       action.fulfill()
   }
   
