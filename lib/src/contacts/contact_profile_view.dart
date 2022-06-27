@@ -53,21 +53,23 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     if (lookupState == 1) return;
     lookupState = 1;
 
-    _fusionConnection.timelineItems.getTimelineFromNumbers(
-        _contact.phoneNumbers
-            .map((number) => number['number'])
-            .where((number) => number.length >= 10)
-            .toList()
-            .cast<String>(), (List<TimelineItem> items, bool fromServer) {
-
-      if (!mounted) return;
+      _fusionConnection.timelineItems.getTimelineFromNumbers(
+          _contact.phoneNumbers
+              .map((number) => number['number'])
+              .where((number) => number.length >= 10)
+              .toList()
+              .cast<String>(), (List<TimelineItem> items, bool fromServer) {
+        print("gottimeline");
+        print(items);
+        if (!mounted) return;
         this.setState(() {
-        if (fromServer) {
-          lookupState = 2;
-        }
-        _timelineItems = items;
+          if (fromServer) {
+            lookupState = 2;
+          }
+          _timelineItems = items;
+        });
       });
-    });
+
   }
 
   _headerButton(String tabName, String iconName) {

@@ -61,6 +61,32 @@ class SMSMessage extends FusionModel {
     this.user = map['user'].runtimeType == String ? map['user'] : null;
   }
 
+  SMSMessage.fromV2(Map<String, dynamic> map) {
+    this.convertedMms = map.containsKey('converted_mms') ? true : false;
+    this.domain = map['domain'].runtimeType == String ? map['domain'] : null;
+    this.from = map['from'];
+    this.fromMe = map['fromMe'];
+    this.id = map['id'].toString();
+    this.isGroup = map['isGroup'];
+    this.message = map['message'];
+    this.messageStatus = map['status'];
+    this.mime = map['mime'];
+    this.read = map['read'];
+    this.scheduledAt = ((map.containsKey('scheduledAt') &&
+            map['scheduledAt'].runtimeType == Map)
+        ? CarbonDate(map['scheduledAt'])
+        : null);
+    this.smsWebhookId =
+        map['smsWebhookId'].runtimeType == int ? map['smsWebhookId'] : 0;
+    this.time = CarbonDate.fromDate(map['time']);
+    this.to = map['to'];
+    this.type = "sms";
+    this.unixtime = (DateTime.parse(map['time']).millisecondsSinceEpoch / 1000) as int;
+    this.user = map['user'].runtimeType == String ? map['user']
+        .toString()
+        .replaceFirst(RegExp("@.*"), "") : null;
+  }
+
   serialize() {
     return convert.jsonEncode({
       'convertedMms': convertedMms,
