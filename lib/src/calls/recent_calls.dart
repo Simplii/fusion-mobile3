@@ -89,6 +89,8 @@ class _RecentCallsListState extends State<RecentCallsList> {
   Map<String, Coworker> _coworkers = {};
   String rand = randomString(10);
   String expandedId = "";
+  int _page = 0;
+  int _pageSize = 100;
 
   expand(item) {
     setState(() {
@@ -111,6 +113,21 @@ class _RecentCallsListState extends State<RecentCallsList> {
     }
   }
 
+
+  _loadMore() {
+    _page += 1;
+    _lookupQuery();
+  }
+
+  _lookupQuery() {
+    if (lookupState == 1) return;
+    lookupState = 1;
+
+    if (_page == -1) return;
+    _page += 1;
+    _lookupHistory();
+  }
+
   _lookupHistory([Function() callback]) {
     lookupState = 1;
     _lookedUpTab = _selectedTab;
@@ -130,14 +147,23 @@ class _RecentCallsListState extends State<RecentCallsList> {
     });
 
     _fusionConnection.callHistory
-        .getRecentHistory(200, 0, (List<CallHistory> history, bool fromServer) {
+        .getRecentHistory(_pageSize, _page * _pageSize, (List<CallHistory> history, bool fromServer) {
           if (!mounted) return;
+          if (!fromServer && _page > 0) return;
+
           if (callback != null) callback();
           this.setState(() {
             if (fromServer) {
               lookupState = 2;
             }
-            _history = history;
+            var oldHistory = new Map();
+            _history.forEach((element) {
+              oldHistory[element.id] = element;
+            });
+            history.forEach((element) {
+              oldHistory[element.id] = element;
+            });
+            _history = oldHistory.values.toList().cast<CallHistory>();
           });
     });
   }
@@ -146,6 +172,35 @@ class _RecentCallsListState extends State<RecentCallsList> {
     _lookupHistory(() {
       return;
     });
+  }
+
+  _filteredHistoryItems() {
+    return _history.where((item) {
+      String searchQuery = item.to + ":" + item.from + ":";
+
+      if (item.contact != null)
+        searchQuery += item.contact.searchString() + ":";
+
+      if (item.crmContact != null)
+        searchQuery += item.crmContact.company + ":" + item.crmContact.name + ":" + item.crmContact.crm;
+
+      if (item.coworker != null)
+        searchQuery += item.coworker.firstName + ':' + item.coworker.lastName;
+
+      if (widget.query != "" && !searchQuery.contains(widget.query)) {
+        return false;
+      } else if (_selectedTab == 'all') {
+        return true;
+      } else if (_selectedTab == 'integrated') {
+        return item.crmContact != null;
+      } else if (_selectedTab == 'coworkers') {
+        return item.coworker != null;
+      } else if (_selectedTab == 'fusion') {
+        return item.contact != null;
+      } else {
+        return false;
+      }
+    }).toList();
   }
 
   _historyList() {
@@ -196,6 +251,30 @@ class _RecentCallsListState extends State<RecentCallsList> {
     return response;
   }
 
+  _historyRow(CallHistory item, int index) {
+      if (item.coworker != null && _coworkers[item.coworker.uid] != null) {
+        item.coworker = _coworkers[item.coworker.uid];
+      }
+      var ret = CallHistorySummaryView(_fusionConnection, _softphone, item,
+          onExpand: () { expand(item); },
+          expanded: item.id == expandedId,
+          onSelect: widget.onSelect == null
+              ? null
+              : () {
+                  widget.onSelect(
+                      item.coworker != null
+                          ? item.coworker.toContact()
+                          : item.contact,
+                      item.crmContact);
+                });
+      if (index == 0) {
+        return Container(padding:EdgeInsets.only(top:40), child: ret);
+      }
+      else {
+        return ret;
+      }
+  }
+
   _spinner() {
     return Container(
         alignment: Alignment.center,
@@ -216,6 +295,8 @@ class _RecentCallsListState extends State<RecentCallsList> {
       _lookupHistory();
     }
 
+    List<CallHistory> historyPage = _filteredHistoryItems();
+
     return Container(
         child: Container(
             decoration: BoxDecoration(
@@ -228,7 +309,23 @@ class _RecentCallsListState extends State<RecentCallsList> {
                   Expanded(
                       child: _isSpinning()
                           ? _spinner()
-                          : Container(
+                : RefreshIndicator(
+              onRefresh: () => _refreshHistoryList(),
+              child: ListView.builder(
+                        itemCount: _page == -1
+                            ? historyPage.length
+                            : historyPage.length + 1,
+                        itemBuilder: (BuildContext context, int index) {
+                          if (index >= historyPage.length) {
+                            _loadMore();
+                            return Container();
+                          } else {
+                            return _historyRow(historyPage[index], index);
+                          }
+                        }
+
+            ))
+            /*Container(
                               padding: EdgeInsets.only(top: 00),
                               child: RefreshIndicator(
                                 onRefresh: () => _refreshHistoryList(),
@@ -237,8 +334,8 @@ class _RecentCallsListState extends State<RecentCallsList> {
                                       delegate:
                                       SliverChildListDelegate(_historyList()))
                                 ]),
-                              )))
-                ],
+                              )))*/
+                  )],
               ),
               Container(
                   alignment: Alignment.topLeft,
