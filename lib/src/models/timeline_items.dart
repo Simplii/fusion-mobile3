@@ -63,6 +63,43 @@ class TimelineItem extends FusionModel {
     }
   }
 
+  TimelineItem.fromV2(Map<String, dynamic> obj, String myUser) {
+    type = obj["type"];
+
+      if (type == 'message') {
+        Map<String, dynamic> messageObj = obj['object'];
+        messageObj['fromMe'] = messageObj['user'].toString().toLowerCase() == myUser.toLowerCase();
+        message = SMSMessage.fromV2(messageObj);
+        time = DateTime.parse(messageObj['time']);
+      }
+      else if (type == 'call'){
+        Map<String, dynamic> callObj = obj['object'];
+        callLog = CallLog();
+        callLog.startTime = DateTime.parse(callObj['startTime']);
+        time = callLog.startTime;
+        if (callObj['duration'] != null)
+          callLog.endTime = DateTime.fromMillisecondsSinceEpoch(
+            callLog.startTime.millisecondsSinceEpoch + (callObj['duration'] * 1000));
+        else
+          callLog.endTime = time;
+        callLog.duration = callObj['duration'];
+        callLog.type = callObj['direction'];
+        callLog.from = callObj['from'];
+        callLog.to = callObj['to'];
+        callLog.recording =
+        callObj['recordingUrl'].runtimeType == String ? callObj['recordingUrl'] : null;
+        callLog.note = callObj['notes'] != null ? callObj['notes'] : '';
+        callLog.disposition =
+        callObj['disposition'].runtimeType == String ? callObj['disposition'] : null;
+        if (callLog.note == '')
+          callLog.note = null;
+        if (callLog.type == 'Outgoing')
+          phoneNumber = callObj['toDid'];
+        else
+          phoneNumber = callObj['fromDid'];
+      }
+    }
+
   @override
   String getId() => this.id;
 }
@@ -73,20 +110,30 @@ class TimelineItemStore extends FusionStore<TimelineItem> {
 
   getTimeline(int contactId,
       Function(List<TimelineItem>, bool) callback) {
+    print("willookuptmeline");
     fusionConnection.apiV1Call(
         "get",
         "/contacts/" + contactId.toString() + "/timeline",
         {},
         callback: (List<dynamic> datas) {
+          print("lookeduptimeline");
+          print(datas);
           List<TimelineItem> response = [];
 
           for (Map<String, dynamic> item in datas) {
-            TimelineItem obj = TimelineItem(item);
-            if (obj.type == 'message')
-              obj.phoneNumber = (obj.message.domain == fusionConnection.getDomain()
-                  ? obj.message.to : obj.message.from);
-            storeRecord(obj);
-            response.add(obj);
+            try {
+              //TimelineItem obj = TimelineItem.fromV2(item, fusionConnection.getUid());
+              TimelineItem obj = TimelineItem(item);
+              if (obj.type == 'message')
+                obj.phoneNumber =
+                (obj.message.domain == fusionConnection.getDomain()
+                    ? obj.message.to : obj.message.from);
+              storeRecord(obj);
+              response.add(obj);
+            } catch (e) {
+              print("failedhere");
+              print(item);
+            }
           }
 
           callback(response, true);
@@ -109,12 +156,18 @@ class TimelineItemStore extends FusionStore<TimelineItem> {
           List<TimelineItem> response = [];
 
           for (Map<String, dynamic> item in datas) {
-            TimelineItem obj = TimelineItem(item);
-            if (obj.type == 'message')
-              obj.phoneNumber = (obj.message.domain == fusionConnection.getDomain()
-                  ? obj.message.to : obj.message.from);
-            storeRecord(obj);
-            response.add(obj);
+            try {
+              TimelineItem obj = TimelineItem(item);
+              if (obj.type == 'message')
+                obj.phoneNumber =
+                (obj.message.domain == fusionConnection.getDomain()
+                    ? obj.message.to : obj.message.from);
+              storeRecord(obj);
+              response.add(obj);
+            } catch (e) {
+              print("failed timeline here");
+              print(item);
+            }
           }
 
           callback(response, true);

@@ -498,6 +498,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                       bottomRight: Radius.circular(8),
                     )),
                 child: TextField(
+                  textCapitalization: TextCapitalization.sentences,
                   controller: _messageInputController,
                   maxLines: 10,
                   minLines: 1,
