@@ -290,8 +290,13 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     super.initState();
 
     if (_historyItem.coworker == null) {
-      var matchingCoworker = _fusionConnection.coworkers.lookupCoworker(_historyItem.to);
-      _historyItem.coworker = matchingCoworker;
+      var matchingCoworker = _fusionConnection.coworkers
+          .lookupCoworker(_historyItem.isInbound()
+          ? _historyItem.from
+          : _historyItem.to);
+      setState(() {
+        _historyItem.coworker = matchingCoworker;
+      });
     }
   }
 
@@ -438,8 +443,6 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _topPart() {
-
-
     return GestureDetector(
         onTap: () {
           if (widget.onSelect != null)
