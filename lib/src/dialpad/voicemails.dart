@@ -71,9 +71,10 @@ class _VoicemailsState extends State<Voicemails> {
     if (!mounted) return;
     if (_lookupState == 1) return;
     _lookupState = 1;
+
     _fusionConnection.voicemails
         .getVoicemails((List<Voicemail> vms, bool fromServer) {
-          setState(() {
+      setState(() {
             _lookupState = 2;
             _voicemails = vms;
           });

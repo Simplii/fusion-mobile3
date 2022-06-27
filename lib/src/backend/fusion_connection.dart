@@ -137,6 +137,24 @@ class FusionConnection {
     _pushkitToken = token;
   }
 
+  _clearDataStores() {
+    crmContacts.clearRecords();
+    contacts.clearRecords();
+    callpopInfos.clearRecords();
+    conversations.clearRecords();
+    messages.clearRecords();
+    smsDepartments.clearRecords();
+    callHistory.clearRecords();
+    coworkers.clearRecords();
+    integratedContacts.clearRecords();
+    contactFields.clearRecords();
+    timelineItems.clearRecords();
+    parkLines.clearRecords();
+    voicemails.clearRecords();
+    dids.clearRecords();
+    unreadMessages.clearRecords();
+  }
+
   logOut() {
     FirebaseMessaging.instance.getToken().then((token) {
       if (_pushkitToken != null) {
@@ -162,6 +180,7 @@ class FusionConnection {
             _onLogOut();
           } catch (e) {}
           _cookies.deleteAll();
+          _clearDataStores();
         });
       });
     });
