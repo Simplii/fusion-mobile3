@@ -127,7 +127,6 @@ class _MenuState extends State<Menu> {
    }
 
    _openOutboundDIDMenu() {
-
      showModalBottomSheet(
          context: context,
          backgroundColor: Colors.transparent,
@@ -168,7 +167,7 @@ class _MenuState extends State<Menu> {
                                                fontWeight: FontWeight.w700),
                                      ),
                                      Container(height: 6),
-                                     Text(option.notes,
+                                     Text(option.notes.replaceFirst(RegExp(r"^ *-[ 0-9]+- *"), ""),
                                            maxLines: 1,
                                            overflow: TextOverflow.ellipsis,
 
@@ -214,6 +213,7 @@ class _MenuState extends State<Menu> {
             _header(),
             Expanded(
                 child: Container(
+                  padding: EdgeInsets.only(top: 12),
                   decoration: BoxDecoration(color: coal),
                     child: ListView(children: _body())
                 )

@@ -69,6 +69,10 @@ class CallHistory extends FusionModel {
     missed = obj['to'] == "abandoned";
   }
 
+  isInbound() {
+    return direction == "inbound";
+  }
+
   @override
   String getId() => this.id;
 }
@@ -78,8 +82,22 @@ class CallHistoryStore extends FusionStore<CallHistory> {
   CallHistoryStore(FusionConnection fusionConnection) : super(fusionConnection);
 
   getRecentHistory(int limit, int offset,
-                   Function(List<CallHistory>, bool) callback) {
-    callback(getRecords(), false);
+      Function(List<CallHistory>, bool) callback) {
+    List<CallHistory> stored = getRecords();
+    stored.sort((a, b) {
+      return a.startTime.isBefore(b.startTime) ? 1 : -1;
+    });
+    List<String> usedIds = [];
+    List<CallHistory> filtered = [];
+
+    stored.forEach((element) {
+      if (!usedIds.contains(element.id)) {
+        usedIds.add(element.id);
+        filtered.add(element);
+      }
+    });
+
+    callback(filtered, false);
     fusionConnection.apiV2Call(
         "get",
         "/calls/recent",
@@ -94,6 +112,10 @@ class CallHistoryStore extends FusionStore<CallHistory> {
             storeRecord(obj);
             response.add(obj);
           }
+
+          response.sort((a, b) {
+            return a.startTime.isBefore(b.startTime) ? 1 : -1;
+          });
 
           callback(response, true);
         });
