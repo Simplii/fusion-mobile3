@@ -497,28 +497,45 @@ print("audiofocusaddlistener");
   }
 
   setHold(Call call, bool setOnHold, bool fromUi) async {
-    _setCallDataValue(call.id, "onHold", setOnHold);
-    if (setOnHold) {
-      if (Platform.isAndroid && fromUi) {
-          _callKeep.setOnHold(_uuidFor(call), true);
-      } else if (Platform.isIOS && fromUi) {
-        _callKit.invokeMethod("setHold", [_uuidFor(call)]);
-      }
-      helper.setVideo(true);
-      call.hold();
-      var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-        helper.setVideo(false);
-      });
-    } else {
-      if (Platform.isIOS && fromUi) {
-        _callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
-      }
-      else if (Platform.isAndroid && fromUi) {
-          _callKeep.setOnHold(_uuidFor(call), false);
-      }
-
-      call.unhold();
+ /*   if (_getCallDataValue(call.id, "onHold") == setOnHold) {
+      return;
     }
+    else {*/
+      _setCallDataValue(call.id, "onHold", setOnHold);
+      print("setonholdnow");print(setOnHold);print(fromUi);
+
+      if (Platform.isIOS && fromUi) {
+        if (setOnHold) {
+          call.hold();
+          //_callKit.invokeMethod("setHold", [_uuidFor(call)]);
+        }
+        else {
+          call.unhold();
+          //_callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
+        }
+      }
+      else if (setOnHold) {
+        if (Platform.isAndroid && fromUi) {
+          _callKeep.setOnHold(_uuidFor(call), true);
+        }
+        helper.setVideo(true);
+        call.hold();
+        var future = new Future.delayed(const Duration(milliseconds: 2000), () {
+          helper.setVideo(false);
+        });
+      } else {
+        call.unhold();
+
+        if (Platform.isAndroid && fromUi) {
+          _callKeep.setOnHold(_uuidFor(call), false);
+        } else if (Platform.isIOS) {
+          _callKit.invokeMethod("attemptAudioSessionActive", []);
+          var future = new Future.delayed(const Duration(milliseconds: 800), () {
+            _callKit.invokeMethod("attemptAudioSessionActive", []);
+          });
+        }
+      }
+ //   }
   }
 
   setMute(Call call, bool setMute, bool fromUi) {
