@@ -499,9 +499,6 @@ print("audiofocusaddlistener");
       } else if (Platform.isIOS && fromUi) {
         _callKit.invokeMethod("setHold", [_uuidFor(call)]);
       }
-      if (Platform.isIOS) {
-      //  _callKit.invokeMethod('attemptAudioSessionInActive');
-      }
       helper.setVideo(true);
       call.hold();
       var future = new Future.delayed(const Duration(milliseconds: 2000), () {
@@ -513,9 +510,6 @@ print("audiofocusaddlistener");
       }
       else if (Platform.isAndroid && fromUi) {
           _callKeep.setOnHold(_uuidFor(call), false);
-      }
-      if (Platform.isIOS) {
-     //   _callKit.invokeMethod('attemptAudioSessionActive');
       }
 
       call.unhold();
@@ -532,7 +526,6 @@ print("audiofocusaddlistener");
       if (Platform.isIOS && fromUi) {
         _callKit.invokeMethod('muteCall', [_uuidFor(call)]);
       }
-
     } else {
       _setCallDataValue(call.id, "muted", false);
       call.unmute();
