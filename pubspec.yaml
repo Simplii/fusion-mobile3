@@ -23,7 +23,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_incall: ^1.0.0
   flutter_apns:
   firebase_messaging: ^11.2.6
   firebase_core:
@@ -32,7 +31,6 @@ dependencies:
   websocket_manager:
   flutter_gravatar: any
   flutter_sound:
-  sound_stream: ^0.2.0
   awesome_notifications:
   sip_ua:
     path: "./dart-sip-ua"
@@ -55,14 +53,13 @@ dependencies:
   dotted_border:
   sentry_flutter:
   audioplayers:
-  ringtone_player:
   cookie_jar:
   shared_preferences:
   all_sensors:
   callkeep:
    # path: "./callkeep"
-    git:
-      url: https://github.com/davidkarn/callkeep.git
+ #   git:
+    #  url: https://github.com/davidkarn/callkeep.git
   flutter_background:
   flutter_phone_state:
     git:
