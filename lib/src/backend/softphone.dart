@@ -489,6 +489,11 @@ print("audiofocusaddlistener");
       }
     }
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
+    this._updateListeners();
+  }
+
+  isSpeakerEnabled() {
+    return this.outputDevice == 'Speaker';
   }
 
   setHold(Call call, bool setOnHold, bool fromUi) async {

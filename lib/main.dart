@@ -204,10 +204,10 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isRegistering = false;
   bool _logged_in = false;
   bool _callInProgress = false;
-  bool _isInProximity;
   bool _isProximityListening = false;
   StreamSubscription<ProximityEvent> _proximitySub;
   List<Did> _dids = [];
+  bool _isBackgroundEnabled = false;
 
   _logOut() {
     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -459,25 +459,37 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     if (softphone.activeCall != null &&
-        softphone.isConnected(softphone.activeCall) != null &&
-        !_isProximityListening) {
-      if (Platform.isAndroid)
-        FlutterBackground.enableBackgroundExecution().then(
-            (value) => print("enablebgexecutionvalue" + value.toString()));
-
+        softphone.isConnected(softphone.activeCall) != null
+        && !_isBackgroundEnabled
+        && Platform.isAndroid) {
+      _isBackgroundEnabled = true;
+      FlutterBackground.enableBackgroundExecution().then(
+              (value) => print("enablebgexecutionvalue" + value.toString()));
+    }
+    else if (_isBackgroundEnabled
+        && Platform.isAndroid
+        && softphone.activeCall == null) {
+      _isBackgroundEnabled = false;
+      FlutterBackground.disableBackgroundExecution().then(
+              (value) => print("disablebgexecutionvalue" + value.toString()));
+    }
+print("speaker enabled");print(softphone.isSpeakerEnabled());print(softphone.outputDevice);
+    if (softphone.activeCall != null
+        && softphone.isConnected(softphone.activeCall) != null
+        && !softphone.getHoldState(softphone.activeCall)
+        && !softphone.isSpeakerEnabled()
+        && !_isProximityListening) {
       _isProximityListening = true;
       _proximitySub = proximityEvents.listen((ProximityEvent event) {
         setState(() {
-          // event.getValue return true or false
-          _isInProximity = event.getValue();
         });
       });
-    } else if (softphone.activeCall == null && _isProximityListening) {
+    } else if (_isProximityListening
+        && (softphone.activeCall == null
+            || softphone.getHoldState(softphone.activeCall)
+            || softphone.isSpeakerEnabled())) {
       _isProximityListening = false;
       _proximitySub.cancel();
-      if (Platform.isAndroid)
-        FlutterBackground.disableBackgroundExecution().then(
-            (value) => print("disablebgexecutionvalue" + value.toString()));
     }
 
     if (!_logged_in) {
@@ -618,11 +630,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           )
                         ],
                       ))),
-              if (softphone.activeCall != null && _isInProximity)
-                Container(
-                    decoration: BoxDecoration(color: Colors.red),
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height)
             ]))
           ],
         ));
