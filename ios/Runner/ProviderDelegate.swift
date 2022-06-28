@@ -91,7 +91,22 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 startCallAction.contactIdentifier = name
                 
                 let transaction = CXTransaction(action: startCallAction)
-                needsReport = uuidObj.uuidString
+                controller.request(transaction) { error in
+                    if let error = error {
+                        print("Error requesting transaction (new outgoing): \(error)")
+                    } else {
+                        print("request transaction");
+                        print("does need reportcall");
+                        let update = CXCallUpdate()
+                        update.hasVideo = false
+                        update.supportsHolding = true
+                        update.supportsDTMF = true
+                        
+                        self.provider.reportCall(with: transaction.uuid,
+                                                 updated: update)
+                        print("reportcall Requested transaction successfully")
+                    }
+                }
                 self.requestTransaction(transaction)
             }
             else if (call.method == "endCall") {
@@ -110,8 +125,8 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 do {
                     print(session.category)
                     print(session.mode)
-                    try session.setCategory(.playAndRecord)
-                    try session.setMode(.voiceChat)
+//                    try session.setCategory(.playAndRecord)
+//                    try session.setMode(.voiceChat)
                     try session.setActive(true)
                     print("did set audiosessionactive")
                 } catch let error as NSError {
@@ -128,6 +143,12 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 } catch let error as NSError {
                     print("Unable to inactivate audiosession:  \(error.localizedDescription)")
                 }
+            print("webrtc workaround didactivate")
+                  var userInfo: Dictionary<AnyHashable, Any> = [:]
+                  userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
+                  NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
+                                                  object: self, userInfo: userInfo)
+                  print("just sent it")
             }
             else if (call.method == "reportConnectedOutgoingCall") {
                 let args = call.arguments as! [Any]
@@ -194,6 +215,8 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     }
   
     func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
+        print("call observer")
+        print(call.isOnHold)
         if call.hasConnected == true {
             print("marking answered", call.uuid.uuidString)
             answeredUuids[call.uuid.uuidString] = true
@@ -206,19 +229,8 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
             if let error = error {
                 print("Error requesting transaction: \(error)")
             } else {
-                print("request transaction"); print(self.needsReport);print(transaction.uuid.uuidString);
-                if (self.needsReport == transaction.uuid.uuidString) {
-                    print("does need report");
-                    self.needsReport = ""
-                    let update = CXCallUpdate()
-                    update.hasVideo = false
-                    update.supportsHolding = true
-                    update.supportsDTMF = true
-                
-                    self.provider.reportCall(with: transaction.uuid,
-                                             updated: update)
-                    print("Requested transaction successfully")
-                }
+                print("request transaction success");
+                print(transaction);
             }
         }
     }
@@ -331,24 +343,22 @@ print("webrtc workaround didactivate")
   
   func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
     callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
-      /*
+      
       let session = AVAudioSession.sharedInstance()
       do {
           print("going to set active audio session")
           print(!action.isOnHold)
-          try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.interruptSpokenAudioAndMixWithOthers])
+         /* try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.interruptSpokenAudioAndMixWithOthers])
           try session.overrideOutputAudioPort(.speaker)
-              print("settingitactive")
-              try session.setActive(!action.isOnHold)
+              print("settingitactive")*/
           if (!action.isOnHold) {
-              NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
-                                              object: self, userInfo: [:])
+              try session.setActive(!action.isOnHold)
           }
-              print("setaudiosession active")
+          print("setaudiosession active")
 
       } catch (let error) {print("adioerror");print(error)
           //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
-      }*/
+      }
       action.fulfill()
   }
   
