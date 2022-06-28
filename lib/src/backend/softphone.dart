@@ -529,8 +529,8 @@ print("audiofocusaddlistener");
       if (Platform.isAndroid && fromUi) {
         _callKeep.setMutedCall(_uuidFor(call), true);
       }
-      if (Platform.isIOS) {
-        _callKit.invokeMethod('attemptAudioSessionInActive');
+      if (Platform.isIOS && fromUi) {
+        _callKit.invokeMethod('muteCall', [_uuidFor(call)]);
       }
 
     } else {
@@ -539,8 +539,8 @@ print("audiofocusaddlistener");
       if (Platform.isAndroid && fromUi) {
         _callKeep.setMutedCall(_uuidFor(call), false);
       }
-      if (Platform.isIOS) {
-        _callKit.invokeMethod('attemptAudioSessionActive');
+      if (Platform.isIOS && fromUi) {
+        _callKit.invokeMethod('unMuteCall', [_uuidFor(call)]);
       }
 
     }
