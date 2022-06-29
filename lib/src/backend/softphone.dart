@@ -497,12 +497,7 @@ print("audiofocusaddlistener");
   }
 
   setHold(Call call, bool setOnHold, bool fromUi) async {
- /*   if (_getCallDataValue(call.id, "onHold") == setOnHold) {
-      return;
-    }
-    else {*/
       _setCallDataValue(call.id, "onHold", setOnHold);
-      print("setonholdnow");print(setOnHold);print(fromUi);
 
       if (Platform.isIOS && fromUi) {
         if (setOnHold) {
@@ -510,8 +505,7 @@ print("audiofocusaddlistener");
           //_callKit.invokeMethod("setHold", [_uuidFor(call)]);
         }
         else {
-          call.unhold();
-          //_callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
+          _callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
         }
       }
       else if (setOnHold) {
@@ -535,7 +529,6 @@ print("audiofocusaddlistener");
           });
         }
       }
- //   }
   }
 
   setMute(Call call, bool setMute, bool fromUi) {

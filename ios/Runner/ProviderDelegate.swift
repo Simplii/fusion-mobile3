@@ -132,6 +132,12 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 } catch let error as NSError {
                     print("Unable to activate audiosession:  \(error.localizedDescription)")
                 }
+                
+                  var userInfo: Dictionary<AnyHashable, Any> = [:]
+                  userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
+                  NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
+                                                  object: self, userInfo: userInfo)
+                  print("just sent it")
             } else if (call.method == "attemptAudioSessionInActive") {
                 let session = AVAudioSession.sharedInstance()
                 print("try to set audio inactive")
@@ -143,12 +149,6 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 } catch let error as NSError {
                     print("Unable to inactivate audiosession:  \(error.localizedDescription)")
                 }
-            print("webrtc workaround didactivate")
-                  var userInfo: Dictionary<AnyHashable, Any> = [:]
-                  userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
-                  NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
-                                                  object: self, userInfo: userInfo)
-                  print("just sent it")
             }
             else if (call.method == "reportConnectedOutgoingCall") {
                 let args = call.arguments as! [Any]
