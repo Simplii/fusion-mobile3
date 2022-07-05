@@ -305,7 +305,7 @@ class FusionConnection {
   }
 
   apiV1Call(String method, String route, Map<String, dynamic> data,
-      {Function callback}) async {
+      {Function callback, Function onError}) async {
     var client = http.Client();
     try {
       data['username'] = await _getUsername();
@@ -340,8 +340,10 @@ class FusionConnection {
       print(uriResponse.body);
       print(data);
       print(urlParams);
-      if (uriResponse.body == '{"error":"invalid_login"}')
-        return;
+      if (uriResponse.body == '{"error":"invalid_login"}') {
+        if (onError != null)
+          onError();
+      }
       else {
         var jsonResponse = convert.jsonDecode(uriResponse.body);
         client.close();
@@ -475,6 +477,9 @@ print(responseBody);
         password != null
             ? {"username": username, "password": password}
             : {"username": username},
+        onError: () {
+          callback(false);
+        },
         callback: (Map<String, dynamic> response) {
       if (response.containsKey("access_key")) {
         _username = username.split('@')[0] + '@' + response['domain'];
@@ -580,6 +585,9 @@ print(responseBody);
         "get",
         "/clients/lookup_options",
         {"username": username},
+        onError: () {
+          logOut();
+        },
         callback: (Map<String, dynamic> response) {
           if (response.containsKey("access_key")) {
             settings.setOptions(response);

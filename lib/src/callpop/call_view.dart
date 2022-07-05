@@ -50,6 +50,7 @@ class _CallViewState extends State<CallView> {
         setState(() {});
       },
     );
+    _softphone.checkMicrophoneAccess(context);
   }
 
   @override
