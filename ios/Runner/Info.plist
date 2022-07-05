@@ -48,7 +48,6 @@
 	<string>Photo library access is needed for sending MMS messages from your photo library</string>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>audio</string>
 		<string>processing</string>
 		<string>remote-notification</string>
 		<string>voip</string>
