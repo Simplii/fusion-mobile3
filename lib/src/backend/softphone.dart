@@ -12,11 +12,11 @@ import 'package:flutter_phone_state/flutter_phone_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
+import 'package:ringtone_player/ringtone_player.dart';
 import 'package:sip_ua/sip_ua.dart';
 import '../../main.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
-import 'package:flutter_incall/flutter_incall.dart';
 
 class Softphone implements SipUaHelperListener {
   String outputDevice = "Phone";
@@ -95,11 +95,16 @@ class Softphone implements SipUaHelperListener {
         cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
           _outboundPlayer = playing;
           _outboundPlayer.earpieceOrSpeakersToggle();
-        });
+       });
       } else if (path == _inboundAudioPath) {
-        cache.loop(_inboundAudioPath).then((Aps.AudioPlayer playing) {
-          _inboundPlayer = playing;
-        });
+        RingtonePlayer.ringtone(alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
+            "ic_alarm_notification",
+            contentTitle: "Phone Call",
+            contentText: "IncomingPhoneCall"),
+            volume: 1.0);
+//        cache.loop(_inboundAudioPath).then((Aps.AudioPlayer playing) {
+  //        _inboundPlayer = playing;
+    //    });
       }
     }
   }
@@ -121,17 +126,17 @@ class Softphone implements SipUaHelperListener {
   }
 
   stopOutbound() {
+    print("stopoutbound");
     if (_outboundPlayer != null) {
+
       _outboundPlayer.stop();
       _outboundPlayer.release();
     }
   }
 
   stopInbound() {
-    if (_inboundPlayer != null) {
-      _inboundPlayer.stop();
-      _inboundPlayer.release();
-    }
+    print("stopinbound");
+    RingtonePlayer.stop();
   }
 
   setContext(BuildContext context) {
@@ -1059,6 +1064,7 @@ print("audiofocusaddlistener");
         }
         break;
       case CallStateEnum.CONFIRMED:
+        print("confirmed now");
         stopOutbound();
         stopInbound();
         if (Platform.isAndroid) {
