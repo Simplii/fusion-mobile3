@@ -473,7 +473,6 @@ class _MyHomePageState extends State<MyHomePage> {
       FlutterBackground.disableBackgroundExecution().then(
               (value) => print("disablebgexecutionvalue" + value.toString()));
     }
-print("speaker enabled");print(softphone.isSpeakerEnabled());print(softphone.outputDevice);
     if (softphone.activeCall != null
         && softphone.isConnected(softphone.activeCall) != null
         && !softphone.getHoldState(softphone.activeCall)

@@ -39,6 +39,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 import '../utils.dart';
 import 'softphone.dart';
 
+
 class FusionConnection {
   String _extension = '';
   String _username = '';
@@ -388,6 +389,9 @@ class FusionConnection {
       print(urlParams);
       print(data);
       print(uriResponse.body);
+      if (uriResponse.body == '{"error":"invalid_login"}') {
+        this.logOut();
+      }
       var jsonResponse = convert.jsonDecode(uriResponse.body);
       if (callback != null) callback(jsonResponse);
     } finally {
