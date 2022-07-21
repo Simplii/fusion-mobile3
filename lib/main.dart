@@ -367,6 +367,11 @@ class _MyHomePageState extends State<MyHomePage> {
             'sip:${fusionConnection.getExtension()}fm@${fusionConnection.getDomain()}',
         'user': fusionConnection.getExtension()
       }, callback: (Map<String, dynamic> response) {
+        print("deviceread");
+        print(response);
+        if (!response.containsKey('device')) {
+          fusionConnection.logOut();
+        }
         Map<String, dynamic> device = response['device'];
         _sub_login = device['sub_login'];
         _auth_key = device['authentication_key'];

@@ -313,6 +313,9 @@ class _CallViewState extends State<CallView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_activeCall == null) {
+      return Container();
+    }
     var companyName = _softphone.getCallerCompany(_activeCall);
     var callerName = _softphone.getCallerName(_activeCall);
     var callerNumber =

@@ -496,18 +496,21 @@ print("audiofocusaddlistener");
     ? _getCallDataValue(activeCall.id, "remoteStreams", def: [].cast<MediaStream>()).cast<MediaStream>()
     : [];
 
-    for (MediaStream stream in localCallStreams + remoteCallStreams + activeCall.peerConnection.getRemoteStreams() + activeCall.peerConnection.getLocalStreams()) {
+    if (Platform.isAndroid) {
+      if (useSpeaker) {
+        _android.invokeMethod("setSpeaker");
+      } else {
+        _android.invokeMethod("setEarpiece");
+      }
+    }
+
+    for (MediaStream stream in localCallStreams + remoteCallStreams) {
       if (stream != null) {
         var tracks = stream.getAudioTracks();
         for (var track in tracks) {
           if (Platform.isIOS) {
             track.enableSpeakerphone(useSpeaker);
           } else {
-            if (useSpeaker) {
-              _android.invokeMethod("setSpeaker");
-            } else {
-              _android.invokeMethod("setEarpiece");
-            }
             track.enableSpeakerphone(useSpeaker);
           }
         }
