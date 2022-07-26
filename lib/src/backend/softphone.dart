@@ -59,7 +59,7 @@ class Softphone implements SipUaHelperListener {
   final Aps.AudioCache _audioCache = Aps.AudioCache(
     fixedPlayer: Aps.AudioPlayer()..setReleaseMode(Aps.ReleaseMode.LOOP),
   );
-  final _outboundAudioPath = "audio/outbound.mp3";
+  final _outboundAudioPath = "audio/outgoing.wav";
   final _inboundAudioPath = "audio/inbound.mp3";
   Aps.AudioPlayer _outboundPlayer;
   Aps.AudioPlayer _inboundPlayer;
@@ -88,7 +88,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   _playAudio(String path, bool ignore) {
-    if (Platform.isIOS && !ignore)
+    if (Platform.isIOS && !ignore && path == _inboundAudioPath)
       return;
     else {
       Aps.AudioCache cache = Aps.AudioCache();
