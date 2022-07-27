@@ -42,6 +42,9 @@
         android:icon="@mipmap/ic_launcher"
         android:label="fusion"
         android:usesCleartextTraffic="true">
+
+        <service android:name="dev.cruv.ringtone_player.PlayerService" />
+
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"

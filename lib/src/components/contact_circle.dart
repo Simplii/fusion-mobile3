@@ -128,7 +128,7 @@ class _ContactCircleState extends State<ContactCircle> {
             height: _diameter - 4,
             decoration: BoxDecoration(
               image: DecorationImage(
-                  fit: BoxFit.fill,
+                  fit: BoxFit.cover,
                   image: (imageUrl != null
                       ? NetworkImage(imageUrl)
                       : AssetImage("assets/blank_avatar.png"))))));
