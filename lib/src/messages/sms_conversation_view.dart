@@ -550,6 +550,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         }
         _mediaToSend = [];
       }
+      _saveLocalState("");
     });
   }
 
