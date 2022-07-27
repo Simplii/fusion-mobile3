@@ -1,6 +1,6 @@
 name: fusion_mobile_revamped
 description: Fusion Mobile
-version: 1.1.5+163
+version: 1.1.7+168
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -30,6 +30,7 @@ dependencies:
   android_intent_plus:
   websocket_manager:
   flutter_gravatar: any
+  ringtone_player:
   flutter_sound:
   awesome_notifications:
   sip_ua:
@@ -57,7 +58,7 @@ dependencies:
   shared_preferences:
   all_sensors:
   callkeep:
-   # path: "./callkeep"
+    path: "./callkeep"
  #   git:
     #  url: https://github.com/davidkarn/callkeep.git
   flutter_background:
@@ -66,6 +67,7 @@ dependencies:
       url: https://github.com/vmeretin/flutter_phone_state.git
   overlay_support:
   path_provider:
+  flutter_audio_manager:
 dev_dependencies:
   flutter_test:
     sdk: flutter

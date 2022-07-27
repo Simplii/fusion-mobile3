@@ -13,8 +13,10 @@ import 'package:flutter_phone_state/flutter_phone_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
+import 'package:ringtone_player/ringtone_player.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sip_ua/sip_ua.dart';
+import 'package:flutter_audio_manager/flutter_audio_manager.dart';
 import '../../main.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
@@ -32,6 +34,7 @@ class Softphone implements SipUaHelperListener {
 
   MethodChannel _callKit;
   MethodChannel _telecom;
+  MethodChannel _android;
 
   bool registered = false;
   bool connected = false;
@@ -70,8 +73,10 @@ class Softphone implements SipUaHelperListener {
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
       _callKit = MethodChannel('net.fusioncomm.ios/callkit');
-    else if (Platform.isAndroid)
+    else if (Platform.isAndroid) {
+      _android = MethodChannel('net.fusioncomm.android/calling');
       _telecom = MethodChannel('net.fusioncomm.android/telecom');
+    }
 
     _audioCache.load(_outboundAudioPath);
     _audioCache.load(_inboundAudioPath);
@@ -102,11 +107,16 @@ class Softphone implements SipUaHelperListener {
         cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
           _outboundPlayer = playing;
           _outboundPlayer.earpieceOrSpeakersToggle();
-        });
+       });
       } else if (path == _inboundAudioPath) {
-        cache.loop(_inboundAudioPath).then((Aps.AudioPlayer playing) {
-          _inboundPlayer = playing;
-        });
+        RingtonePlayer.ringtone(alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
+            "ic_alarm_notification",
+            contentTitle: "Phone Call",
+            contentText: "IncomingPhoneCall"),
+            volume: 1.0);
+//        cache.loop(_inboundAudioPath).then((Aps.AudioPlayer playing) {
+  //        _inboundPlayer = playing;
+    //    });
       }
     }
   }
@@ -128,17 +138,17 @@ class Softphone implements SipUaHelperListener {
   }
 
   stopOutbound() {
+    print("stopoutbound");
     if (_outboundPlayer != null) {
+
       _outboundPlayer.stop();
       _outboundPlayer.release();
     }
   }
 
   stopInbound() {
-    if (_inboundPlayer != null) {
-      _inboundPlayer.stop();
-      _inboundPlayer.release();
-    }
+    print("stopinbound");
+    RingtonePlayer.stop();
   }
 
   setContext(BuildContext context) {
@@ -486,16 +496,35 @@ print("audiofocusaddlistener");
 
   setSpeaker(bool useSpeaker) {
     _savedOutput = useSpeaker;
-    if (_localStream != null) {
-      var tracks = _localStream.getAudioTracks();
-      for (var track in tracks) {
-        if (Platform.isIOS) {
-          track.enableSpeakerphone(useSpeaker);
-        } else {
-          track.enableSpeakerphone(useSpeaker);
+
+    List<MediaStream> localCallStreams = activeCall != null
+    ? _getCallDataValue(activeCall.id, "localStreams", def: [].cast<MediaStream>()).cast<MediaStream>()
+    : [];
+    List<MediaStream> remoteCallStreams = activeCall != null
+    ? _getCallDataValue(activeCall.id, "remoteStreams", def: [].cast<MediaStream>()).cast<MediaStream>()
+    : [];
+
+    if (Platform.isAndroid) {
+      if (useSpeaker) {
+        _android.invokeMethod("setSpeaker");
+      } else {
+        _android.invokeMethod("setEarpiece");
+      }
+    }
+
+    for (MediaStream stream in localCallStreams + remoteCallStreams) {
+      if (stream != null) {
+        var tracks = stream.getAudioTracks();
+        for (var track in tracks) {
+          if (Platform.isIOS) {
+            track.enableSpeakerphone(useSpeaker);
+          } else {
+            track.enableSpeakerphone(useSpeaker);
+          }
         }
       }
     }
+
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
     this._updateListeners();
   }
@@ -698,12 +727,22 @@ print("audiofocusaddlistener");
     return null;
   }
 
-  _handleStreams(CallState event) async {
+  _handleStreams(CallState event, Call call) async {
     MediaStream stream = event.stream;
     if (event.originator == 'local') {
+      List<MediaStream> localCallStreams = _getCallDataValue(
+          call.id, "localStreams",
+          def: [].cast<MediaStream>()).cast<MediaStream>();
+      localCallStreams.add(stream);
+      _setCallDataValue(call.id, "localStreams", localCallStreams);
       _localStream = stream;
     }
     if (event.originator == 'remote') {
+      List<MediaStream> remoteCallStreams = _getCallDataValue(
+          call.id, "remoteStreams",
+          def: [].cast<MediaStream>()).cast<MediaStream>();
+      remoteCallStreams.add(stream);
+      _setCallDataValue(call.id, "remoteStreams", remoteCallStreams);
       _remoteStream = stream;
     }
   }
@@ -904,27 +943,38 @@ print("audiofocusaddlistener");
   }
 
   getCallerName(Call call) {
-    CallpopInfo data = getCallpopInfo(call.id);
-    if (data != null) {
-      if (data.getName().trim().length > 0)
-        return data.getName();
-      else
-        return "Unknown";
-    } else {
-      if (call.remote_display_name != null &&
-          call.remote_display_name.trim().length > 0)
-        return call.remote_display_name;
-      else
-        return "Unknown";
+    if (call != null) {
+      CallpopInfo data = getCallpopInfo(call.id);
+      if (data != null) {
+        if (data
+            .getName()
+            .trim()
+            .length > 0)
+          return data.getName();
+        else
+          return "Unknown";
+      } else {
+        if (call.remote_display_name != null &&
+            call.remote_display_name
+                .trim()
+                .length > 0)
+          return call.remote_display_name;
+        else
+          return "Unknown";
+      }
     }
   }
 
   String getCallerCompany(Call call) {
-    CallpopInfo data = getCallpopInfo(call.id);
-    if (data != null) {
-      return data.getCompany();
-    } else {
+    if (call == null) {
       return "";
+    } else {
+      CallpopInfo data = getCallpopInfo(call.id);
+      if (data != null) {
+        return data.getCompany();
+      } else {
+        return "";
+      }
     }
   }
 
@@ -1058,7 +1108,7 @@ print("audiofocusaddlistener");
         var future = new Future.delayed(const Duration(milliseconds: 2000), () {
           _blockingEvent = false;
         });
-        _handleStreams(callState);
+        _handleStreams(callState, call);
         if (Platform.isIOS) {
           if (!isIncoming(call)) {
             _callKit.invokeMethod(
@@ -1104,6 +1154,7 @@ print("audiofocusaddlistener");
         }
         break;
       case CallStateEnum.CONFIRMED:
+        print("confirmed now");
         stopOutbound();
         stopInbound();
         if (Platform.isAndroid) {
