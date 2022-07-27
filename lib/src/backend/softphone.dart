@@ -94,7 +94,14 @@ class Softphone implements SipUaHelperListener {
 
   _playAudio(String path, bool ignore) {
     print("willplayaudio");
-    if (Platform.isIOS && path == _inboundAudioPath) {
+    if (Platform.isIOS && path == _outboundAudioPath) {
+      Aps.AudioCache cache = Aps.AudioCache();
+        cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
+          _outboundPlayer = playing;
+          _outboundPlayer.earpieceOrSpeakersToggle();
+        });
+        return;
+
       try {
         _callKit.invokeMethod('attemptAudioSessionActiveRingtone');
       } on PlatformException catch (e) {
