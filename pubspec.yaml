@@ -58,7 +58,7 @@ dependencies:
   shared_preferences:
   all_sensors:
   callkeep:
-    path: "./callkeep"
+  #  path: "./callkeep"
  #   git:
     #  url: https://github.com/davidkarn/callkeep.git
   flutter_background:

@@ -62,7 +62,7 @@ class Softphone implements SipUaHelperListener {
   final Aps.AudioCache _audioCache = Aps.AudioCache(
     fixedPlayer: Aps.AudioPlayer()..setReleaseMode(Aps.ReleaseMode.LOOP),
   );
-  final _outboundAudioPath = "audio/outbound.mp3";
+  final _outboundAudioPath = "audio/outgoing.wav";
   final _inboundAudioPath = "audio/inbound.mp3";
   Aps.AudioPlayer _outboundPlayer;
   Aps.AudioPlayer _inboundPlayer;
@@ -93,8 +93,21 @@ class Softphone implements SipUaHelperListener {
   }
 
   _playAudio(String path, bool ignore) {
-    if (Platform.isIOS && !ignore)
-      return;
+    print("willplayaudio");
+    if (Platform.isIOS && path == _outboundAudioPath) {
+      Aps.AudioCache cache = Aps.AudioCache();
+        cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
+          _outboundPlayer = playing;
+          _outboundPlayer.earpieceOrSpeakersToggle();
+        });
+        return;
+
+      try {
+        _callKit.invokeMethod('attemptAudioSessionActiveRingtone');
+      } on PlatformException catch (e) {
+        print("error callkit invoke attempt audio session");
+      }
+    }
     else {
       Aps.AudioCache cache = Aps.AudioCache();
       if (path == _outboundAudioPath) {
@@ -389,6 +402,8 @@ print("audiofocusaddlistener");
   }
 
   doMakeCall(String destination) async {
+    _playAudio(_outboundAudioPath, false);
+
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     helper.setVideo(false);
     MediaStream mediaStream;
@@ -496,18 +511,21 @@ print("audiofocusaddlistener");
     ? _getCallDataValue(activeCall.id, "remoteStreams", def: [].cast<MediaStream>()).cast<MediaStream>()
     : [];
 
-    for (MediaStream stream in localCallStreams + remoteCallStreams + activeCall.peerConnection.getRemoteStreams() + activeCall.peerConnection.getLocalStreams()) {
+    if (Platform.isAndroid) {
+      if (useSpeaker) {
+        _android.invokeMethod("setSpeaker");
+      } else {
+        _android.invokeMethod("setEarpiece");
+      }
+    }
+
+    for (MediaStream stream in localCallStreams + remoteCallStreams) {
       if (stream != null) {
         var tracks = stream.getAudioTracks();
         for (var track in tracks) {
           if (Platform.isIOS) {
             track.enableSpeakerphone(useSpeaker);
           } else {
-            if (useSpeaker) {
-              _android.invokeMethod("setSpeaker");
-            } else {
-              _android.invokeMethod("setEarpiece");
-            }
             track.enableSpeakerphone(useSpeaker);
           }
         }
