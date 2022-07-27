@@ -88,8 +88,14 @@ class Softphone implements SipUaHelperListener {
   }
 
   _playAudio(String path, bool ignore) {
-    if (Platform.isIOS && !ignore && path == _inboundAudioPath)
-      return;
+    print("willplayaudio");
+    if (Platform.isIOS && path == _inboundAudioPath) {
+      try {
+        _callKit.invokeMethod('attemptAudioSessionActiveRingtone');
+      } on PlatformException catch (e) {
+        print("error callkit invoke attempt audio session");
+      }
+    }
     else {
       Aps.AudioCache cache = Aps.AudioCache();
       if (path == _outboundAudioPath) {
@@ -379,6 +385,8 @@ print("audiofocusaddlistener");
   }
 
   doMakeCall(String destination) async {
+    _playAudio(_outboundAudioPath, false);
+
     final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
     helper.setVideo(false);
     MediaStream mediaStream;
