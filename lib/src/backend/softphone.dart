@@ -20,6 +20,8 @@ import 'package:flutter_audio_manager/flutter_audio_manager.dart';
 import '../../main.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
+import 'package:flutter_incall_manager/flutter_incall_manager.dart';
+
 
 class Softphone implements SipUaHelperListener {
   String outputDevice = "Phone";
@@ -35,6 +37,8 @@ class Softphone implements SipUaHelperListener {
   MethodChannel _callKit;
   MethodChannel _telecom;
   MethodChannel _android;
+
+  IncallManager incallManager = new IncallManager();
 
   bool registered = false;
   bool connected = false;
@@ -417,6 +421,9 @@ print("audiofocusaddlistener");
       print("audioincallmanager.start");
       //incallManager.start();
     }
+    if (Platform.isAndroid) {
+      incallManager.start(auto: true, media: MediaType.AUDIO);
+    }
     activeCall = call;
     if (Platform.isAndroid) {
       _callKeep.setCurrentCallActive(_uuidFor(call));
@@ -514,24 +521,42 @@ print("audiofocusaddlistener");
     if (Platform.isAndroid) {
       if (useSpeaker) {
         _android.invokeMethod("setSpeaker");
+        if (activeCall != null) {
+          _callKeep.setSpeaker(_uuidFor(activeCall));
+        }
+       // incallManager.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_ON);
       } else {
+      //  incallManager.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_OFF);
+        if (activeCall != null) {
+          _callKeep.setEarpiece(_uuidFor(activeCall));
+        }
+
         _android.invokeMethod("setEarpiece");
       }
-    }
-
-    for (MediaStream stream in localCallStreams + remoteCallStreams) {
-      if (stream != null) {
-        var tracks = stream.getAudioTracks();
-        for (var track in tracks) {
-          if (Platform.isIOS) {
-            track.enableSpeakerphone(useSpeaker);
-          } else {
-            track.enableSpeakerphone(useSpeaker);
+    }else {
+      print("localstreams");
+      print(localCallStreams);
+      print("remotestreams");
+      print(remoteCallStreams);
+      var streams = localCallStreams + remoteCallStreams;
+      print("streams");
+      print(streams);
+      for (MediaStream stream in streams) {
+        if (stream != null) {
+          var tracks = stream.getAudioTracks();
+          print("tracks");
+          print(tracks);
+          for (var track in tracks) {
+            print("settingtrackspeaker");
+            if (Platform.isIOS) {
+              track.enableSpeakerphone(useSpeaker);
+            } else {
+              track.enableSpeakerphone(useSpeaker);
+            }
           }
         }
       }
     }
-
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
     this._updateListeners();
   }
@@ -765,7 +790,9 @@ print("audiofocusaddlistener");
 
     if (call == activeCall) {
       activeCall = null;
-     // incallManager.stop();
+      if (Platform.isAndroid) {
+        incallManager.stop();
+      }
       print("audioincallmanagerstop:");
     }
 
