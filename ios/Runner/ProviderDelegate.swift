@@ -145,8 +145,8 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 do {
                     print(session.category)
                     print(session.mode)
-//                    try session.setCategory(.playAndRecord)
-//                    try session.setMode(.voiceChat)
+                    try session.setCategory(.playAndRecord)
+                    try session.setMode(.voiceChat)
                     try session.setActive(true)
                     print("did set audiosessionactive")
                 } catch let error as NSError {
@@ -176,6 +176,14 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 provider.reportOutgoingCall(with: UUID(uuidString: uuid)!,
                                             connectedAt: Date())
                 print("callkit connecting")
+            }
+            else if (call.method == "stopRinging") {
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                print("stopping ringing unanswered");
+                self.provider.reportCall(with: UUID.init(uuidString: uuid)!,
+                                         endedAt: Date(),
+                                         reason: .unanswered)
             }
             else if (call.method == "reportConnectingOutgoingCall") {
                 let args = call.arguments as! [Any]
@@ -312,7 +320,7 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
         if (answeredUuids.keys.contains(uuid) && answeredUuids[uuid] != true) {
             print("removing unanswered")
             self.provider.reportCall(with: UUID.init(uuidString: uuid)!,
-                                     endedAt: nil,
+                                     endedAt: Date(),
                                      reason: .unanswered)
             answeredUuids.removeValue(forKey: uuid)
         }
@@ -352,7 +360,6 @@ print("webrtc workaround didactivate")
       NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
                                       object: self, userInfo: userInfo)
       print("just sent it")
-
   }
   
   func provider(_ provider: CXProvider, perform action: CXEndCallAction) {

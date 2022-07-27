@@ -308,7 +308,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _setupFirebase() {
     FirebaseMessaging.onMessage.listen((event) {
+      print("fbmessage");print(event.data);
       event.data;
+      if (Platform.isIOS) {
+        if (event.data.containsKey("remove_fusion_call")) {
+          softphone.stopRinging(event.data["uuid"]);
+        }
+      }
       setState(() {});
     });
 

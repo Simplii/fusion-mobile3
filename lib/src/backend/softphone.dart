@@ -95,7 +95,7 @@ class Softphone implements SipUaHelperListener {
   _playAudio(String path, bool ignore) {
     print("willplayaudio");
     if (Platform.isIOS && path == _outboundAudioPath) {
-      Aps.AudioCache cache = Aps.AudioCache();
+     Aps.AudioCache cache = Aps.AudioCache();
         cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
           _outboundPlayer = playing;
           _outboundPlayer.earpieceOrSpeakersToggle();
@@ -273,7 +273,19 @@ print("audiofocusaddlistener");
       case 'answerButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
         callIdsAnswered.add(callUuid);
+        print("ansewrbuttonpressed");
+        print(callUuid);
+        print(_getCallByUuid(callUuid));
+        if (_getCallByUuid(callUuid) == null
+            && (activeCall.state == CallStateEnum.CONNECTING
+                || activeCall.state == CallStateEnum.PROGRESS)) {
+          callData[activeCall.id]['uuid'] = callUuid;
+          print("newuuid");
+          print(_getCallByUuid(callUuid));
+        }
+
         answerCall(_getCallByUuid(callUuid));
+
         return;
 
       case 'endButtonPressed':
@@ -364,11 +376,10 @@ print("audiofocusaddlistener");
       settings.iceGatheringTimeout = 1000;
     }
     settings.iceServers = [
-      {"urls": "stun:stun.l.google.com:19305"},
       {"urls": "stun:stun.l.google.com:19302"},
-      {"urls": "stun:srvfusturn.fusioncomm.net"},
+      {"urls": "stun:services.fusioncomm.net:3478"},
       {
-        "urls": "turn:srvfusturn.fusioncomm.net",
+        "urls": "turn:services.fusioncomm.net:3478",
         "username": "fuser",
         "credential": "fpassword"
       }
@@ -623,10 +634,15 @@ print("audiofocusaddlistener");
   }
 
   answerCall(Call call) async {
-    if (call == null)
+    if (call == null) {
+      print("return, null");
       return;
-    else if (_getCallDataValue(call.id, "answerTime") != null)
-      return;
+    }
+    else if (_getCallDataValue(call.id, "answerTime") != null) {
+      print("skipping, answertime");
+      print(call.id);
+      print(_getCallDataValue(call.id, "answerTime") != null);
+    }
     else {
       if (callIdsAnswered.contains(_uuidFor(call))) {
         callIdsAnswered.remove(_uuidFor(call));
@@ -634,9 +650,12 @@ print("audiofocusaddlistener");
 
       final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
       MediaStream mediaStream;
+      print("building stream to answer");
       mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+      print("answering call now");
+      print(mediaStream);
       call.answer(helper.buildCallOptions(), mediaStream: mediaStream);
-      if (Platform.isAndroid) {
+      if (Platform.isAndroid) { //
         _callKeep.answerIncomingCall(_uuidFor(call));
       }
       makeActiveCall(call);
@@ -1152,12 +1171,19 @@ print("audiofocusaddlistener");
 
         break;
       case CallStateEnum.ACCEPTED:
+        print("accepted now");
         _blockingEvent = true;
         var future = new Future.delayed(const Duration(milliseconds: 2000), () {
           _blockingEvent = false;
         });
         if (Platform.isAndroid) {
           setCallOutput(call, getCallOutput(call));
+        }
+        if (Platform.isIOS) {
+          _callKit.invokeMethod("attemptAudioSessionActive", []);
+          var future = new Future.delayed(const Duration(milliseconds: 1500), () {
+            _callKit.invokeMethod("attemptAudioSessionActive", []);
+          });
         }
         break;
       case CallStateEnum.CONFIRMED:
@@ -1263,5 +1289,14 @@ print("audiofocusaddlistener");
   void onNewNotify( ntf) {
     print("new notify");
     print(ntf);
+  }
+
+  void stopRinging(String uuid) {
+    try {
+      _callKit.invokeMethod('stopRinging', [uuid]);
+      hangUp(_getCallByUuid(uuid));
+    } on PlatformException catch (e) {
+      print("callkit outgoing error");
+    }
   }
 }
