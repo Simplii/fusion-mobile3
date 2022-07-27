@@ -118,7 +118,27 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 let transaction = CXTransaction(action: endCallAction)
                 self.requestTransaction(transaction)
 
-            }
+            }else if (call.method == "attemptAudioSessionActiveRingtone") {
+                let session = AVAudioSession.sharedInstance()
+                                    print("try to set audio active")
+                                    do {
+                                        try session.setCategory(.playback, mode: .voiceChat, options: .mixWithOthers)
+                                        try session.overrideOutputAudioPort(.speaker)
+                                        try session.setActive(true) 
+                
+                                        print(session.category)
+                                        print(session.mode)
+                                        print("did set audiosessionactive")
+                                        let url = URL(fileURLWithPath: "outgoing.wav")
+                                        let player = try? AVAudioPlayer(contentsOf: url)
+                                        player?.numberOfLoops = -1
+                                        player?.setVolume(1.0,  fadeDuration: 0)
+                                        player?.play()
+                                        print("played audiosession ringtone")
+                                    } catch let error as NSError {
+                                        print("Unable to activate audiosession:  \(error.localizedDescription)")
+                                    }
+                                }
             else if (call.method == "attemptAudioSessionActive") {
                 let session = AVAudioSession.sharedInstance()
                 print("try to set audio active")
