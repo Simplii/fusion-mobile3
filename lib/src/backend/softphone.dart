@@ -100,10 +100,14 @@ class Softphone implements SipUaHelperListener {
     print("willplayaudio");
     if (Platform.isIOS && path == _outboundAudioPath) {
       Aps.AudioCache cache = Aps.AudioCache();
+      if (_outboundPlayer == null) {
+        print("setupoutbound");
+        _outboundPlayer = Aps.AudioPlayer();
         cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
           _outboundPlayer = playing;
           _outboundPlayer.earpieceOrSpeakersToggle();
         });
+      }
         return;
 
       try {
@@ -112,13 +116,17 @@ class Softphone implements SipUaHelperListener {
         print("error callkit invoke attempt audio session");
       }
     }
-    else {
+    else if (Platform.isAndroid) {
       Aps.AudioCache cache = Aps.AudioCache();
       if (path == _outboundAudioPath) {
-        cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
-          _outboundPlayer = playing;
-          _outboundPlayer.earpieceOrSpeakersToggle();
-       });
+        if (_outboundPlayer == null) {
+          _outboundPlayer = Aps.AudioPlayer(); 
+          cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
+            _outboundPlayer = playing;
+            _outboundPlayer.earpieceOrSpeakersToggle();
+            print("set outbound player");
+          });
+        }
       } else if (path == _inboundAudioPath) {
         RingtonePlayer.ringtone(alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
             "ic_alarm_notification",
@@ -151,7 +159,7 @@ class Softphone implements SipUaHelperListener {
   stopOutbound() {
     print("stopoutbound");
     if (_outboundPlayer != null) {
-
+      print("stopppingoutbound");
       _outboundPlayer.stop();
       _outboundPlayer.release();
     }
