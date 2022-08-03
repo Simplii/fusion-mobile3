@@ -120,7 +120,7 @@ class Softphone implements SipUaHelperListener {
       Aps.AudioCache cache = Aps.AudioCache();
       if (path == _outboundAudioPath) {
         if (_outboundPlayer == null) {
-          _outboundPlayer = Aps.AudioPlayer(); 
+          _outboundPlayer = Aps.AudioPlayer();
           cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
             _outboundPlayer = playing;
             _outboundPlayer.earpieceOrSpeakersToggle();
@@ -185,6 +185,7 @@ class Softphone implements SipUaHelperListener {
       _setupCallKeep();
 
       FlutterPhoneState.rawPhoneEvents.forEach((element) {
+        print("rawphonevent");print(element.type);print(element);
         if (element.type == RawEventType.connected && activeCall != null && !_blockingEvent) {
           isCellPhoneCallActive = true;
           activeCall.hold();
@@ -1140,6 +1141,13 @@ print("audiofocusaddlistener");
     _fusionConnection.nsApiCall("call", "record_off",
         {"callid": ids['orig'], "uid": _fusionConnection.getUid()},
         callback: (Map<String, dynamic> result) {});
+  }
+
+  blockAndroidAudioEvents(int time) {
+    _blockingEvent = true;
+    var future = new Future.delayed(Duration(milliseconds: time), () {
+      _blockingEvent = false;
+    });
   }
 
   @override
