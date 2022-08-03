@@ -90,7 +90,12 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       final String path = getApplicationDocumentsDirectory().toString();
       List<String> savedImgs =
           prefs.getStringList(_conversation.hash + "_savedImages");
-      savedImgs.map((e) => {_mediaToSend.add(XFile("$path/$e"))});
+      if (savedImgs != null) {
+        savedImgs.map((e) =>
+        {
+          _mediaToSend.add(XFile("$path/$e"))
+        });
+      }
     });
 
     if (_fusionConnection.smsDepartments.lookupRecord("-2") != null) {
