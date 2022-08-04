@@ -343,6 +343,35 @@ class _MyHomePageState extends State<MyHomePage> {
           });
 
           softphone.register(sub_login, auth_key, aor.replaceAll('sip:', ''));
+          softphone.onUnregister(() {
+                 fusionConnection.nsApiCall('device', 'read', {
+        'domain': fusionConnection.getDomain(),
+        'device':
+            'sip:${fusionConnection.getExtension()}fm@${fusionConnection.getDomain()}',
+        'user': fusionConnection.getExtension()
+      }, callback: (Map<String, dynamic> response) {
+                   print("deviceread");
+                   print(response);
+                   if (!response.containsKey('device')) {
+                     fusionConnection.logOut();
+                   }
+                   Map<String, dynamic> device = response['device'];
+                   _sub_login = device['sub_login'];
+                   _auth_key = device['authentication_key'];
+                   _aor = device['aor'];
+
+                   SharedPreferences.getInstance().then((
+                       SharedPreferences prefs) {
+                     prefs.setString("sub_login", _sub_login);
+                     prefs.setString("auth_key", _auth_key);
+                     prefs.setString("aor", _aor);
+                   });
+
+                   softphone.register(
+                       device['sub_login'], device['authentication_key'],
+                       device['aor'].replaceAll('sip:', ''));
+                 });
+          });
           checkForInitialMessage();
         } else {}
       }
