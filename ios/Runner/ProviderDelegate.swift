@@ -380,6 +380,11 @@ print("webrtc workaround didactivate")
               print("settingitactive")*/
           if (!action.isOnHold) {
               try session.setActive(!action.isOnHold)
+              var userInfo: Dictionary<AnyHashable, Any> = [:]
+              userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
+              NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
+                                              object: self, userInfo: userInfo)
+              print("just sent it")
           }
           print("setaudiosession active")
 

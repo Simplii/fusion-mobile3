@@ -15,6 +15,7 @@ import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:ringtone_player/ringtone_player.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:flutter_audio_manager/flutter_audio_manager.dart';
 import '../../main.dart';
@@ -56,6 +57,7 @@ class Softphone implements SipUaHelperListener {
   bool _isAudioSessionActive = false;
   bool _attemptingToRegainAudio = false;
 
+  Function _onUnregister = null;
   List<String> callIdsAnswered = [];
   //IncallManager incallManager = new IncallManager();
 
@@ -258,6 +260,7 @@ print("audiofocusaddlistener");
   }
 
   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
+    Sentry.captureMessage("callkitmethod:" + methodCall.method);
     print("callkitmethod:" + methodCall.method);
     print(methodCall.method);
     print(methodCall);
@@ -448,6 +451,7 @@ print("audiofocusaddlistener");
 
     for (Call c in calls) {
       if (c.id != call.id) {
+        print("setholdonothercall");
         setHold(c, true, false);
       }
     }
@@ -556,10 +560,12 @@ print("audiofocusaddlistener");
 
       if (Platform.isIOS && fromUi) {
         if (setOnHold) {
+          print("setholdindart");
           call.hold();
           //_callKit.invokeMethod("setHold", [_uuidFor(call)]);
         }
         else {
+          print("setholdinvoke");
           _callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
         }
       }
@@ -569,6 +575,7 @@ print("audiofocusaddlistener");
         }
         helper.setVideo(true);
         call.hold();
+        print("sethold here");
         var future = new Future.delayed(const Duration(milliseconds: 2000), () {
           helper.setVideo(false);
         });
@@ -668,6 +675,16 @@ print("audiofocusaddlistener");
         flutterLocalNotificationsPlugin.cancelAll();
       } else if (Platform.isIOS) {
         _callKit.invokeMethod("answerCall", [_uuidFor(call)]);
+        if (calls.length > 1) {
+          var future = new Future.delayed(const Duration(milliseconds: 700), () {
+            var speaker = isSpeakerEnabled();
+            setSpeaker(!speaker);
+
+            var future = new Future.delayed(const Duration(milliseconds: 700), () {
+              setSpeaker(speaker);
+            });
+          });
+        }
       }
     }
   }
@@ -761,6 +778,7 @@ print("audiofocusaddlistener");
           def: [].cast<MediaStream>()).cast<MediaStream>();
       localCallStreams.add(stream);
       _setCallDataValue(call.id, "localStreams", localCallStreams);
+      print("setlocalstream");
       _localStream = stream;
     }
     if (event.originator == 'remote') {
@@ -1128,6 +1146,7 @@ print("audiofocusaddlistener");
 
   @override
   void callStateChanged(Call call, CallState callState) {
+    Sentry.captureMessage("callstate changed: " + callState.state.toString());
     switch (callState.state) {
       case CallStateEnum.STREAM:
         _blockingEvent = true;
@@ -1266,6 +1285,10 @@ print("audiofocusaddlistener");
     if (state.state == RegistrationStateEnum.UNREGISTERED) {
       registered = false;
     } else if (state.state == RegistrationStateEnum.REGISTRATION_FAILED) {
+      if (_onUnregister != null) {
+        _onUnregister();
+        _onUnregister = null;
+      }
       registered = false;
     } else if (state.state == RegistrationStateEnum.NONE) {
       registered = this.helper.registered;
@@ -1298,5 +1321,9 @@ print("audiofocusaddlistener");
     } on PlatformException catch (e) {
       print("callkit outgoing error");
     }
+  }
+
+  void onUnregister(Function() fn) {
+    _onUnregister = fn;
   }
 }
