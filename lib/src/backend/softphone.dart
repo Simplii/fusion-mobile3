@@ -675,12 +675,23 @@ print("audiofocusaddlistener");
         flutterLocalNotificationsPlugin.cancelAll();
       } else if (Platform.isIOS) {
         _callKit.invokeMethod("answerCall", [_uuidFor(call)]);
+
+        if (Platform.isIOS) {
+          _callKit.invokeMethod("attemptAudioSessionActive", []);
+          var future = new Future.delayed(const Duration(milliseconds: 1500), () {
+            _callKit.invokeMethod("attemptAudioSessionActive", []);
+          });
+        }
+
         if (calls.length > 1) {
-          var future = new Future.delayed(const Duration(milliseconds: 700), () {
+          // needed for hold + accept when both calls are fusion calls on ios. not sure why...
+          var future = new Future.delayed(const Duration(milliseconds: 1600), () {
             var speaker = isSpeakerEnabled();
             setSpeaker(!speaker);
+            print("setting speaker");print(!speaker);
 
-            var future = new Future.delayed(const Duration(milliseconds: 700), () {
+            var future = new Future.delayed(const Duration(milliseconds: 1700), () {
+              print("setting speaker");print(speaker);
               setSpeaker(speaker);
             });
           });
@@ -1146,7 +1157,7 @@ print("audiofocusaddlistener");
 
   @override
   void callStateChanged(Call call, CallState callState) {
-    Sentry.captureMessage("callstate changed: " + callState.state.toString());
+    //Sentry.captureMessage("callstate changed: " + callState.state.toString());
     switch (callState.state) {
       case CallStateEnum.STREAM:
         _blockingEvent = true;
