@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 
@@ -15,12 +16,16 @@ import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:ringtone_player/ringtone_player.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:flutter_audio_manager/flutter_audio_manager.dart';
 import '../../main.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
 import 'package:flutter_incall_manager/flutter_incall_manager.dart';
+import 'package:bluetoothadapter/bluetoothadapter.dart';
+import 'package:uuid/uuid.dart';
+
 
 
 class Softphone implements SipUaHelperListener {
@@ -72,7 +77,11 @@ class Softphone implements SipUaHelperListener {
   Aps.AudioPlayer _inboundPlayer;
   bool _blockingEvent = false;
 
-
+  Bluetoothadapter flutterbluetoothadapter = Bluetoothadapter();
+  StreamSubscription _btConnectionStatusListener, _btReceivedMessageListener;
+  String btConnectionStatus = "NONE";
+  String btReceivedMessage;
+  List<BtDevice> devices = [];
 
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
@@ -84,6 +93,30 @@ class Softphone implements SipUaHelperListener {
 
     _audioCache.load(_outboundAudioPath);
     _audioCache.load(_inboundAudioPath);
+
+    _initBluetooth();
+  }
+
+  _initBluetooth() {
+    flutterbluetoothadapter
+        .initBlutoothConnection(Uuid().toString());
+    print("initing bluetooth");
+    flutterbluetoothadapter
+        .checkBluetooth()
+        .then((value) => print("bluetooth value: " + value.toString()));
+    _btConnectionStatusListener =
+        flutterbluetoothadapter.connectionStatus().listen((dynamic status) {
+        btConnectionStatus = status.toString();
+        _updateListeners();
+        print("bluetooth: " + btConnectionStatus + " : " + btReceivedMessage);
+    });
+    _btReceivedMessageListener =
+        flutterbluetoothadapter.receiveMessages().listen((dynamic newMessage) {
+        btReceivedMessage = newMessage.toString();
+        _updateListeners();
+        print("bluetooth msg: " + btConnectionStatus + " : " + btReceivedMessage);
+    });
+    flutterbluetoothadapter.startServer();
   }
 
   close() async {
