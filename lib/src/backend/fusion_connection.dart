@@ -322,7 +322,7 @@ class FusionConnection {
       String urlParams = '?';
       if (method.toLowerCase() == 'get') {
         for (String key in data.keys) {
-          urlParams += key + "=" + data[key].toString() + '&';
+          urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
       Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
@@ -372,7 +372,7 @@ class FusionConnection {
 
       if (method.toLowerCase() == 'get') {
         for (String key in data.keys) {
-          urlParams += key + "=" + data[key].toString() + '&';
+          urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
       Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route + urlParams);

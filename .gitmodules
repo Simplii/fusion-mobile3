@@ -1,3 +1,12 @@
 [submodule "dart-sip-ua"]
 	path = dart-sip-ua
-	url = git@bitbucket.org:davidkarn/dart_sip_ua_fm
+	url = git@bitbucket.org:john_brown/dart-sip-ua
+[submodule "callkeap"]
+	path = callkeap
+	url = git@bitbucket.org:john_brown/callkeap
+[submodule "flutter-incall-manager"]
+	path = flutter-incall-manager
+	url = git@bitbucket.org:john_brown/flutter-incall-manager
+[submodule "flutter-webrtc"]
+	path = flutter-webrtc
+	url = git@bitbucket.org:john_brown/flutter-webrtc
