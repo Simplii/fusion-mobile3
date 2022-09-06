@@ -129,6 +129,16 @@ class Softphone implements SipUaHelperListener {
     }
   }
 
+  _checkAudio() {
+    var shouldPlayOutbound = (activeCall.direction == "OUTGOING"
+        && (activeCall.state == CallStateEnum.CONNECTING
+            || activeCall.state == CallStateEnum.PROGRESS));
+
+    if (!shouldPlayOutbound && _outboundPlayer != null) {
+      stopOutbound();
+    }
+  }
+
   _playAudio(String path, bool ignore) {
     print("willplayaudio");
     if (Platform.isIOS && path == _outboundAudioPath) {
@@ -140,13 +150,6 @@ class Softphone implements SipUaHelperListener {
           _outboundPlayer = playing;
           _outboundPlayer.earpieceOrSpeakersToggle();
         });
-      }
-        return;
-
-      try {
-        _callKit.invokeMethod('attemptAudioSessionActiveRingtone');
-      } on PlatformException catch (e) {
-        print("error callkit invoke attempt audio session");
       }
     }
     else if (Platform.isAndroid) {
@@ -166,9 +169,6 @@ class Softphone implements SipUaHelperListener {
             contentTitle: "Phone Call",
             contentText: "IncomingPhoneCall"),
             volume: 1.0);
-//        cache.loop(_inboundAudioPath).then((Aps.AudioPlayer playing) {
-  //        _inboundPlayer = playing;
-    //    });
       }
     }
   }
@@ -190,9 +190,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   stopOutbound() {
-    print("stopoutbound");
     if (_outboundPlayer != null) {
-      print("stopppingoutbound");
       _outboundPlayer.stop();
       _outboundPlayer.release();
     }
@@ -1305,6 +1303,7 @@ print("audiofocusaddlistener");
         break;
     }
     _updateListeners();
+    _checkAudio();
   }
 
   @override
