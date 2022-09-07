@@ -686,6 +686,7 @@ print("audiofocusaddlistener");
         if (calls.length > 1) {
           // needed for hold + accept when both calls are fusion calls on ios. not sure why...
           var future = new Future.delayed(const Duration(milliseconds: 1600), () {
+            _callKit.invokeMethod("attemptAudioSessionActive", []);
             var speaker = isSpeakerEnabled();
             setSpeaker(!speaker);
             print("setting speaker");print(!speaker);
@@ -693,6 +694,19 @@ print("audiofocusaddlistener");
             var future = new Future.delayed(const Duration(milliseconds: 1700), () {
               print("setting speaker");print(speaker);
               setSpeaker(speaker);
+              _callKit.invokeMethod("attemptAudioSessionActive", []);
+            });
+          });
+          var future2 = new Future.delayed(const Duration(milliseconds: 2600), () {
+            _callKit.invokeMethod("attemptAudioSessionActive", []);
+            var speaker = isSpeakerEnabled();
+            setSpeaker(!speaker);
+            print("setting speaker");print(!speaker);
+
+            var future = new Future.delayed(const Duration(milliseconds: 2700), () {
+              print("setting speaker");print(speaker);
+              setSpeaker(speaker);
+              _callKit.invokeMethod("attemptAudioSessionActive", []);
             });
           });
         }
@@ -841,7 +855,6 @@ print("audiofocusaddlistener");
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
       flutterLocalNotificationsPlugin.cancelAll();
     }
-
   }
 
   _linkUuidFor(Call call) {
