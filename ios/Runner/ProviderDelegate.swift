@@ -9,7 +9,7 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     private let provider: CXProvider
     private let callkitChannel: FlutterMethodChannel!
     private var answeredUuids: [String: Bool] = [:]
-    private let theCallObserver = CXCallObserver()
+    private let theCallObserver = CXCallObserver()  
     private var needsReport: String = "";
 
     @objc func handleInterruption(notification: Notification) {
