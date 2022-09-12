@@ -405,6 +405,9 @@ class _MyHomePageState extends State<MyHomePage> {
         print("deviceread");
         print(response);
         if (!response.containsKey('device')) {
+          toast(
+              "You don't seem to have a fusion mobile device registered, please contact support.",
+              duration: Toast.LENGTH_LONG);
           fusionConnection.logOut();
         }
         Map<String, dynamic> device = response['device'];

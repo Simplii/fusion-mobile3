@@ -24,24 +24,28 @@ class CallpopInfo extends FusionModel {
         emails.add(email['email']);
       });
       contact.externalReferences.forEach((extRef) {
-        var key = extRef['externalId'] + ':' + extRef['network'];
-        if (!added.containsKey(key)) {
-          added[key] = true;
-          this.crmContacts.add(CrmContact(
-              {
-                "crm": extRef['network'],
-                "emails": emails,
-                "icon": extRef['icon'],
-                "id": extRef['externalId'],
-                "nid": extRef['externalId'],
-                "label": extRef['name'] != null ? extRef['name'] : contact.name,
-                "name": extRef['name'] != null ? extRef['name'] : contact.name,
-                "module": extRef['module'],
-                "url": extRef['url'],
-                "phone_number": map['phone_number'],
-                "company": contact.company
-              }
-          ));
+        if (extRef['externalId']) {
+          var key = extRef['externalId'] + ':' + extRef['network'];
+          if (!added.containsKey(key)) {
+            added[key] = true;
+            this.crmContacts.add(CrmContact(
+                {
+                  "crm": extRef['network'],
+                  "emails": emails,
+                  "icon": extRef['icon'],
+                  "id": extRef['externalId'],
+                  "nid": extRef['externalId'],
+                  "label": extRef['name'] != null ? extRef['name'] : contact
+                      .name,
+                  "name": extRef['name'] != null ? extRef['name'] : contact
+                      .name,
+                  "module": extRef['module'],
+                  "url": extRef['url'],
+                  "phone_number": map['phone_number'],
+                  "company": contact.company
+                }
+            ));
+          }
         }
       });
     });

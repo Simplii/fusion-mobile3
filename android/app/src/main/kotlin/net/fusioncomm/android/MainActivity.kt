@@ -2,6 +2,7 @@ package net.fusioncomm.android
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
 import android.util.Log
@@ -21,20 +22,29 @@ class MainActivity: FlutterFragmentActivity() {
 
         var channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "net.fusioncomm.android/calling");
         channel.setMethodCallHandler { call, result ->
-            val argument = call.arguments() as Map<String, String>;
             if (call.method == "setSpeaker") {
                 Log.d("TAG", "setspeaker");
-                Toast.makeText(this, "asdf", Toast.LENGTH_LONG).show();
 
                 val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-                audioManager.isSpeakerphoneOn = true
+
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    var devices = audioManager.availableCommunicationDevices
+    Log.d("TAG", "searchspeakerddeivce");
+    for (device in devices) {
+        if (device.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) {
+            Log.d("TAG", "setspeakernew");
+            audioManager.setCommunicationDevice(device);
+        }
+    }
+} else {
+    Log.d("TAG", "setspeakerold");
+     audioManager.isSpeakerphoneOn = true
+}
             } else if (call.method == "setEarpiece") {
-                Toast.makeText(this, "eairpiece", Toast.LENGTH_LONG).show();
-
                 val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-                audioManager.isSpeakerphoneOn = true
+                audioManager.isSpeakerphoneOn = false
             }
         }
 /*

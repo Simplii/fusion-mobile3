@@ -27,6 +27,7 @@ class _IncomingWhileOnCallState extends State<IncomingWhileOnCall> {
   _hangupButton() {
     return GestureDetector(
       onTap: () {
+        widget.softphone.blockAndroidAudioEvents(500);
         widget.softphone.hangUp(widget.call);
       },
       child: Center(
@@ -49,6 +50,7 @@ class _IncomingWhileOnCallState extends State<IncomingWhileOnCall> {
   _answerButton() {
     return GestureDetector(
       onTap: () {
+        widget.softphone.blockAndroidAudioEvents(500);
         widget.softphone.answerCall(widget.call);
       },
       child: Center(
