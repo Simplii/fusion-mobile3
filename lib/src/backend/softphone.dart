@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'dart:io';
-
 
 import 'package:audioplayers/audioplayers.dart' as Aps;
 import 'package:callkeep/callkeep.dart';
@@ -21,6 +21,11 @@ import 'package:flutter_audio_manager/flutter_audio_manager.dart';
 import '../../main.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
+import 'package:flutter_incall_manager/flutter_incall_manager.dart';
+import 'package:bluetoothadapter/bluetoothadapter.dart';
+import 'package:uuid/uuid.dart';
+
+
 
 class Softphone implements SipUaHelperListener {
   String outputDevice = "Phone";
@@ -36,6 +41,8 @@ class Softphone implements SipUaHelperListener {
   MethodChannel _callKit;
   MethodChannel _telecom;
   MethodChannel _android;
+
+  IncallManager incallManager = new IncallManager();
 
   bool registered = false;
   bool connected = false;
@@ -70,7 +77,11 @@ class Softphone implements SipUaHelperListener {
   Aps.AudioPlayer _inboundPlayer;
   bool _blockingEvent = false;
 
-
+  Bluetoothadapter flutterbluetoothadapter = Bluetoothadapter();
+  StreamSubscription _btConnectionStatusListener, _btReceivedMessageListener;
+  String btConnectionStatus = "NONE";
+  String btReceivedMessage;
+  List<BtDevice> devices = [];
 
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
@@ -82,6 +93,30 @@ class Softphone implements SipUaHelperListener {
 
     _audioCache.load(_outboundAudioPath);
     _audioCache.load(_inboundAudioPath);
+
+    _initBluetooth();
+  }
+
+  _initBluetooth() {
+    flutterbluetoothadapter
+        .initBlutoothConnection(Uuid().toString());
+    print("initing bluetooth");
+    flutterbluetoothadapter
+        .checkBluetooth()
+        .then((value) => print("bluetooth value: " + value.toString()));
+    _btConnectionStatusListener =
+        flutterbluetoothadapter.connectionStatus().listen((dynamic status) {
+        btConnectionStatus = status.toString();
+        _updateListeners();
+        print("bluetooth: " + btConnectionStatus + " : " + btReceivedMessage);
+    });
+    _btReceivedMessageListener =
+        flutterbluetoothadapter.receiveMessages().listen((dynamic newMessage) {
+        btReceivedMessage = newMessage.toString();
+        _updateListeners();
+        print("bluetooth msg: " + btConnectionStatus + " : " + btReceivedMessage);
+    });
+    flutterbluetoothadapter.startServer();
   }
 
   close() async {
@@ -94,38 +129,46 @@ class Softphone implements SipUaHelperListener {
     }
   }
 
+  _checkAudio() {
+    var shouldPlayOutbound = (activeCall.direction == "OUTGOING"
+        && (activeCall.state == CallStateEnum.CONNECTING
+            || activeCall.state == CallStateEnum.PROGRESS));
+
+    if (!shouldPlayOutbound && _outboundPlayer != null) {
+      stopOutbound();
+    }
+  }
+
   _playAudio(String path, bool ignore) {
     print("willplayaudio");
     if (Platform.isIOS && path == _outboundAudioPath) {
-     Aps.AudioCache cache = Aps.AudioCache();
+      Aps.AudioCache cache = Aps.AudioCache();
+      if (_outboundPlayer == null) {
+        print("setupoutbound");
+        _outboundPlayer = Aps.AudioPlayer();
         cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
           _outboundPlayer = playing;
           _outboundPlayer.earpieceOrSpeakersToggle();
         });
-        return;
-
-      try {
-        _callKit.invokeMethod('attemptAudioSessionActiveRingtone');
-      } on PlatformException catch (e) {
-        print("error callkit invoke attempt audio session");
       }
     }
-    else {
+    else if (Platform.isAndroid) {
       Aps.AudioCache cache = Aps.AudioCache();
       if (path == _outboundAudioPath) {
-        cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
-          _outboundPlayer = playing;
-          _outboundPlayer.earpieceOrSpeakersToggle();
-       });
+        if (_outboundPlayer == null) {
+          _outboundPlayer = Aps.AudioPlayer();
+          cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
+            _outboundPlayer = playing;
+            _outboundPlayer.earpieceOrSpeakersToggle();
+            print("set outbound player");
+          });
+        }
       } else if (path == _inboundAudioPath) {
         RingtonePlayer.ringtone(alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
             "ic_alarm_notification",
             contentTitle: "Phone Call",
             contentText: "IncomingPhoneCall"),
             volume: 1.0);
-//        cache.loop(_inboundAudioPath).then((Aps.AudioPlayer playing) {
-  //        _inboundPlayer = playing;
-    //    });
       }
     }
   }
@@ -147,9 +190,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   stopOutbound() {
-    print("stopoutbound");
     if (_outboundPlayer != null) {
-
       _outboundPlayer.stop();
       _outboundPlayer.release();
     }
@@ -175,6 +216,7 @@ class Softphone implements SipUaHelperListener {
       _setupCallKeep();
 
       FlutterPhoneState.rawPhoneEvents.forEach((element) {
+        print("rawphonevent");print(element.type);print(element);
         if (element.type == RawEventType.connected && activeCall != null && !_blockingEvent) {
           isCellPhoneCallActive = true;
           activeCall.hold();
@@ -359,11 +401,11 @@ print("audiofocusaddlistener");
     UaSettings settings = UaSettings();
 
     settings.webSocketSettings.allowBadCertificate = true;
-    settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
+    settings.webSocketUrl = "wss://nms1-atl.simplii.net";
 
     if (aor == "9812fm@Simplii1" || aor == "9811fm@Simplii1") {
       print("using test push proxy 9811/9812 detected");
-      settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
+      settings.webSocketUrl = "wss://nms4-sf.simplii.net:9002";
     }
 
     settings.uri = aor;
@@ -379,7 +421,7 @@ print("audiofocusaddlistener");
       settings.iceGatheringTimeout = 1000;
     }
     settings.iceServers = [
-      {"urls": "stun:stun.l.google.com:19302"},
+//      {"urls": "stun:stun.l.google.com:19302"},
       {"urls": "stun:services.fusioncomm.net:3478"},
       {
         "urls": "turn:services.fusioncomm.net:3478",
@@ -430,6 +472,9 @@ print("audiofocusaddlistener");
     if (Platform.isAndroid && activeCall == null) {
       print("audioincallmanager.start");
       //incallManager.start();
+    }
+    if (Platform.isAndroid) {
+      incallManager.start(auto: true, media: MediaType.AUDIO);
     }
     activeCall = call;
     if (Platform.isAndroid) {
@@ -529,24 +574,42 @@ print("audiofocusaddlistener");
     if (Platform.isAndroid) {
       if (useSpeaker) {
         _android.invokeMethod("setSpeaker");
+        if (activeCall != null) {
+          _callKeep.setSpeaker(_uuidFor(activeCall));
+        }
+       // incallManager.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_ON);
       } else {
+      //  incallManager.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_OFF);
+        if (activeCall != null) {
+          _callKeep.setEarpiece(_uuidFor(activeCall));
+        }
+
         _android.invokeMethod("setEarpiece");
       }
-    }
-
-    for (MediaStream stream in localCallStreams + remoteCallStreams) {
-      if (stream != null) {
-        var tracks = stream.getAudioTracks();
-        for (var track in tracks) {
-          if (Platform.isIOS) {
-            track.enableSpeakerphone(useSpeaker);
-          } else {
-            track.enableSpeakerphone(useSpeaker);
+    }else {
+      print("localstreams");
+      print(localCallStreams);
+      print("remotestreams");
+      print(remoteCallStreams);
+      var streams = localCallStreams + remoteCallStreams;
+      print("streams");
+      print(streams);
+      for (MediaStream stream in streams) {
+        if (stream != null) {
+          var tracks = stream.getAudioTracks();
+          print("tracks");
+          print(tracks);
+          for (var track in tracks) {
+            print("settingtrackspeaker");
+            if (Platform.isIOS) {
+              track.enableSpeakerphone(useSpeaker);
+            } else {
+              track.enableSpeakerphone(useSpeaker);
+            }
           }
         }
       }
     }
-
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
     this._updateListeners();
   }
@@ -675,15 +738,28 @@ print("audiofocusaddlistener");
         flutterLocalNotificationsPlugin.cancelAll();
       } else if (Platform.isIOS) {
         _callKit.invokeMethod("answerCall", [_uuidFor(call)]);
-
+        if (Platform.isIOS) {
+                    [250,500,750,1000,1250, 1500,1750, 2000,2250,2500,3000,4000,5000].map((e) {
+                      var future = new Future.delayed(Duration(milliseconds:
+                      e), () {
+                        _callKit.invokeMethod(
+                            "setSpeaker", [isSpeakerEnabled()]);
+                      });
+                    });
+        }
+        return;
         if (Platform.isIOS) {
           _callKit.invokeMethod("attemptAudioSessionActive", []);
-          var future = new Future.delayed(const Duration(milliseconds: 1500), () {
-            _callKit.invokeMethod("attemptAudioSessionActive", []);
+          [250,500,750,1000,1500,2000,2500].map((e) {
+            var future = new Future.delayed(Duration(milliseconds:
+            e), () {
+              _callKit.invokeMethod("attemptAudioSessionActive", []);
+            });
           });
         }
 
         if (calls.length > 1) {
+          print("speakerstuff");print(DateTime.now());
           // needed for hold + accept when both calls are fusion calls on ios. not sure why...
           var future = new Future.delayed(const Duration(milliseconds: 1600), () {
             _callKit.invokeMethod("attemptAudioSessionActive", []);
@@ -827,7 +903,9 @@ print("audiofocusaddlistener");
 
     if (call == activeCall) {
       activeCall = null;
-     // incallManager.stop();
+      if (Platform.isAndroid) {
+        incallManager.stop();
+      }
       print("audioincallmanagerstop:");
     }
 
@@ -933,7 +1011,7 @@ print("audiofocusaddlistener");
         title: Text("Mic access denied"),
         content: Text("You must give Fusion Mobile microphone access to make calls"),
         actions: <Widget>[
-          FlatButton(
+          TextButton(
               onPressed: () {
                 Navigator.of(ctx).pop();
               },
@@ -1168,6 +1246,13 @@ print("audiofocusaddlistener");
         callback: (Map<String, dynamic> result) {});
   }
 
+  blockAndroidAudioEvents(int time) {
+    _blockingEvent = true;
+    var future = new Future.delayed(Duration(milliseconds: time), () {
+      _blockingEvent = false;
+    });
+  }
+
   @override
   void callStateChanged(Call call, CallState callState) {
     //Sentry.captureMessage("callstate changed: " + callState.state.toString());
@@ -1223,6 +1308,7 @@ print("audiofocusaddlistener");
           setCallOutput(call, getCallOutput(call));
         }
         if (Platform.isIOS) {
+          return;
           _callKit.invokeMethod("attemptAudioSessionActive", []);
           var future = new Future.delayed(const Duration(milliseconds: 1500), () {
             _callKit.invokeMethod("attemptAudioSessionActive", []);
@@ -1298,6 +1384,7 @@ print("audiofocusaddlistener");
         break;
     }
     _updateListeners();
+    _checkAudio();
   }
 
   @override

@@ -22,7 +22,7 @@ import AVFoundation
         providerDelegate = ProviderDelegate(channel: callkitChannel)
 
         GeneratedPluginRegistrant.register(with: self)
-
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
         let mainQueue = DispatchQueue.main
         let voipRegistry: PKPushRegistry = PKPushRegistry(queue: mainQueue)
         voipRegistry.delegate = self
@@ -100,6 +100,7 @@ import AVFoundation
     func pushRegistry(_ registry: PKPushRegistry,
             didUpdate pushCredentials: PKPushCredentials,
             for type: PKPushType) {
+        return;
         print("didpudategreds providerpush")
         print(pushCredentials)
         let deviceToken: String = pushCredentials.token.map { String(format: "%02x", $0) }.joined();
@@ -119,7 +120,7 @@ import AVFoundation
                         didReceiveIncomingPushWith payload: PKPushPayload,
                         for type: PKPushType, completion: @escaping () -> Void) {
         print("didrecproviderpush callkit", payload, payload.dictionaryPayload)
-        
+        return;
       if let uuidString = payload.dictionaryPayload["uuid"] as? String,
           let identifier = payload.dictionaryPayload["caller_name"] as? String,
           let handle = payload.dictionaryPayload["caller_id"] as? String,

@@ -47,6 +47,7 @@ class _CallViewState extends State<CallView> {
     _timer = new Timer.periodic(
       Duration(seconds: 1),
       (Timer timer) {
+        print("timerefired: " +DateTime.now().toString());
         setState(() {});
       },
     );

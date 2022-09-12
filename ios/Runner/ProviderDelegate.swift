@@ -3,16 +3,19 @@ import AVFoundation
 import AVFAudio
 import CallKit
 import Sentry
+import WebRTC
 
 class ProviderDelegate: NSObject, CXCallObserverDelegate {
     private let controller = CXCallController()
     private let provider: CXProvider
     private let callkitChannel: FlutterMethodChannel!
     private var answeredUuids: [String: Bool] = [:]
-    private let theCallObserver = CXCallObserver()  
+    private let theCallObserver = CXCallObserver()
     private var needsReport: String = "";
+    private let speakerTurnedOn = false;
 
     @objc func handleInterruption(notification: Notification) {
+        return;
         guard let userInfo = notification.userInfo,
             let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
             let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
@@ -25,6 +28,7 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
         case .began:
             print("began audiosession interruption")
             callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
+            setAudioAndSpeakerPhone(speakerOn: speakerTurnedOn)
             break
             // An interruption began. Update the UI as necessary.
 
@@ -61,10 +65,12 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     public init(channel: FlutterMethodChannel) {
         provider = CXProvider(configuration: ProviderDelegate.providerConfiguration)
 
-        callkitChannel = channel
+        callkitChannel = channel
         super.init()
         theCallObserver.setDelegate(self, queue: nil)
-
+        
+     //   RTCAudioSession.sharedInstance().useManualAudio = true;
+        RTCAudioSession.sharedInstance().setPreferredIOBufferDuration(0.005)
         print("setup audiosesssion observer")
         
         let nc = NotificationCenter.default
@@ -76,7 +82,13 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
         callkitChannel.setMethodCallHandler({ [self]
           (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             print("callkit method hanlder", call.method)
-            
+            if (call.method == "setSpeaker") {
+                print("settingspeakercallkit");
+                let args = call.arguments as! [Any]
+                let speakerOn = args[0] as! Bool
+                setAudioAndSpeakerPhone(speakerOn: speakerOn)
+            }
+            return;
             if (call.method == "reportOutgoingCall") {
                 print("report outgoing call callkit")
                 let args = call.arguments as! [Any]
@@ -148,6 +160,7 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                     try session.setCategory(.playAndRecord)
                     try session.setMode(.voiceChat)
                     try session.setActive(true)
+                    setAudioAndSpeakerPhone(speakerOn: speakerTurnedOn)
                     print("did set audiosessionactive")
                 } catch let error as NSError {
                     print("Unable to activate audiosession:  \(error.localizedDescription)")
@@ -212,6 +225,12 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                                                        onHold: true)
                 let transaction = CXTransaction(action: holdAction)
                 self.requestTransaction(transaction)
+            }
+            else if (call.method == "setSpeaker") {
+                print("settingspeakercallkit");
+                let args = call.arguments as! [Any]
+                let speakerOn = args[0] as! Bool
+                setAudioAndSpeakerPhone(speakerOn: speakerOn)
             }
             else if (call.method == "answerCall") {
                 print("answer call callkit")
@@ -350,11 +369,43 @@ extension ProviderDelegate: CXProviderDelegate {
     // answer the call here
   }
   
+    func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
+        print("audiosession dideactivate");
+        RTCAudioSession.sharedInstance().audioSessionDidDeactivate(audioSession);
+        RTCAudioSession.sharedInstance().isAudioEnabled = false;
+    }
+    
+    func _setAudioAndSpeakerphone(speakerOn: Bool) {
+    var session = RTCAudioSession.sharedInstance();
+        //session.beginConfiguration();
+        session.lockForConfiguration();
+        do {
+        try session.setCategory(AVAudioSession.Category.playAndRecord.rawValue)
+        try session.overrideOutputAudioPort(
+            speakerOn
+            ? AVAudioSession.PortOverride.speaker
+            : AVAudioSession.PortOverride.none);
+        try session.setActive(true);
+        } catch let error {
+            print("!!!!!therewasanerror!!!rtcsession setactivespaker");
+            print(error);
+        }
+        session.unlockForConfiguration();
+    }
+    
+    func setAudioAndSpeakerPhone(speakerOn: Bool) {
+        _setAudioAndSpeakerphone(speakerOn: !speakerOn)
+        _setAudioAndSpeakerphone(speakerOn: speakerOn)
+    }
+    
   func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
 //    https://stackoverflow.com/questions/47416493/callkit-can-reactivate-sound-after-swapping-call
       //https://bugs.chromium.org/p/webrtc/issues/detail?id=8126
     print("didactivate here provider audiosession callkit", audioSession)
 print("webrtc workaround didactivate")
+      RTCAudioSession.sharedInstance().audioSessionDidActivate(audioSession);
+      RTCAudioSession.sharedInstance().isAudioEnabled = true;
+      setAudioAndSpeakerPhone(speakerOn: false)
       var userInfo: Dictionary<AnyHashable, Any> = [:]
       userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
       NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
