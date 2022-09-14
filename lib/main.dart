@@ -80,6 +80,9 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
         registerNotifications();
 
+      MethodChannel callKit = MethodChannel('net.fusioncomm.ios/callkit');
+      callKit.invokeMethod("endCall", [callUUID]);
+
     flutterLocalNotificationsPlugin.cancel(id);
   }
 

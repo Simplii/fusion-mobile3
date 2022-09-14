@@ -24,7 +24,7 @@ class CallpopInfo extends FusionModel {
         emails.add(email['email']);
       });
       contact.externalReferences.forEach((extRef) {
-        if (extRef['externalId']) {
+        if (extRef['externalId'] != null) {
           var key = extRef['externalId'] + ':' + extRef['network'];
           if (!added.containsKey(key)) {
             added[key] = true;
