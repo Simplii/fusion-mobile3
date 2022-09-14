@@ -13,6 +13,7 @@ import 'package:flutter_phone_state/flutter_phone_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
+import 'package:overlay_support/overlay_support.dart';
 import 'package:ringtone_player/ringtone_player.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -721,9 +722,15 @@ print("audiofocusaddlistener");
       final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
       MediaStream mediaStream;
       print("building stream to answer");
-      mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
       print("answering call now");
       print(mediaStream);
+      try {
+        mediaStream =
+        await navigator.mediaDevices.getUserMedia(mediaConstraints);
+      } catch (e) {
+        toast("unable to connect to microphone, check permissions");
+        print("unable to connect");
+      }
       call.answer(helper.buildCallOptions(), mediaStream: mediaStream);
       if (Platform.isAndroid) { //
         _callKeep.answerIncomingCall(_uuidFor(call));
@@ -1255,135 +1262,149 @@ print("audiofocusaddlistener");
 
   @override
   void callStateChanged(Call call, CallState callState) {
-    //Sentry.captureMessage("callstate changed: " + callState.state.toString());
-    switch (callState.state) {
-      case CallStateEnum.STREAM:
-        _blockingEvent = true;
-        var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-          _blockingEvent = false;
-        });
-        _handleStreams(callState, call);
-        if (Platform.isIOS) {
-          if (!isIncoming(call)) {
-            _callKit.invokeMethod(
-                "reportConnectedOutgoingCall", [_uuidFor(call)]);
-          }
-          // for some reason ios defaults to speakerphone and wont let me change
-          // that until after this event.
-          for (var i = 1250; i < 10000; i += 1500) {
-            var future = new Future.delayed(Duration(milliseconds: i), () {
-              setCallOutput(call, getCallOutput(call));
-            });
-          }
-        }
-        break;
-      case CallStateEnum.ENDED:
-        stopOutbound();
-        stopInbound();
-        _removeCall(call);
-        break;
-      case CallStateEnum.FAILED:
-        stopOutbound();
-        stopInbound();
-        _removeCall(call);
-        break;
-      case CallStateEnum.UNMUTED:
-        _setCallDataValue(call.id, "muted", false);
-        break;
-      case CallStateEnum.MUTED:
-        _setCallDataValue(call.id, "muted", true);
-        break;
-      case CallStateEnum.CONNECTING:
-        break;
-      case CallStateEnum.PROGRESS:
-
-        break;
-      case CallStateEnum.ACCEPTED:
-        print("accepted now");
-        _blockingEvent = true;
-        var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-          _blockingEvent = false;
-        });
-        if (Platform.isAndroid) {
-          setCallOutput(call, getCallOutput(call));
-        }
-        if (Platform.isIOS) {
-          return;
-          _callKit.invokeMethod("attemptAudioSessionActive", []);
-          var future = new Future.delayed(const Duration(milliseconds: 1500), () {
-            _callKit.invokeMethod("attemptAudioSessionActive", []);
+    try {
+      switch (callState.state) {
+        case CallStateEnum.STREAM:
+          _blockingEvent = true;
+          var future = new Future.delayed(
+              const Duration(milliseconds: 2000), () {
+            _blockingEvent = false;
           });
-        }
-        break;
-      case CallStateEnum.CONFIRMED:
-        print("confirmed now");
-        stopOutbound();
-        stopInbound();
-        if (Platform.isAndroid) {
-          setCallOutput(call, getCallOutput(call));
-        }
-        _setCallDataValue(call.id, "answerTime", DateTime.now());
-
-        _blockingEvent = true;
-        var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-          _blockingEvent = false;
-        });
-
-        if (!isIncoming(call)) {
-          if (Platform.isAndroid) {
-            _callKeep.reportConnectedOutgoingCallWithUUID(_uuidFor(call));
-          }
-        } else {
-          if (Platform.isAndroid) {
-            _callKeep.answerIncomingCall(_uuidFor(call));
-          }
-        }
-        break;
-      case CallStateEnum.HOLD:
-        _setCallDataValue(call.id, "onHold", true);
-        break;
-      case CallStateEnum.UNHOLD:
-        _setCallDataValue(call.id, "onHold", false);
-        break;
-      case CallStateEnum.NONE:
-        break;
-      case CallStateEnum.CALL_INITIATION:
-        _addCall(call);
-        if (Platform.isAndroid) {
-          setCallOutput(call, getCallOutput(call));
-
-          if (isIncoming(call)) {
-            _callKeep.displayIncomingCall(_uuidFor(call), getCallerName(call));
-          }
-          else {
-            _callKeep.startCall(_uuidFor(call), getCallerNumber(call), getCallerName(call));
-          }
-          if (Platform.isAndroid) {
-            _blockingEvent = true;
-            var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-              _blockingEvent = false;
-            });
-
-            //TODO: do this in a less hacky way
-            for (var i = 1000; i < 10000; i += 1500) {
+          _handleStreams(callState, call);
+          if (Platform.isIOS) {
+            if (!isIncoming(call)) {
+              _callKit.invokeMethod(
+                  "reportConnectedOutgoingCall", [_uuidFor(call)]);
+            }
+            // for some reason ios defaults to speakerphone and wont let me change
+            // that until after this event.
+            for (var i = 1250; i < 10000; i += 1500) {
               var future = new Future.delayed(Duration(milliseconds: i), () {
-                _callKeep.updateDisplay(
-                    _uuidFor(call),
-                    handle: getCallerNumber(call),
-                    displayName: getCallerName(call));
+                setCallOutput(call, getCallOutput(call));
               });
             }
           }
-        }
-        if (!isIncoming(call) && Platform.isIOS) {
+          break;
+        case CallStateEnum.ENDED:
+          stopOutbound();
+          stopInbound();
+          _removeCall(call);
+          break;
+        case CallStateEnum.FAILED:
+          if (Platform.isAndroid) {
+    toast("call failed, " + callState.refer.toString() + callState.toString() + callState.cause.toString() + " - " +
+    callState.originator.toString(), duration: Toast.LENGTH_LONG);
+
+    Sentry.captureMessage(
+    "callkit failed:" + callState.refer.toString() + callState.toString() + callState.cause.toString() + " - " +
+    callState.originator.toString(), hint: callState);
+    }
+          stopOutbound();
+          stopInbound();
+          _removeCall(call);
+          break;
+        case CallStateEnum.UNMUTED:
+          _setCallDataValue(call.id, "muted", false);
+          break;
+        case CallStateEnum.MUTED:
+          _setCallDataValue(call.id, "muted", true);
+          break;
+        case CallStateEnum.CONNECTING:
+          break;
+        case CallStateEnum.PROGRESS:
+          break;
+        case CallStateEnum.ACCEPTED:
+          _blockingEvent = true;
+          var future = new Future.delayed(
+              const Duration(milliseconds: 2000), () {
+            _blockingEvent = false;
+          });
+          if (Platform.isAndroid) {
+            setCallOutput(call, getCallOutput(call));
+          }
+          break;
+        case CallStateEnum.CONFIRMED:
+          print("confirmed now");
+          stopOutbound();
+          stopInbound();
+          if (Platform.isAndroid) {
+            setCallOutput(call, getCallOutput(call));
+          }
+          _setCallDataValue(call.id, "answerTime", DateTime.now());
+
+          _blockingEvent = true;
+          var future = new Future.delayed(
+              const Duration(milliseconds: 2000), () {
+            _blockingEvent = false;
+          });
+
+          if (!isIncoming(call)) {
+            if (Platform.isAndroid) {
+              _callKeep.reportConnectedOutgoingCallWithUUID(_uuidFor(call));
+            }
+          } else {
+            if (Platform.isAndroid) {
+              _callKeep.answerIncomingCall(_uuidFor(call));
+            }
+          }
+          break;
+        case CallStateEnum.HOLD:
+          _setCallDataValue(call.id, "onHold", true);
+          break;
+        case CallStateEnum.UNHOLD:
+          _setCallDataValue(call.id, "onHold", false);
+          break;
+        case CallStateEnum.NONE:
+          break;
+        case CallStateEnum.CALL_INITIATION:
+          _addCall(call);
+          if (Platform.isAndroid) {
+            setCallOutput(call, getCallOutput(call));
+
+            if (isIncoming(call)) {
+              _callKeep.displayIncomingCall(
+                  _uuidFor(call), getCallerName(call));
+            }
+            else {
+              _callKeep.startCall(
+                  _uuidFor(call), getCallerNumber(call), getCallerName(call));
+            }
+            if (Platform.isAndroid) {
+              _blockingEvent = true;
+              var future = new Future.delayed(
+                  const Duration(milliseconds: 2000), () {
+                _blockingEvent = false;
+              });
+
+              //TODO: do this in a less hacky way
+              for (var i = 1000; i < 10000; i += 1500) {
+                var future = new Future.delayed(Duration(milliseconds: i), () {
+                  _callKeep.updateDisplay(
+                      _uuidFor(call),
+                      handle: getCallerNumber(call),
+                      displayName: getCallerName(call));
+                });
+              }
+            }
+          }
+          if (!isIncoming(call) && Platform.isIOS) {
             _callKit.invokeMethod(
                 "reportConnectingOutgoingCall", [_uuidFor(call)]);
-        }
-        break;
-      case CallStateEnum.REFER:
-        break;
+          }
+          break;
+        case CallStateEnum.REFER:
+          break;
+      }
+    } catch (e) {
+      print("call event error");
+      print(e);
     }
-    _updateListeners();
+    try {
+      _updateListeners();
+    } catch (e) {
+      print("listener update error");
+      print(e);
+    }
     _checkAudio();
   }
 

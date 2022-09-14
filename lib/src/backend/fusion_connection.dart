@@ -550,10 +550,7 @@ print(responseBody);
             refreshUnreads();
             unreadMessages.getRecords();
 
-            showSimpleNotification(
-                Text(newMessage.from + " says: " + newMessage.message),
-                background: smoke);
-
+            messages.notifyMessage(newMessage);
             messages.storeRecord(newMessage);
           }
         }
