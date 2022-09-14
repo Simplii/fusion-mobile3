@@ -15,7 +15,6 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     private let speakerTurnedOn = false;
 
     @objc func handleInterruption(notification: Notification) {
-        return;
         guard let userInfo = notification.userInfo,
             let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
             let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
@@ -65,12 +64,10 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     public init(channel: FlutterMethodChannel) {
         provider = CXProvider(configuration: ProviderDelegate.providerConfiguration)
 
-        callkitChannel = channel
+        callkitChannel = channel
         super.init()
         theCallObserver.setDelegate(self, queue: nil)
         
-     //   RTCAudioSession.sharedInstance().useManualAudio = true;
-        RTCAudioSession.sharedInstance().setPreferredIOBufferDuration(0.005)
         print("setup audiosesssion observer")
         
         let nc = NotificationCenter.default
@@ -88,7 +85,7 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 let speakerOn = args[0] as! Bool
                 setAudioAndSpeakerPhone(speakerOn: speakerOn)
             }
-            return;
+          //  return;
             if (call.method == "reportOutgoingCall") {
                 print("report outgoing call callkit")
                 let args = call.arguments as! [Any]

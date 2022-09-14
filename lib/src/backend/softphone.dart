@@ -401,11 +401,11 @@ print("audiofocusaddlistener");
     UaSettings settings = UaSettings();
 
     settings.webSocketSettings.allowBadCertificate = true;
-    settings.webSocketUrl = "wss://nms1-atl.simplii.net";
+    settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
 
     if (aor == "9812fm@Simplii1" || aor == "9811fm@Simplii1") {
       print("using test push proxy 9811/9812 detected");
-      settings.webSocketUrl = "wss://nms4-sf.simplii.net:9002";
+      settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
     }
 
     settings.uri = aor;
@@ -738,7 +738,7 @@ print("audiofocusaddlistener");
         flutterLocalNotificationsPlugin.cancelAll();
       } else if (Platform.isIOS) {
         _callKit.invokeMethod("answerCall", [_uuidFor(call)]);
-        if (Platform.isIOS) {
+       /* if (Platform.isIOS) {
                     [250,500,750,1000,1250, 1500,1750, 2000,2250,2500,3000,4000,5000].map((e) {
                       var future = new Future.delayed(Duration(milliseconds:
                       e), () {
@@ -746,11 +746,11 @@ print("audiofocusaddlistener");
                             "setSpeaker", [isSpeakerEnabled()]);
                       });
                     });
-        }
-        return;
+        }*/
+
         if (Platform.isIOS) {
           _callKit.invokeMethod("attemptAudioSessionActive", []);
-          [250,500,750,1000,1500,2000,2500].map((e) {
+          [250,500,750,1000,1500,2000,2500,4000,5000,7000].map((e) {
             var future = new Future.delayed(Duration(milliseconds:
             e), () {
               _callKit.invokeMethod("attemptAudioSessionActive", []);
