@@ -383,6 +383,24 @@ class _SMSConversationViewState extends State<SMSConversationView> {
           });
         }
       });
+    } else if (source == 'videos') {
+      _picker.pickVideo(source: ImageSource.gallery).then((XFile file) {
+        if (file != null) {
+          this.setState(() {
+            _mediaToSend.add(file);
+            _saveImageLocally(file);
+          });
+        }
+      });
+    } else if (source == 'recordvideo') {
+      _picker.pickVideo(source: ImageSource.camera).then((XFile file) {
+        if (file != null) {
+          this.setState(() {
+            _mediaToSend.add(file);
+            _saveImageLocally(file);
+          });
+        }
+      });
     } else {
       _picker.pickMultiImage().then((List<XFile> images) {
         this.setState(() {
@@ -411,7 +429,17 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                         topRight: Radius.circular(4),
                         bottomLeft: Radius.circular(4),
                         bottomRight: Radius.circular(4)),
-                    child: Image.file(File(media.path), height: 100)),
+                    child: (
+                        media.name.toLowerCase().contains("png")
+                            || media.name.toLowerCase().contains("gif")
+                            || media.name.toLowerCase().contains("jpg")
+                            || media.name.toLowerCase().contains("jpeg")
+                            || media.name.toLowerCase().contains("jiff")
+                    )
+                        ?  Image.file(File(media.path), height: 100)
+                        : Container(height: 100,width:100,color:particle,
+                        alignment: Alignment.center,
+                        child: Text("attachment", style: TextStyle(color:coal)))),
                 GestureDetector(
                     onTap: () {
                       this.setState(() {
@@ -464,6 +492,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               value: "",
               options: [
                 ["Camera", "camera"],
+                ["Record Videos", "recordvideo"],
+                ["Videos", "videos"],
                 ["Photos", "photos"]
               ],
               label: "From which source?",
