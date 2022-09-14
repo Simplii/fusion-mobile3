@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
+import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:overlay_support/overlay_support.dart';
 import 'package:path/path.dart';
 
 import '../backend/fusion_connection.dart';
@@ -166,9 +169,34 @@ class SMSMessageSubscription {
 class SMSMessagesStore extends FusionStore<SMSMessage> {
   String _id_field = 'id';
   Map<String, SMSMessageSubscription> subscriptions = {};
+  Map<String, bool> notifiedMessages = {};
 
   SMSMessagesStore(FusionConnection _fusionConnection)
       : super(_fusionConnection);
+
+  notifyMessage(SMSMessage message) {
+    if (!notifiedMessages.containsKey(message.id)) {
+      notifiedMessages[message.id] = true;
+
+      fusionConnection.callpopInfos.lookupPhone(message.from, (callpopInfo) {
+          String name = message.from.toString().formatPhone();
+          callpopInfo.contacts.map((e) {
+            name = e.name;
+          });
+print("willshowinfo");
+print(name);
+print(message);
+print(callpopInfo);
+          showSimpleNotification(
+                Text(name + " says: " + message.message),
+                background: smoke);
+      });
+
+      new Future.delayed(Duration(minutes: 2), () {
+        notifiedMessages.remove(message.id);
+      });
+    }
+  }
 
   subscribe(SMSConversation conversation, Function(List<SMSMessage>) callback) {
     String name = randomString(20);
