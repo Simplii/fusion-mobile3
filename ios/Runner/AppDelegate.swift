@@ -2,8 +2,8 @@ import UIKit
 import CallKit
 import Flutter
 import PushKit
-import Sentry
 import AVFoundation
+//import linphonesw
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate{
@@ -15,7 +15,7 @@ import AVFoundation
       _ application: UIApplication,
       didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        
+
         print("providerpush app delegate starting")
         
         setupCallkitFlutterLink()

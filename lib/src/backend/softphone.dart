@@ -12,6 +12,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_phone_state/flutter_phone_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
+import 'package:fusion_mobile_revamped/src/backend/ln_call.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:ringtone_player/ringtone_player.dart';
@@ -26,8 +27,6 @@ import 'package:flutter_incall_manager/flutter_incall_manager.dart';
 import 'package:bluetoothadapter/bluetoothadapter.dart';
 import 'package:uuid/uuid.dart';
 
-
-
 class Softphone implements SipUaHelperListener {
   String outputDevice = "Phone";
   MediaStream _localStream;
@@ -39,6 +38,7 @@ class Softphone implements SipUaHelperListener {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       registerNotifications();
 
+  bool _isUsingUa = !Platform.isIOS;
   MethodChannel _callKit;
   MethodChannel _telecom;
   MethodChannel _android;
@@ -99,23 +99,22 @@ class Softphone implements SipUaHelperListener {
   }
 
   _initBluetooth() {
-    flutterbluetoothadapter
-        .initBlutoothConnection(Uuid().toString());
+    flutterbluetoothadapter.initBlutoothConnection(Uuid().toString());
     print("initing bluetooth");
     flutterbluetoothadapter
         .checkBluetooth()
         .then((value) => print("bluetooth value: " + value.toString()));
     _btConnectionStatusListener =
         flutterbluetoothadapter.connectionStatus().listen((dynamic status) {
-        btConnectionStatus = status.toString();
-        _updateListeners();
-        print("bluetooth: " + btConnectionStatus + " : " + btReceivedMessage);
+      btConnectionStatus = status.toString();
+      _updateListeners();
+      print("bluetooth: " + btConnectionStatus + " : " + btReceivedMessage);
     });
     _btReceivedMessageListener =
         flutterbluetoothadapter.receiveMessages().listen((dynamic newMessage) {
-        btReceivedMessage = newMessage.toString();
-        _updateListeners();
-        print("bluetooth msg: " + btConnectionStatus + " : " + btReceivedMessage);
+      btReceivedMessage = newMessage.toString();
+      _updateListeners();
+      print("bluetooth msg: " + btConnectionStatus + " : " + btReceivedMessage);
     });
     flutterbluetoothadapter.startServer();
   }
@@ -131,9 +130,9 @@ class Softphone implements SipUaHelperListener {
   }
 
   _checkAudio() {
-    var shouldPlayOutbound = (activeCall.direction == "OUTGOING"
-        && (activeCall.state == CallStateEnum.CONNECTING
-            || activeCall.state == CallStateEnum.PROGRESS));
+    var shouldPlayOutbound = (activeCall.direction == "OUTGOING" &&
+        (activeCall.state == CallStateEnum.CONNECTING ||
+            activeCall.state == CallStateEnum.PROGRESS));
 
     if (!shouldPlayOutbound && _outboundPlayer != null) {
       stopOutbound();
@@ -152,8 +151,7 @@ class Softphone implements SipUaHelperListener {
           _outboundPlayer.earpieceOrSpeakersToggle();
         });
       }
-    }
-    else if (Platform.isAndroid) {
+    } else if (Platform.isAndroid) {
       Aps.AudioCache cache = Aps.AudioCache();
       if (path == _outboundAudioPath) {
         if (_outboundPlayer == null) {
@@ -165,29 +163,30 @@ class Softphone implements SipUaHelperListener {
           });
         }
       } else if (path == _inboundAudioPath) {
-        RingtonePlayer.ringtone(alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
-            "ic_alarm_notification",
-            contentTitle: "Phone Call",
-            contentText: "IncomingPhoneCall"),
+        RingtonePlayer.ringtone(
+            alarmMeta: AlarmMeta(
+                "net.fusioncomm.android.MainActivity", "ic_alarm_notification",
+                contentTitle: "Phone Call", contentText: "IncomingPhoneCall"),
             volume: 1.0);
       }
     }
   }
 
-  _attemptToRegainAudioSession() async { return;
-     _attemptingToRegainAudio = true;
+  _attemptToRegainAudioSession() async {
+    return;
+    _attemptingToRegainAudio = true;
     try {
       await _callKit.invokeMethod('attemptAudioSessionActive');
     } on PlatformException catch (e) {
       print("error callkit invoke attempt audio session");
     }
     var future = new Future.delayed(const Duration(milliseconds: 10000), () {
-        if (couldGetAudioSession != "") {
-          _attemptToRegainAudioSession();
-        } else {
-          _attemptingToRegainAudio = false;
-        }
-      });
+      if (couldGetAudioSession != "") {
+        _attemptToRegainAudioSession();
+      } else {
+        _attemptingToRegainAudio = false;
+      }
+    });
   }
 
   stopOutbound() {
@@ -217,12 +216,15 @@ class Softphone implements SipUaHelperListener {
       _setupCallKeep();
 
       FlutterPhoneState.rawPhoneEvents.forEach((element) {
-        print("rawphonevent");print(element.type);print(element);
-        if (element.type == RawEventType.connected && activeCall != null && !_blockingEvent) {
+        print("rawphonevent");
+        print(element.type);
+        print(element);
+        if (element.type == RawEventType.connected &&
+            activeCall != null &&
+            !_blockingEvent) {
           isCellPhoneCallActive = true;
           activeCall.hold();
-        }
-        else if (element.type == RawEventType.disconnected) {
+        } else if (element.type == RawEventType.disconnected) {
           isCellPhoneCallActive = false;
         }
       });
@@ -285,7 +287,7 @@ class Softphone implements SipUaHelperListener {
     if (Platform.isAndroid) {
       //if (isIOS) iOS_Permission();
       //_firebaseMessaging.requestNotificationPermissions();
-print("audiofocusaddlistener");
+      print("audiofocusaddlistener");
 
       /*incallManager.onAudioFocusChange.stream.listen((event) {
         print("audiofocuschange");
@@ -302,12 +304,99 @@ print("audiofocusaddlistener");
     }
   }
 
+  void _setLpCallState(LnCall call, CallStateEnum stateEnum) {
+    print("setting state");print(stateEnum.name);
+    CallState state = CallState(stateEnum);
+    print("setstateoncall");
+    print(state);
+    print(state.state);
+    call.setState(state);
+    print("fwding state");
+    callStateChanged(call, state);
+    print("done");
+  }
+
   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
     Sentry.captureMessage("callkitmethod:" + methodCall.method);
     print("callkitmethod:" + methodCall.method);
     print(methodCall.method);
-    print(methodCall);
-    switch (methodCall.method) {
+    print("themethod: '" + methodCall.method + "'");
+    var args = methodCall.arguments;
+        print("gotargs");
+    print(args);
+    print("switchnow");
+switch (methodCall.method) {
+      case "lnOutgoingInit":
+        _addCall(
+            _linkLnCallWithUuid(args[2], args[1], args[0], args[2], "OUTGOING")
+        );
+        break;
+      case "lnOutgoingProgress":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
+        break;
+      case "lnOutgoingRinging":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
+      // [uuid]
+        break;
+      case "lnCallConnected":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.CONFIRMED);
+        break;
+      case "lnCallStreamsRunning":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.STREAM);
+        break;
+      case "lnCallPaused":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.HOLD);
+        break;
+      case "lnCallPausedByRemote":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.HOLD);
+        break;
+      case "lnCallUpdatedByRemote":
+//        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
+        break;
+      case "lnCallReleased":
+        print("released call");print(args[0]);print(_getCallByUuid(args[0]));
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.ENDED);
+        break;
+      case "lnIncomingReceived":
+        print("processincoming");
+        print(args[2]);
+        print(args[0]);
+        print(args[3]);
+        print(args[4]);
+        var toAddress = args[2] as String;
+        toAddress = toAddress.replaceFirst(RegExp(r".*<sip:"), "")
+            .replaceFirst(RegExp(r">.*"), "")
+            .replaceFirst(RegExp(r"@.*$"), "");
+        var callerId = args[4] as String;
+        toAddress = toAddress.replaceFirst(RegExp(r"<.*?> *$"), "");
+        LnCall call = _linkLnCallWithUuid(
+            toAddress,
+            args[0] as String,
+            args[3] as String,
+            callerId,
+            "INCOMING");
+        print("incoming");print(call);
+        _addCall(call);
+        break;
+      case "lnCallError":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.FAILED);
+        break;
+      case "lnAudioDeviceChanged":
+      // [device.id, device.deviceName, device.driverName, device.capabilities.rawValue]
+        break;
+      case "lnAudioDeviceListUpdated":
+      // []
+        break;
+      case "lnRegistrationOk":
+        registrationStateChanged(RegistrationState(
+            state: RegistrationStateEnum.REGISTERED
+        ));
+        break;
+      case "lnRegistrationCleared":
+        registrationStateChanged(RegistrationState(
+            state: RegistrationStateEnum.UNREGISTERED
+        ));
+        break;
       case 'setPushToken':
         String token = methodCall.arguments[0] as String;
         _fusionConnection.setPushkitToken(token);
@@ -322,9 +411,9 @@ print("audiofocusaddlistener");
         print("ansewrbuttonpressed");
         print(callUuid);
         print(_getCallByUuid(callUuid));
-        if (_getCallByUuid(callUuid) == null
-            && (activeCall.state == CallStateEnum.CONNECTING
-                || activeCall.state == CallStateEnum.PROGRESS)) {
+        if (_getCallByUuid(callUuid) == null &&
+            (activeCall.state == CallStateEnum.CONNECTING ||
+                activeCall.state == CallStateEnum.PROGRESS)) {
           callData[activeCall.id]['uuid'] = callUuid;
           print("newuuid");
           print(_getCallByUuid(callUuid));
@@ -399,6 +488,21 @@ print("audiofocusaddlistener");
   }
 
   register(String login, String password, String aor) {
+    if (Platform.isIOS) {
+      registerIos(login, password, aor);
+    } else {
+      registerAndroid(login, password, aor);
+    }
+  }
+
+  registerIos(String login, String password, String aor) {
+    print("iosreg");
+    print(aor.split("@"));
+    _callKit.invokeMethod(
+        "lpRegister", [aor.split("@")[0], password, aor.split("@")[1]]);
+  }
+
+  registerAndroid(String login, String password, String aor) {
     UaSettings settings = UaSettings();
 
     settings.webSocketSettings.allowBadCertificate = true;
@@ -459,14 +563,28 @@ print("audiofocusaddlistener");
   }
 
   doMakeCall(String destination) async {
-    _playAudio(_outboundAudioPath, false);
+    if (Platform.isIOS) {
+      _playAudio(_outboundAudioPath, false);
 
-    final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
-    helper.setVideo(false);
-    MediaStream mediaStream;
-    mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+      if (!destination.contains("sip:")) destination = "sip:" + destination;
+      if (!destination.contains("@"))
+        destination +=
+            "@" + "nms4-sf.simplii.net"; //_fusionConnection.getDomain();
 
-    return helper.call(destination, voiceonly: true, mediaStream: mediaStream);
+      print("startcall");
+      print(destination);
+      _callKit.invokeMethod("lpStartCall", [destination]);
+    } else {
+      _playAudio(_outboundAudioPath, false);
+
+      final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
+      helper.setVideo(false);
+      MediaStream mediaStream;
+      mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+
+      return helper.call(destination,
+          voiceonly: true, mediaStream: mediaStream);
+    }
   }
 
   makeActiveCall(Call call) {
@@ -483,6 +601,8 @@ print("audiofocusaddlistener");
     }
     call.unmute();
     call.unhold();
+    print(call.id);
+    print(call.direction);
     print("making active callkit call:" + call.id + ":" + call.direction);
 
     if (_getCallDataValue(call.id, "isReported") != true &&
@@ -564,52 +684,34 @@ print("audiofocusaddlistener");
 
   setSpeaker(bool useSpeaker) {
     _savedOutput = useSpeaker;
-
-    List<MediaStream> localCallStreams = activeCall != null
-    ? _getCallDataValue(activeCall.id, "localStreams", def: [].cast<MediaStream>()).cast<MediaStream>()
-    : [];
-    List<MediaStream> remoteCallStreams = activeCall != null
-    ? _getCallDataValue(activeCall.id, "remoteStreams", def: [].cast<MediaStream>()).cast<MediaStream>()
-    : [];
-
     if (Platform.isAndroid) {
+      List<MediaStream> localCallStreams = activeCall != null
+        ? _getCallDataValue(activeCall.id, "localStreams",
+                def: [].cast<MediaStream>())
+            .cast<MediaStream>()
+        : [];
+      List<MediaStream> remoteCallStreams = activeCall != null
+        ? _getCallDataValue(activeCall.id, "remoteStreams",
+                def: [].cast<MediaStream>())
+            .cast<MediaStream>()
+        : [];
+
       if (useSpeaker) {
         _android.invokeMethod("setSpeaker");
         if (activeCall != null) {
           _callKeep.setSpeaker(_uuidFor(activeCall));
         }
-       // incallManager.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_ON);
+        // incallManager.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_ON);
       } else {
-      //  incallManager.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_OFF);
+        //  incallManager.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_OFF);
         if (activeCall != null) {
           _callKeep.setEarpiece(_uuidFor(activeCall));
         }
 
         _android.invokeMethod("setEarpiece");
       }
-    }else {
-      print("localstreams");
-      print(localCallStreams);
-      print("remotestreams");
-      print(remoteCallStreams);
-      var streams = localCallStreams + remoteCallStreams;
-      print("streams");
-      print(streams);
-      for (MediaStream stream in streams) {
-        if (stream != null) {
-          var tracks = stream.getAudioTracks();
-          print("tracks");
-          print(tracks);
-          for (var track in tracks) {
-            print("settingtrackspeaker");
-            if (Platform.isIOS) {
-              track.enableSpeakerphone(useSpeaker);
-            } else {
-              track.enableSpeakerphone(useSpeaker);
-            }
-          }
-        }
-      }
+    } else {
+      _callKit.invokeMethod("lpSetSpeaker", [useSpeaker]);
     }
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
     this._updateListeners();
@@ -620,41 +722,34 @@ print("audiofocusaddlistener");
   }
 
   setHold(Call call, bool setOnHold, bool fromUi) async {
-      _setCallDataValue(call.id, "onHold", setOnHold);
+    _setCallDataValue(call.id, "onHold", setOnHold);
 
-      if (Platform.isIOS && fromUi) {
-        if (setOnHold) {
-          print("setholdindart");
-          call.hold();
-          //_callKit.invokeMethod("setHold", [_uuidFor(call)]);
-        }
-        else {
-          print("setholdinvoke");
-          _callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
-        }
-      }
-      else if (setOnHold) {
-        if (Platform.isAndroid && fromUi) {
-          _callKeep.setOnHold(_uuidFor(call), true);
-        }
-        helper.setVideo(true);
+    if (Platform.isIOS && fromUi) {
+      if (setOnHold) {
+        print("setholdindart");
         call.hold();
-        print("sethold here");
-        var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-          helper.setVideo(false);
-        });
+        _callKit.invokeMethod("setHold", [_uuidFor(call)]);
       } else {
-        call.unhold();
-
-        if (Platform.isAndroid && fromUi) {
-          _callKeep.setOnHold(_uuidFor(call), false);
-        } else if (Platform.isIOS) {
-          _callKit.invokeMethod("attemptAudioSessionActive", []);
-          var future = new Future.delayed(const Duration(milliseconds: 800), () {
-            _callKit.invokeMethod("attemptAudioSessionActive", []);
-          });
-        }
+        print("setholdinvoke");
+        _callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
       }
+    } else if (setOnHold) {
+      if (Platform.isAndroid && fromUi) {
+        _callKeep.setOnHold(_uuidFor(call), true);
+      }
+      helper.setVideo(true);
+      call.hold();
+      print("sethold here");
+      var future = new Future.delayed(const Duration(milliseconds: 2000), () {
+        helper.setVideo(false);
+      });
+    } else {
+      call.unhold();
+
+      if (Platform.isAndroid && fromUi) {
+        _callKeep.setOnHold(_uuidFor(call), false);
+      }
+    }
   }
 
   setMute(Call call, bool setMute, bool fromUi) {
@@ -676,7 +771,6 @@ print("audiofocusaddlistener");
       if (Platform.isIOS && fromUi) {
         _callKit.invokeMethod('unMuteCall', [_uuidFor(call)]);
       }
-
     }
   }
 
@@ -708,32 +802,37 @@ print("audiofocusaddlistener");
     if (call == null) {
       print("return, null");
       return;
-    }
-    else if (_getCallDataValue(call.id, "answerTime") != null) {
+    } else if (_getCallDataValue(call.id, "answerTime") != null) {
       print("skipping, answertime");
       print(call.id);
       print(_getCallDataValue(call.id, "answerTime") != null);
-    }
-    else {
+    } else {
       if (callIdsAnswered.contains(_uuidFor(call))) {
         callIdsAnswered.remove(_uuidFor(call));
       }
-
-      final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
-      MediaStream mediaStream;
-      print("building stream to answer");
-      print("answering call now");
-      print(mediaStream);
-      try {
-        mediaStream =
-        await navigator.mediaDevices.getUserMedia(mediaConstraints);
-      } catch (e) {
-        toast("unable to connect to microphone, check permissions");
-        print("unable to connect");
-      }
-      call.answer(helper.buildCallOptions(), mediaStream: mediaStream);
-      if (Platform.isAndroid) { //
-        _callKeep.answerIncomingCall(_uuidFor(call));
+      if (_isUsingUa) {
+        final mediaConstraints = <String, dynamic>{
+          'audio': true,
+          'video': false
+        };
+        MediaStream mediaStream;
+        print("building stream to answer");
+        print("answering call now");
+        print(mediaStream);
+        try {
+          mediaStream =
+          await navigator.mediaDevices.getUserMedia(mediaConstraints);
+        } catch (e) {
+          toast("unable to connect to microphone, check permissions");
+          print("unable to connect");
+        }
+        call.answer(helper.buildCallOptions(), mediaStream: mediaStream);
+        if (Platform.isAndroid) {
+          //
+          _callKeep.answerIncomingCall(_uuidFor(call));
+        }
+      } else {
+        call.answer({});
       }
       makeActiveCall(call);
       _setCallDataValue(call.id, "answerTime", DateTime.now());
@@ -745,54 +844,6 @@ print("audiofocusaddlistener");
         flutterLocalNotificationsPlugin.cancelAll();
       } else if (Platform.isIOS) {
         _callKit.invokeMethod("answerCall", [_uuidFor(call)]);
-       /* if (Platform.isIOS) {
-                    [250,500,750,1000,1250, 1500,1750, 2000,2250,2500,3000,4000,5000].map((e) {
-                      var future = new Future.delayed(Duration(milliseconds:
-                      e), () {
-                        _callKit.invokeMethod(
-                            "setSpeaker", [isSpeakerEnabled()]);
-                      });
-                    });
-        }*/
-
-        if (Platform.isIOS) {
-          _callKit.invokeMethod("attemptAudioSessionActive", []);
-          [250,500,750,1000,1500,2000,2500,4000,5000,7000].map((e) {
-            var future = new Future.delayed(Duration(milliseconds:
-            e), () {
-              _callKit.invokeMethod("attemptAudioSessionActive", []);
-            });
-          });
-        }
-
-        if (calls.length > 1) {
-          print("speakerstuff");print(DateTime.now());
-          // needed for hold + accept when both calls are fusion calls on ios. not sure why...
-          var future = new Future.delayed(const Duration(milliseconds: 1600), () {
-            _callKit.invokeMethod("attemptAudioSessionActive", []);
-            var speaker = isSpeakerEnabled();
-            setSpeaker(!speaker);
-            print("setting speaker");print(!speaker);
-
-            var future = new Future.delayed(const Duration(milliseconds: 1700), () {
-              print("setting speaker");print(speaker);
-              setSpeaker(speaker);
-              _callKit.invokeMethod("attemptAudioSessionActive", []);
-            });
-          });
-          var future2 = new Future.delayed(const Duration(milliseconds: 2600), () {
-            _callKit.invokeMethod("attemptAudioSessionActive", []);
-            var speaker = isSpeakerEnabled();
-            setSpeaker(!speaker);
-            print("setting speaker");print(!speaker);
-
-            var future = new Future.delayed(const Duration(milliseconds: 2700), () {
-              print("setting speaker");print(speaker);
-              setSpeaker(speaker);
-              _callKit.invokeMethod("attemptAudioSessionActive", []);
-            });
-          });
-        }
       }
     }
   }
@@ -856,11 +907,11 @@ print("audiofocusaddlistener");
   }
 
   _callKeepDidToggleHold(CallKeepDidToggleHoldAction event) {
-      setHold(_getCallByUuid(event.callUUID), event.hold, false);
+    setHold(_getCallByUuid(event.callUUID), event.hold, false);
   }
 
   _callKeepPerformEndCall(CallKeepPerformEndCallAction event) {
-  //  hangUp(_getCallByUuid(event.callUUID));
+    //  hangUp(_getCallByUuid(event.callUUID));
     // i dont think this should need to be ran from callkeep, since
     // it should place the call on hold if needed.
   }
@@ -870,8 +921,13 @@ print("audiofocusaddlistener");
   }
 
   _getCallByUuid(String uuid) {
+    print("getting call by uuid");
     for (String id in callData.keys) {
+      print("id");
+      print(id);
+      print(callData[id].toString());
       if (callData[id]['uuid'] == uuid) {
+        print("found");
         return _getCallById(id);
       }
     }
@@ -882,8 +938,9 @@ print("audiofocusaddlistener");
     MediaStream stream = event.stream;
     if (event.originator == 'local') {
       List<MediaStream> localCallStreams = _getCallDataValue(
-          call.id, "localStreams",
-          def: [].cast<MediaStream>()).cast<MediaStream>();
+              call.id, "localStreams",
+              def: [].cast<MediaStream>())
+          .cast<MediaStream>();
       localCallStreams.add(stream);
       _setCallDataValue(call.id, "localStreams", localCallStreams);
       print("setlocalstream");
@@ -891,8 +948,9 @@ print("audiofocusaddlistener");
     }
     if (event.originator == 'remote') {
       List<MediaStream> remoteCallStreams = _getCallDataValue(
-          call.id, "remoteStreams",
-          def: [].cast<MediaStream>()).cast<MediaStream>();
+              call.id, "remoteStreams",
+              def: [].cast<MediaStream>())
+          .cast<MediaStream>();
       remoteCallStreams.add(stream);
       _setCallDataValue(call.id, "remoteStreams", remoteCallStreams);
       _remoteStream = stream;
@@ -903,6 +961,7 @@ print("audiofocusaddlistener");
 
   _removeCall(Call call) {
     if (Platform.isIOS) {
+      _callKit.invokeMethod("lpEndCall", [_uuidFor(call)]);
       _callKit.invokeMethod("endCall", [_uuidFor(call)]);
     } else if (Platform.isAndroid) {
       _callKeep.endCall(_uuidFor(call));
@@ -940,6 +999,22 @@ print("audiofocusaddlistener");
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
       flutterLocalNotificationsPlugin.cancelAll();
     }
+  }
+
+  _linkLnCall(toAddress, callId) {
+    var call = LnCall.makeLnCall(callId, toAddress);
+    _linkUuidFor(call);
+    return call;
+  }
+
+  _linkLnCallWithUuid(toAddress, callId, uuid, callerId, direction) {
+    var call = LnCall.makeLnCall(callId.toString(), toAddress);
+    call.setIdentities(toAddress, callerId, direction);
+    call.setChannel(_callKit, uuid);
+    Map<String, dynamic> data = _getCallDataById(call.id);
+    data['uuid'] = uuid;
+    print("linking call");print(callId);print(uuid);print(data.toString());
+    return call;
   }
 
   _linkUuidFor(Call call) {
@@ -990,7 +1065,9 @@ print("audiofocusaddlistener");
   }
 
   _getCallById(String id) {
+    print("finding call" + id);
     for (Call call in calls) {
+      print(call);print(call.id);
       if (call.id == id) {
         return call;
       }
@@ -1007,25 +1084,25 @@ print("audiofocusaddlistener");
     return false;
   }
 
-  checkMicrophoneAccess(BuildContext context)  async {
+  checkMicrophoneAccess(BuildContext context) async {
     PermissionStatus status = await Permission.microphone.status;
-    if (status != PermissionStatus.granted
-        && status != PermissionStatus.permanentlyDenied) {
+    if (status != PermissionStatus.granted &&
+        status != PermissionStatus.permanentlyDenied) {
       status = await Permission.microphone.request();
-    }
-    else if (status == PermissionStatus.permanentlyDenied) {
-      showDialog(context: context, builder: (ctx) => AlertDialog(
-        title: Text("Mic access denied"),
-        content: Text("You must give Fusion Mobile microphone access to make calls"),
-        actions: <Widget>[
-          TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-              },
-              child: Text("OK")
-          )
-        ]
-      ));
+    } else if (status == PermissionStatus.permanentlyDenied) {
+      showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+                  title: Text("Mic access denied"),
+                  content: Text(
+                      "You must give Fusion Mobile microphone access to make calls"),
+                  actions: <Widget>[
+                    TextButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                        },
+                        child: Text("OK"))
+                  ]));
     }
   }
 
@@ -1099,18 +1176,13 @@ print("audiofocusaddlistener");
     if (call != null) {
       CallpopInfo data = getCallpopInfo(call.id);
       if (data != null) {
-        if (data
-            .getName()
-            .trim()
-            .length > 0)
+        if (data.getName().trim().length > 0)
           return data.getName();
         else
           return "Unknown";
       } else {
         if (call.remote_display_name != null &&
-            call.remote_display_name
-                .trim()
-                .length > 0)
+            call.remote_display_name.trim().length > 0)
           return call.remote_display_name;
         else
           return "Unknown";
@@ -1197,43 +1269,45 @@ print("audiofocusaddlistener");
   }
 
   mergeCalls(Call call, Call call2) {
-    call2.peerConnection.getLocalDescription().then((value) {});
-    call.peerConnection.getLocalDescription().then((value) {});
-    MediaStream call2Remote = call2.peerConnection.getRemoteStreams()[1];
-    call.peerConnection.getRemoteStreams().map((MediaStream m) {
-      call2.peerConnection.addStream(m);
-      m.getAudioTracks().map((MediaStreamTrack mt) {
-        call2.peerConnection.addTrack(mt);
-      });
-    });
-    MediaStream callRemote = call.peerConnection.getRemoteStreams()[1];
-    call2.peerConnection.getRemoteStreams().map((MediaStream m) {
-      call.peerConnection.addStream(m);
-      m.getAudioTracks().map((MediaStreamTrack mt) {
-        call.peerConnection.addTrack(mt);
-      });
-    });
-    _setCallDataValue(call.id, "mergedWith", call2.id);
-    _setCallDataValue(call2.id, "mergedWith", call.id);
-
-    createLocalMediaStream('local').then((MediaStream mergedStream) {
-      call.peerConnection.getLocalStreams().map((MediaStream m) {
+    if (_isUsingUa) {
+      call2.peerConnection.getLocalDescription().then((value) {});
+      call.peerConnection.getLocalDescription().then((value) {});
+      MediaStream call2Remote = call2.peerConnection.getRemoteStreams()[1];
+      call.peerConnection.getRemoteStreams().map((MediaStream m) {
+        call2.peerConnection.addStream(m);
         m.getAudioTracks().map((MediaStreamTrack mt) {
-          mergedStream.addTrack(mt);
+          call2.peerConnection.addTrack(mt);
         });
       });
-
+      MediaStream callRemote = call.peerConnection.getRemoteStreams()[1];
       call2.peerConnection.getRemoteStreams().map((MediaStream m) {
+        call.peerConnection.addStream(m);
         m.getAudioTracks().map((MediaStreamTrack mt) {
-          mergedStream.addTrack(mt);
+          call.peerConnection.addTrack(mt);
         });
       });
+      _setCallDataValue(call.id, "mergedWith", call2.id);
+      _setCallDataValue(call2.id, "mergedWith", call.id);
 
-      call.peerConnection
-          .getLocalStreams()
-          .map((stream) => call.peerConnection.removeStream(stream));
-      call.peerConnection.addStream(mergedStream);
-    });
+      createLocalMediaStream('local').then((MediaStream mergedStream) {
+        call.peerConnection.getLocalStreams().map((MediaStream m) {
+          m.getAudioTracks().map((MediaStreamTrack mt) {
+            mergedStream.addTrack(mt);
+          });
+        });
+
+        call2.peerConnection.getRemoteStreams().map((MediaStream m) {
+          m.getAudioTracks().map((MediaStreamTrack mt) {
+            mergedStream.addTrack(mt);
+          });
+        });
+
+        call.peerConnection
+            .getLocalStreams()
+            .map((stream) => call.peerConnection.removeStream(stream));
+        call.peerConnection.addStream(mergedStream);
+      });
+    }
   }
 
   recordCall(Call call) {
@@ -1262,12 +1336,13 @@ print("audiofocusaddlistener");
 
   @override
   void callStateChanged(Call call, CallState callState) {
+    print("callstatechange " + callState.state.name);
     try {
       switch (callState.state) {
         case CallStateEnum.STREAM:
           _blockingEvent = true;
-          var future = new Future.delayed(
-              const Duration(milliseconds: 2000), () {
+          var future =
+              new Future.delayed(const Duration(milliseconds: 2000), () {
             _blockingEvent = false;
           });
           _handleStreams(callState, call);
@@ -1292,13 +1367,24 @@ print("audiofocusaddlistener");
           break;
         case CallStateEnum.FAILED:
           if (Platform.isAndroid) {
-    toast("call failed, " + callState.refer.toString() + callState.toString() + callState.cause.toString() + " - " +
-    callState.originator.toString(), duration: Toast.LENGTH_LONG);
+            toast(
+                "call failed, " +
+                    callState.refer.toString() +
+                    callState.toString() +
+                    callState.cause.toString() +
+                    " - " +
+                    callState.originator.toString(),
+                duration: Toast.LENGTH_LONG);
 
-    Sentry.captureMessage(
-    "callkit failed:" + callState.refer.toString() + callState.toString() + callState.cause.toString() + " - " +
-    callState.originator.toString(), hint: callState);
-    }
+            Sentry.captureMessage(
+                "callkit failed:" +
+                    callState.refer.toString() +
+                    callState.toString() +
+                    callState.cause.toString() +
+                    " - " +
+                    callState.originator.toString(),
+                hint: callState);
+          }
           stopOutbound();
           stopInbound();
           _removeCall(call);
@@ -1315,8 +1401,8 @@ print("audiofocusaddlistener");
           break;
         case CallStateEnum.ACCEPTED:
           _blockingEvent = true;
-          var future = new Future.delayed(
-              const Duration(milliseconds: 2000), () {
+          var future =
+              new Future.delayed(const Duration(milliseconds: 2000), () {
             _blockingEvent = false;
           });
           if (Platform.isAndroid) {
@@ -1333,8 +1419,8 @@ print("audiofocusaddlistener");
           _setCallDataValue(call.id, "answerTime", DateTime.now());
 
           _blockingEvent = true;
-          var future = new Future.delayed(
-              const Duration(milliseconds: 2000), () {
+          var future =
+              new Future.delayed(const Duration(milliseconds: 2000), () {
             _blockingEvent = false;
           });
 
@@ -1364,23 +1450,21 @@ print("audiofocusaddlistener");
             if (isIncoming(call)) {
               _callKeep.displayIncomingCall(
                   _uuidFor(call), getCallerName(call));
-            }
-            else {
+            } else {
               _callKeep.startCall(
                   _uuidFor(call), getCallerNumber(call), getCallerName(call));
             }
             if (Platform.isAndroid) {
               _blockingEvent = true;
-              var future = new Future.delayed(
-                  const Duration(milliseconds: 2000), () {
+              var future =
+                  new Future.delayed(const Duration(milliseconds: 2000), () {
                 _blockingEvent = false;
               });
 
               //TODO: do this in a less hacky way
               for (var i = 1000; i < 10000; i += 1500) {
                 var future = new Future.delayed(Duration(milliseconds: i), () {
-                  _callKeep.updateDisplay(
-                      _uuidFor(call),
+                  _callKeep.updateDisplay(_uuidFor(call),
                       handle: getCallerNumber(call),
                       displayName: getCallerName(call));
                 });
@@ -1388,8 +1472,8 @@ print("audiofocusaddlistener");
             }
           }
           if (!isIncoming(call) && Platform.isIOS) {
-            _callKit.invokeMethod(
-                "reportConnectingOutgoingCall", [_uuidFor(call)]);
+            _callKit
+                .invokeMethod("reportConnectingOutgoingCall", [_uuidFor(call)]);
           }
           break;
         case CallStateEnum.REFER:
@@ -1413,7 +1497,6 @@ print("audiofocusaddlistener");
 
   @override
   void registrationStateChanged(RegistrationState state) {
-
     if (state.state == RegistrationStateEnum.UNREGISTERED) {
       registered = false;
     } else if (state.state == RegistrationStateEnum.REGISTRATION_FAILED) {
@@ -1441,7 +1524,7 @@ print("audiofocusaddlistener");
   void transportStateChanged(TransportState state) {}
 
   @override
-  void onNewNotify( ntf) {
+  void onNewNotify(ntf) {
     print("new notify");
     print(ntf);
   }

@@ -8,15 +8,35 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		15547A01F718B6F9C8728F9D /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 169678BC4521198A2B252A0F /* Pods_Runner.framework */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		8305305426E9334E0056950F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8305305326E9334E0056950F /* GoogleService-Info.plist */; };
 		8305305626E94FCF0056950F /* google-services.json in Resources */ = {isa = PBXBuildFile; fileRef = 8305305526E94FCF0056950F /* google-services.json */; };
-		8A9C2E7DD3E9908D9676EFC7 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A483225D477059D610434E5E /* Pods_Runner.framework */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		F2176AC82891630300EB3F40 /* outgoing.wav in Resources */ = {isa = PBXBuildFile; fileRef = F2176AC72891630300EB3F40 /* outgoing.wav */; };
+		F2CDC56428DB640F00111316 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		F2CDC58D28DB86AF00111316 /* belcard.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC57B28DB868D00111316 /* belcard.framework */; };
+		F2CDC58E28DB86AF00111316 /* bctoolbox-tester.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC57C28DB868E00111316 /* bctoolbox-tester.framework */; };
+		F2CDC58F28DB86AF00111316 /* linphonetester.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC57D28DB869400111316 /* linphonetester.framework */; };
+		F2CDC59028DB86AF00111316 /* belle-sip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC57E28DB869700111316 /* belle-sip.framework */; };
+		F2CDC59128DB86AF00111316 /* belr.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC57F28DB869800111316 /* belr.framework */; };
+		F2CDC59228DB86AF00111316 /* mscodec2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58028DB869900111316 /* mscodec2.framework */; };
+		F2CDC59328DB86B000111316 /* lime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58128DB869B00111316 /* lime.framework */; };
+		F2CDC59428DB86B000111316 /* mediastreamer2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58228DB869E00111316 /* mediastreamer2.framework */; };
+		F2CDC59528DB86B000111316 /* mswebrtc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58328DB869F00111316 /* mswebrtc.framework */; };
+		F2CDC59628DB86B000111316 /* msopenh264.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58428DB869F00111316 /* msopenh264.framework */; };
+		F2CDC59728DB86B000111316 /* ortp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58528DB86A000111316 /* ortp.framework */; };
+		F2CDC59828DB86B000111316 /* msamr.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58628DB86A100111316 /* msamr.framework */; };
+		F2CDC59928DB86B000111316 /* linphone.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58728DB86AB00111316 /* linphone.framework */; };
+		F2CDC59A28DB86B000111316 /* bctoolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58828DB86AD00111316 /* bctoolbox.framework */; };
+		F2CDC59B28DB86B100111316 /* bctoolbox-ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58928DB86AD00111316 /* bctoolbox-ios.framework */; };
+		F2CDC59C28DB86B100111316 /* mssilk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58A28DB86AD00111316 /* mssilk.framework */; };
+		F2CDC59D28DB86B100111316 /* msx264.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58B28DB86AE00111316 /* msx264.framework */; };
+		F2CDC59E28DB86B100111316 /* limetester.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2CDC58C28DB86AF00111316 /* limetester.framework */; };
+		F2CDC5A028DB870000111316 /* LinphoneWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2CDC59F28DB870000111316 /* LinphoneWrapper.swift */; };
 		F2D5938427452F600044961F /* ProviderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D5938327452F600044961F /* ProviderDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +61,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				F2CDC56428DB640F00111316 /* (null) in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -50,13 +71,13 @@
 /* Begin PBXFileReference section */
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		169678BC4521198A2B252A0F /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		8305305326E9334E0056950F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		8305305526E94FCF0056950F /* google-services.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = "google-services.json"; path = "../google-services.json"; sourceTree = "<group>"; };
-		8E922C20D9375AF7FD609B09 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -64,10 +85,72 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A483225D477059D610434E5E /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		BA0D97EB6AED4418829482FE /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
-		D4DD4E8F704C8E365C1D1260 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+		AD5772D8DD34F8643694AC7F /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		CF3AA93D44213334C0380EC2 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		E9887EB098C597C6D0BF9FA7 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		F2176AC72891630300EB3F40 /* outgoing.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = outgoing.wav; sourceTree = "<group>"; };
+		F2CDC4F728DB640900111316 /* all_sensors.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = all_sensors.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC4F828DB640900111316 /* audio_session.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = audio_session.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC4F928DB640900111316 /* audioplayers.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = audioplayers.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC4FA28DB640900111316 /* awesome_notifications.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = awesome_notifications.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC4FB28DB640900111316 /* bluetoothadapter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = bluetoothadapter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC4FC28DB640900111316 /* callkeep.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = callkeep.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC4FD28DB640900111316 /* firebase_core.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = firebase_core.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC4FE28DB640900111316 /* firebase_messaging.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = firebase_messaging.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC4FF28DB640900111316 /* FirebaseCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = FirebaseCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50028DB640900111316 /* FirebaseCoreDiagnostics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = FirebaseCoreDiagnostics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50128DB640900111316 /* FirebaseCoreInternal.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = FirebaseCoreInternal.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50228DB640900111316 /* FirebaseInstallations.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = FirebaseInstallations.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50328DB640900111316 /* FirebaseMessaging.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = FirebaseMessaging.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50428DB640900111316 /* flutter_apns_only.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_apns_only.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50528DB640900111316 /* flutter_audio_manager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_audio_manager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50628DB640900111316 /* flutter_dtmf.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_dtmf.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50728DB640900111316 /* flutter_incall_manager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_incall_manager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50828DB640900111316 /* flutter_keyboard_visibility.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_keyboard_visibility.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50928DB640900111316 /* flutter_local_notifications.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_local_notifications.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50A28DB640900111316 /* flutter_sound.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_sound.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50B28DB640900111316 /* flutter_sound_core.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_sound_core.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50C28DB640900111316 /* flutter_webrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_webrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50D28DB640900111316 /* FMDB.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = FMDB.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50E28DB640900111316 /* GoogleDataTransport.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = GoogleDataTransport.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC50F28DB640900111316 /* GoogleUtilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = GoogleUtilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51028DB640900111316 /* image_picker_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = image_picker_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51128DB640900111316 /* just_audio.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = just_audio.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51228DB640900111316 /* linphonesw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = linphonesw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51328DB640900111316 /* nanopb.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = nanopb.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51428DB640900111316 /* package_info_plus.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = package_info_plus.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51528DB640900111316 /* path_provider_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = path_provider_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51628DB640900111316 /* permission_handler.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = permission_handler.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51828DB640900111316 /* FBLPromises.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = FBLPromises.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51928DB640900111316 /* ringtone_player.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ringtone_player.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51A28DB640900111316 /* Sentry.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Sentry.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51B28DB640900111316 /* sentry_flutter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = sentry_flutter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51C28DB640900111316 /* shared_preferences_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = shared_preferences_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51D28DB640900111316 /* sqflite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = sqflite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51E28DB640900111316 /* Starscream.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Starscream.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC51F28DB640900111316 /* url_launcher_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = url_launcher_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC52028DB640900111316 /* video_player_avfoundation.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = video_player_avfoundation.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC52128DB640900111316 /* WebRTC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = WebRTC.xcframework; path = "Pods/WebRTC-SDK/WebRTC.xcframework"; sourceTree = "<group>"; };
+		F2CDC52228DB640900111316 /* websocket_manager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = websocket_manager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2CDC57B28DB868D00111316 /* belcard.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = belcard.framework; sourceTree = "<group>"; };
+		F2CDC57C28DB868E00111316 /* bctoolbox-tester.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = "bctoolbox-tester.framework"; sourceTree = "<group>"; };
+		F2CDC57D28DB869400111316 /* linphonetester.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = linphonetester.framework; sourceTree = "<group>"; };
+		F2CDC57E28DB869700111316 /* belle-sip.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = "belle-sip.framework"; sourceTree = "<group>"; };
+		F2CDC57F28DB869800111316 /* belr.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = belr.framework; sourceTree = "<group>"; };
+		F2CDC58028DB869900111316 /* mscodec2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = mscodec2.framework; sourceTree = "<group>"; };
+		F2CDC58128DB869B00111316 /* lime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = lime.framework; sourceTree = "<group>"; };
+		F2CDC58228DB869E00111316 /* mediastreamer2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = mediastreamer2.framework; sourceTree = "<group>"; };
+		F2CDC58328DB869F00111316 /* mswebrtc.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = mswebrtc.framework; sourceTree = "<group>"; };
+		F2CDC58428DB869F00111316 /* msopenh264.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = msopenh264.framework; sourceTree = "<group>"; };
+		F2CDC58528DB86A000111316 /* ortp.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ortp.framework; sourceTree = "<group>"; };
+		F2CDC58628DB86A100111316 /* msamr.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = msamr.framework; sourceTree = "<group>"; };
+		F2CDC58728DB86AB00111316 /* linphone.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = linphone.framework; sourceTree = "<group>"; };
+		F2CDC58828DB86AD00111316 /* bctoolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = bctoolbox.framework; sourceTree = "<group>"; };
+		F2CDC58928DB86AD00111316 /* bctoolbox-ios.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = "bctoolbox-ios.framework"; sourceTree = "<group>"; };
+		F2CDC58A28DB86AD00111316 /* mssilk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = mssilk.framework; sourceTree = "<group>"; };
+		F2CDC58B28DB86AE00111316 /* msx264.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = msx264.framework; sourceTree = "<group>"; };
+		F2CDC58C28DB86AF00111316 /* limetester.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = limetester.framework; sourceTree = "<group>"; };
+		F2CDC59F28DB870000111316 /* LinphoneWrapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinphoneWrapper.swift; sourceTree = "<group>"; };
 		F2D5938327452F600044961F /* ProviderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderDelegate.swift; sourceTree = "<group>"; };
 		F2D8B53F2703C6D100C88053 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -77,7 +160,25 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8A9C2E7DD3E9908D9676EFC7 /* Pods_Runner.framework in Frameworks */,
+				F2CDC59428DB86B000111316 /* mediastreamer2.framework in Frameworks */,
+				F2CDC59528DB86B000111316 /* mswebrtc.framework in Frameworks */,
+				F2CDC58F28DB86AF00111316 /* linphonetester.framework in Frameworks */,
+				F2CDC59328DB86B000111316 /* lime.framework in Frameworks */,
+				F2CDC59128DB86AF00111316 /* belr.framework in Frameworks */,
+				F2CDC59228DB86AF00111316 /* mscodec2.framework in Frameworks */,
+				F2CDC59E28DB86B100111316 /* limetester.framework in Frameworks */,
+				F2CDC58D28DB86AF00111316 /* belcard.framework in Frameworks */,
+				F2CDC59B28DB86B100111316 /* bctoolbox-ios.framework in Frameworks */,
+				F2CDC59C28DB86B100111316 /* mssilk.framework in Frameworks */,
+				F2CDC59928DB86B000111316 /* linphone.framework in Frameworks */,
+				F2CDC58E28DB86AF00111316 /* bctoolbox-tester.framework in Frameworks */,
+				15547A01F718B6F9C8728F9D /* Pods_Runner.framework in Frameworks */,
+				F2CDC59628DB86B000111316 /* msopenh264.framework in Frameworks */,
+				F2CDC59028DB86AF00111316 /* belle-sip.framework in Frameworks */,
+				F2CDC59728DB86B000111316 /* ortp.framework in Frameworks */,
+				F2CDC59828DB86B000111316 /* msamr.framework in Frameworks */,
+				F2CDC59D28DB86B100111316 /* msx264.framework in Frameworks */,
+				F2CDC59A28DB86B000111316 /* bctoolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -87,11 +188,80 @@
 		44207A17AA04776924B15568 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				8E922C20D9375AF7FD609B09 /* Pods-Runner.debug.xcconfig */,
-				D4DD4E8F704C8E365C1D1260 /* Pods-Runner.release.xcconfig */,
-				BA0D97EB6AED4418829482FE /* Pods-Runner.profile.xcconfig */,
+				CF3AA93D44213334C0380EC2 /* Pods-Runner.debug.xcconfig */,
+				E9887EB098C597C6D0BF9FA7 /* Pods-Runner.release.xcconfig */,
+				AD5772D8DD34F8643694AC7F /* Pods-Runner.profile.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		8BD064704D405A0734874F25 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F2CDC58928DB86AD00111316 /* bctoolbox-ios.framework */,
+				F2CDC57C28DB868E00111316 /* bctoolbox-tester.framework */,
+				F2CDC58828DB86AD00111316 /* bctoolbox.framework */,
+				F2CDC57B28DB868D00111316 /* belcard.framework */,
+				F2CDC57E28DB869700111316 /* belle-sip.framework */,
+				F2CDC57F28DB869800111316 /* belr.framework */,
+				F2CDC58128DB869B00111316 /* lime.framework */,
+				F2CDC58C28DB86AF00111316 /* limetester.framework */,
+				F2CDC58728DB86AB00111316 /* linphone.framework */,
+				F2CDC57D28DB869400111316 /* linphonetester.framework */,
+				F2CDC58228DB869E00111316 /* mediastreamer2.framework */,
+				F2CDC58628DB86A100111316 /* msamr.framework */,
+				F2CDC58028DB869900111316 /* mscodec2.framework */,
+				F2CDC58428DB869F00111316 /* msopenh264.framework */,
+				F2CDC58A28DB86AD00111316 /* mssilk.framework */,
+				F2CDC58328DB869F00111316 /* mswebrtc.framework */,
+				F2CDC58B28DB86AE00111316 /* msx264.framework */,
+				F2CDC58528DB86A000111316 /* ortp.framework */,
+				F2CDC4F728DB640900111316 /* all_sensors.framework */,
+				F2CDC4F828DB640900111316 /* audio_session.framework */,
+				F2CDC4F928DB640900111316 /* audioplayers.framework */,
+				F2CDC4FA28DB640900111316 /* awesome_notifications.framework */,
+				F2CDC4FB28DB640900111316 /* bluetoothadapter.framework */,
+				F2CDC4FC28DB640900111316 /* callkeep.framework */,
+				F2CDC4FD28DB640900111316 /* firebase_core.framework */,
+				F2CDC4FE28DB640900111316 /* firebase_messaging.framework */,
+				F2CDC4FF28DB640900111316 /* FirebaseCore.framework */,
+				F2CDC50028DB640900111316 /* FirebaseCoreDiagnostics.framework */,
+				F2CDC50128DB640900111316 /* FirebaseCoreInternal.framework */,
+				F2CDC50228DB640900111316 /* FirebaseInstallations.framework */,
+				F2CDC50328DB640900111316 /* FirebaseMessaging.framework */,
+				F2CDC50428DB640900111316 /* flutter_apns_only.framework */,
+				F2CDC50528DB640900111316 /* flutter_audio_manager.framework */,
+				F2CDC50628DB640900111316 /* flutter_dtmf.framework */,
+				F2CDC50728DB640900111316 /* flutter_incall_manager.framework */,
+				F2CDC50828DB640900111316 /* flutter_keyboard_visibility.framework */,
+				F2CDC50928DB640900111316 /* flutter_local_notifications.framework */,
+				F2CDC50A28DB640900111316 /* flutter_sound.framework */,
+				F2CDC50B28DB640900111316 /* flutter_sound_core.framework */,
+				F2CDC50C28DB640900111316 /* flutter_webrtc.framework */,
+				F2CDC50D28DB640900111316 /* FMDB.framework */,
+				F2CDC50E28DB640900111316 /* GoogleDataTransport.framework */,
+				F2CDC50F28DB640900111316 /* GoogleUtilities.framework */,
+				F2CDC51028DB640900111316 /* image_picker_ios.framework */,
+				F2CDC51128DB640900111316 /* just_audio.framework */,
+				F2CDC51228DB640900111316 /* linphonesw.framework */,
+				F2CDC51328DB640900111316 /* nanopb.framework */,
+				F2CDC51428DB640900111316 /* package_info_plus.framework */,
+				F2CDC51528DB640900111316 /* path_provider_ios.framework */,
+				F2CDC51628DB640900111316 /* permission_handler.framework */,
+				F2CDC51828DB640900111316 /* FBLPromises.framework */,
+				F2CDC51928DB640900111316 /* ringtone_player.framework */,
+				F2CDC51A28DB640900111316 /* Sentry.framework */,
+				F2CDC51B28DB640900111316 /* sentry_flutter.framework */,
+				F2CDC51C28DB640900111316 /* shared_preferences_ios.framework */,
+				F2CDC51D28DB640900111316 /* sqflite.framework */,
+				F2CDC51E28DB640900111316 /* Starscream.framework */,
+				F2CDC51F28DB640900111316 /* url_launcher_ios.framework */,
+				F2CDC52028DB640900111316 /* video_player_avfoundation.framework */,
+				F2CDC52128DB640900111316 /* WebRTC.xcframework */,
+				F2CDC52228DB640900111316 /* websocket_manager.framework */,
+				169678BC4521198A2B252A0F /* Pods_Runner.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
@@ -114,7 +284,7 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				44207A17AA04776924B15568 /* Pods */,
-				9BC9C4CA22BECCA2ABE48231 /* Frameworks */,
+				8BD064704D405A0734874F25 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -140,16 +310,9 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				F2D5938327452F600044961F /* ProviderDelegate.swift */,
+				F2CDC59F28DB870000111316 /* LinphoneWrapper.swift */,
 			);
 			path = Runner;
-			sourceTree = "<group>";
-		};
-		9BC9C4CA22BECCA2ABE48231 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				A483225D477059D610434E5E /* Pods_Runner.framework */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -159,14 +322,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
-				326BCA9DC1B410CC91E15820 /* [CP] Check Pods Manifest.lock */,
+				BE042AF0199DC90858C78ECA /* [CP] Check Pods Manifest.lock */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
-				FC0C290665DC5850E265F000 /* [CP] Embed Pods Frameworks */,
+				F4123BC0001A2A6863312EB6 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 				F2CDC4F628D216DB00111316 /* PBXBuildRule */,
@@ -229,28 +392,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		326BCA9DC1B410CC91E15820 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Runner-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
 		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -279,7 +420,29 @@
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build\n";
 		};
-		FC0C290665DC5850E265F000 /* [CP] Embed Pods Frameworks */ = {
+		BE042AF0199DC90858C78ECA /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Runner-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F4123BC0001A2A6863312EB6 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -305,6 +468,7 @@
 			files = (
 				F2D5938427452F600044961F /* ProviderDelegate.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+				F2CDC5A028DB870000111316 /* LinphoneWrapper.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -384,7 +548,7 @@
 		};
 		249021D4217E4FDB00AE95B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BA0D97EB6AED4418829482FE /* Pods-Runner.profile.xcconfig */;
+			baseConfigurationReference = AD5772D8DD34F8643694AC7F /* Pods-Runner.profile.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-1";
 				CLANG_ENABLE_MODULES = YES;
@@ -398,7 +562,7 @@
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -523,7 +687,7 @@
 		};
 		97C147061CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8E922C20D9375AF7FD609B09 /* Pods-Runner.debug.xcconfig */;
+			baseConfigurationReference = CF3AA93D44213334C0380EC2 /* Pods-Runner.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-1";
 				CLANG_ENABLE_MODULES = YES;
@@ -537,7 +701,7 @@
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -554,7 +718,7 @@
 		};
 		97C147071CF9000F007C117D /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D4DD4E8F704C8E365C1D1260 /* Pods-Runner.release.xcconfig */;
+			baseConfigurationReference = E9887EB098C597C6D0BF9FA7 /* Pods-Runner.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-1";
 				CLANG_ENABLE_MODULES = YES;
@@ -568,7 +732,7 @@
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
