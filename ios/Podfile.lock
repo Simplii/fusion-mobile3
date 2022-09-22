@@ -111,13 +111,13 @@ PODS:
   - PromisesObjC (2.1.1)
   - ringtone_player (0.0.1):
     - Flutter
-  - Sentry (7.23.0):
-    - Sentry/Core (= 7.23.0)
-  - Sentry/Core (7.23.0)
+  - Sentry (7.25.1):
+    - Sentry/Core (= 7.25.1)
+  - Sentry/Core (7.25.1)
   - sentry_flutter (0.0.1):
     - Flutter
     - FlutterMacOS
-    - Sentry (~> 7.23.0)
+    - Sentry (~> 7.25.1)
   - shared_preferences_ios (0.0.1):
     - Flutter
   - sqflite (0.0.2):
@@ -278,8 +278,8 @@ SPEC CHECKSUMS:
   permission_handler: ccb20a9fad0ee9b1314a52b70b76b473c5f8dab0
   PromisesObjC: ab77feca74fa2823e7af4249b8326368e61014cb
   ringtone_player: 151303fcb26e9daa11257fa6947faed36b198f13
-  Sentry: a0d4563fa4ddacba31fdcc35daaa8573d87224d6
-  sentry_flutter: 8bde7d0e57a721727fe573f13bb292c497b5a249
+  Sentry: dd29c18c32b0af9269949f079cf631d581ca76ca
+  sentry_flutter: 544b23de27343d0cd12d8d16b0fac71dc884f0e6
   shared_preferences_ios: 548a61f8053b9b8a49ac19c1ffbc8b92c50d68ad
   sqflite: 6d358c025f5b867b29ed92fc697fd34924e11904
   Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
@@ -288,6 +288,6 @@ SPEC CHECKSUMS:
   WebRTC-SDK: e0589abeb63db07a4ca1f45c82ba0f1a72e61622
   websocket_manager: cadb93f3b88cf3f5d60fca8629824c1b50f30e1b
 
-PODFILE CHECKSUM: b18f59de8d6beba9acc19ebf05b9342e321a6c6c
+PODFILE CHECKSUM: c04a0bd71828c451afcc7546199feba08d44b20e
 
 COCOAPODS: 1.11.3
