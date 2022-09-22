@@ -38,7 +38,7 @@ dependencies:
   http: ^0.13.3
   keyboard_attachable:
   web_socket_channel: ^2.1.0
-  flutter_local_notifications:
+  flutter_local_notifications: ^9.9.1
   cupertino_icons: ^1.0.2
   url_launcher:
   modal_bottom_sheet: ^2.0.0
