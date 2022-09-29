@@ -17,7 +17,7 @@ import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:ringtone_player/ringtone_player.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
+//import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:flutter_audio_manager/flutter_audio_manager.dart';
 import '../../main.dart';
@@ -83,6 +83,9 @@ class Softphone implements SipUaHelperListener {
   String btConnectionStatus = "NONE";
   String btReceivedMessage;
   List<BtDevice> devices = [];
+  String _savedLogin;
+  String _savedAor;
+  String _savedPassword;
 
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
@@ -317,7 +320,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
-    Sentry.captureMessage("callkitmethod:" + methodCall.method);
+  //  Sentry.captureMessage("callkitmethod:" + methodCall.method);
     print("callkitmethod:" + methodCall.method);
     print(methodCall.method);
     print("themethod: '" + methodCall.method + "'");
@@ -328,7 +331,7 @@ class Softphone implements SipUaHelperListener {
 switch (methodCall.method) {
       case "lnOutgoingInit":
         _addCall(
-            _linkLnCallWithUuid(args[2], args[1], args[0], args[2], "OUTGOING")
+            _linkLnCallWithUuid(_cleanToAddress(args[2]), args[1], args[0], args[2], "OUTGOING")
         );
         break;
       case "lnOutgoingProgress":
@@ -362,13 +365,12 @@ switch (methodCall.method) {
         print(args[2]);
         print(args[0]);
         print(args[3]);
+        print("callerid");
         print(args[4]);
         var toAddress = args[2] as String;
-        toAddress = toAddress.replaceFirst(RegExp(r".*<sip:"), "")
-            .replaceFirst(RegExp(r">.*"), "")
-            .replaceFirst(RegExp(r"@.*$"), "");
+        toAddress = _cleanToAddress(toAddress);
         var callerId = args[4] as String;
-        toAddress = toAddress.replaceFirst(RegExp(r"<.*?> *$"), "");
+
         LnCall call = _linkLnCallWithUuid(
             toAddress,
             args[0] as String,
@@ -498,8 +500,28 @@ switch (methodCall.method) {
   registerIos(String login, String password, String aor) {
     print("iosreg");
     print(aor.split("@"));
+    _savedLogin = login;
+    _savedPassword = password;
+    _savedAor = aor;
     _callKit.invokeMethod(
         "lpRegister", [aor.split("@")[0], password, aor.split("@")[1]]);
+  }
+
+  _unregisterIos() {
+    print("iosunreg");
+    _callKit.invokeMethod(
+        "lpUnregister", []);
+  }
+
+  _cleanToAddress(toAddress) {
+    toAddress = toAddress.replaceFirst(RegExp(r".*<sip:"), "")
+        .replaceFirst(RegExp(">.*"), "")
+        .replaceFirst(RegExp(r"@.*$"), "");
+    toAddress = toAddress.replaceFirst(RegExp(r"<.*?> *$"), "");
+    if (toAddress.length == 12 && toAddress[0] == "+" && toAddress[1] == "1") {
+      toAddress = toAddress.substring(2);
+    }
+    return toAddress.replaceFirst('sip:', '');
   }
 
   registerAndroid(String login, String password, String aor) {
@@ -508,7 +530,7 @@ switch (methodCall.method) {
     settings.webSocketSettings.allowBadCertificate = true;
     settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
 
-    if (aor == "9812fm@Simplii1" || aor == "9811fm@Simplii1") {
+    if (aor == "9812fi@Simplii1" || aor == "9811fi@Simplii1") {
       print("using test push proxy 9811/9812 detected");
       settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
     }
@@ -541,7 +563,11 @@ switch (methodCall.method) {
 
   reregister() {
     print("reregistering...");
-    helper.register();
+    if (Platform.isAndroid) {
+      helper.register();
+    } else if (Platform.isIOS) {
+      registerIos(_savedLogin, _savedPassword, _savedAor);
+    }
   }
 
   setupPermissions() {
@@ -568,11 +594,8 @@ switch (methodCall.method) {
 
       if (!destination.contains("sip:")) destination = "sip:" + destination;
       if (!destination.contains("@"))
-        destination +=
-            "@" + "nms4-sf.simplii.net"; //_fusionConnection.getDomain();
+        destination += "@" + _fusionConnection.getDomain();
 
-      print("startcall");
-      print(destination);
       _callKit.invokeMethod("lpStartCall", [destination]);
     } else {
       _playAudio(_outboundAudioPath, false);
@@ -986,7 +1009,13 @@ switch (methodCall.method) {
     for (Call c in toRemove) calls.remove(c);
 
     if (calls.length > 0) {
-      makeActiveCall(calls[0]);
+      var newActive = calls[0];
+      var state = newActive.state;
+      makeActiveCall(newActive);
+
+      if (state == CallStateEnum.HOLD) {
+        newActive.hold();
+      }
     } else {
       setCallOutput(call, "phone");
     }
@@ -1155,7 +1184,8 @@ switch (methodCall.method) {
       _setCallDataValue(call.id, "startTime", DateTime.now());
     }
 
-    if (callIdsAnswered.contains(_uuidFor(call))) answerCall(call);
+    if (callIdsAnswered.contains(_uuidFor(call)))
+      answerCall(call);
   }
 
   onUpdate(Function listener) {
@@ -1163,6 +1193,9 @@ switch (methodCall.method) {
   }
 
   _updateListeners() {
+    if (activeCall != null && activeCall.id == "") {
+      print("!!!!!!!activecall has no id???????");
+    }
     for (Function listener in this._listeners) {
       listener();
     }
@@ -1208,6 +1241,10 @@ switch (methodCall.method) {
   }
 
   int getCallRunTime(Call call) {
+    print('call id here');
+    print(call.id);
+    print(_uuidFor(call));
+
     DateTime time = _getCallDataValue(call.id, "answerTime") as DateTime;
     if (time == null)
       time = _getCallDataValue(call.id, "startTime") as DateTime;
@@ -1376,14 +1413,14 @@ switch (methodCall.method) {
                     callState.originator.toString(),
                 duration: Toast.LENGTH_LONG);
 
-            Sentry.captureMessage(
+           /* Sentry.captureMessage(
                 "callkit failed:" +
                     callState.refer.toString() +
                     callState.toString() +
                     callState.cause.toString() +
                     " - " +
                     callState.originator.toString(),
-                hint: callState);
+                hint: callState);*/
           }
           stopOutbound();
           stopInbound();
@@ -1539,6 +1576,10 @@ switch (methodCall.method) {
   }
 
   void onUnregister(Function() fn) {
-    _onUnregister = fn;
+    if (Platform.isAndroid) {
+      _onUnregister = fn;
+    } else if (Platform.isIOS) {
+      _unregisterIos();
+    }
   }
 }

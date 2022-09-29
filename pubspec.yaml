@@ -31,7 +31,6 @@ dependencies:
   websocket_manager:
   flutter_gravatar: any
   ringtone_player:
-  flutter_sound:
   awesome_notifications:
   sip_ua:
     path: "./dart-sip-ua"
@@ -52,7 +51,6 @@ dependencies:
   mime:
   just_audio:
   dotted_border:
-  sentry_flutter: ^6.9.1
   audioplayers: ^0.20.0
   cookie_jar:
   shared_preferences:

@@ -3,7 +3,8 @@ import CallKit
 import Flutter
 import PushKit
 import AVFoundation
-//import linphonesw
+import linphonesw
+import Firebase
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate{
@@ -20,6 +21,8 @@ import AVFoundation
         
         setupCallkitFlutterLink()
         providerDelegate = ProviderDelegate(channel: callkitChannel)
+        
+        FirebaseApp.configure() //add this before the code below
 
         GeneratedPluginRegistrant.register(with: self)
         let mainQueue = DispatchQueue.main
@@ -141,7 +144,7 @@ import AVFoundation
                     callerName: identifier,
                   hasVideo: false) { (e: Error?) in
                   print("completion2")
-	
+    
               };
                   
             }
