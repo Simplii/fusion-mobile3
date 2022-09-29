@@ -1576,10 +1576,6 @@ switch (methodCall.method) {
   }
 
   void onUnregister(Function() fn) {
-    if (Platform.isAndroid) {
       _onUnregister = fn;
-    } else if (Platform.isIOS) {
-      _unregisterIos();
-    }
   }
 }

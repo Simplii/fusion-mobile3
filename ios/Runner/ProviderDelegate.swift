@@ -96,6 +96,7 @@ print("audiointerruption")
         
         try! mCore = factory.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
         try! mCore?.start()
+        mCore?.ipv6Enabled = false
 
         var mCoreDelegate = CoreDelegateStub( onCallStateChanged: { (core: Core, call: Call, state: Call.State, message: String) in
             // This function will be called each time a call state changes,
