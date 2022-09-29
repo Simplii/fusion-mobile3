@@ -3,7 +3,7 @@ import AVFoundation
 import AVFAudio
 import CallKit
 import Flutter
-//import linphonesw
+import linphonesw
 import CommonCrypto
 import CryptoKit
 import Foundation
@@ -92,15 +92,10 @@ print("audiointerruption")
     
     public func setupLinphone() {
         LoggingService.Instance.logLevel = LogLevel.Debug
-        
-        // Core is the main object of the SDK. You can't do much without it.
-        // To create a Core, we need the instance of the Factory.
         let factory = Factory.Instance
         
-        // Your Core can use up to 2 configuration files, but that isn't Ω
         try! mCore = factory.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
         try! mCore?.start()
-
 
         var mCoreDelegate = CoreDelegateStub( onCallStateChanged: { (core: Core, call: Call, state: Call.State, message: String) in
             // This function will be called each time a call state changes,
@@ -118,18 +113,31 @@ print("audiointerruption")
             print(call.remoteAddress!.displayName);
             var uuid: String? = self.findUuidByCall(call: call);
             if (state == .OutgoingInit) {
+                // wait until .outgoingProgress to notify dart because the callid
+                // doesn't seem to be available during .OutgoingInit
+            } else if (state == .OutgoingProgress) {
+                print("outgoing call info progress here")
+                print(call.callLog!)
+                print(call.callLog?.toStr())
+                print(call.callLog!.callId)
                 uuid = self.uuidFromString(str: call.callLog!.callId).uuidString;
                 print(uuid);
                 self.uuidCalls[uuid!] = call;
-                self.callkitChannel.invokeMethod("lnOutgoingInit", arguments: [uuid, call.callLog?.callId, call.remoteAddressAsString])
-                // First state an outgoing call will go through
-            } else if (state == .OutgoingProgress) {
+               self.callkitChannel.invokeMethod("lnOutgoingInit", arguments: [uuid, call.callLog?.callId, call.remoteAddressAsString])
                 self.callkitChannel.invokeMethod("lnOutgoingProgress", arguments: [uuid])                // Right after outgoing init
             } else if (state == .OutgoingRinging) {
+                print("outoging call info ringing here")
+                print(call.callLog!)
+                print(call.callLog?.toStr())
+                print(call.callLog!.callId)
                 self.callkitChannel.invokeMethod("lnOutgoingRinging", arguments: [uuid])                // This state will be reached upon reception of the 180 RINGING
             } else if (state == .Connected) {
                 self.callkitChannel.invokeMethod("lnCallConnected", arguments: [uuid])                // When the 200 OK has been received
             } else if (state == .StreamsRunning) {
+                print("outoging call info streamsrunning here")
+                print(call.callLog!)
+                print(call.callLog?.toStr())
+                print(call.callLog!.callId)
                 self.callkitChannel.invokeMethod("lnCallStreamsRunning", arguments: [uuid])                // This state indicates the call is active.
                 // You may reach this state multiple times, for example after a pause/resume
                 // or after the ICE negotiation completes
@@ -184,75 +192,92 @@ print("audiointerruption")
                 self.loggedIn = false
             }
         })
-
+        
         mCore?.addDelegate(delegate: mCoreDelegate)
+        mCore?.remoteRingbackTone = Bundle.main.path(forResource: "outgoing", ofType: "wav") ?? ""
+        mCore?.ring = Bundle.main.path(forResource: "inbound", ofType: "mp3") ?? ""
         coreVersion = Core.getVersion
+        print("ringtone")
+        print(mCore?.ring)
+        print(mCore?.remoteRingbackTone)
     }
     
     public func registerPhone() {
         do {
-                // Get the transport protocol to use.
-                // TLS is strongly recommended
-                // Only use UDP if you don't have the choice
-                var transport : TransportType
-                if (transportType == "TLS") { transport = TransportType.Tls }
-                else if (transportType == "TCP") { transport = TransportType.Tcp }
-                else  { transport = TransportType.Udp }
-                
-                // To configure a SIP account, we need an Account object and an AuthInfo object
-                // The first one is how to connect to the proxy server, the second one stores the credentials
-                
-                // The auth info can be created from the Factory as it's only a data class
-                // userID is set to null as it's the same as the username in our case
-                // ha1 is set to null as we are using the clear text password. Upon first register, the hash will be computed automatically.
-                // The realm will be determined automatically from the first register, as well as the algorithm
-                let authInfo = try Factory.Instance.createAuthInfo(username: username, userid: "", passwd: passwd, ha1: "", realm: "", domain: domain)
+            // Get the transport protocol to use.
+            // TLS is strongly recommended
+            // Only use UDP if you don't have the choice
+            var transport : TransportType
+            if (transportType == "TLS") { transport = TransportType.Tls }
+            else if (transportType == "TCP") { transport = TransportType.Tcp }
+            else  { transport = TransportType.Udp }
+            
+            // To configure a SIP account, we need an Account object and an AuthInfo object
+            // The first one is how to connect to the proxy server, the second one stores the credentials
+            
+            // The auth info can be created from the Factory as it's only a data class
+            // userID is set to null as it's the same as the username in our case
+            // ha1 is set to null as we are using the clear text password. Upon first register, the hash will be computed automatically.
+            // The realm will be determined automatically from the first register, as well as the algorithm
+            let authInfo = try Factory.Instance.createAuthInfo(username: username, userid: "", passwd: passwd, ha1: "", realm: "", domain: domain)
+
             print("authinfo");
             print(authInfo);
-                // Account object replaces deprecated ProxyConfig object
-                // Account object is configured through an AccountParams object that we can obtain from the Core
-                let accountParams = try mCore?.createAccountParams()
+            let accountParams = try mCore?.createAccountParams()
             print("accountparams");
             print(accountParams);
-                // A SIP account is identified by an identity address that we can construct from the username and domain
-                let identity = try Factory.Instance.createAddress(addr: String("sip:" + username + "@" + domain))
+
+            let identity = try Factory.Instance.createAddress(addr: String("sip:" + username + "@" + domain))
             print(identity);
             print("identity");
             print(String("sip:"+username+"@"+domain))
             print(passwd);
-                try! accountParams!.setIdentityaddress(newValue: identity)
-                
-                // We also need to configure where the proxy server is located
-                let address = try Factory.Instance.createAddress(addr: String("sip:mobile-proxy.fusioncomm.net:5060"))
-                
-                // We use the Address object to easily set the transport protocol
-                try address.setTransport(newValue: transport)
+            try! accountParams!.setIdentityaddress(newValue: identity)
+            
+            let address = try Factory.Instance.createAddress(addr: String("sip:mobile-proxy.fusioncomm.net:5060"))
+            
+            try address.setTransport(newValue: transport)
             try accountParams!.setServeraddress(newValue: address)
-                // And we ensure the account will start the registration process
             accountParams!.registerEnabled = true
-                
-                // Now that our AccountParams is configured, we can create the Account object
-            let 	account = try mCore?.createAccount(params: accountParams!)
-                
-                // Now let's add our objects to the Core
-                mCore?.addAuthInfo(info: authInfo)
+            print("registering")
+            let account = try mCore?.createAccount(params: accountParams!)
+            
+            mCore?.addAuthInfo(info: authInfo)
             try mCore?.addAccount(account: account!)
-                
-                // Also set the newly added account as default
-                mCore?.defaultAccount = account
-                
-            } catch { NSLog(error.localizedDescription) }
+            mCore?.defaultAccount = account
+            var defaultProxyConfig = mCore?.defaultProxyConfig
+            if (defaultProxyConfig == nil) {
+                defaultProxyConfig = try mCore?.createProxyConfig()
+            }
+            var proxyConfig = try createProxyConfig(proxyConfig: defaultProxyConfig!, aor: "sip:" + username + "@" + domain, authInfo: authInfo)
+            try mCore?.addProxyConfig(config: proxyConfig)
+            mCore?.defaultProxyConfig = proxyConfig
+        } catch {print("error registering");
+            NSLog(error.localizedDescription) }
     }
-        
+    
+    func createProxyConfig(proxyConfig: ProxyConfig, aor: String, authInfo: AuthInfo) throws -> ProxyConfig {
+        let address = try mCore?.createAddress(address: aor)
+        try proxyConfig.setIdentityaddress(newValue: address!)
+        try proxyConfig.setServeraddr(newValue: "<sip:mobile-proxy.fusioncomm.net:5060;transport=tcp>")
+        try proxyConfig.setRoute(newValue: "<sip:mobile-proxy.fusioncomm.net:5060;transport=tcp>")
+        proxyConfig.realm = authInfo.realm
+        proxyConfig.registerEnabled = true
+        proxyConfig.avpfMode = .Disabled
+        proxyConfig.publishEnabled = false
+        proxyConfig.dialEscapePlus = false
+        return proxyConfig
+    }
+    
     func unregister()
     {
-            // Here we will disable the registration of our Account
-            if let account = mCore?.defaultAccount {
-                let params = account.params
-                let clonedParams = params?.clone()
-                clonedParams?.registerEnabled = false
-                account.params = clonedParams
-            }
+        // Here we will disable the registration of our Account
+        if let account = mCore?.defaultAccount {
+            let params = account.params
+            let clonedParams = params?.clone()
+            clonedParams?.registerEnabled = false
+            account.params = clonedParams
+        }
     }
     
     func outgoingCall(address: String) {

@@ -294,8 +294,8 @@ class _CallViewState extends State<CallView> {
                         Text(_softphone.isCellPhoneCallActive
                             ? 'Mobile Call Active'
                             : (_softphone.couldGetAudioSession == _softphone.activeCall.id && Platform.isIOS
-                            ? 'Lost audio access, click to restart call.'
-                            : 'RESUME'),
+                              ? 'RESUME'
+                              : 'RESUME'),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: Colors.white,
