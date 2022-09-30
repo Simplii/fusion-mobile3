@@ -73,7 +73,7 @@ class Softphone implements SipUaHelperListener {
     fixedPlayer: Aps.AudioPlayer()..setReleaseMode(Aps.ReleaseMode.LOOP),
   );
   final _outboundAudioPath = "audio/outgoing.wav";
-  final _callWaitingAudioPath = "audio/call_waiting.wav";
+  final _callWaitingAudioPath = "audio/call_waiting .wav";
   final _inboundAudioPath = "audio/inbound.mp3";
   Aps.AudioPlayer _outboundPlayer;
   Aps.AudioPlayer _inboundPlayer;
