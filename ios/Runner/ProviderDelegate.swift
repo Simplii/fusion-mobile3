@@ -90,6 +90,7 @@ print("audiointerruption")
         }
     }
     
+    
     public func setupLinphone() {
         LoggingService.Instance.logLevel = LogLevel.Debug
         let factory = Factory.Instance
@@ -146,7 +147,7 @@ print("audiointerruption")
                 self.isCallRunning = true
                 
                 // Only enable toggle camera button if there is more than 1 camera
-                // We check if core.videoDevicesList.size > 2 because of the fake camera with static image created by our SDK (see below)
+                // We check if core.videoDevicesList.size > 2 because of the fake camera with static image created by our SDK (see below)e
                 self.canChangeCamera = core.videoDevicesList.count > 2
             } else if (state == .Paused) {
                 self.callkitChannel.invokeMethod("lnCallPaused", arguments: [uuid])                // When you put a call in pause, it will became Paused
@@ -193,7 +194,22 @@ print("audiointerruption")
                 self.loggedIn = false
             }
         })
-        
+
+        mCore?.callkitEnabled = true
+        mCore?.stunServer = "turn:services.fusioncomm.net"
+        mCore?.natPolicy?.turnEnabled = true
+        mCore?.natPolicy?.stunServerUsername = "fuser"
+        do {
+            var turnAuth = try factory.createAuthInfo(
+                username: "fuser", userid: "fuser", passwd: "fpassword",
+                ha1: nil, realm: nil, domain: nil)
+            mCore?.addAuthInfo(info: turnAuth)
+        } catch {
+            print("AUTHINFO for TURN not generated")
+        }
+        mCore?.echoLimiterEnabled = false
+        mCore?.echoCancellationEnabled = false
+        mCore?.natPolicy?.stunServer = "services.fusioncomm.net"
         mCore?.addDelegate(delegate: mCoreDelegate)
         mCore?.remoteRingbackTone = Bundle.main.path(forResource: "outgoing", ofType: "wav") ?? ""
         mCore?.ring = Bundle.main.path(forResource: "inbound", ofType: "mp3") ?? ""
@@ -375,6 +391,9 @@ print("audiointerruption")
         }
     }
 
+    @objc func handleRouteChange(notification: Notification) {
+        mCore?.audioRouteChanged()
+    }
     
     public init(channel: FlutterMethodChannel) {
         provider = CXProvider(configuration: ProviderDelegate.providerConfiguration)
@@ -391,6 +410,13 @@ print("audiointerruption")
                          selector: #selector(handleInterruption),
                          name: AVAudioSession.interruptionNotification,
                          object: AVAudioSession.sharedInstance())
+        
+          nc.addObserver(self,
+                         selector: #selector(handleRouteChange),
+                         name: AVAudioSession.routeChangeNotification,
+                         object: nil)
+ 
+       
 
         callkitChannel.setMethodCallHandler({ [self]
           (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
@@ -449,9 +475,13 @@ print("audiointerruption")
                 do {
                     let toHold = args[1] as! Bool
                     if (toHold) {
-                        try call!.pause();
+                        if (call!.state != .Paused && call!.state != .PausedByRemote && call!.state != .OutgoingInit && call!.state != .OutgoingProgress && call!.state != .OutgoingRinging && call!.state != .IncomingReceived && call!.state != .Error) {
+                            try call!.pause();
+                        }
                     } else {
-                        try call!.resume();
+                        if (call!.state == .Paused || call!.state == .PausedByRemote || call!.state == .Pausing) {
+                            try call!.resume();
+                        }
                     }
                 } catch let error as NSError {
                     print("error holding/unholding call");
@@ -798,11 +828,13 @@ extension ProviderDelegate: CXProviderDelegate {
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
       callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
-      configureAudioSession()
+      mCore?.configureAudioSession()
+//      configureAudioSession()
       action.fulfill();
   }
   
     func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
+        mCore?.activateAudioSession(actived: false)
         return
         print("audiosession dideactivate");
     }
@@ -817,6 +849,7 @@ extension ProviderDelegate: CXProviderDelegate {
     }
     
   func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
+      mCore?.activateAudioSession(actived: true)
       return;
 //    https://stackoverflow.com/questions/47416493/callkit-can-reactivate-sound-after-swapping-call
       //https://bugs.chromium.org/p/webrtc/issues/detail?id=8126
@@ -831,13 +864,14 @@ print("webrtc workaround didactivate")
   }
   
   func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
+      print("theendcallaction from callkit")
     callkitChannel.invokeMethod("endButtonPressed", arguments: [action.callUUID.uuidString])
     action.fulfill()
     // end call
   }
   
   func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
-      let session = AVAudioSession.sharedInstance()
+/*      let session = AVAudioSession.sharedInstance()
       do {
           print("going to set active audio session")
           print(!action.isOnHold)
@@ -856,14 +890,16 @@ print("webrtc workaround didactivate")
 
       } catch (let error) {print("adioerror");print(error)
           //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
-      }
+      }*/
       callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
       action.fulfill()
   }
   
   func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
       print("start call action here callkit")
-      configureAudioSession();
+      mCore?.configureAudioSession()
+
+    //  configureAudioSession();
       callkitChannel.invokeMethod("startCall", arguments: [action.callUUID.uuidString, action.handle.value, action.contactIdentifier])
     action.fulfill()
   }
