@@ -422,7 +422,6 @@ switch (methodCall.method) {
         }
 
         answerCall(_getCallByUuid(callUuid));
-
         return;
 
       case 'endButtonPressed':
