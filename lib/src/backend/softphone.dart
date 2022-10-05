@@ -73,6 +73,7 @@ class Softphone implements SipUaHelperListener {
     fixedPlayer: Aps.AudioPlayer()..setReleaseMode(Aps.ReleaseMode.LOOP),
   );
   final _outboundAudioPath = "audio/outgoing.wav";
+  final _callWaitingAudioPath = "audio/call_waiting .wav";
   final _inboundAudioPath = "audio/inbound.mp3";
   Aps.AudioPlayer _outboundPlayer;
   Aps.AudioPlayer _inboundPlayer;
@@ -164,11 +165,22 @@ class Softphone implements SipUaHelperListener {
           });
         }
       } else if (path == _inboundAudioPath) {
-        RingtonePlayer.ringtone(alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
-            "ic_alarm_notification",
-            contentTitle: "Phone Call",
-            contentText: "IncomingPhoneCall"),
-            volume: 1.0);
+        if (calls.length > 1
+            && activeCall.state != CallStateEnum.CONNECTING
+            && activeCall.state != CallStateEnum.PROGRESS) {
+          RingtonePlayer.ringtone(
+              alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
+                  "ic_alarm_notification",
+                  contentTitle: "Phone Call",
+                  contentText: "IncomingPhoneCall"),
+              volume: 1.0);
+        } else {
+          _inboundPlayer = Aps.AudioPlayer();
+          cache.loop(_callWaitingAudioPath).then((Aps.AudioPlayer playing) {
+            _inboundPlayer = playing;
+            _inboundPlayer.earpieceOrSpeakersToggle();
+          });
+        }
       }
     }
   }
