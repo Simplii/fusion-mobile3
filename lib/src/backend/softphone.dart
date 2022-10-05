@@ -23,7 +23,7 @@ import '../../main.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
 import 'package:flutter_incall_manager/flutter_incall_manager.dart';
-import 'package:bluetoothadapter/bluetoothadapter.dart';
+//import 'package:bluetoothadapter/bluetoothadapter.dart';
 import 'package:uuid/uuid.dart';
 
 
@@ -78,11 +78,10 @@ class Softphone implements SipUaHelperListener {
   Aps.AudioPlayer _inboundPlayer;
   bool _blockingEvent = false;
 
-  Bluetoothadapter flutterbluetoothadapter = Bluetoothadapter();
+  //Bluetoothadapter flutterbluetoothadapter = Bluetoothadapter();
   StreamSubscription _btConnectionStatusListener, _btReceivedMessageListener;
   String btConnectionStatus = "NONE";
   String btReceivedMessage;
-  List<BtDevice> devices = [];
 
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
@@ -99,7 +98,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   _initBluetooth() {
-    flutterbluetoothadapter
+  /*  flutterbluetoothadapter
         .initBlutoothConnection(Uuid().toString());
     print("initing bluetooth");
     flutterbluetoothadapter
@@ -117,7 +116,7 @@ class Softphone implements SipUaHelperListener {
         _updateListeners();
         print("bluetooth msg: " + btConnectionStatus + " : " + btReceivedMessage);
     });
-    flutterbluetoothadapter.startServer();
+    flutterbluetoothadapter.startServer();*/
   }
 
   close() async {
