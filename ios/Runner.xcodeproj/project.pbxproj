@@ -17,7 +17,31 @@
 		F2ADB5A328DCB0D700BBA250 /* ProviderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2ADB5A028DCB0D700BBA250 /* ProviderDelegate.swift */; };
 		F2ADB5A528DCB0FE00BBA250 /* outgoing.wav in Resources */ = {isa = PBXBuildFile; fileRef = F2ADB5A428DCB0FD00BBA250 /* outgoing.wav */; };
 		F2B68B8128DDE04300EFD383 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F2B68B8028DDE04300EFD383 /* GoogleService-Info.plist */; };
+		F2B68B8F28EDE93600EFD383 /* Intents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2B68B8E28EDE93600EFD383 /* Intents.framework */; };
+		F2B68B9228EDE93600EFD383 /* IntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B68B9128EDE93600EFD383 /* IntentHandler.swift */; };
+		F2B68B9A28EDE93700EFD383 /* IntentsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2B68B9928EDE93700EFD383 /* IntentsUI.framework */; };
+		F2B68B9D28EDE93700EFD383 /* IntentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B68B9C28EDE93700EFD383 /* IntentViewController.swift */; };
+		F2B68BA028EDE93700EFD383 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F2B68B9E28EDE93700EFD383 /* MainInterface.storyboard */; };
+		F2B68BA428EDE93700EFD383 /* FusionIntentsUI.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F2B68B9828EDE93700EFD383 /* FusionIntentsUI.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F2B68BA728EDE93800EFD383 /* FusionIntents.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F2B68B8D28EDE93600EFD383 /* FusionIntents.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F2B68BA228EDE93700EFD383 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F2B68B9728EDE93700EFD383;
+			remoteInfo = FusionIntentsUI;
+		};
+		F2B68BA528EDE93800EFD383 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F2B68B8C28EDE93600EFD383;
+			remoteInfo = FusionIntents;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
@@ -28,6 +52,18 @@
 			files = (
 			);
 			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2B68BA828EDE93800EFD383 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F2B68BA728EDE93800EFD383 /* FusionIntents.appex in Embed Foundation Extensions */,
+				F2B68BA428EDE93700EFD383 /* FusionIntentsUI.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -54,6 +90,15 @@
 		F2ADB5A428DCB0FD00BBA250 /* outgoing.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = outgoing.wav; sourceTree = "<group>"; };
 		F2B68B8028DDE04300EFD383 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../ios2/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		F2B68B8228DDE31900EFD383 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
+		F2B68B8D28EDE93600EFD383 /* FusionIntents.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FusionIntents.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2B68B8E28EDE93600EFD383 /* Intents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = System/Library/Frameworks/Intents.framework; sourceTree = SDKROOT; };
+		F2B68B9128EDE93600EFD383 /* IntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentHandler.swift; sourceTree = "<group>"; };
+		F2B68B9328EDE93600EFD383 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F2B68B9828EDE93700EFD383 /* FusionIntentsUI.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FusionIntentsUI.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2B68B9928EDE93700EFD383 /* IntentsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IntentsUI.framework; path = System/Library/Frameworks/IntentsUI.framework; sourceTree = SDKROOT; };
+		F2B68B9C28EDE93700EFD383 /* IntentViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentViewController.swift; sourceTree = "<group>"; };
+		F2B68B9F28EDE93700EFD383 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
+		F2B68BA128EDE93700EFD383 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +107,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				A738ECBA5A222E28D97DBC54 /* Pods_Runner.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2B68B8A28EDE93600EFD383 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2B68B8F28EDE93600EFD383 /* Intents.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2B68B9528EDE93700EFD383 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2B68B9A28EDE93700EFD383 /* IntentsUI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -82,6 +143,8 @@
 			isa = PBXGroup;
 			children = (
 				40FE659A59863152B2CFC35B /* Pods_Runner.framework */,
+				F2B68B8E28EDE93600EFD383 /* Intents.framework */,
+				F2B68B9928EDE93700EFD383 /* IntentsUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -102,6 +165,8 @@
 			children = (
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
+				F2B68B9028EDE93600EFD383 /* FusionIntents */,
+				F2B68B9B28EDE93700EFD383 /* FusionIntentsUI */,
 				97C146EF1CF9000F007C117D /* Products */,
 				42956BD32CFCA856A6D7C3ED /* Pods */,
 				5F857604CD7DFA5C8F743147 /* Frameworks */,
@@ -112,6 +177,8 @@
 			isa = PBXGroup;
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
+				F2B68B8D28EDE93600EFD383 /* FusionIntents.appex */,
+				F2B68B9828EDE93700EFD383 /* FusionIntentsUI.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -135,6 +202,25 @@
 			path = Runner;
 			sourceTree = "<group>";
 		};
+		F2B68B9028EDE93600EFD383 /* FusionIntents */ = {
+			isa = PBXGroup;
+			children = (
+				F2B68B9128EDE93600EFD383 /* IntentHandler.swift */,
+				F2B68B9328EDE93600EFD383 /* Info.plist */,
+			);
+			path = FusionIntents;
+			sourceTree = "<group>";
+		};
+		F2B68B9B28EDE93700EFD383 /* FusionIntentsUI */ = {
+			isa = PBXGroup;
+			children = (
+				F2B68B9C28EDE93700EFD383 /* IntentViewController.swift */,
+				F2B68B9E28EDE93700EFD383 /* MainInterface.storyboard */,
+				F2B68BA128EDE93700EFD383 /* Info.plist */,
+			);
+			path = FusionIntentsUI;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -150,15 +236,52 @@
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				DA0F3B685EA4BE37186311CC /* [CP] Embed Pods Frameworks */,
+				F2B68BA828EDE93800EFD383 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F2B68BA328EDE93700EFD383 /* PBXTargetDependency */,
+				F2B68BA628EDE93800EFD383 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
+		};
+		F2B68B8C28EDE93600EFD383 /* FusionIntents */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F2B68BB028EDE93800EFD383 /* Build configuration list for PBXNativeTarget "FusionIntents" */;
+			buildPhases = (
+				F2B68B8928EDE93600EFD383 /* Sources */,
+				F2B68B8A28EDE93600EFD383 /* Frameworks */,
+				F2B68B8B28EDE93600EFD383 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FusionIntents;
+			productName = FusionIntents;
+			productReference = F2B68B8D28EDE93600EFD383 /* FusionIntents.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		F2B68B9728EDE93700EFD383 /* FusionIntentsUI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F2B68BAF28EDE93800EFD383 /* Build configuration list for PBXNativeTarget "FusionIntentsUI" */;
+			buildPhases = (
+				F2B68B9428EDE93700EFD383 /* Sources */,
+				F2B68B9528EDE93700EFD383 /* Frameworks */,
+				F2B68B9628EDE93700EFD383 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FusionIntentsUI;
+			productName = FusionIntentsUI;
+			productReference = F2B68B9828EDE93700EFD383 /* FusionIntentsUI.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -166,12 +289,19 @@
 		97C146E61CF9000F007C117D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 1400;
 				LastUpgradeCheck = 1300;
 				ORGANIZATIONNAME = "";
 				TargetAttributes = {
 					97C146ED1CF9000F007C117D = {
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 1100;
+					};
+					F2B68B8C28EDE93600EFD383 = {
+						CreatedOnToolsVersion = 14.0;
+					};
+					F2B68B9728EDE93700EFD383 = {
+						CreatedOnToolsVersion = 14.0;
 					};
 				};
 			};
@@ -189,6 +319,8 @@
 			projectRoot = "";
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
+				F2B68B8C28EDE93600EFD383 /* FusionIntents */,
+				F2B68B9728EDE93700EFD383 /* FusionIntentsUI */,
 			);
 		};
 /* End PBXProject section */
@@ -204,6 +336,21 @@
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				F2ADB5A528DCB0FE00BBA250 /* outgoing.wav in Resources */,
 				F2B68B8128DDE04300EFD383 /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2B68B8B28EDE93600EFD383 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2B68B9628EDE93700EFD383 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2B68BA028EDE93700EFD383 /* MainInterface.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,7 +437,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F2B68B8928EDE93600EFD383 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2B68B9228EDE93600EFD383 /* IntentHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2B68B9428EDE93700EFD383 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2B68B9D28EDE93700EFD383 /* IntentViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F2B68BA328EDE93700EFD383 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F2B68B9728EDE93700EFD383 /* FusionIntentsUI */;
+			targetProxy = F2B68BA228EDE93700EFD383 /* PBXContainerItemProxy */;
+		};
+		F2B68BA628EDE93800EFD383 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F2B68B8C28EDE93600EFD383 /* FusionIntents */;
+			targetProxy = F2B68BA528EDE93800EFD383 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		97C146FA1CF9000F007C117D /* Main.storyboard */ = {
@@ -307,6 +483,14 @@
 				97C147001CF9000F007C117D /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		F2B68B9E28EDE93700EFD383 /* MainInterface.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F2B68B9F28EDE93700EFD383 /* Base */,
+			);
+			name = MainInterface.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -367,6 +551,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-1";
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
@@ -511,6 +696,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-1";
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
@@ -548,6 +734,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-1";
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
@@ -579,6 +766,216 @@
 			};
 			name = Release;
 		};
+		F2B68BA928EDE93800EFD383 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WG63U5G4K9;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FusionIntents/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FusionIntents;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = net.fusioncomm.ios.FusionIntents;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F2B68BAA28EDE93800EFD383 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WG63U5G4K9;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FusionIntents/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FusionIntents;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = net.fusioncomm.ios.FusionIntents;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F2B68BAB28EDE93800EFD383 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WG63U5G4K9;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FusionIntents/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FusionIntents;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = net.fusioncomm.ios.FusionIntents;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
+		};
+		F2B68BAC28EDE93800EFD383 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WG63U5G4K9;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FusionIntentsUI/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FusionIntentsUI;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = net.fusioncomm.ios.FusionIntentsUI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F2B68BAD28EDE93800EFD383 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WG63U5G4K9;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FusionIntentsUI/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FusionIntentsUI;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = net.fusioncomm.ios.FusionIntentsUI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F2B68BAE28EDE93800EFD383 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WG63U5G4K9;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FusionIntentsUI/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FusionIntentsUI;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = net.fusioncomm.ios.FusionIntentsUI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -598,6 +995,26 @@
 				97C147061CF9000F007C117D /* Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F2B68BAF28EDE93800EFD383 /* Build configuration list for PBXNativeTarget "FusionIntentsUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F2B68BAC28EDE93800EFD383 /* Debug */,
+				F2B68BAD28EDE93800EFD383 /* Release */,
+				F2B68BAE28EDE93800EFD383 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F2B68BB028EDE93800EFD383 /* Build configuration list for PBXNativeTarget "FusionIntents" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F2B68BA928EDE93800EFD383 /* Debug */,
+				F2B68BAA28EDE93800EFD383 /* Release */,
+				F2B68BAB28EDE93800EFD383 /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
