@@ -19,7 +19,7 @@ import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
+//import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sip_ua/sip_ua.dart';
 
@@ -124,7 +124,7 @@ Future<void> main() async {
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
-  await SentryFlutter.init(
+  /*await SentryFlutter.init(
     (options) {
       options.diagnosticLevel = SentryLevel.error;
       options.dsn =
@@ -132,7 +132,8 @@ Future<void> main() async {
     },
     appRunner: () =>
         runApp(OverlaySupport.global(child: MaterialApp(home: MyApp()))),
-  );
+  );*/
+  runApp(OverlaySupport.global(child: MaterialApp(home: MyApp())));
   // runApp(MaterialApp(home: MyApp()));
 }
 
@@ -350,7 +351,7 @@ class _MyHomePageState extends State<MyHomePage> {
                  fusionConnection.nsApiCall('device', 'read', {
         'domain': fusionConnection.getDomain(),
         'device':
-            'sip:${fusionConnection.getExtension()}fm@${fusionConnection.getDomain()}',
+            'sip:${fusionConnection.getExtension()}fi@${fusionConnection.getDomain()}',
         'user': fusionConnection.getExtension()
       }, callback: (Map<String, dynamic> response) {
                    print("deviceread");
@@ -402,7 +403,7 @@ class _MyHomePageState extends State<MyHomePage> {
       fusionConnection.nsApiCall('device', 'read', {
         'domain': fusionConnection.getDomain(),
         'device':
-            'sip:${fusionConnection.getExtension()}fm@${fusionConnection.getDomain()}',
+            'sip:${fusionConnection.getExtension()}fi@${fusionConnection.getDomain()}',
         'user': fusionConnection.getExtension()
       }, callback: (Map<String, dynamic> response) {
         print("deviceread");

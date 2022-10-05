@@ -100,14 +100,16 @@ class _MenuState extends State<Menu> {
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w700)),
-              Container(height: 4),
-              Text(
-                  smallText,
-                  textAlign: TextAlign.left,
-                  style: TextStyle(
-                      color: smoke,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400))
+              if (smallText.length > 0)
+                Container(height: 4),
+              if (smallText.length > 0)
+                Text(
+                    smallText,
+                    textAlign: TextAlign.left,
+                    style: TextStyle(
+                        color: smoke,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400))
             ]
           )
         ]
@@ -190,7 +192,7 @@ class _MenuState extends State<Menu> {
 
   _body() {
     List<Widget> response =  [
-      _row("phone_outgoing", "Manage Outbound DID", "Dynamic Dialing", () { _openOutboundDIDMenu(); }),
+      _row("phone_outgoing", "Manage Outbound DID", "", () { _openOutboundDIDMenu(); }),
       // _row("gear_light", "Settings", "Coming soon", () {}),
       _line(),
       _row("moon_light", "Log Out", "", () { _fusionConnection.logOut(); })

@@ -1,9 +1,11 @@
 import UIKit
+import Intents
 import CallKit
 import Flutter
 import PushKit
-import Sentry
 import AVFoundation
+import linphonesw
+import Firebase
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate{
@@ -11,15 +13,65 @@ import AVFoundation
     var providerDelegate: ProviderDelegate!
     var callkitChannel: FlutterMethodChannel!
 
+    override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        print("opened from url")
+        print(url)
+        return true
+    }
+    
+    override func application(_ application: UIApplication,
+                     continue userActivity: NSUserActivity,
+                     restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool
+    {
+     print("startintent")
+        print(userActivity.activityType)
+        if (userActivity.activityType == "INStartAudioCallIntent" && userActivity.startCallHandle != nil) {
+            print("startcallintent")
+            print(userActivity.startCallHandle)
+            var matchNonNumeric = "[^0-9]+"
+            var address = "sip:" + userActivity.startCallHandle!.replacingOccurrences(of: matchNonNumeric, with: "", options: [.regularExpression ]) + "@" + providerDelegate.domain
+            providerDelegate.outgoingCall(
+                address: address)
+        }
+        
+        return true
+    }
+    
+    @available(iOS 13.0, *)
+    func handle(startWorkout intent: INStartCallIntent,
+                completion: @escaping (INStartWorkoutIntentResponse) -> Void) {
+        print("hadle instartcallintent")
+        print(intent.contacts)
+    }
+
+    func handle(startWorkout intent: INStartAudioCallIntent,
+                completion: @escaping (INStartWorkoutIntentResponse) -> Void) {
+        print("hadle instartcallaudiointent")
+        print(intent.identifier)
+        print(intent)
+    }
+    
+    func application(
+        _ application: UIApplication,
+        handlerFor intent: INIntent) {
+            print("startedfromintent")
+            print(intent)
+            print(intent.identifier)
+            print(intent.classForCoder)
+            print(intent.intentDescription)
+    }
+    
     override func application(
       _ application: UIApplication,
       didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        
+
         print("providerpush app delegate starting")
         
         setupCallkitFlutterLink()
         providerDelegate = ProviderDelegate(channel: callkitChannel)
+        
+        FirebaseApp.configure() //add this before the code below
 
         GeneratedPluginRegistrant.register(with: self)
         let mainQueue = DispatchQueue.main
@@ -44,6 +96,15 @@ import AVFoundation
         }*/
         
       return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+    
+    @available(iOS 13.0, *)
+    func scene(_ scene: UIScene,
+               willConnectTo session: UISceneSession,
+               options connectionOptions: UIScene.ConnectionOptions) {
+        print("opened from scene")
+        print(scene)
+        print(connectionOptions)
     }
     
     override func applicationDidBecomeActive(_ application: UIApplication) {
@@ -141,7 +202,7 @@ import AVFoundation
                     callerName: identifier,
                   hasVideo: false) { (e: Error?) in
                   print("completion2")
-	
+    
               };
                   
             }
@@ -149,4 +210,25 @@ import AVFoundation
         providerDelegate.reportNewIncomingCall(uuid: UUID(), handle: "Unknown", callerName: "Unknown") {(e: Error?) in print("completion3"); };
         }
     }
+}
+
+
+@available(iOS 10.0, *)
+protocol SupportedStartCallIntent {
+    var contacts: [INPerson]? { get }
+}
+
+@available(iOS 10.0, *)
+extension INStartAudioCallIntent: SupportedStartCallIntent {}
+
+@available(iOS 10.0, *)
+extension NSUserActivity {
+
+    var startCallHandle: String? {
+        guard let startCallIntent = interaction?.intent as? SupportedStartCallIntent else {
+            return nil
+        }
+        return startCallIntent.contacts?.first?.personHandle?.value
+    }
+
 }
