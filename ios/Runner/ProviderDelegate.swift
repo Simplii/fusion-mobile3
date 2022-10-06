@@ -470,6 +470,15 @@ print("audiointerruption")
                     print("error answering call");
                 }
             }
+            else if (call.method == "lpSendDtmf") {
+                let args = call.arguments as! [Any]
+                let call = findCallByUuid(uuid:args[0] as! String);
+                do {
+                    try call?.sendDtmfs(dtmfs: args[1] as! String);
+                } catch {
+                    print("error sending dtmf")
+                }
+            }
             else if (call.method == "lpSetHold") {
                 let args = call.arguments as! [Any]
                 let call = findCallByUuid(uuid:args[0] as! String);
