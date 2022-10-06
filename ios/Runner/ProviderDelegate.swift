@@ -159,6 +159,7 @@ print("audiointerruption")
             } else if (state == .UpdatedByRemote) {
                 self.callkitChannel.invokeMethod("lnCallUpdatedByRemote", arguments: [uuid])                // When the remote requests a call update
             } else if (state == .Released) {
+                self.ringingDidTimeout(uuid: uuid ?? "")
                 self.callkitChannel.invokeMethod("lnCallReleased", arguments: [uuid])                // Call state will be released shortly after the End state
                 self.isCallRunning = false
                 self.canChangeCamera = false
