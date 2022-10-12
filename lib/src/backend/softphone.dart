@@ -38,7 +38,7 @@ class Softphone implements SipUaHelperListener {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       registerNotifications();
 
-  bool _isUsingUa = !Platform.isIOS;
+  bool _isUsingUa = false;
   MethodChannel _callKit;
   MethodChannel _telecom;
   MethodChannel _android;
@@ -231,6 +231,7 @@ class Softphone implements SipUaHelperListener {
     else if (Platform.isAndroid) {
       _callKeep = FlutterCallkeep();
       _setupCallKeep();
+      _android.setMethodCallHandler(_callKitHandler);
 
       FlutterPhoneState.rawPhoneEvents.forEach((element) {
         print("rawphonevent");
@@ -333,17 +334,38 @@ class Softphone implements SipUaHelperListener {
     print("done");
   }
 
+
   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
   //  Sentry.captureMessage("callkitmethod:" + methodCall.method);
     print("callkitmethod:" + methodCall.method);
     print(methodCall.method);
     print("themethod: '" + methodCall.method + "'");
     var args = methodCall.arguments;
+    print(args);
+    if (Platform.isAndroid) {
+
+      switch (methodCall.method ) {
+        case "lnOutgoingInit":
+          args = [args['uuid'], args['callId'], args['remoteAddress']];
+          break;
+        case "lnIncomingReceived":
+          args = [args['callId'], args['remoteContact'],
+            args['remoteAddress'], args['uuid'], args['displayName']];
+          break;
+        default:
+          args = [args['uuid']];
+      }
+    }
         print("gotargs");
     print(args);
     print("switchnow");
 switch (methodCall.method) {
       case "lnOutgoingInit":
+        print("outgoing init");
+        print(args[0]) ;
+        print(args[1]);print(args[2]);
+        print(_cleanToAddress(args[2]));
+        print("linklncall");
         _addCall(
             _linkLnCallWithUuid(_cleanToAddress(args[2]), args[1], args[0], args[2], "OUTGOING")
         );
@@ -355,21 +377,26 @@ switch (methodCall.method) {
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
       // [uuid]
         break;
+  case "lnConnected":
       case "lnCallConnected":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.CONFIRMED);
         break;
+  case "lnStreamsRunning":
       case "lnCallStreamsRunning":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.STREAM);
         break;
+  case "lnPaused":
       case "lnCallPaused":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.HOLD);
         break;
+  case "lnPausedByRemote":
       case "lnCallPausedByRemote":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.HOLD);
         break;
       case "lnCallUpdatedByRemote":
 //        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
         break;
+  case "lnReleased":
       case "lnCallReleased":
         print("released call");print(args[0]);print(_getCallByUuid(args[0]));
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.ENDED);
@@ -394,6 +421,7 @@ switch (methodCall.method) {
         print("incoming");print(call);
         _addCall(call);
         break;
+  case "lnError":
       case "lnCallError":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.FAILED);
         break;
@@ -494,35 +522,29 @@ switch (methodCall.method) {
     }
   }
 
-  Future<void> _reportOutgoingCall(String uuid) async {
-    try {
-      await _callKit.invokeMethod('reportOutgoingCall', uuid);
-    } on PlatformException catch (e) {
-      print("callkit outgoing error");
-    }
-  }
-
   register(String login, String password, String aor) {
-    if (Platform.isIOS) {
-      registerIos(login, password, aor);
-    } else {
-      registerAndroid(login, password, aor);
-    }
+      registerLinphone(login, password, aor);
+
   }
 
-  registerIos(String login, String password, String aor) {
+  _getMethodChannel() {
+    return (Platform.isIOS ? _callKit : _android);
+  }
+
+  registerLinphone(String login, String password, String aor) {
     print("iosreg");
     print(aor.split("@"));
     _savedLogin = login;
     _savedPassword = password;
     _savedAor = aor;
-    _callKit.invokeMethod(
-        "lpRegister", [aor.split("@")[0], password, aor.split("@")[1]]);
+
+    _getMethodChannel().invokeMethod(
+          "lpRegister", [aor.split("@")[0], password, aor.split("@")[1]]);
   }
 
-  _unregisterIos() {
+  _unregisterLinphone() {
     print("iosunreg");
-    _callKit.invokeMethod(
+    _getMethodChannel().invokeMethod(
         "lpUnregister", []);
   }
 
@@ -576,11 +598,7 @@ switch (methodCall.method) {
 
   reregister() {
     print("reregistering...");
-    if (Platform.isAndroid) {
-      helper.register();
-    } else if (Platform.isIOS) {
-      registerIos(_savedLogin, _savedPassword, _savedAor);
-    }
+      registerLinphone(_savedLogin, _savedPassword, _savedAor);
   }
 
   setupPermissions() {
@@ -602,31 +620,18 @@ switch (methodCall.method) {
   }
 
   doMakeCall(String destination) async {
-    if (Platform.isIOS) {
       _playAudio(_outboundAudioPath, false);
 
       if (!destination.contains("sip:")) destination = "sip:" + destination;
       if (!destination.contains("@"))
         destination += "@" + _fusionConnection.getDomain();
 
-      _callKit.invokeMethod("lpStartCall", [destination]);
-    } else {
-      _playAudio(_outboundAudioPath, false);
-
-      final mediaConstraints = <String, dynamic>{'audio': true, 'video': false};
-      helper.setVideo(false);
-      MediaStream mediaStream;
-      mediaStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
-
-      return helper.call(destination,
-          voiceonly: true, mediaStream: mediaStream);
-    }
+      _getMethodChannel().invokeMethod("lpStartCall", [destination]);
   }
 
   makeActiveCall(Call call) {
     if (Platform.isAndroid && activeCall == null) {
       print("audioincallmanager.start");
-      //incallManager.start();
     }
     if (Platform.isAndroid) {
       incallManager.start(auto: true, media: MediaType.AUDIO);
@@ -646,7 +651,7 @@ switch (methodCall.method) {
       if (Platform.isIOS) {
         print("reportoing outging call callkit");
         _setCallDataValue(call.id, "isReported", true);
-        _callKit.invokeMethod("reportOutgoingCall",
+        _getMethodChannel().invokeMethod("reportOutgoingCall",
             [_uuidFor(call), getCallerNumber(call), getCallerName(call)]);
       }
     }
@@ -720,35 +725,9 @@ switch (methodCall.method) {
 
   setSpeaker(bool useSpeaker) {
     _savedOutput = useSpeaker;
-    if (Platform.isAndroid) {
-      List<MediaStream> localCallStreams = activeCall != null
-        ? _getCallDataValue(activeCall.id, "localStreams",
-                def: [].cast<MediaStream>())
-            .cast<MediaStream>()
-        : [];
-      List<MediaStream> remoteCallStreams = activeCall != null
-        ? _getCallDataValue(activeCall.id, "remoteStreams",
-                def: [].cast<MediaStream>())
-            .cast<MediaStream>()
-        : [];
+    print("lpsetspeaker");
+    _getMethodChannel().invokeMethod("lpSetSpeaker", [useSpeaker]);
 
-      if (useSpeaker) {
-        _android.invokeMethod("setSpeaker");
-        if (activeCall != null) {
-          _callKeep.setSpeaker(_uuidFor(activeCall));
-        }
-        // incallManager.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_ON);
-      } else {
-        //  incallManager.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_OFF);
-        if (activeCall != null) {
-          _callKeep.setEarpiece(_uuidFor(activeCall));
-        }
-
-        _android.invokeMethod("setEarpiece");
-      }
-    } else {
-      _callKit.invokeMethod("lpSetSpeaker", [useSpeaker]);
-    }
     this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
     this._updateListeners();
   }
@@ -760,31 +739,27 @@ switch (methodCall.method) {
   setHold(Call call, bool setOnHold, bool fromUi) async {
     _setCallDataValue(call.id, "onHold", setOnHold);
 
-    if (Platform.isIOS && fromUi) {
+    if ( fromUi) {
       if (setOnHold) {
+        if (Platform.isAndroid) {
+          _callKeep.setOnHold(_uuidFor(call), true);
+          _getMethodChannel().invokeMethod("lpSetHold", [_uuidFor(call), true]);
+        }
         print("setholdindart");
         call.hold();
-        _callKit.invokeMethod("setHold", [_uuidFor(call)]);
+        _getMethodChannel().invokeMethod("setHold", [_uuidFor(call)]);
       } else {
+        if (Platform.isAndroid) {
+          _callKeep.setOnHold(_uuidFor(call), false);
+          _getMethodChannel().invokeMethod("lpSetHold", [_uuidFor(call), false]);
+        }
         print("setholdinvoke");
-        _callKit.invokeMethod("setUnhold", [_uuidFor(call)]);
+        _getMethodChannel().invokeMethod("setUnhold", [_uuidFor(call)]);
       }
     } else if (setOnHold) {
-      if (Platform.isAndroid && fromUi) {
-        _callKeep.setOnHold(_uuidFor(call), true);
-      }
-      helper.setVideo(true);
       call.hold();
-      print("sethold here");
-      var future = new Future.delayed(const Duration(milliseconds: 2000), () {
-        helper.setVideo(false);
-      });
     } else {
       call.unhold();
-
-      if (Platform.isAndroid && fromUi) {
-        _callKeep.setOnHold(_uuidFor(call), false);
-      }
     }
   }
 
@@ -795,8 +770,8 @@ switch (methodCall.method) {
       if (Platform.isAndroid && fromUi) {
         _callKeep.setMutedCall(_uuidFor(call), true);
       }
-      if (Platform.isIOS && fromUi) {
-        _callKit.invokeMethod('muteCall', [_uuidFor(call)]);
+      if (fromUi) {
+        _getMethodChannel().invokeMethod('muteCall', [_uuidFor(call)]);
       }
     } else {
       _setCallDataValue(call.id, "muted", false);
@@ -804,8 +779,8 @@ switch (methodCall.method) {
       if (Platform.isAndroid && fromUi) {
         _callKeep.setMutedCall(_uuidFor(call), false);
       }
-      if (Platform.isIOS && fromUi) {
-        _callKit.invokeMethod('unMuteCall', [_uuidFor(call)]);
+      if (fromUi) {
+        _getMethodChannel().invokeMethod('unMuteCall', [_uuidFor(call)]);
       }
     }
   }
@@ -869,6 +844,9 @@ switch (methodCall.method) {
         }
       } else {
         call.answer({});
+        if (Platform.isAndroid) {
+          _callKeep.answerIncomingCall(_uuidFor(call));
+        }
       }
       makeActiveCall(call);
       _setCallDataValue(call.id, "answerTime", DateTime.now());
@@ -997,9 +975,10 @@ switch (methodCall.method) {
 
   _removeCall(Call call) {
     if (Platform.isIOS) {
-      _callKit.invokeMethod("lpEndCall", [_uuidFor(call)]);
-      _callKit.invokeMethod("endCall", [_uuidFor(call)]);
+      _getMethodChannel().invokeMethod("lpEndCall", [_uuidFor(call)]);
+      _getMethodChannel().invokeMethod("endCall", [_uuidFor(call)]);
     } else if (Platform.isAndroid) {
+      _getMethodChannel().invokeMethod("lpEndCall", [_uuidFor(call)]);
       _callKeep.endCall(_uuidFor(call));
     }
 
@@ -1050,9 +1029,13 @@ switch (methodCall.method) {
   }
 
   _linkLnCallWithUuid(toAddress, callId, uuid, callerId, direction) {
+    print("cid");
+    print(callId.toString());print(toAddress);
     var call = LnCall.makeLnCall(callId.toString(), toAddress);
+    print(call);print(direction);
     call.setIdentities(toAddress, callerId, direction);
-    call.setChannel(_callKit, uuid);
+    call.setChannel(_getMethodChannel(), uuid);
+    print("getdatabyid");print(call.id);
     Map<String, dynamic> data = _getCallDataById(call.id);
     data['uuid'] = uuid;
     print("linking call");print(callId);print(uuid);print(data.toString());
