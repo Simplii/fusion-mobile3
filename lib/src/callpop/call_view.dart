@@ -155,7 +155,116 @@ class _CallViewState extends State<CallView> {
             : _softphone.getCallerNumber(_softphone.activeCall));
   }
 
+  _changeDefaultInputDevice() {
+
+    List<List<String>> options = _softphone.devicesList
+        .where((element) => element[2] == "Microphone")
+        .toList()
+        .cast<List<String>>();
+
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (contact) => PopupMenu(
+            label: "Default Input Device",
+            bottomChild: Container(
+                constraints: BoxConstraints(
+                    minHeight: 24,
+                    maxHeight: 200,
+                    minWidth: 90,
+                    maxWidth: MediaQuery.of(context).size.width - 66),
+                child: ListView(
+                    padding: EdgeInsets.all(8),
+                    children: options.map((List<String> option) {
+                      return GestureDetector(
+                          onTap: () {
+                            _softphone.setDefaultInput(option[1]);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                              padding: EdgeInsets.only(
+                                  top: 12, bottom: 12, left: 8, right: 8),
+                              decoration: BoxDecoration(
+                                  color: option[1] == _softphone.defaultInput
+                                      ? lightHighlight
+                                      : Colors.transparent,
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: lightDivider, width: 1.0))),
+                              child: Row(children: [
+                                Text(option[1],
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700)),
+                                Spacer(),
+                                if (_softphone.defaultInput == option[1])
+                                  Image.asset(
+                                      "assets/icons/call_view/check.png",
+                                      width: 16,
+                                      height: 11)
+                              ])));
+                    }).toList()))));
+  }
+
+  _changeDefaultOutputDevice() {
+
+    List<List<String>> options = _softphone.devicesList
+        .where((element) => element[2] != "Microphone")
+        .toList()
+        .cast<List<String>>();
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (contact) => PopupMenu(
+            label: "Default Output Device",
+            bottomChild: Container(
+                constraints: BoxConstraints(
+                    minHeight: 24,
+                    maxHeight: 200,
+                    minWidth: 90,
+                    maxWidth: MediaQuery.of(context).size.width - 66),
+                child: ListView(
+                    padding: EdgeInsets.all(8),
+                    children: options.map((List<String> option) {
+                      return GestureDetector(
+                          onTap: () {
+                            _softphone.setDefaultOutput(option[1]);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                              padding: EdgeInsets.only(
+                                  top: 12, bottom: 12, left: 8, right: 8),
+                              decoration: BoxDecoration(
+                                  color: option[1] == _softphone.defaultOutput
+                                      ? lightHighlight
+                                      : Colors.transparent,
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: lightDivider, width: 1.0))),
+                              child: Row(children: [
+                                Text(option[1],
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700)),
+                                Spacer(),
+                                if (_softphone.defaultOutput == option[1])
+                                  Image.asset(
+                                      "assets/icons/call_view/check.png",
+                                      width: 16,
+                                      height: 11)
+                              ])));
+                    }).toList()))));
+  }
+
   _onAudioBtnPress() {
+    print("audiopress");
+    print(_softphone.devicesList);
+    print(_softphone.defaultInput);
+    print(_softphone.defaultOutput);
     List<List<String>> options = [
       ["assets/icons/call_view/audio_phone.png", "Phone", "phone"],
       ["assets/icons/call_view/audio_speaker.png", "Speaker", "speaker"],
@@ -168,7 +277,76 @@ class _CallViewState extends State<CallView> {
         isScrollControlled: true,
         builder: (contact) => PopupMenu(
             label: "AUDIO SOURCE",
-            topChild: Row(children: [
+            topChild:
+                Column(
+                  children: [
+              if (Platform.isAndroid)
+            Row(children: [
+              Expanded(
+                  child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _changeDefaultOutputDevice();
+                      },
+                      child: Container(
+                          alignment: Alignment.center,
+                          margin: EdgeInsets.only(
+                              bottom: 4, left: 20, right: 20, top: 6),
+                          padding: EdgeInsets.only(top: 12, bottom: 12),
+                          decoration: BoxDecoration(
+                              color: coal,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8)),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: translucentBlack(0.28),
+                                    offset: Offset.zero,
+                                    blurRadius: 36)
+                              ]),
+                          child: Text(_softphone.defaultOutput,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                height: 1.4,
+                              )))))
+            ]),
+              if (Platform.isAndroid)
+                    Container(height: 4),
+              if (Platform.isAndroid)
+            Row(children: [
+              Expanded(
+                  child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _changeDefaultInputDevice();
+                      },
+                      child: Container(
+                          alignment: Alignment.center,
+                          margin: EdgeInsets.only(
+                              bottom: 16, left: 20, right: 20, top: 6),
+                          padding: EdgeInsets.only(top: 12, bottom: 12),
+                          decoration: BoxDecoration(
+                              color: coal,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8)),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: translucentBlack(0.28),
+                                    offset: Offset.zero,
+                                    blurRadius: 36)
+                              ]),
+                          child: Text(_softphone.defaultInput,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                height: 1.4,
+                              )))))
+            ]),
+              if (Platform.isAndroid)
+                    Container(height: 4),
+            Row(children: [
               Expanded(
                   child: GestureDetector(
                       onTap: () {
@@ -197,7 +375,9 @@ class _CallViewState extends State<CallView> {
                                 fontSize: 16,
                                 height: 1.4,
                               )))))
-            ]),
+            ])
+                  ]
+                ),
             bottomChild: Container(
                 constraints: BoxConstraints(
                     minHeight: 24,
