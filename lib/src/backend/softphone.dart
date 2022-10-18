@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart' as Aps;
@@ -64,6 +65,10 @@ class Softphone implements SipUaHelperListener {
   //AudioSession _audioSession;
   bool _isAudioSessionActive = false;
   bool _attemptingToRegainAudio = false;
+  bool _ringingInbound = false;
+
+  String defaultInput = "";
+  String defaultOutput = "";
 
   Function _onUnregister = null;
   List<String> callIdsAnswered = [];
@@ -87,6 +92,7 @@ class Softphone implements SipUaHelperListener {
   String _savedLogin;
   String _savedAor;
   String _savedPassword;
+  List<List<String>> devicesList = [];
 
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
@@ -159,7 +165,7 @@ class Softphone implements SipUaHelperListener {
       }
     } else if (Platform.isAndroid) {
       Aps.AudioCache cache = Aps.AudioCache();
-      if (path == _outboundAudioPath) {
+      if (path == _outboundAudioPath) {return true;
         if (_outboundPlayer == null) {
           _outboundPlayer = Aps.AudioPlayer();
           cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
@@ -169,9 +175,10 @@ class Softphone implements SipUaHelperListener {
           });
         }
       } else if (path == _inboundAudioPath) {
-        if (calls.length > 1
+        if (!(calls.length > 1
             && activeCall.state != CallStateEnum.CONNECTING
-            && activeCall.state != CallStateEnum.PROGRESS) {
+            && activeCall.state != CallStateEnum.PROGRESS)) {
+           _ringingInbound = true;
           RingtonePlayer.ringtone(
               alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
                   "ic_alarm_notification",
@@ -215,6 +222,7 @@ class Softphone implements SipUaHelperListener {
 
   stopInbound() {
     print("stopinbound");
+    _ringingInbound = false;
     RingtonePlayer.stop();
   }
 
@@ -334,6 +342,20 @@ class Softphone implements SipUaHelperListener {
     print("done");
   }
 
+   setDefaultInput(String deviceId) {
+     _getMethodChannel().invokeMethod(
+         "lpSetDefaultInput", [deviceId]);
+     defaultInput = deviceId;
+     _updateListeners();
+   }
+
+   setDefaultOutput(String deviceId) {
+     _getMethodChannel().invokeMethod(
+         "lpSetDefaultOutput", [deviceId]);
+     defaultOutput = deviceId;
+     _updateListeners();
+   }
+
 
   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
   //  Sentry.captureMessage("callkitmethod:" + methodCall.method);
@@ -345,6 +367,21 @@ class Softphone implements SipUaHelperListener {
     if (Platform.isAndroid) {
 
       switch (methodCall.method ) {
+        case "lnNewDevicesList":
+          var decoded = json.decode(args['devicesList']);
+          devicesList = [];
+          for (dynamic item in decoded) {
+            print(item);
+            devicesList.add([item[0], item[1], item[2]]);
+          }
+          defaultInput = args['defaultInput'];
+          defaultOutput = args['defaultOutput'] as String;
+
+          args = [
+            args['devicesList'] as String,
+            args["defaultInput"] as String,
+            args["defaultOutput"] as String];
+          break;
         case "lnOutgoingInit":
           args = [args['uuid'], args['callId'], args['remoteAddress']];
           break;
@@ -430,6 +467,20 @@ switch (methodCall.method) {
         break;
       case "lnAudioDeviceListUpdated":
       // []
+        break;
+      case "lnNewDevicesList":
+  /*      print("newdevicesList");
+        print(devicesList);
+        print(args[0]);
+        print(args);
+        List<List<String>> devices = args[0];
+        print(devices);
+        devicesList = devices;
+        defaultInput = args[1];
+        defaultOutput = args[2];
+        print(defaultInput);
+        print(defaultOutput);*/
+        _updateListeners();
         break;
       case "lnRegistrationOk":
         registrationStateChanged(RegistrationState(
@@ -1189,6 +1240,17 @@ switch (methodCall.method) {
   }
 
   _updateListeners() {
+    if (_ringingInbound
+        && (activeCall == null ||
+            (activeCall.state != CallStateEnum.CONNECTING
+                && activeCall.state != null
+                && activeCall.state != CallStateEnum.PROGRESS))) {
+      if (activeCall != null) {
+        print("stoppingringtone");
+        print(activeCall.state);
+      }
+      stopInbound();
+    }
     if (activeCall != null && activeCall.id == "") {
       print("!!!!!!!activecall has no id???????");
     }

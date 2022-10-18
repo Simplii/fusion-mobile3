@@ -633,10 +633,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     "assets/icons/phone_filled_white.png",
                                     width: 18,
                                     height: 18),
-                                label: "Calls (" +
-                                    (softphone.helper.connected ? "C" : "c") +
-                                    (softphone.helper.registered ? "R" : "r") +
-                                    ")",
+                                label: "Calls",
                               ),
                               BottomNavigationBarItem(
                                 icon: Opacity(

@@ -7,9 +7,13 @@ import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.util.JsonWriter
 import android.util.Log
 import android.widget.Toast
 import com.tekartik.sqflite.SqflitePlugin;
+
+import com.google.gson.Gson
+
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -56,6 +60,14 @@ class MainActivity : FlutterFragmentActivity() {
             }
         }
 
+        override fun onAudioDeviceChanged(core: Core, audioDevice: AudioDevice) {
+        }
+
+        override fun onAudioDevicesListUpdated(core: Core) {
+            // This callback will be triggered when the available devices list has changed,
+            // for example after a bluetooth headset has been connected/disconnected.
+            sendDevices()
+        }
 
         override fun onCallStateChanged(
             core: Core,
@@ -68,7 +80,7 @@ class MainActivity : FlutterFragmentActivity() {
             print(uuid)
             print(state)
             print(call)
-      when (state) {
+            when (state) {
                 Call.State.Idle -> {
                     channel.invokeMethod(
                         "lnIdle",
@@ -101,9 +113,11 @@ class MainActivity : FlutterFragmentActivity() {
                     uuidCalls[uuid] = call
                     channel.invokeMethod(
                         "lnOutgoingInit",
-                        mapOf(Pair("uuid", uuid),
-                        Pair("callId", call.callLog.callId),
-                        Pair("remoteAddress", call.remoteAddressAsString))
+                        mapOf(
+                            Pair("uuid", uuid),
+                            Pair("callId", call.callLog.callId),
+                            Pair("remoteAddress", call.remoteAddressAsString)
+                        )
                     )
                     channel.invokeMethod(
                         "lnOutgoingProgress",
@@ -230,11 +244,22 @@ class MainActivity : FlutterFragmentActivity() {
             )
         )
         core.natPolicy?.enableTurn(true)
-        core.enableEchoLimiter(false)
-        core.enableEchoCancellation(false)
+//        core.enableEchoLimiter(true)
+//        core.enableEchoCancellation(true)
+
+        if (core.hasBuiltinEchoCanceller()) {
+            print("Device has built in echo canceler, disabling software echo canceler");
+            core.enableEchoCancellation(false);
+        }
+        else {
+            print("Device has no echo canceler, enabling software echo canceler");
+            core.enableEchoCancellation(true);
+        }
+
         core.natPolicy?.stunServer = "services.fusioncomm.net"
         core.remoteRingbackTone = "android.resource://net.fusioncomm.android/" + R.raw.outgoing
         core.ring = "android.resource://net.fusioncomm.android/" + R.raw.inbound;
+
     }
 
     private fun register() {
@@ -283,6 +308,23 @@ class MainActivity : FlutterFragmentActivity() {
         account.addListener { _, state, message ->
         }
         core.start()
+        sendDevices()
+    }
+
+    private fun sendDevices() {
+        var devicesList: Array<Array<String>> = arrayOf()
+        for (device in core.extendedAudioDevices) {
+            devicesList = devicesList.plus(
+                arrayOf(device.deviceName, device.id, device.type.name)
+            )
+        }
+
+        var gson = Gson();
+        channel.invokeMethod(
+            "lnNewDevicesList",
+            mapOf(Pair("devicesList", gson.toJson(devicesList)),
+            Pair("defaultInput", core.defaultInputAudioDevice.id),
+            Pair("defaultOutput", core.defaultOutputAudioDevice.id)))
     }
 
     private fun createProxyConfig(
@@ -390,8 +432,7 @@ class MainActivity : FlutterFragmentActivity() {
                 val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
                 audioManager.isSpeakerphoneOn = false
-            }
-            else if (call.method == "lpAnswer") {
+            } else if (call.method == "lpAnswer") {
                 var args = call.arguments as List<Any>
                 var lpCall = findCallByUuid(args[0] as String)
                 print("answering...")
@@ -412,6 +453,26 @@ class MainActivity : FlutterFragmentActivity() {
                         lpCall.resume()
                     } else {
                         lpCall.pause()
+                    }
+                }
+            } else if (call.method == "lpSetDefaultInput") {
+                var args = call.arguments as List<Any>
+                for (audioDevice in core.audioDevices) {
+                    if (audioDevice.id == args[0]) {
+                        core.defaultInputAudioDevice = audioDevice;
+                        for  (call in core.calls) {
+                            call.inputAudioDevice = audioDevice
+                        }
+                    }
+                }
+            } else if (call.method == "lpSetDefaultOutput") {
+                var args = call.arguments as List<Any>
+                for (audioDevice in core.audioDevices) {
+                    if (audioDevice.id == args[0]) {
+                        core.defaultInputAudioDevice = audioDevice;
+                        for  (call in core.calls) {
+                            call.outputAudioDevice = audioDevice
+                        }
                     }
                 }
             } else if (call.method == "lpSetSpeaker") {

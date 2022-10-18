@@ -59,6 +59,12 @@ class LnCall extends Call {
     nativeChannel.invokeMethod("lpEndCall", [uuid]);
   }
 
+  sendDTMF(String letters, [Map<String, dynamic> x = null]) {
+    if (Platform.isAndroid) {
+      nativeChannel.invokeMethod("lpSendDtmf", [uuid, letters]);
+    }
+  }
+
   mute([bool x, bool y]) {
     nativeChannel.invokeMethod("lpMuteCall", [uuid]);
   }
