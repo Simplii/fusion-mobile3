@@ -563,7 +563,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SafeArea(
                 child: Stack(children: [
               Scaffold(
-                  drawer: Menu(fusionConnection, _dids),
+                  drawer: Menu(fusionConnection, _dids, softphone),
                   backgroundColor: Colors.transparent,
                   body: _getTabWidget(),
                   floatingActionButton: _getFloatingButton(),
