@@ -69,6 +69,10 @@ class Softphone implements SipUaHelperListener {
 
   String defaultInput = "";
   String defaultOutput = "";
+  bool echoLimiterEnabled = false;
+  bool echoCancellationEnabled = false;
+  String echoCancellationFilterName = "";
+  bool isTestingEcho = false;
 
   Function _onUnregister = null;
   List<String> callIdsAnswered = [];
@@ -343,14 +347,16 @@ class Softphone implements SipUaHelperListener {
   }
 
    setDefaultInput(String deviceId) {
-     _getMethodChannel().invokeMethod(
+    print("heresetit");
+     _android.invokeMethod(
          "lpSetDefaultInput", [deviceId]);
      defaultInput = deviceId;
      _updateListeners();
    }
 
    setDefaultOutput(String deviceId) {
-     _getMethodChannel().invokeMethod(
+    print("setdefaultoutput");
+     _android.invokeMethod(
          "lpSetDefaultOutput", [deviceId]);
      defaultOutput = deviceId;
      _updateListeners();
@@ -376,6 +382,9 @@ class Softphone implements SipUaHelperListener {
           }
           defaultInput = args['defaultInput'];
           defaultOutput = args['defaultOutput'] as String;
+          echoLimiterEnabled = args['echoLimiterEnabled'] as bool;
+          echoCancellationEnabled = args['echoCancellationEnabled'] as bool;
+          echoCancellationFilterName = args['echoCancellationFilterName'] as String;
 
           args = [
             args['devicesList'] as String,
@@ -1091,6 +1100,29 @@ switch (methodCall.method) {
     data['uuid'] = uuid;
     print("linking call");print(callId);print(uuid);print(data.toString());
     return call;
+  }
+
+  testEcho() {
+    _android.invokeMethod("lpTestEcho", []);
+    isTestingEcho = true;
+  }
+
+  stopTestingEcho() {
+    _android.invokeMethod("lpStopTestEcho", []);
+    isTestingEcho = false;
+  }
+
+  calibrateEcho() {
+    _android.invokeMethod("lpCalibrateEcho", []);
+  }
+
+  toggleEchoLimiterEnabled() {
+    _android.invokeMethod("lpSetEchoLimiterEnabled", [!echoLimiterEnabled]);
+  }
+
+
+  toggleEchoCancellationEnabled() {
+    _android.invokeMethod("lpSetEchoCancellationEnabled", [!echoCancellationEnabled]);
   }
 
   _linkUuidFor(Call call) {

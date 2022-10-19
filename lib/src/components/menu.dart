@@ -6,14 +6,16 @@ import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
 
 import '../backend/fusion_connection.dart';
+import '../backend/softphone.dart';
 import '../styles.dart';
 import '../utils.dart';
 
 class Menu extends StatefulWidget {
   final FusionConnection _fusionConnection;
+  final Softphone _softphone;
   final List<Did> _dids;
 
-  Menu(this._fusionConnection, this._dids, {Key key})
+  Menu(this._fusionConnection, this._dids, this._softphone, {Key key})
       : super(key: key);
 
   @override
@@ -22,8 +24,285 @@ class Menu extends StatefulWidget {
 
 class _MenuState extends State<Menu> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
+  Softphone get _softphone => widget._softphone;
   List<Did> get _dids => widget._dids;
+
+
+  _changeDefaultInputDevice() {
+
+    List<List<String>> options = _softphone.devicesList
+        .where((element) => element[2] == "Microphone")
+        .toList()
+        .cast<List<String>>();
+
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (contact) => PopupMenu(
+            label: "Default Input Device",
+            bottomChild: Container(
+                constraints: BoxConstraints(
+                    minHeight: 24,
+                    maxHeight: 200,
+                    minWidth: 90,
+                    maxWidth: MediaQuery.of(context).size.width - 66),
+                child: ListView(
+                    padding: EdgeInsets.all(8),
+                    children: options.map((List<String> option) {
+                      return GestureDetector(
+                          onTap: () {
+                            _softphone.setDefaultInput(option[1]);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                              padding: EdgeInsets.only(
+                                  top: 12, bottom: 12, left: 8, right: 8),
+                              decoration: BoxDecoration(
+                                  color: option[1] == _softphone.defaultInput
+                                      ? lightHighlight
+                                      : Colors.transparent,
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: lightDivider, width: 1.0))),
+                              child: Row(children: [
+                                Text(option[1],
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700)),
+                                Spacer(),
+                                if (_softphone.defaultInput == option[1])
+                                  Image.asset(
+                                      "assets/icons/call_view/check.png",
+                                      width: 16,
+                                      height: 11)
+                              ])));
+                    }).toList()))));
+  }
+
+  _changeDefaultOutputDevice() {
+
+    List<List<String>> options = _softphone.devicesList
+        .where((element) => element[2] != "Microphone")
+        .toList()
+        .cast<List<String>>();
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (contact) => PopupMenu(
+            label: "Default Output Device",
+            bottomChild: Container(
+                constraints: BoxConstraints(
+                    minHeight: 24,
+                    maxHeight: 200,
+                    minWidth: 90,
+                    maxWidth: MediaQuery.of(context).size.width - 66),
+                child: ListView(
+                    padding: EdgeInsets.all(8),
+                    children: options.map((List<String> option) {
+                      return GestureDetector(
+                          onTap: () {
+                            _softphone.setDefaultOutput(option[1]);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                              padding: EdgeInsets.only(
+                                  top: 12, bottom: 12, left: 8, right: 8),
+                              decoration: BoxDecoration(
+                                  color: option[1] == _softphone.defaultOutput
+                                      ? lightHighlight
+                                      : Colors.transparent,
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: lightDivider, width: 1.0))),
+                              child: Row(children: [
+                                Text(option[1],
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700)),
+                                Spacer(),
+                                if (_softphone.defaultOutput == option[1])
+                                  Image.asset(
+                                      "assets/icons/call_view/check.png",
+                                      width: 16,
+                                      height: 11)
+                              ])));
+                    }).toList()))));
+  }
+
+  _onAudioBtnPress() {
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (contact) => PopupMenu(
+            label: "Default Audio Sources",
+            topChild:
+                Column(
+                  children: [
+            Row(children: [
+              Expanded(
+                  child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _changeDefaultOutputDevice();
+                      },
+                      child: Container(
+                          alignment: Alignment.center,
+                          margin: EdgeInsets.only(
+                              bottom: 4, left: 20, right: 20, top: 6),
+                          padding: EdgeInsets.only(top: 12, bottom: 12),
+                          decoration: BoxDecoration(
+                              color: coal,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8)),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: translucentBlack(0.28),
+                                    offset: Offset.zero,
+                                    blurRadius: 36)
+                              ]),
+                          child: Text(_softphone.defaultOutput,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                height: 1.4,
+                              )))))
+            ]),
+                    Container(height: 4),
+            Row(children: [
+              Expanded(
+                  child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _changeDefaultInputDevice();
+                      },
+                      child: Container(
+                          alignment: Alignment.center,
+                          margin: EdgeInsets.only(
+                              bottom: 16, left: 20, right: 20, top: 6),
+                          padding: EdgeInsets.only(top: 12, bottom: 12),
+                          decoration: BoxDecoration(
+                              color: coal,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8)),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: translucentBlack(0.28),
+                                    offset: Offset.zero,
+                                    blurRadius: 36)
+                              ]),
+                          child: Text(_softphone.defaultInput,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                height: 1.4,
+                              )))))
+            ])]),
+            bottomChild: Container(
+                constraints: BoxConstraints(
+                    minHeight: 24,
+                    maxHeight: 200,
+                    minWidth: 90,
+                    maxWidth: MediaQuery.of(context).size.width - 136),
+                child: ListView(
+                    padding: EdgeInsets.all(8),
+                    children: [
+                      GestureDetector(
+                          onTap: () {
+                            _softphone.toggleEchoCancellationEnabled();
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                              padding: EdgeInsets.only(
+                                  top: 12, bottom: 12, left: 18, right: 18),
+                              decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: lightDivider, width: 1.0))),
+                              child: Row(children: [
+                                Text(
+                                    (_softphone.echoCancellationEnabled
+                                        ?  "Disable Echo Cancellation"
+                                        : "Enable Echo Cancellation"),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700)),
+                              ]))),
+                      GestureDetector(
+                          onTap: () {
+                            _softphone.toggleEchoLimiterEnabled();
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                              padding: EdgeInsets.only(
+                                  top: 12, bottom: 12, left: 18, right: 18),
+                              decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: lightDivider, width: 1.0))),
+                              child: Row(children: [
+                                Text(_softphone.echoLimiterEnabled
+                                    ? "Disable Echo Limiter"
+                                    : "Enable Echo Limiter",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700)),
+                              ]))),
+                      GestureDetector(
+                          onTap: () {
+                            _softphone.calibrateEcho();
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                              padding: EdgeInsets.only(
+                                  top: 12, bottom: 12, left: 18, right: 18),
+                              decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: lightDivider, width: 1.0))),
+                              child: Row(children: [
+                                Text("Calibrate Echo Cancellation",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700)),
+                              ]))),
+                      GestureDetector(
+                          onTap: () {
+                            if (_softphone.isTestingEcho)
+                              _softphone.stopTestingEcho();
+                            else
+                              _softphone.testEcho();
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                              padding: EdgeInsets.only(
+                                  top: 12, bottom: 12, left: 18, right: 18),
+                              decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  border: Border(
+                                      bottom: BorderSide(
+                                          color: lightDivider, width: 1.0))),
+                              child: Row(children: [
+                                Text(_softphone.isTestingEcho ? "Stop Testing Echo" : "Test Echo",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700)),
+                              ]))),
+                    ]))));
+  }
 
   _header() {
     UserSettings settings = _fusionConnection.settings;
@@ -87,9 +366,12 @@ class _MenuState extends State<Menu> {
           Container(
               margin: EdgeInsets.only(right: 24),
               width: 22, height: 22,
-              child: Image.asset(
+
+              child: Opacity(
+                opacity: icon.contains("call_view") ? 0.45 : 1.0,
+                child: Image.asset(
                   "assets/icons/" + icon + ".png",
-                  width: 22, height: 22)),
+                  width: 22, height: 22))),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -193,6 +475,8 @@ class _MenuState extends State<Menu> {
   _body() {
     List<Widget> response =  [
       _row("phone_outgoing", "Manage Outbound DID", "", () { _openOutboundDIDMenu(); }),
+      _row("call_view/audio_phone", "Audio Settings", "", () { _onAudioBtnPress(); }),
+
       // _row("gear_light", "Settings", "Coming soon", () {}),
       _line(),
       _row("moon_light", "Log Out", "", () { _fusionConnection.logOut(); })

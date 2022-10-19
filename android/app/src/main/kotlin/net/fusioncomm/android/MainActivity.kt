@@ -323,8 +323,11 @@ class MainActivity : FlutterFragmentActivity() {
         channel.invokeMethod(
             "lnNewDevicesList",
             mapOf(Pair("devicesList", gson.toJson(devicesList)),
-            Pair("defaultInput", core.defaultInputAudioDevice.id),
-            Pair("defaultOutput", core.defaultOutputAudioDevice.id)))
+                Pair("echoLimiterEnabled", core.echoLimiterEnabled()),
+                Pair("echoCancellationEnabled", core.echoCancellationEnabled()),
+                Pair("echoCancellationFilterName", core.echoCancellerFilterName),
+                Pair("defaultInput", core.defaultInputAudioDevice.id),
+                Pair("defaultOutput", core.defaultOutputAudioDevice.id)))
     }
 
     private fun createProxyConfig(
@@ -455,26 +458,54 @@ class MainActivity : FlutterFragmentActivity() {
                         lpCall.pause()
                     }
                 }
+            } else if (call.method == "lpSetEchoCancellationEnabled") {
+                var args = call.arguments as List<Any>
+                core.enableEchoCancellation(args[0] as Boolean)
+                sendDevices()
+            } else if (call.method == "lpCalibrateEcho") {
+                core.startEchoCancellerCalibration()
+            } else if (call.method == "lpTestEcho") {
+                core.startEchoTester(10)
+            } else if (call.method == "lpStopTestEcho") {
+                core.stopEchoTester()
+                sendDevices()
+            } else if (call.method == "lpSetEchoLimiterEnabled") {
+                var args = call.arguments as List<Any>
+                core.enableEchoLimiter(args[0] as Boolean)
+                sendDevices()
             } else if (call.method == "lpSetDefaultInput") {
                 var args = call.arguments as List<Any>
-                for (audioDevice in core.audioDevices) {
+                Log.d("setinput", "gonna set default input")
+                for (audioDevice in core.extendedAudioDevices) {
+                    Log.d("setinput", "checking audio device" + audioDevice.id)
+                    Log.d("setinput", "checking against" + args[0])
                     if (audioDevice.id == args[0]) {
+                        Log.d("setinput", "found the default input")
                         core.defaultInputAudioDevice = audioDevice;
                         for  (call in core.calls) {
+                            Log.d("setinput", "setting the default input for a call")
                             call.inputAudioDevice = audioDevice
+                            Log.d("setinput", audioDevice.id)
                         }
                     }
                 }
+                sendDevices()
             } else if (call.method == "lpSetDefaultOutput") {
                 var args = call.arguments as List<Any>
-                for (audioDevice in core.audioDevices) {
+                for (audioDevice in core.extendedAudioDevices) {
+                                        Log.d("setou8tput", "out checking audio device" + audioDevice.id)
+                    Log.d("output", "out checking against" + args[0])
+
                     if (audioDevice.id == args[0]) {
-                        core.defaultInputAudioDevice = audioDevice;
+                        core.defaultOutputAudioDevice = audioDevice;
                         for  (call in core.calls) {
+                                                        Log.d("setinput", "setting the default input for a call")
+
                             call.outputAudioDevice = audioDevice
                         }
                     }
                 }
+                sendDevices()
             } else if (call.method == "lpSetSpeaker") {
                 var args = call.arguments as List<Any>
                 var enableSpeaker = args[0] as Boolean
@@ -486,6 +517,7 @@ class MainActivity : FlutterFragmentActivity() {
                         core.currentCall?.outputAudioDevice = audioDevice
                     }
                 }
+                sendDevices()
             } else if (call.method == "lpMuteCall") {
                 var args = call.arguments as List<Any>
                 var lpCall = findCallByUuid(args[0] as String)
