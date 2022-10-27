@@ -132,6 +132,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   String _typeFilter = "Fusion Contacts";
   String _subscriptionKey;
   int _page = 0;
+  bool _hasPulledFromServer = false;
 
   initState() {
     super.initState();
@@ -171,6 +172,12 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         if (thisLookup != _lookedUpQuery) return;
         if (!mounted) return;
         if (_typeFilter != 'Fusion Contacts') return;
+        if (fromServer && !_hasPulledFromServer) {
+          _hasPulledFromServer = true;
+          _contacts = [];
+          print("gotfirstcontactsfromserver");
+          print(contacts);
+        }
 
         this.setState(() {
           if (fromServer) {
@@ -180,6 +187,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             _contacts = contacts;
           } else {
             Map<String, Contact> list = {};
+
             _contacts.forEach((Contact c) {
               list[c.id] = c;
             });
@@ -201,6 +209,12 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         if (thisLookup != _lookedUpQuery) return;
         if (!mounted) return;
         if (_typeFilter != 'Integrated Contacts') return;
+        if (fromServer && !_hasPulledFromServer) {
+          _hasPulledFromServer = true;
+          _contacts = [];
+          print("gotfirstcontactsfromserver");
+          print(contacts);
+        }
 
         this.setState(() {
           if (fromServer) {
@@ -244,7 +258,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                 })
                 .toList()
                 .cast<String>(), (List<Coworker> coworkers) {
-          if (!mounted) return;
+          if (!mounted || _typeFilter != 'Coworkers') return;
 
           this.setState(() {
             _contacts = coworkers
@@ -330,10 +344,10 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             .compareTo((b.name).trim().toLowerCase());
 
       else
-        return (a.firstName + a.lastName)
+        return (a.lastName + " " + a.firstName)
             .trim()
             .toLowerCase()
-            .compareTo((b.firstName + b.lastName).trim().toLowerCase());
+            .compareTo((b.lastName + " " + b.firstName).trim().toLowerCase());
     });
   }
 
@@ -358,6 +372,11 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         return " ";
       else
         return (item.name).trim()[0].toLowerCase();
+    } else if (_typeFilter == 'Fusion Contacts') {
+      if ((item.lastName + item.firstName).trim().length == 0)
+        return " ";
+      else
+        return (item.lastName + item.firstName).trim()[0].toLowerCase();
     } else {
       if ((item.firstName + item.lastName).trim().length == 0)
         return " ";
@@ -389,7 +408,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       _typeFilter = 'Fusion Contacts';
     else if (_selectedTab == 'integrated')
       _typeFilter = 'Integrated Contacts';
-    else if (_selectedTab == 'fusion') _typeFilter = 'Fusion Contacts';
+    else if (_selectedTab == 'fusion')
+      _typeFilter = 'Fusion Contacts';
 
     if (_typeFilter != origType) {
       _contacts = [];
@@ -398,6 +418,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     if (_lookedUpQuery != _typeFilter + _query) {
       _page = 0;
       lookupState = 0;
+      _hasPulledFromServer = false;
     }
     if (lookupState == 0) {
       _lookupQuery();
@@ -420,7 +441,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                           itemBuilder: (BuildContext context, int index) {
                             if (index >= _contacts.length) {
                               _loadMore();
-                              return Container();
+                              return Container(height: 20);
                             } else {
                               String letter = _letterFor(_contacts[index]);
                               if (index != 0 &&
