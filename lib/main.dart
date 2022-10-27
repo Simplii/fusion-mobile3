@@ -105,7 +105,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
     flutterLocalNotificationsPlugin.show(id, callerName,
-        callerNumber + ' incoming phone call', platformChannelSpecifics,
+        callerNumber.formatPhone() + ' incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
 
     var timer = Timer(Duration(seconds: 40), () {
