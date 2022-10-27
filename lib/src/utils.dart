@@ -63,7 +63,7 @@ extension PhoneNumbers on String {
     else if (this.length < 10)
       return this;
     else
-      return this.replaceAllMapped(RegExp(r'(\d{3})(\d{3})(\d{4})'), (match) {
+      return this.replaceAllMapped(RegExp(r'([02-9]\d{2})(\d{3})(\d{4})'), (match) {
         return '(${match.group(1)}) ${match.group(2)}-${match.group(3)}';
       });
   }
