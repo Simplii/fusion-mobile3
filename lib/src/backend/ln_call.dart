@@ -42,6 +42,10 @@ class LnCall extends Call {
     iosChannel.invokeMethod("lpSetHold", [uuid, hold]);
   }
 
+  sendDTMF(String digits, [Map<String, dynamic> arg]) {
+    iosChannel.invokeMethod("lpSendDtmf", [uuid, digits]);
+  }
+
   hold() {
     setHold(true);
   }
