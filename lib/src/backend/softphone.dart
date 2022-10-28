@@ -529,7 +529,7 @@ switch (methodCall.method) {
     settings.webSocketSettings.allowBadCertificate = true;
     settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
 
-    if (aor == "9812fi@Simplii1" || aor == "9811fi@Simplii1") {
+    if (aor == "9812fm@Simplii1" || aor == "9811fm@Simplii1") {
       print("using test push proxy 9811/9812 detected");
       settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
     }
