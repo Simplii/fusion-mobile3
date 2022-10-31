@@ -24,8 +24,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_apns:
-  firebase_messaging: ^11.2.6
-  firebase_core:
+  firebase_messaging: ^11.2.5
+  firebase_core: ^1.24.0
   flutter_dtmf:
   android_intent_plus:
   websocket_manager:
