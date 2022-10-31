@@ -160,7 +160,7 @@ class FusionConnection {
     FirebaseMessaging.instance.getToken().then((token) {
       if (_pushkitToken != null) {
         apiV1Call("delete", "/clients/device_token",
-          {"token":  _pushkitToken});
+          {"token":  _pushkitToken });
       }
       apiV1Call("delete", "/clients/device_token",
           {"token": token, "pn_tok": _pushkitToken}, callback: (data) {
