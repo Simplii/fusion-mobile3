@@ -25,6 +25,7 @@ end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
+source 'https://github.com/CocoaPods/Specs.git'
 source "https://gitlab.linphone.org/BC/public/podspec.git"
 
 flutter_ios_podfile_setup
