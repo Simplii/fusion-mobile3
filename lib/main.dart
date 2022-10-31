@@ -105,7 +105,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
     flutterLocalNotificationsPlugin.show(id, callerName,
-        callerNumber + ' incoming phone call', platformChannelSpecifics,
+        callerNumber.formatPhone() + ' incoming phone call', platformChannelSpecifics,
         payload: callUUID.toString());
 
     var timer = Timer(Duration(seconds: 40), () {
@@ -563,7 +563,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SafeArea(
                 child: Stack(children: [
               Scaffold(
-                  drawer: Menu(fusionConnection, _dids),
+                  drawer: Menu(fusionConnection, _dids, softphone),
                   backgroundColor: Colors.transparent,
                   body: _getTabWidget(),
                   floatingActionButton: _getFloatingButton(),
@@ -633,10 +633,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     "assets/icons/phone_filled_white.png",
                                     width: 18,
                                     height: 18),
-                                label: "Calls (" +
-                                    (softphone.helper.connected ? "C" : "c") +
-                                    (softphone.helper.registered ? "R" : "r") +
-                                    ")",
+                                label: "Calls",
                               ),
                               BottomNavigationBarItem(
                                 icon: Opacity(

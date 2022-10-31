@@ -22,7 +22,7 @@ class LnCall extends Call {
   String direction;
 
   String uuid;
-  MethodChannel iosChannel;
+  MethodChannel nativeChannel;
 
   LnCall(String id, RTCSession session, CallStateEnum state) : super(id, session, state);
   LnCall.makeLnCall(String callId, String remoteAddress): super(callId, LnSession(null), CallStateEnum.NONE);
@@ -35,15 +35,15 @@ class LnCall extends Call {
 
   setChannel(channel, uuid) {
     this.uuid = uuid;
-    iosChannel = channel;
+    nativeChannel = channel;
   }
 
   setHold(bool hold) {
-    iosChannel.invokeMethod("lpSetHold", [uuid, hold]);
+    nativeChannel.invokeMethod("lpSetHold", [uuid, hold]);
   }
 
   sendDTMF(String digits, [Map<String, dynamic> arg]) {
-    iosChannel.invokeMethod("lpSendDtmf", [uuid, digits]);
+    nativeChannel.invokeMethod("lpSendDtmf", [uuid, digits]);
   }
 
   hold() {
@@ -55,21 +55,23 @@ class LnCall extends Call {
   }
 
   answer(Map<String, dynamic> s, {MediaStream mediaStream = null}) {
-    iosChannel.invokeMethod("lpAnswer", [uuid]);
+    print("answer call here");
+    print(uuid);
+    nativeChannel.invokeMethod("lpAnswer", [uuid]);
   }
   hangup([Map<String, dynamic> x = null]) {
-    iosChannel.invokeMethod("lpEndCall", [uuid]);
+    nativeChannel.invokeMethod("lpEndCall", [uuid]);
   }
 
   mute([bool x, bool y]) {
-    iosChannel.invokeMethod("lpMuteCall", [uuid]);
+    nativeChannel.invokeMethod("lpMuteCall", [uuid]);
   }
   unmute([bool x, bool y]) {
-    iosChannel.invokeMethod("lpUnmuteCall", [uuid]);
+    nativeChannel.invokeMethod("lpUnmuteCall", [uuid]);
   }
 
   refer(String destination) {
-    iosChannel.invokeMethod("lpRefer", [uuid, destination]);
+    nativeChannel.invokeMethod("lpRefer", [uuid, destination]);
   }
 
   void setState(CallState newState) {print("1");

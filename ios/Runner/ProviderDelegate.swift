@@ -904,7 +904,6 @@ extension ProviderDelegate: CXProviderDelegate {
     
   func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
       mCore?.activateAudioSession(actived: true)
-      print("didactivate audiosession here")
       return;
 //    https://stackoverflow.com/questions/47416493/callkit-can-reactivate-sound-after-swapping-call
       //https://bugs.chromium.org/p/webrtc/issues/detail?id=8126
