@@ -1194,9 +1194,12 @@ switch (methodCall.method) {
   }
 
   checkMicrophoneAccess(BuildContext context) async {
+    print("checkmicrophone");
     PermissionStatus status = await Permission.microphone.status;
+    print(status);
     if (status != PermissionStatus.granted &&
         status != PermissionStatus.permanentlyDenied) {
+      print("reqmic");
       status = await Permission.microphone.request();
     } else if (status == PermissionStatus.permanentlyDenied) {
       showDialog(

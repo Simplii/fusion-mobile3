@@ -103,6 +103,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
 
   initState() {
     super.initState();
+    _softphone.checkMicrophoneAccess(context);
   }
 
   @override
