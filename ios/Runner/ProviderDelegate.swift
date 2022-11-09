@@ -472,6 +472,8 @@ print("audiointerruption")
             else if (call.method == "lpSetHold") {
                 let args = call.arguments as! [Any]
                 let call = findCallByUuid(uuid:args[0] as! String);
+                print("toholdhere")
+                print(call!.state)
                 do {
                     let toHold = args[1] as! Bool
                     if (toHold) {
@@ -481,11 +483,18 @@ print("audiointerruption")
                     } else {
                         if (call!.state == .Paused || call!.state == .PausedByRemote || call!.state == .Pausing) {
                             try call!.resume();
+                        } else if (call!.state == .Resuming){
+                            let uuid = args[0] as! String
+
+                            self.callkitChannel.invokeMethod("lnCallConnected", arguments: [uuid])                // Call state will be released shortly after the End state
+
                         }
                     }
                 } catch let error as NSError {
                     print("error holding/unholding call");
                     print(error);
+                    
+                
                 }
             }
             else if (call.method == "lpSetSpeaker") {

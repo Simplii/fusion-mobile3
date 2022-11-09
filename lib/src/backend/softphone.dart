@@ -1065,10 +1065,13 @@ switch (methodCall.method) {
       var newActive = calls[0];
       var state = newActive.state;
       makeActiveCall(newActive);
-
-      if (state == CallStateEnum.HOLD) {
-        newActive.hold();
-      }
+      print("willunholdcall");
+      newActive.unhold();
+      _getMethodChannel().invokeMethod("lpSetHold", [_uuidFor(call), false]);
+      print("setholdinvoke");
+      _getMethodChannel().invokeMethod("setUnhold", [_uuidFor(call)]);
+      _setLpCallState(call, CallStateEnum.CONFIRMED);
+     _setCallDataValue(call.id, "onHold", false);
     } else {
       setCallOutput(call, "phone");
     }
@@ -1380,6 +1383,7 @@ switch (methodCall.method) {
   }
 
   getHoldState(Call call) {
+    return call.state == CallStateEnum.HOLD;
     return _getCallDataValue(call.id, "onHold", def: false);
   }
 
