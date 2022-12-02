@@ -375,22 +375,24 @@ class Softphone implements SipUaHelperListener {
 
       switch (methodCall.method ) {
         case "lnNewDevicesList":
-          var decoded = json.decode(args['devicesList']);
-          devicesList = [];
-          for (dynamic item in decoded) {
-            print(item);
-            devicesList.add([item[0], item[1], item[2]]);
+          if (Platform.isAndroid) {
+            var decoded = json.decode(args['devicesList']);
+            devicesList = [];
+            for (dynamic item in decoded) {
+              print(item);
+              devicesList.add([item[0], item[1], item[2]]);
+            }
+            defaultInput = args['defaultInput'];
+            defaultOutput = args['defaultOutput'] as String;
+            echoLimiterEnabled = args['echoLimiterEnabled'] as bool;
+            echoCancellationEnabled = args['echoCancellationEnabled'] as bool;
+            echoCancellationFilterName =
+            args['echoCancellationFilterName'] as String;
+            args = [
+              args['devicesList'] as String,
+              args["defaultInput"] as String,
+              args["defaultOutput"] as String];
           }
-          defaultInput = args['defaultInput'];
-          defaultOutput = args['defaultOutput'] as String;
-          echoLimiterEnabled = args['echoLimiterEnabled'] as bool;
-          echoCancellationEnabled = args['echoCancellationEnabled'] as bool;
-          echoCancellationFilterName = args['echoCancellationFilterName'] as String;
-
-          args = [
-            args['devicesList'] as String,
-            args["defaultInput"] as String,
-            args["defaultOutput"] as String];
           break;
         case "lnOutgoingInit":
           args = [args['uuid'], args['callId'], args['remoteAddress']];
@@ -402,6 +404,25 @@ class Softphone implements SipUaHelperListener {
         default:
           args = [args['uuid']];
       }
+    } else {
+      if (methodCall.method == "lnNewDevicesList") {
+        print("newdeviceslist");
+        print(args);
+            devicesList = [];
+            var decoded = json.decode(args[0] as String);
+            for (dynamic item in decoded) {
+              print("onedeviceitem");
+              print(item);
+              devicesList.add([item[0], item[1], item[2]]);
+            }
+            print("updatedeeviceslist");
+            print(devicesList);
+            defaultInput = args[4] as String;
+            defaultOutput = args[5] as String;
+            echoLimiterEnabled = args[1] as bool;
+            echoCancellationEnabled = args[2] as bool;
+            echoCancellationFilterName = args[3] as String;
+          }
     }
         print("gotargs");
     print(args);
@@ -1107,26 +1128,26 @@ switch (methodCall.method) {
   }
 
   testEcho() {
-    _android.invokeMethod("lpTestEcho", []);
+    _getMethodChannel().invokeMethod("lpTestEcho", []);
     isTestingEcho = true;
   }
 
   stopTestingEcho() {
-    _android.invokeMethod("lpStopTestEcho", []);
+    _getMethodChannel().invokeMethod("lpStopTestEcho", []);
     isTestingEcho = false;
   }
 
   calibrateEcho() {
-    _android.invokeMethod("lpCalibrateEcho", []);
+    _getMethodChannel().invokeMethod("lpCalibrateEcho", []);
   }
 
   toggleEchoLimiterEnabled() {
-    _android.invokeMethod("lpSetEchoLimiterEnabled", [!echoLimiterEnabled]);
+    _getMethodChannel().invokeMethod("lpSetEchoLimiterEnabled", [!echoLimiterEnabled]);
   }
 
 
   toggleEchoCancellationEnabled() {
-    _android.invokeMethod("lpSetEchoCancellationEnabled", [!echoCancellationEnabled]);
+    _getMethodChannel().invokeMethod("lpSetEchoCancellationEnabled", [!echoCancellationEnabled]);
   }
 
   _linkUuidFor(Call call) {
