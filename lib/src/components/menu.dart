@@ -458,6 +458,7 @@ class _MenuState extends State<Menu> {
       _row("phone_outgoing", "Manage Outbound DID", "", () {
         _openOutboundDIDMenu();
       }),
+
       _row("call_view/audio_phone", "Audio Settings", "", () {
         _onAudioBtnPress();
       }),
