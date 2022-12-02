@@ -47,7 +47,7 @@ class _CallViewState extends State<CallView> {
     _timer = new Timer.periodic(
       Duration(seconds: 1),
       (Timer timer) {
-        print("timerefired: " +DateTime.now().toString());
+        print("timerefired: " + DateTime.now().toString());
         setState(() {});
       },
     );
@@ -61,17 +61,16 @@ class _CallViewState extends State<CallView> {
   }
 
   _onHoldBtnPress() {
-    _softphone.setHold(_activeCall, true,  true);
+    _softphone.setHold(_activeCall, true, true);
   }
 
   _onResumeBtnPress() {
-    if (Platform.isIOS
-        && _softphone.couldGetAudioSession == _softphone.activeCall.id) {
+    if (Platform.isIOS &&
+        _softphone.couldGetAudioSession == _softphone.activeCall.id) {
       String num = _softphone.getCallerNumber(_softphone.activeCall);
       _softphone.hangUp(_softphone.activeCall);
       _softphone.makeCall(num);
-    }
-    else if (!_softphone.isCellPhoneCallActive)
+    } else if (!_softphone.isCellPhoneCallActive)
       _softphone.setHold(_activeCall, false, true);
   }
 
@@ -148,7 +147,7 @@ class _CallViewState extends State<CallView> {
         context,
         _fusionConnection,
         callPopInfo != null ? callPopInfo.contacts : [],
-        callPopInfo != null ? callPopInfo.crmContacts: [],
+        callPopInfo != null ? callPopInfo.crmContacts : [],
         _softphone,
         callPopInfo != null
             ? callPopInfo.phoneNumber
@@ -156,12 +155,11 @@ class _CallViewState extends State<CallView> {
   }
 
   _changeDefaultInputDevice() {
-
     List<List<String>> options = _softphone.devicesList
         .where((element) => element[2] == "Microphone")
         .toList()
         .cast<List<String>>();
-
+    print('here2 $options');
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -209,7 +207,6 @@ class _CallViewState extends State<CallView> {
   }
 
   _changeDefaultOutputDevice() {
-
     List<List<String>> options = _softphone.devicesList
         .where((element) => element[2] != "Microphone")
         .toList()
@@ -231,7 +228,8 @@ class _CallViewState extends State<CallView> {
                     children: options.map((List<String> option) {
                       return GestureDetector(
                           onTap: () {
-                            _softphone.setDefaultOutput(option[1]);
+                            // _softphone.setDefaultOutput(option[1]);
+                            _softphone.forceupdateOutputDevice(option[1]);
                             Navigator.pop(context);
                           },
                           child: Container(
@@ -268,6 +266,7 @@ class _CallViewState extends State<CallView> {
     List<List<String>> options = [
       ["assets/icons/call_view/audio_phone.png", "Phone", "phone"],
       ["assets/icons/call_view/audio_speaker.png", "Speaker", "speaker"],
+      ["assets/icons/call_view/audio_speaker.png", "Bluetooth", "bluetooth"],
     ];
     String callAudioOutput = _softphone.getCallOutput(_activeCall);
     bool muted = _softphone.getMuted(_activeCall);
@@ -277,107 +276,102 @@ class _CallViewState extends State<CallView> {
         isScrollControlled: true,
         builder: (contact) => PopupMenu(
             label: "AUDIO SOURCE",
-            topChild:
-                Column(
-                  children: [
+            topChild: Column(children: [
               if (Platform.isAndroid)
-            Row(children: [
-              Expanded(
-                  child: GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        _changeDefaultOutputDevice();
-                      },
-                      child: Container(
-                          alignment: Alignment.center,
-                          margin: EdgeInsets.only(
-                              bottom: 4, left: 20, right: 20, top: 6),
-                          padding: EdgeInsets.only(top: 12, bottom: 12),
-                          decoration: BoxDecoration(
-                              color: coal,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8)),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: translucentBlack(0.28),
-                                    offset: Offset.zero,
-                                    blurRadius: 36)
-                              ]),
-                          child: Text(_softphone.defaultOutput,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                                height: 1.4,
-                              )))))
+                Row(children: [
+                  Expanded(
+                      child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            _changeDefaultOutputDevice();
+                          },
+                          child: Container(
+                              alignment: Alignment.center,
+                              margin: EdgeInsets.only(
+                                  bottom: 4, left: 20, right: 20, top: 6),
+                              padding: EdgeInsets.only(top: 12, bottom: 12),
+                              decoration: BoxDecoration(
+                                  color: coal,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(8)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: translucentBlack(0.28),
+                                        offset: Offset.zero,
+                                        blurRadius: 36)
+                                  ]),
+                              child: Text(_softphone.defaultOutput,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                    height: 1.4,
+                                  )))))
+                ]),
+              if (Platform.isAndroid) Container(height: 4),
+              if (Platform.isAndroid)
+                Row(children: [
+                  Expanded(
+                      child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            _changeDefaultInputDevice();
+                          },
+                          child: Container(
+                              alignment: Alignment.center,
+                              margin: EdgeInsets.only(
+                                  bottom: 16, left: 20, right: 20, top: 6),
+                              padding: EdgeInsets.only(top: 12, bottom: 12),
+                              decoration: BoxDecoration(
+                                  color: coal,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(8)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: translucentBlack(0.28),
+                                        offset: Offset.zero,
+                                        blurRadius: 36)
+                                  ]),
+                              child: Text(_softphone.defaultInput,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                    height: 1.4,
+                                  )))))
+                ]),
+              if (Platform.isAndroid) Container(height: 4),
+              Row(children: [
+                Expanded(
+                    child: GestureDetector(
+                        onTap: () {
+                          _softphone.setMute(_activeCall, !muted, true);
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                            alignment: Alignment.center,
+                            margin: EdgeInsets.only(
+                                bottom: 24, left: 20, right: 20, top: 6),
+                            padding: EdgeInsets.only(top: 12, bottom: 12),
+                            decoration: BoxDecoration(
+                                color: muted ? crimsonDarker : coal,
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(8)),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: translucentBlack(0.28),
+                                      offset: Offset.zero,
+                                      blurRadius: 36)
+                                ]),
+                            child: Text(muted ? "Muted" : "Mute",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                  height: 1.4,
+                                )))))
+              ])
             ]),
-              if (Platform.isAndroid)
-                    Container(height: 4),
-              if (Platform.isAndroid)
-            Row(children: [
-              Expanded(
-                  child: GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        _changeDefaultInputDevice();
-                      },
-                      child: Container(
-                          alignment: Alignment.center,
-                          margin: EdgeInsets.only(
-                              bottom: 16, left: 20, right: 20, top: 6),
-                          padding: EdgeInsets.only(top: 12, bottom: 12),
-                          decoration: BoxDecoration(
-                              color: coal,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8)),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: translucentBlack(0.28),
-                                    offset: Offset.zero,
-                                    blurRadius: 36)
-                              ]),
-                          child: Text(_softphone.defaultInput,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                                height: 1.4,
-                              )))))
-            ]),
-              if (Platform.isAndroid)
-                    Container(height: 4),
-            Row(children: [
-              Expanded(
-                  child: GestureDetector(
-                      onTap: () {
-                        _softphone.setMute(_activeCall, !muted, true);
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                          alignment: Alignment.center,
-                          margin: EdgeInsets.only(
-                              bottom: 24, left: 20, right: 20, top: 6),
-                          padding: EdgeInsets.only(top: 12, bottom: 12),
-                          decoration: BoxDecoration(
-                              color: muted ? crimsonDarker : coal,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8)),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: translucentBlack(0.28),
-                                    offset: Offset.zero,
-                                    blurRadius: 36)
-                              ]),
-                          child: Text(muted ? "Muted" : "Mute",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                                height: 1.4,
-                              )))))
-            ])
-                  ]
-                ),
             bottomChild: Container(
                 constraints: BoxConstraints(
                     minHeight: 24,
@@ -387,6 +381,7 @@ class _CallViewState extends State<CallView> {
                 child: ListView(
                     padding: EdgeInsets.all(8),
                     children: options.map((List<String> option) {
+                      print('here2 $option');
                       return GestureDetector(
                           onTap: () {
                             _softphone.setCallOutput(_activeCall, option[2]);
@@ -462,20 +457,24 @@ class _CallViewState extends State<CallView> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        if (!_softphone.isCellPhoneCallActive
-                            && !(_softphone.couldGetAudioSession != _softphone.activeCall
-                                && Platform.isIOS))
-                        Container(
-                            margin: EdgeInsets.only(right: 8),
-                            child: Image.asset(
-                                "assets/icons/call_view/play.png",
-                                width: 12,
-                                height: 16)),
-                        Text(_softphone.isCellPhoneCallActive
-                            ? 'Mobile Call Active'
-                            : (_softphone.couldGetAudioSession == _softphone.activeCall.id && Platform.isIOS
-                              ? 'RESUME'
-                              : 'RESUME'),
+                        if (!_softphone.isCellPhoneCallActive &&
+                            !(_softphone.couldGetAudioSession !=
+                                    _softphone.activeCall &&
+                                Platform.isIOS))
+                          Container(
+                              margin: EdgeInsets.only(right: 8),
+                              child: Image.asset(
+                                  "assets/icons/call_view/play.png",
+                                  width: 12,
+                                  height: 16)),
+                        Text(
+                            _softphone.isCellPhoneCallActive
+                                ? 'Mobile Call Active'
+                                : (_softphone.couldGetAudioSession ==
+                                            _softphone.activeCall.id &&
+                                        Platform.isIOS
+                                    ? 'RESUME'
+                                    : 'RESUME'),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: Colors.white,
@@ -533,103 +532,107 @@ class _CallViewState extends State<CallView> {
     }
 
     return WillPopScope(
-      onWillPop: () async {
-        return false;
-      },
+        onWillPop: () async {
+          return false;
+        },
         child: Container(
-        decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Stack(
-            children: [
-              if (_softphone.getHoldState(_activeCall) || dialpadVisible)
-                Container(
-                    child: Container(
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage("assets/background.png"),
+                    fit: BoxFit.cover)),
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Stack(
+                children: [
+                  if (_softphone.getHoldState(_activeCall) || dialpadVisible)
+                    Container(
+                        child: Container(
                       decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [translucentWhite(0.0), Colors.black],
-                          )),
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [translucentWhite(0.0), Colors.black],
+                      )),
                     )),
-              if (_softphone.getHoldState(_activeCall) || dialpadVisible)
-                ClipRect(
-                    child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 21, sigmaY: 21),
-                        child: Container())),
-              SafeArea(
-                  bottom: false,
-                  child: Container(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (Platform.isIOS && isIncoming && isRinging)
-                          CallActionButtons(
-                              actions: actions,
-                              isRinging: isRinging,
-                              isIncoming: isIncoming,
-                              dialPadOpen: dialpadVisible,
-                              resumeDisabled: _softphone.isCellPhoneCallActive,
-                              isOnConference:
-                              _softphone.isCallMerged(_activeCall),
-                              setDialpad: (bool isOpen) {
-                                setState(() {
-                                  dialpadVisible = isOpen;
-                                });
-                              },
-                              callIsRecording:
-                              _softphone.getRecordState(_activeCall),
-                              callIsMuted: _softphone.getMuted(_activeCall),
-                              callOnHold: _softphone.getHoldState(_activeCall)),
-                        CallHeaderDetails(
-                            callerName: callerName,
-                            companyName: companyName,
-                            callerNumber: callerNumber,
-                            isRinging: isRinging,
-                            callIsRecording:
-                            _softphone.getRecordState(_activeCall),
-                            callRunTime: callRunTime),
-                        if (_softphone.getHoldState(_activeCall))
-                          _onHoldView()
-                        else
-                          Spacer(),
-                        if (!_softphone.getHoldState(_activeCall) &&
-                            dialpadVisible)
-                          CallDialPad(_softphone, _activeCall),
-                        if (!Platform.isIOS || !isIncoming || !isRinging)
-                          CallActionButtons(
-                              actions: actions,
-                              isRinging: isRinging,
-                              isIncoming: isIncoming,
-                              dialPadOpen: dialpadVisible,
-                              isOnConference:
-                              _softphone.isCallMerged(_activeCall),
-                              setDialpad: (bool isOpen) {
-                                setState(() {
-                                  dialpadVisible = isOpen;
-                                });
-                              },
-                              callIsRecording:
-                              _softphone.getRecordState(_activeCall),
-                              callIsMuted: _softphone.getMuted(_activeCall),
-                              callOnHold: _softphone.getHoldState(_activeCall)),
-                        CallFooterDetails(
-                            _fusionConnection, _softphone, _activeCall)
-                      ],
-                    ),
-                  )),
-              if (connectedCalls.length > 0)
-                AnsweredWhileOnCall(
-                    calls: connectedCalls,
-                    softphone: _softphone,
-                    activeCall: _activeCall),
-              if (incomingCall != null)
-                IncomingWhileOnCall(call: incomingCall, softphone: _softphone)
-            ],
-          ),
-        ))
-    );
+                  if (_softphone.getHoldState(_activeCall) || dialpadVisible)
+                    ClipRect(
+                        child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 21, sigmaY: 21),
+                            child: Container())),
+                  SafeArea(
+                      bottom: false,
+                      child: Container(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (Platform.isIOS && isIncoming && isRinging)
+                              CallActionButtons(
+                                  actions: actions,
+                                  isRinging: isRinging,
+                                  isIncoming: isIncoming,
+                                  dialPadOpen: dialpadVisible,
+                                  resumeDisabled:
+                                      _softphone.isCellPhoneCallActive,
+                                  isOnConference:
+                                      _softphone.isCallMerged(_activeCall),
+                                  setDialpad: (bool isOpen) {
+                                    setState(() {
+                                      dialpadVisible = isOpen;
+                                    });
+                                  },
+                                  callIsRecording:
+                                      _softphone.getRecordState(_activeCall),
+                                  callIsMuted: _softphone.getMuted(_activeCall),
+                                  callOnHold:
+                                      _softphone.getHoldState(_activeCall)),
+                            CallHeaderDetails(
+                                callerName: callerName,
+                                companyName: companyName,
+                                callerNumber: callerNumber,
+                                isRinging: isRinging,
+                                callIsRecording:
+                                    _softphone.getRecordState(_activeCall),
+                                callRunTime: callRunTime),
+                            if (_softphone.getHoldState(_activeCall))
+                              _onHoldView()
+                            else
+                              Spacer(),
+                            if (!_softphone.getHoldState(_activeCall) &&
+                                dialpadVisible)
+                              CallDialPad(_softphone, _activeCall),
+                            if (!Platform.isIOS || !isIncoming || !isRinging)
+                              CallActionButtons(
+                                  actions: actions,
+                                  isRinging: isRinging,
+                                  isIncoming: isIncoming,
+                                  dialPadOpen: dialpadVisible,
+                                  isOnConference:
+                                      _softphone.isCallMerged(_activeCall),
+                                  setDialpad: (bool isOpen) {
+                                    setState(() {
+                                      dialpadVisible = isOpen;
+                                    });
+                                  },
+                                  callIsRecording:
+                                      _softphone.getRecordState(_activeCall),
+                                  callIsMuted: _softphone.getMuted(_activeCall),
+                                  callOnHold:
+                                      _softphone.getHoldState(_activeCall)),
+                            CallFooterDetails(
+                                _fusionConnection, _softphone, _activeCall)
+                          ],
+                        ),
+                      )),
+                  if (connectedCalls.length > 0)
+                    AnsweredWhileOnCall(
+                        calls: connectedCalls,
+                        softphone: _softphone,
+                        activeCall: _activeCall),
+                  if (incomingCall != null)
+                    IncomingWhileOnCall(
+                        call: incomingCall, softphone: _softphone)
+                ],
+              ),
+            )));
   }
 }
