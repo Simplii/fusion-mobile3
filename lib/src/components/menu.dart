@@ -475,6 +475,7 @@ print("changeout");print(_softphone.devicesList);
   _body() {
     List<Widget> response =  [
       _row("phone_outgoing", "Manage Outbound DID", "", () { _openOutboundDIDMenu(); }),
+
       _row("call_view/audio_phone", "Audio Settings", "", () { _onAudioBtnPress(); }),
 
       // _row("gear_light", "Settings", "Coming soon", () {}),
