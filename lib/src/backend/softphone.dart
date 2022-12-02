@@ -373,24 +373,25 @@ class Softphone implements SipUaHelperListener {
     if (Platform.isAndroid) {
       switch (methodCall.method) {
         case "lnNewDevicesList":
-          var decoded = json.decode(args['devicesList']);
-          devicesList = [];
-          for (dynamic item in decoded) {
-            print(item);
-            devicesList.add([item[0], item[1], item[2]]);
+          if (Platform.isAndroid) {
+            var decoded = json.decode(args['devicesList']);
+            devicesList = [];
+            for (dynamic item in decoded) {
+              print(item);
+              devicesList.add([item[0], item[1], item[2]]);
+            }
+            defaultInput = args['defaultInput'];
+            defaultOutput = args['defaultOutput'] as String;
+            echoLimiterEnabled = args['echoLimiterEnabled'] as bool;
+            echoCancellationEnabled = args['echoCancellationEnabled'] as bool;
+            echoCancellationFilterName =
+                args['echoCancellationFilterName'] as String;
+            args = [
+              args['devicesList'] as String,
+              args["defaultInput"] as String,
+              args["defaultOutput"] as String
+            ];
           }
-          defaultInput = args['defaultInput'];
-          defaultOutput = args['defaultOutput'] as String;
-          echoLimiterEnabled = args['echoLimiterEnabled'] as bool;
-          echoCancellationEnabled = args['echoCancellationEnabled'] as bool;
-          echoCancellationFilterName =
-              args['echoCancellationFilterName'] as String;
-
-          args = [
-            args['devicesList'] as String,
-            args["defaultInput"] as String,
-            args["defaultOutput"] as String
-          ];
           break;
         case "lnOutgoingInit":
           args = [args['uuid'], args['callId'], args['remoteAddress']];
@@ -406,6 +407,25 @@ class Softphone implements SipUaHelperListener {
           break;
         default:
           args = [args['uuid']];
+      }
+    } else {
+      if (methodCall.method == "lnNewDevicesList") {
+        print("newdeviceslist");
+        print(args);
+        devicesList = [];
+        var decoded = json.decode(args[0] as String);
+        for (dynamic item in decoded) {
+          print("onedeviceitem");
+          print(item);
+          devicesList.add([item[0], item[1], item[2]]);
+        }
+        print("updatedeeviceslist");
+        print(devicesList);
+        defaultInput = args[4] as String;
+        defaultOutput = args[5] as String;
+        echoLimiterEnabled = args[1] as bool;
+        echoCancellationEnabled = args[2] as bool;
+        echoCancellationFilterName = args[3] as String;
       }
     }
     // print(["gotargs", args]);
@@ -1067,10 +1087,13 @@ class Softphone implements SipUaHelperListener {
       var newActive = calls[0];
       var state = newActive.state;
       makeActiveCall(newActive);
-
-      if (state == CallStateEnum.HOLD) {
-        newActive.hold();
-      }
+      print("willunholdcall");
+      newActive.unhold();
+      _getMethodChannel().invokeMethod("lpSetHold", [_uuidFor(call), false]);
+      print("setholdinvoke");
+      _getMethodChannel().invokeMethod("setUnhold", [_uuidFor(call)]);
+      _setLpCallState(call, CallStateEnum.CONFIRMED);
+      _setCallDataValue(call.id, "onHold", false);
     } else {
       setCallOutput(call, "phone");
     }
@@ -1112,25 +1135,26 @@ class Softphone implements SipUaHelperListener {
   }
 
   testEcho() {
-    _android.invokeMethod("lpTestEcho", []);
+    _getMethodChannel().invokeMethod("lpTestEcho", []);
     isTestingEcho = true;
   }
 
   stopTestingEcho() {
-    _android.invokeMethod("lpStopTestEcho", []);
+    _getMethodChannel().invokeMethod("lpStopTestEcho", []);
     isTestingEcho = false;
   }
 
   calibrateEcho() {
-    _android.invokeMethod("lpCalibrateEcho", []);
+    _getMethodChannel().invokeMethod("lpCalibrateEcho", []);
   }
 
   toggleEchoLimiterEnabled() {
-    _android.invokeMethod("lpSetEchoLimiterEnabled", [!echoLimiterEnabled]);
+    _getMethodChannel()
+        .invokeMethod("lpSetEchoLimiterEnabled", [!echoLimiterEnabled]);
   }
 
   toggleEchoCancellationEnabled() {
-    _android.invokeMethod(
+    _getMethodChannel().invokeMethod(
         "lpSetEchoCancellationEnabled", [!echoCancellationEnabled]);
   }
 
@@ -1388,6 +1412,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   getHoldState(Call call) {
+    return call.state == CallStateEnum.HOLD;
     return _getCallDataValue(call.id, "onHold", def: false);
   }
 

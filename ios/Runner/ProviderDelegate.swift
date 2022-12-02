@@ -97,6 +97,7 @@ print("audiointerruption")
         
         try! mCore = factory.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
         try! mCore?.start()
+        sendDevices()
         mCore?.ipv6Enabled = false
 
         var mCoreDelegate = CoreDelegateStub( onCallStateChanged: { (core: Core, call: Call, state: Call.State, message: String) in
@@ -180,7 +181,7 @@ print("audiointerruption")
         }, onAudioDeviceChanged: { (core: Core, device: AudioDevice) in
             self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName, device.capabilities.rawValue])
         }, onAudioDevicesListUpdated: { (core: Core) in
-            self.callkitChannel.invokeMethod("lnAudioDeviceListUpdated", arguments: [])
+            self.sendDevices()
         }, onAccountRegistrationStateChanged: { (core: Core, account: Account, state: RegistrationState, message: String) in
             NSLog("New registration state is \(state) for user id \( String(describing: account.params?.identityAddress?.asString()))\n")
             
@@ -217,6 +218,7 @@ print("audiointerruption")
         print("ringtone")
         print(mCore?.ring)
         print(mCore?.remoteRingbackTone)
+        sendDevices()
     }
     
     public func registerPhone() {
@@ -269,6 +271,7 @@ print("audiointerruption")
             var proxyConfig = try createProxyConfig(proxyConfig: defaultProxyConfig!, aor: "sip:" + username + "@" + domain, authInfo: authInfo)
             try mCore?.addProxyConfig(config: proxyConfig)
             mCore?.defaultProxyConfig = proxyConfig
+            sendDevices()
         } catch {print("error registering");
             NSLog(error.localizedDescription) }
     }
@@ -395,6 +398,23 @@ print("audiointerruption")
         mCore?.audioRouteChanged()
     }
     
+    public func sendDevices() {
+        print("sending devices from swift")
+        var devices: [[String]] = []
+        mCore?.extendedAudioDevices.forEach({ device in
+            devices.append([device.deviceName, device.id, device.type == .Microphone ? "Microphone" : "Speaker"])
+        })
+        let jsonEncoder = JSONEncoder()
+        do {
+            let devicesString = try jsonEncoder.encode(devices)
+            self.callkitChannel.invokeMethod("lnNewDevicesList",
+                                             arguments: [String(data: devicesString, encoding: .utf8), mCore?.echoLimiterEnabled, mCore?.echoCancellationEnabled, "notused", mCore?.defaultInputAudioDevice!.id, mCore?.defaultOutputAudioDevice!.id])                // Right after outgoing init
+        } catch let error as NSError {
+            print("was an error sending newdeviceslist")
+        }
+
+    }
+    
     public init(channel: FlutterMethodChannel) {
         provider = CXProvider(configuration: ProviderDelegate.providerConfiguration)
 
@@ -415,9 +435,7 @@ print("audiointerruption")
                          selector: #selector(handleRouteChange),
                          name: AVAudioSession.routeChangeNotification,
                          object: nil)
- 
-       
-
+        
         callkitChannel.setMethodCallHandler({ [self]
           (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             print("callkit method hanlder", call.method)
@@ -426,6 +444,7 @@ print("audiointerruption")
                 let args = call.arguments as! [Any]
                 let speakerOn = args[0] as! Bool
                 setAudioAndSpeakerPhone(speakerOn: speakerOn)
+                sendDevices()
             }
           //  return;
             if (call.method == "reportOutgoingCall") {
@@ -472,6 +491,8 @@ print("audiointerruption")
             else if (call.method == "lpSetHold") {
                 let args = call.arguments as! [Any]
                 let call = findCallByUuid(uuid:args[0] as! String);
+                print("toholdhere")
+                print(call!.state)
                 do {
                     let toHold = args[1] as! Bool
                     if (toHold) {
@@ -481,12 +502,83 @@ print("audiointerruption")
                     } else {
                         if (call!.state == .Paused || call!.state == .PausedByRemote || call!.state == .Pausing) {
                             try call!.resume();
+                        } else if (call!.state == .Resuming){
+                            let uuid = args[0] as! String
+
+                            self.callkitChannel.invokeMethod("lnCallConnected", arguments: [uuid])                // Call state will be released shortly after the End state
+
                         }
                     }
                 } catch let error as NSError {
                     print("error holding/unholding call");
                     print(error);
+                    
+                
                 }
+            }
+            else if (call.method == "lpSetEchoCancellationEnabled") {
+                let args = call.arguments as! [Any]
+                mCore?.echoCancellationEnabled = args[0] as! Bool
+            }
+            else if (call.method == "lpCalibrateEcho") {
+                do {
+                        try mCore?.startEchoCancellerCalibration()
+                }catch let error as NSError {
+                    print("error holding/unholding call");
+                    print(error);
+                    
+                
+                }
+            }
+            else if (call.method == "lpTestEcho") {
+                do {
+                 try   mCore?.startEchoTester(rate: 10)
+                }catch let error as NSError {
+                    print("error holding/unholding call");
+                    print(error);
+                    
+                
+                }
+            }
+            else if (call.method == "lpStopTestEcho") {
+                do {
+                  try  mCore?.stopEchoTester()
+                }catch let error as NSError {
+                    print("error holding/unholding call");
+                    print(error);
+                    
+                
+                }
+                self.sendDevices()
+            }
+            else if (call.method == "lpSetEchoLimiterEnabled") {
+                let args = call.arguments as! [Any]
+                mCore?.echoLimiterEnabled = args[0] as! Bool
+                self.sendDevices()
+            }
+            else if (call.method == "lpSetDefaultInput") {
+                let args = call.arguments as! [Any]
+                let deviceId = args[0] as! String
+                mCore?.extendedAudioDevices.forEach({ device in
+                    if (device.id == deviceId) {
+                        mCore?.defaultInputAudioDevice = device
+                        mCore?.calls.forEach { call in
+                            call.inputAudioDevice = device
+                        }
+                    }
+                })
+            }
+            else if (call.method == "lpSetDefaultOutput") {
+                let args = call.arguments as! [Any]
+                let deviceId = args[0] as! String
+                mCore?.extendedAudioDevices.forEach({ device in
+                    if (device.id == deviceId) {
+                        mCore?.defaultOutputAudioDevice = device
+                        mCore?.calls.forEach { call in
+                            call.outputAudioDevice = device
+                        }
+                    }
+                })
             }
             else if (call.method == "lpSetSpeaker") {
                 let args = call.arguments as! [Any]
@@ -497,6 +589,7 @@ print("audiointerruption")
                     print("error holding/unholding call");
                     print(error);
                 }
+                sendDevices()
             }
             else if (call.method == "lpMuteCall") {
                 let args = call.arguments as! [Any]
