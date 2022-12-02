@@ -14,9 +14,9 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		A738ECBA5A222E28D97DBC54 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40FE659A59863152B2CFC35B /* Pods_Runner.framework */; };
+		B884B694292D5CCF00205021 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = B884B693292D5CCF00205021 /* GoogleService-Info.plist */; };
 		F2ADB5A328DCB0D700BBA250 /* ProviderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2ADB5A028DCB0D700BBA250 /* ProviderDelegate.swift */; };
 		F2ADB5A528DCB0FE00BBA250 /* outgoing.wav in Resources */ = {isa = PBXBuildFile; fileRef = F2ADB5A428DCB0FD00BBA250 /* outgoing.wav */; };
-		F2B68B8128DDE04300EFD383 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F2B68B8028DDE04300EFD383 /* GoogleService-Info.plist */; };
 		F2B68B8F28EDE93600EFD383 /* Intents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2B68B8E28EDE93600EFD383 /* Intents.framework */; };
 		F2B68B9228EDE93600EFD383 /* IntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B68B9128EDE93600EFD383 /* IntentHandler.swift */; };
 		F2B68B9A28EDE93700EFD383 /* IntentsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F2B68B9928EDE93700EFD383 /* IntentsUI.framework */; };
@@ -86,9 +86,9 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		987DD6D0C420BEE93901B01A /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+		B884B693292D5CCF00205021 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		F2ADB5A028DCB0D700BBA250 /* ProviderDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProviderDelegate.swift; sourceTree = "<group>"; };
 		F2ADB5A428DCB0FD00BBA250 /* outgoing.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = outgoing.wav; sourceTree = "<group>"; };
-		F2B68B8028DDE04300EFD383 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../ios2/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		F2B68B8228DDE31900EFD383 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		F2B68B8D28EDE93600EFD383 /* FusionIntents.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FusionIntents.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2B68B8E28EDE93600EFD383 /* Intents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = System/Library/Frameworks/Intents.framework; sourceTree = SDKROOT; };
@@ -187,7 +187,7 @@
 			isa = PBXGroup;
 			children = (
 				F2B68B8228DDE31900EFD383 /* Runner.entitlements */,
-				F2B68B8028DDE04300EFD383 /* GoogleService-Info.plist */,
+				B884B693292D5CCF00205021 /* GoogleService-Info.plist */,
 				F2ADB5A428DCB0FD00BBA250 /* outgoing.wav */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
@@ -335,7 +335,7 @@
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				F2ADB5A528DCB0FE00BBA250 /* outgoing.wav in Resources */,
-				F2B68B8128DDE04300EFD383 /* GoogleService-Info.plist in Resources */,
+				B884B694292D5CCF00205021 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -561,6 +561,7 @@
 				CURRENT_PROJECT_VERSION = 177;
 				DEVELOPMENT_TEAM = WG63U5G4K9;
 				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "i386 arm64";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -706,6 +707,7 @@
 				CURRENT_PROJECT_VERSION = 177;
 				DEVELOPMENT_TEAM = WG63U5G4K9;
 				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "arm64 i386";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -744,6 +746,7 @@
 				CURRENT_PROJECT_VERSION = 177;
 				DEVELOPMENT_TEAM = WG63U5G4K9;
 				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "i386 arm64";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
