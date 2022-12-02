@@ -93,6 +93,7 @@ class Softphone implements SipUaHelperListener {
   StreamSubscription _btConnectionStatusListener, _btReceivedMessageListener;
   String btConnectionStatus = "NONE";
   String btReceivedMessage;
+
   // List<BtDevice> devices = [];
   String _savedLogin;
   String _savedAor;
@@ -428,17 +429,11 @@ class Softphone implements SipUaHelperListener {
         echoCancellationFilterName = args[3] as String;
       }
     }
-    // print(["gotargs", args]);
-    // print(args);
+    print("gotargs");
+    print(args);
     print("switchnow");
     switch (methodCall.method) {
       case "lnOutgoingInit":
-        print("outgoing init");
-        print(args[0]);
-        print(args[1]);
-        print(args[2]);
-        print(_cleanToAddress(args[2]));
-        print("linklncall");
         _addCall(_linkLnCallWithUuid(
             _cleanToAddress(args[2]), args[1], args[0], args[2], "OUTGOING"));
         break;
@@ -448,6 +443,15 @@ class Softphone implements SipUaHelperListener {
       case "lnOutgoingRinging":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
         // [uuid]
+        break;
+      case "lnCallConnected":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.CONFIRMED);
+        break;
+      case "lnCallStreamsRunning":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.STREAM);
+        break;
+      case "lnCallPaused":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.HOLD);
         break;
       case "lnConnected":
       case "lnCallConnected":
@@ -468,6 +472,7 @@ class Softphone implements SipUaHelperListener {
       case "lnCallUpdatedByRemote":
         //        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
         break;
+
       case "lnReleased":
       case "lnCallReleased":
         print("released call");
@@ -619,7 +624,6 @@ class Softphone implements SipUaHelperListener {
     _savedLogin = login;
     _savedPassword = password;
     _savedAor = aor;
-
     _getMethodChannel().invokeMethod(
         "lpRegister", [aor.split("@")[0], password, aor.split("@")[1]]);
   }
@@ -807,6 +811,7 @@ class Softphone implements SipUaHelperListener {
 
   setSpeaker(bool useSpeaker) {
     _savedOutput = useSpeaker;
+
     print("lpsetspeaker");
     _getMethodChannel().invokeMethod("lpSetSpeaker", [useSpeaker]);
 

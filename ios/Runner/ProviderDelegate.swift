@@ -33,6 +33,9 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     var isCallIncoming : Bool = false
     var isMicrophoneEnabled : Bool = false
     var isSpeakerEnabled : Bool = false
+    var wasAudioInterrupted : Bool = false
+    var unpausePauseState : Int = 0
+    var unpausePauseUuid : String = ""
 
     var coreVersion: String = Core.getVersion
     
@@ -48,7 +51,14 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 return
         }
 print("audiointerruption")
-        print(type);
+        print(type.rawValue);
+        switch type {
+        case .began :
+            wasAudioInterrupted = true
+            break
+        case .ended:
+            break
+        }
         return;
         // Switch over the interruption type.
         switch type {
@@ -152,6 +162,18 @@ print("audiointerruption")
                 self.canChangeCamera = core.videoDevicesList.count > 2
             } else if (state == .Paused) {
                 self.callkitChannel.invokeMethod("lnCallPaused", arguments: [uuid])                // When you put a call in pause, it will became Paused
+                if (self.unpausePauseState == 2 && uuid == self.unpausePauseUuid) {
+                    print("unpause2")
+                    self.unpausePauseState = 0
+                    self.unpausePauseUuid = ""
+                    
+                    let holdAction = CXSetHeldCallAction(call: UUID(uuidString: uuid!)!,
+                                                         onHold: false)
+                    let transaction = CXTransaction(action: holdAction)
+                    self.requestTransaction(transaction)
+                
+                }
+                
                 self.canChangeCamera = false
             } else if (state == .PausedByRemote) {
                 self.callkitChannel.invokeMethod("lnCallPausedByRemote", arguments: [uuid])                // When the remote end of the call pauses it, it will be PausedByRemote
@@ -160,9 +182,25 @@ print("audiointerruption")
             } else if (state == .UpdatedByRemote) {
                 self.callkitChannel.invokeMethod("lnCallUpdatedByRemote", arguments: [uuid])                // When the remote requests a call update
             } else if (state == .Released) {
+                self.ringingDidTimeout(uuid: uuid ?? "")
                 self.callkitChannel.invokeMethod("lnCallReleased", arguments: [uuid])                // Call state will be released shortly after the End state
                 self.isCallRunning = false
                 self.canChangeCamera = false
+                print("unpausetest")
+                print(self.unpausePauseState)
+                print(self.unpausePauseUuid)
+                print(uuid)
+                
+                if (self.unpausePauseState == 1 && uuid == self.unpausePauseUuid) {
+                    print("unpause1")
+                    self.unpausePauseState = 2
+                    
+                    let holdAction = CXSetHeldCallAction(call: UUID(uuidString: uuid ?? "")!,
+                                                         onHold: true)
+                    let transaction = CXTransaction(action: holdAction)
+                    self.requestTransaction(transaction)
+                
+                }
             } else if (state == .IncomingReceived) { // When a call is received
                 do {
                     try uuid = self.uuidFromString(str: call.callLog!.callId).uuidString
@@ -179,7 +217,7 @@ print("audiointerruption")
                 self.callkitChannel.invokeMethod("lnCallError", arguments: [uuid])
             }
         }, onAudioDeviceChanged: { (core: Core, device: AudioDevice) in
-            self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName, device.capabilities.rawValue])
+            self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName, ""])
         }, onAudioDevicesListUpdated: { (core: Core) in
             self.sendDevices()
         }, onAccountRegistrationStateChanged: { (core: Core, account: Account, state: RegistrationState, message: String) in
@@ -488,6 +526,15 @@ print("audiointerruption")
                     print("error answering call");
                 }
             }
+            else if (call.method == "lpSendDtmf") {
+                let args = call.arguments as! [Any]
+                let call = findCallByUuid(uuid:args[0] as! String);
+                do {
+                    try call?.sendDtmfs(dtmfs: args[1] as! String);
+                } catch {
+                    print("error sending dtmf")
+                }
+            }
             else if (call.method == "lpSetHold") {
                 let args = call.arguments as! [Any]
                 let call = findCallByUuid(uuid:args[0] as! String);
@@ -501,6 +548,13 @@ print("audiointerruption")
                         }
                     } else {
                         if (call!.state == .Paused || call!.state == .PausedByRemote || call!.state == .Pausing) {
+                            if (wasAudioInterrupted) {
+                                print("unpause0 set to 1")
+                                wasAudioInterrupted = false
+                                unpausePauseState = 0
+                                unpausePauseUuid = args[0] as! String
+                                print(unpausePauseUuid)
+                            }
                             try call!.resume();
                         } else if (call!.state == .Resuming){
                             let uuid = args[0] as! String
@@ -984,6 +1038,10 @@ print("webrtc workaround didactivate")
       } catch (let error) {print("adioerror");print(error)
           //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
       }*/
+      if (!action.isOnHold) {
+          print("holdbuttonpressed configure audio")
+          mCore?.configureAudioSession()
+      }
       callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
       action.fulfill()
   }
