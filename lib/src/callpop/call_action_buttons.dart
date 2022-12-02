@@ -112,7 +112,7 @@ class _CallActionButtonsState extends State<CallActionButtons> {
             CallActionButton(
                 onPressed: widget.actions['onTextBtnPress'],
                 title: 'Text',
-                icon: Image.asset("assets/icons/call_view/chat text.png",
+                icon: Image.asset("assets/icons/call_view/chattext.png",
                     width: 24, height: 24)),
             CallActionButton(
                 onPressed: widget.actions['onAudioBtnPress'],

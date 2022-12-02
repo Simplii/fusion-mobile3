@@ -92,6 +92,7 @@ class Softphone implements SipUaHelperListener {
   StreamSubscription _btConnectionStatusListener, _btReceivedMessageListener;
   String btConnectionStatus = "NONE";
   String btReceivedMessage;
+
  // List<BtDevice> devices = [];
   String _savedLogin;
   String _savedAor;
@@ -179,6 +180,7 @@ class Softphone implements SipUaHelperListener {
           });
         }
       } else if (path == _inboundAudioPath) {
+
         if (!(calls.length > 1
             && activeCall.state != CallStateEnum.CONNECTING
             && activeCall.state != CallStateEnum.PROGRESS)) {
@@ -363,8 +365,7 @@ class Softphone implements SipUaHelperListener {
      _updateListeners();
    }
 
-
-  Future<dynamic> _callKitHandler(MethodCall methodCall) async {
+   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
   //  Sentry.captureMessage("callkitmethod:" + methodCall.method);
     print("callkitmethod:" + methodCall.method);
     print(methodCall.method);
@@ -424,16 +425,11 @@ class Softphone implements SipUaHelperListener {
             echoCancellationFilterName = args[3] as String;
           }
     }
-        print("gotargs");
+    print("gotargs");
     print(args);
     print("switchnow");
 switch (methodCall.method) {
       case "lnOutgoingInit":
-        print("outgoing init");
-        print(args[0]) ;
-        print(args[1]);print(args[2]);
-        print(_cleanToAddress(args[2]));
-        print("linklncall");
         _addCall(
             _linkLnCallWithUuid(_cleanToAddress(args[2]), args[1], args[0], args[2], "OUTGOING")
         );
@@ -444,6 +440,15 @@ switch (methodCall.method) {
       case "lnOutgoingRinging":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
       // [uuid]
+        break;
+      case "lnCallConnected":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.CONFIRMED);
+        break;
+      case "lnCallStreamsRunning":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.STREAM);
+        break;
+      case "lnCallPaused":
+        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.HOLD);
         break;
   case "lnConnected":
       case "lnCallConnected":
@@ -464,6 +469,7 @@ switch (methodCall.method) {
       case "lnCallUpdatedByRemote":
 //        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
         break;
+
   case "lnReleased":
       case "lnCallReleased":
         print("released call");print(args[0]);print(_getCallByUuid(args[0]));
@@ -619,7 +625,6 @@ switch (methodCall.method) {
     _savedLogin = login;
     _savedPassword = password;
     _savedAor = aor;
-
     _getMethodChannel().invokeMethod(
           "lpRegister", [aor.split("@")[0], password, aor.split("@")[1]]);
   }
@@ -807,6 +812,7 @@ switch (methodCall.method) {
 
   setSpeaker(bool useSpeaker) {
     _savedOutput = useSpeaker;
+
     print("lpsetspeaker");
     _getMethodChannel().invokeMethod("lpSetSpeaker", [useSpeaker]);
 
@@ -1057,6 +1063,7 @@ switch (methodCall.method) {
 
   _removeCall(Call call) {
     if (Platform.isIOS) {
+
       _getMethodChannel().invokeMethod("lpEndCall", [_uuidFor(call)]);
       _getMethodChannel().invokeMethod("endCall", [_uuidFor(call)]);
     } else if (Platform.isAndroid) {
