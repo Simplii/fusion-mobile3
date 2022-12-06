@@ -266,7 +266,7 @@ class _CallViewState extends State<CallView> {
     List<List<String>> options = [
       ["assets/icons/call_view/audio_phone.png", "Phone", "phone"],
       ["assets/icons/call_view/audio_speaker.png", "Speaker", "speaker"],
-      ["assets/icons/call_view/audio_speaker.png", "Bluetooth", "bluetooth"],
+      ["assets/icons/call_view/bluetooth.png", "Bluetooth", "bluetooth"],
     ];
     String callAudioOutput = _softphone.getCallOutput(_activeCall);
     bool muted = _softphone.getMuted(_activeCall);
@@ -302,7 +302,7 @@ class _CallViewState extends State<CallView> {
                                   ]),
                               child: Text(_softphone.defaultOutput,
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: Colors.white70,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
                                     height: 1.4,
@@ -334,7 +334,7 @@ class _CallViewState extends State<CallView> {
                                   ]),
                               child: Text(_softphone.defaultInput,
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: Colors.white70,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
                                     height: 1.4,
@@ -375,13 +375,12 @@ class _CallViewState extends State<CallView> {
             bottomChild: Container(
                 constraints: BoxConstraints(
                     minHeight: 24,
-                    maxHeight: 100,
+                    maxHeight: 150,
                     minWidth: 90,
                     maxWidth: MediaQuery.of(context).size.width - 136),
                 child: ListView(
                     padding: EdgeInsets.all(8),
                     children: options.map((List<String> option) {
-                      print('here2 $option');
                       return GestureDetector(
                           onTap: () {
                             _softphone.setCallOutput(_activeCall, option[2]);

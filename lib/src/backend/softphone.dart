@@ -73,8 +73,6 @@ class Softphone implements SipUaHelperListener {
   bool echoCancellationEnabled = false;
   String echoCancellationFilterName = "";
   bool isTestingEcho = false;
-  bool userUpdatedOutputDevice = false;
-  bool useBluetooth = false;
   Function _onUnregister = null;
   List<String> callIdsAnswered = [];
   //IncallManager incallManager = new IncallManager();
@@ -502,7 +500,18 @@ class Softphone implements SipUaHelperListener {
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.FAILED);
         break;
       case "lnAudioDeviceChanged":
-        // [device.id, device.deviceName, device.driverName, device.capabilities.rawValue]
+        //this fires when changing output device IOS only
+        final newSelectedDeviceIsBlue =
+            RegExp(r'(AU Bluetooth capture, playback:).*').hasMatch(args[0]);
+        final newSelectedDeviceIsSpeaker =
+            RegExp(r'(AU Speaker:).*').hasMatch(args[0]);
+        this.defaultOutput = args[0];
+        this.outputDevice = newSelectedDeviceIsBlue
+            ? 'Bluetooth'
+            : newSelectedDeviceIsSpeaker
+                ? 'Speaker'
+                : 'Phone';
+        _updateListeners();
         break;
       case "lnAudioDeviceListUpdated":
         // []
@@ -815,7 +824,25 @@ class Softphone implements SipUaHelperListener {
     print("lpsetspeaker");
     _getMethodChannel().invokeMethod("lpSetSpeaker", [useSpeaker]);
 
-    this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
+    this.outputDevice = 'Speaker';
+    this._updateListeners();
+  }
+
+  setEarpiece(bool useEarpiece) {
+    _savedOutput = useEarpiece;
+
+    print("lpsetspeaker $defaultInput");
+    _getMethodChannel().invokeMethod("lpSetSpeaker", [false]);
+
+    this.outputDevice = 'Phone';
+    this._updateListeners();
+  }
+
+  setBluetooth(bool isBluetooth) {
+    _savedOutput = isBluetooth;
+    _getMethodChannel().invokeMethod("lpSetBluetooth");
+    // need to set defalut output device setDefaultOutput()
+    this.outputDevice = 'Bluetooth';
     this._updateListeners();
   }
 
@@ -1422,11 +1449,23 @@ class Softphone implements SipUaHelperListener {
   }
 
   getCallOutput(Call call) {
-    return this.outputDevice == 'Speaker' ? 'speaker' : 'phone';
+    print('calloutput here' + this.outputDevice);
+    return this.outputDevice == 'Speaker'
+        ? 'speaker'
+        : this.outputDevice == 'Bluetooth'
+            ? 'bluetooth'
+            : 'phone';
   }
 
   setCallOutput(Call call, String outputDevice) {
-    setSpeaker(outputDevice == 'speaker');
+    print('calloutput here' + outputDevice);
+    if (outputDevice == 'bluetooth') {
+      setBluetooth(outputDevice == 'bluetooth');
+    } else if (outputDevice == 'phone') {
+      setEarpiece(outputDevice == 'phone');
+    } else {
+      setSpeaker(outputDevice == 'speaker');
+    }
   }
 
   isCallMerged(Call call) {
@@ -1582,9 +1621,9 @@ class Softphone implements SipUaHelperListener {
           print("confirmed now");
           stopOutbound();
           stopInbound();
-          if (Platform.isAndroid) {
-            setCallOutput(call, getCallOutput(call));
-          }
+          // if (Platform.isAndroid) {
+          //   setCallOutput(call, getCallOutput(call));
+          // }
           _setCallDataValue(call.id, "answerTime", DateTime.now());
 
           _blockingEvent = true;
@@ -1712,12 +1751,11 @@ class Softphone implements SipUaHelperListener {
   }
 
   void forceupdateOutputDevice(String deviceId) {
-    userUpdatedOutputDevice = true;
+    _savedOutput = true;
     setDefaultOutput(deviceId);
   }
 
   void switchToHeadsetWhenConnected() {
-    print(['here2', devicesList, defaultOutput, userUpdatedOutputDevice]);
     devicesList.forEach((element) {
       final validBluetoothDevice =
           RegExp(r'(openSLES Bluetooth:).*').hasMatch(element[1]);
@@ -1725,15 +1763,17 @@ class Softphone implements SipUaHelperListener {
           RegExp(r'(openSLES Microphone:).*').hasMatch(element[1]);
       if (validBluetoothDevice &&
           defaultOutput != element[1] &&
-          !userUpdatedOutputDevice) {
+          !_savedOutput) {
+        _savedOutput = true;
         setDefaultOutput(element[1]);
+        this.outputDevice = 'Bluetooth';
       }
       // openSLES Microphone should always be the default mic, if the bt device
       // have a mic it will be capturing the voice from the bt device, otherwise
       // it will capture voice from phone mic
       if (validBluetoothInputDevice &&
           defaultInput != element[1] &&
-          !userUpdatedOutputDevice) {
+          !_savedOutput) {
         setDefaultInput(element[1]);
       }
       _updateListeners();
