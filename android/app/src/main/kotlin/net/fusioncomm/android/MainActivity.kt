@@ -518,6 +518,13 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                 }
                 sendDevices()
+            } else if (call.method == "lpSetBluetooth"){
+                for (audioDevice in core.audioDevices) {
+                    if (audioDevice.type == AudioDevice.Type.Bluetooth) {
+                        core.currentCall?.outputAudioDevice = audioDevice
+                    }
+                }
+                sendDevices()
             } else if (call.method == "lpMuteCall") {
                 var args = call.arguments as List<Any>
                 var lpCall = findCallByUuid(args[0] as String)
