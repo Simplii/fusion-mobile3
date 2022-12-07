@@ -18,6 +18,7 @@ import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:sip_ua/sip_ua.dart';
+import '../utils.dart';
 
 import 'answered_while_on_call.dart';
 
@@ -587,7 +588,7 @@ class _CallViewState extends State<CallView> {
                             CallHeaderDetails(
                                 callerName: callerName,
                                 companyName: companyName,
-                                callerNumber: callerNumber,
+                                callerNumber: callerNumber.toString().formatPhone(),
                                 isRinging: isRinging,
                                 callIsRecording:
                                     _softphone.getRecordState(_activeCall),
