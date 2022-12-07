@@ -429,8 +429,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
       return _historyItem.contact.name;
     } else if (_historyItem.crmContact != null) {
       return _historyItem.crmContact.name;
-    } else if (_historyItem.callerId != null) {
-      return _historyItem.callerId;
+    } else if (_historyItem.callerId != '') {
+       return _historyItem.callerId;
     } else {
       return _historyItem.direction == 'inbound'
           ? _historyItem.fromDid.formatPhone()
