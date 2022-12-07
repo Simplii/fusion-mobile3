@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
 
 import '../styles.dart';
 import 'dialpad_key.dart';
@@ -53,9 +54,12 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
   void pasteNumber() async {
     ClipboardData data = await Clipboard.getData(Clipboard.kTextPlain);
     if (data == null) return;
-
+    String pastedNumber = data.text.onlyNumbers();
+    if (pastedNumber.length > 10 && pastedNumber.startsWith("1", 0)) {
+      pastedNumber = pastedNumber.substring(1);
+    }
     setState(() {
-      dialedNumber = data.text;
+      dialedNumber = pastedNumber;
       if (widget.onQueryChange != null) widget.onQueryChange(dialedNumber);
     });
   }
