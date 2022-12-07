@@ -73,8 +73,6 @@ class Softphone implements SipUaHelperListener {
   bool echoCancellationEnabled = false;
   String echoCancellationFilterName = "";
   bool isTestingEcho = false;
-  bool userUpdatedOutputDevice = false;
-  bool useBluetooth = false;
   Function _onUnregister = null;
   List<String> callIdsAnswered = [];
   //IncallManager incallManager = new IncallManager();
@@ -352,14 +350,15 @@ class Softphone implements SipUaHelperListener {
 
   setDefaultInput(String deviceId) {
     print("heresetit");
-    _android.invokeMethod("lpSetDefaultInput", [deviceId]);
+    _getMethodChannel().invokeMethod("lpSetDefaultInput", [deviceId]);
     defaultInput = deviceId;
     _updateListeners();
   }
 
   setDefaultOutput(String deviceId) {
     print("setdefaultoutput");
-    _android.invokeMethod("lpSetDefaultOutput", [deviceId]);
+
+    _getMethodChannel().invokeMethod("lpSetDefaultOutput", [deviceId]);
     defaultOutput = deviceId;
     _updateListeners();
   }
@@ -1712,12 +1711,11 @@ class Softphone implements SipUaHelperListener {
   }
 
   void forceupdateOutputDevice(String deviceId) {
-    userUpdatedOutputDevice = true;
+    _savedOutput = true;
     setDefaultOutput(deviceId);
   }
 
   void switchToHeadsetWhenConnected() {
-    print(['here2', devicesList, defaultOutput, userUpdatedOutputDevice]);
     devicesList.forEach((element) {
       final validBluetoothDevice =
           RegExp(r'(openSLES Bluetooth:).*').hasMatch(element[1]);
@@ -1725,7 +1723,7 @@ class Softphone implements SipUaHelperListener {
           RegExp(r'(openSLES Microphone:).*').hasMatch(element[1]);
       if (validBluetoothDevice &&
           defaultOutput != element[1] &&
-          !userUpdatedOutputDevice) {
+          !_savedOutput) {
         setDefaultOutput(element[1]);
       }
       // openSLES Microphone should always be the default mic, if the bt device
@@ -1733,7 +1731,7 @@ class Softphone implements SipUaHelperListener {
       // it will capture voice from phone mic
       if (validBluetoothInputDevice &&
           defaultInput != element[1] &&
-          !userUpdatedOutputDevice) {
+          !_savedOutput) {
         setDefaultInput(element[1]);
       }
       _updateListeners();
