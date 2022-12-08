@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.JsonWriter
 import android.util.Log
+import android.view.KeyEvent
 import android.widget.Toast
 import com.tekartik.sqflite.SqflitePlugin;
 
@@ -401,6 +402,18 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun findCallByUuid(uuid: String): Call? {
         return uuidCalls.get(uuid)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
+        //this only work when the app is in the foreground for now..
+        var action = event?.action;
+        var keycode = event?.keyCode;
+
+        if(KeyEvent.ACTION_DOWN == action && KeyEvent.KEYCODE_VOLUME_DOWN == keycode){
+            Log.d("vol", "trues ");
+            channel.invokeMethod("volDown",true);
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
