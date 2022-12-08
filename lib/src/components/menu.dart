@@ -207,7 +207,7 @@ class _MenuState extends State<Menu> {
                     minHeight: 24,
                     maxHeight: 200,
                     minWidth: 90,
-                    maxWidth: MediaQuery.of(context).size.width - 136),
+                    maxWidth: MediaQuery.of(context).size.width - 135),
                 child: ListView(padding: EdgeInsets.all(8), children: [
                   GestureDetector(
                       onTap: () {
