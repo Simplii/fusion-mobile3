@@ -61,12 +61,52 @@ class MainActivity : FlutterFragmentActivity() {
         }
 
         override fun onAudioDeviceChanged(core: Core, audioDevice: AudioDevice) {
-        }
+            // This listner will be triggered when switching audioDevice in call only
+            var newDevice: Array<String> = arrayOf(audioDevice.id, audioDevice.type.name);
 
-        override fun onAudioDevicesListUpdated(core: Core) {
+            // Getting default Mic to set it as default input if the new device selected was
+            // a phone/speaker and the bluetooth is still connected
+            var defaultMic = ""
+            for (device in core.extendedAudioDevices) {
+                Log.d("device form list", "input " + device.id)
+               if(device.type == AudioDevice.Type.Microphone && device.id.contains("AAudio")){
+                   defaultMic = device.id
+               }
+            }
+
+           if(!newDevice.isNullOrEmpty()){
+
+                var gson = Gson();
+
+                channel.invokeMethod(
+                        "lnAudioDeviceChanged",
+                       mapOf(Pair("audioDevice", gson.toJson(newDevice)),
+                            Pair("activeCallOutput", core.currentCall?.outputAudioDevice?.id),
+                            Pair("defaultMic", gson.toJson(defaultMic)))
+                    );
+           }
+            
+        }
+    
+        override fun onAudioDevicesListUpdated(@NonNull core: Core) {
             // This callback will be triggered when the available devices list has changed,
             // for example after a bluetooth headset has been connected/disconnected.
-            sendDevices()
+            var devicesList: Array<Array<String>> = arrayOf()
+
+            for (device in core.audioDevices) {
+                devicesList = devicesList.plus(
+                    arrayOf(device.deviceName, device.id, device.type.name)
+                )
+            }
+
+            var gson = Gson();
+
+            channel.invokeMethod(
+                "lnAudioDeviceListUpdated",
+                mapOf(Pair("devicesList", gson.toJson(devicesList)),
+                    Pair("defaultInput", core.defaultInputAudioDevice.id),
+                    Pair("defaultOutput", core.defaultOutputAudioDevice.id)))
+            // sendDevices()
         }
 
         override fun onCallStateChanged(
@@ -489,24 +529,36 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                     }
                 }
-                sendDevices()
+//                 sendDevices()
             } else if (call.method == "lpSetDefaultOutput") {
                 var args = call.arguments as List<Any>
                 for (audioDevice in core.extendedAudioDevices) {
-                                        Log.d("setou8tput", "out checking audio device" + audioDevice.id)
+                    Log.d("setou8tput", "out checking audio device" + audioDevice.id)
                     Log.d("output", "out checking against" + args[0])
 
                     if (audioDevice.id == args[0]) {
                         core.defaultOutputAudioDevice = audioDevice;
                         for  (call in core.calls) {
-                                                        Log.d("setinput", "setting the default input for a call")
+                    Log.d("setinput", "setting the default input for a call")
 
                             call.outputAudioDevice = audioDevice
                         }
                     }
                 }
-                sendDevices()
-            } else if (call.method == "lpSetSpeaker") {
+//                 sendDevices()
+            } else if(call.method == "lpSetActiveCallOutput") {
+                var args = call.arguments as List<Any>
+                for (audioDevice in core.audioDevices) {
+                    if (audioDevice.id == args[0]) {
+                        core.currentCall?.outputAudioDevice = audioDevice
+                        // for  (call in core.calls) {
+                        //     call.outputAudioDevice = audioDevice
+                        // }
+                    }
+                }
+            }
+            
+            else if (call.method == "lpSetSpeaker") {
                 var args = call.arguments as List<Any>
                 var enableSpeaker = args[0] as Boolean
 
@@ -517,14 +569,14 @@ class MainActivity : FlutterFragmentActivity() {
                         core.currentCall?.outputAudioDevice = audioDevice
                     }
                 }
-                sendDevices()
+//                sendDevices()
             } else if (call.method == "lpSetBluetooth"){
                 for (audioDevice in core.audioDevices) {
                     if (audioDevice.type == AudioDevice.Type.Bluetooth) {
                         core.currentCall?.outputAudioDevice = audioDevice
                     }
                 }
-                sendDevices()
+//                sendDevices()
             } else if (call.method == "lpMuteCall") {
                 var args = call.arguments as List<Any>
                 var lpCall = findCallByUuid(args[0] as String)

@@ -75,6 +75,10 @@ class Softphone implements SipUaHelperListener {
   bool isTestingEcho = false;
   Function _onUnregister = null;
   List<String> callIdsAnswered = [];
+
+  String activeCallOutput = "";
+  String activeCallOutputDevice = "";
+  bool bluetoothAvailable = false;
   //IncallManager incallManager = new IncallManager();
 
   final Aps.AudioCache _audioCache = Aps.AudioCache(
@@ -350,15 +354,21 @@ class Softphone implements SipUaHelperListener {
 
   setDefaultInput(String deviceId) {
     print("heresetit");
-    _android.invokeMethod("lpSetDefaultInput", [deviceId]);
+    _getMethodChannel().invokeMethod("lpSetDefaultInput", [deviceId]);
     defaultInput = deviceId;
     _updateListeners();
   }
 
   setDefaultOutput(String deviceId) {
     print("setdefaultoutput");
-    _android.invokeMethod("lpSetDefaultOutput", [deviceId]);
+    _getMethodChannel().invokeMethod("lpSetDefaultOutput", [deviceId]);
     defaultOutput = deviceId;
+    _updateListeners();
+  }
+
+  setActiveCallOutputDevice(String deviceId) {
+    _getMethodChannel().invokeMethod("lpSetActiveCallOutput", [deviceId]);
+    activeCallOutputDevice = deviceId;
     _updateListeners();
   }
 
@@ -368,7 +378,7 @@ class Softphone implements SipUaHelperListener {
     print(methodCall);
     print("themethod: '" + methodCall.method + "'");
     var args = methodCall.arguments;
-    print(args);
+
     if (Platform.isAndroid) {
       switch (methodCall.method) {
         case "lnNewDevicesList":
@@ -403,6 +413,24 @@ class Softphone implements SipUaHelperListener {
             args['uuid'],
             args['displayName']
           ];
+          break;
+        case "lnAudioDeviceChanged":
+          // triggers incall only
+          args = [
+            args['audioDevice'] as String,
+            args['defaultMic'] as String,
+            args['activeCallOutput'] as String
+          ];
+          ;
+          break;
+        case "lnAudioDeviceListUpdated":
+          args = [
+            args['devicesList'] as String,
+            args["defaultInput"] as String,
+            args["defaultOutput"] as String,
+            args["activeCallOutput"] as String
+          ];
+
           break;
         default:
           args = [args['uuid']];
@@ -476,6 +504,8 @@ class Softphone implements SipUaHelperListener {
         print("released call");
         print(args[0]);
         print(_getCallByUuid(args[0]));
+        activeCallOutput = "";
+        activeCallOutputDevice = "";
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.ENDED);
         break;
       case "lnIncomingReceived":
@@ -500,21 +530,44 @@ class Softphone implements SipUaHelperListener {
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.FAILED);
         break;
       case "lnAudioDeviceChanged":
-        //this fires when changing output device IOS only
-        final newSelectedDeviceIsBlue =
-            RegExp(r'(AU Bluetooth capture, playback:).*').hasMatch(args[0]);
-        final newSelectedDeviceIsSpeaker =
-            RegExp(r'(AU Speaker:).*').hasMatch(args[0]);
-        this.defaultOutput = args[0];
-        this.outputDevice = newSelectedDeviceIsBlue
-            ? 'Bluetooth'
-            : newSelectedDeviceIsSpeaker
-                ? 'Speaker'
-                : 'Phone';
+        //this fires when changing output device in call IOS/Android
+        var deviceChanged = json.decode(args[0] as String);
+        var defaultInputDevice = args[1] as String;
+
+        setActiveCallOutputDevice(deviceChanged[0]);
+
+        /* 
+          when we connect a buletooth device we are seting the default input
+          to bluetooth capture so we must switch back to the device 
+          default input when tapping the phone/speaker button while 
+          bluetooth is still connected 
+        */
+        if (deviceChanged[1] == 'Earpiece' || deviceChanged[1] == 'Speaker') {
+          setDefaultInput(defaultInputDevice);
+        } else {
+          var device = devicesList.firstWhere(
+              (element) => element[1].contains('AAudio Bluetooth capture'));
+          setDefaultInput(device[1]);
+        }
+
+        activeCallOutput =
+            deviceChanged[1] == 'Earpiece' ? 'Phone' : deviceChanged[1];
+
         _updateListeners();
         break;
       case "lnAudioDeviceListUpdated":
-        // []
+        devicesList = [];
+        var decoded = json.decode(args[0] as String);
+
+        for (dynamic item in decoded) {
+          devicesList.add([item[0], item[1], item[2]]);
+        }
+
+        String defaultOutputDevice = args[2] as String;
+        String defaultInputDevice = args[1] as String;
+
+        switchToHeadsetWhenConnected(defaultOutputDevice, defaultInputDevice);
+
         break;
       case "lnNewDevicesList":
         /*      print("newdevicesList");
@@ -528,7 +581,7 @@ class Softphone implements SipUaHelperListener {
         defaultOutput = args[2];
         print(defaultInput);
         print(defaultOutput);*/
-        switchToHeadsetWhenConnected();
+        switchToHeadsetWhenConnected(null, null);
         break;
       case "lnRegistrationOk":
         registrationStateChanged(
@@ -819,30 +872,21 @@ class Softphone implements SipUaHelperListener {
   }
 
   setSpeaker(bool useSpeaker) {
-    _savedOutput = useSpeaker;
+    /*
+     don't need to save the speaker as default output
+     it should be set for the current call only
+     _savedOutput = useSpeaker; 
+    */
 
     print("lpsetspeaker");
     _getMethodChannel().invokeMethod("lpSetSpeaker", [useSpeaker]);
 
-    this.outputDevice = 'Speaker';
+    // this.outputDevice = 'Speaker';
     this._updateListeners();
   }
 
-  setEarpiece(bool useEarpiece) {
-    _savedOutput = useEarpiece;
-
-    print("lpsetspeaker $defaultInput");
-    _getMethodChannel().invokeMethod("lpSetSpeaker", [false]);
-
-    this.outputDevice = 'Phone';
-    this._updateListeners();
-  }
-
-  setBluetooth(bool isBluetooth) {
-    _savedOutput = isBluetooth;
+  setBluetooth() {
     _getMethodChannel().invokeMethod("lpSetBluetooth");
-    // need to set defalut output device setDefaultOutput()
-    this.outputDevice = 'Bluetooth';
     this._updateListeners();
   }
 
@@ -1449,7 +1493,6 @@ class Softphone implements SipUaHelperListener {
   }
 
   getCallOutput(Call call) {
-    print('calloutput here' + this.outputDevice);
     return this.outputDevice == 'Speaker'
         ? 'speaker'
         : this.outputDevice == 'Bluetooth'
@@ -1458,11 +1501,8 @@ class Softphone implements SipUaHelperListener {
   }
 
   setCallOutput(Call call, String outputDevice) {
-    print('calloutput here' + outputDevice);
     if (outputDevice == 'bluetooth') {
-      setBluetooth(outputDevice == 'bluetooth');
-    } else if (outputDevice == 'phone') {
-      setEarpiece(outputDevice == 'phone');
+      setBluetooth();
     } else {
       setSpeaker(outputDevice == 'speaker');
     }
@@ -1755,28 +1795,42 @@ class Softphone implements SipUaHelperListener {
     setDefaultOutput(deviceId);
   }
 
-  void switchToHeadsetWhenConnected() {
+  void switchToHeadsetWhenConnected(
+      String defaultOutputDeviceId, String defaultInputDeviceId) {
+    List<List<String>> defaultMic = this
+        .devicesList
+        .where((element) => element[2] == "Microphone")
+        .toList()
+        .cast<List<String>>();
+    bool bluetoothDevice = false;
+
     devicesList.forEach((element) {
       final validBluetoothDevice =
-          RegExp(r'(openSLES Bluetooth:).*').hasMatch(element[1]);
+          RegExp(r'(AAudio Bluetooth playback:).*').hasMatch(element[1]);
       final validBluetoothInputDevice =
-          RegExp(r'(openSLES Microphone:).*').hasMatch(element[1]);
+          RegExp(r'(AAudio Bluetooth capture:).*').hasMatch(element[1]);
+
       if (validBluetoothDevice &&
           defaultOutput != element[1] &&
           !_savedOutput) {
-        _savedOutput = true;
         setDefaultOutput(element[1]);
         this.outputDevice = 'Bluetooth';
+        bluetoothDevice = true;
+        bluetoothAvailable = true;
       }
-      // openSLES Microphone should always be the default mic, if the bt device
-      // have a mic it will be capturing the voice from the bt device, otherwise
-      // it will capture voice from phone mic
-      if (validBluetoothInputDevice &&
-          defaultInput != element[1] &&
-          !_savedOutput) {
+
+      if (validBluetoothInputDevice && defaultInput != element[1]) {
         setDefaultInput(element[1]);
       }
       _updateListeners();
     });
+
+    //when bluetooth disconnect fallback to default out/input devices
+    if (!bluetoothDevice && defaultOutputDeviceId != null) {
+      setDefaultOutput(defaultOutputDeviceId);
+      setDefaultInput(defaultMic[0][1]);
+      activeCallOutput = activeCallOutput == "Speaker" ? "Speaker" : "Phone";
+      bluetoothAvailable = false;
+    }
   }
 }
