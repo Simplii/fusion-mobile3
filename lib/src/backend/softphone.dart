@@ -531,6 +531,19 @@ class Softphone implements SipUaHelperListener {
         break;
       case "lnAudioDeviceChanged":
         //this fires when changing output device in call IOS/Android
+        if (Platform.isIOS) {
+          print(['lnAudioDeviceChanged args', args[0]]);
+          bool outputDeviceIsBluetooth =
+              RegExp(r'(AU Bluetooth capture, playback:).*').hasMatch(args[0]);
+          bool outputDeviceIsSpeaker =
+              RegExp(r'(AU Speaker:).*').hasMatch(args[0]);
+          outputDevice = outputDeviceIsBluetooth
+              ? "Bluetooth"
+              : outputDeviceIsSpeaker
+                  ? "Speaker"
+                  : "Phone";
+          return;
+        }
         var deviceChanged = json.decode(args[0] as String);
         var defaultInputDevice = args[1] as String;
 
@@ -556,6 +569,9 @@ class Softphone implements SipUaHelperListener {
         _updateListeners();
         break;
       case "lnAudioDeviceListUpdated":
+        if (Platform.isIOS) {
+          return;
+        }
         devicesList = [];
         var decoded = json.decode(args[0] as String);
 
@@ -597,6 +613,7 @@ class Softphone implements SipUaHelperListener {
         return;
 
       case 'setAudioSessionActive':
+        print(["args setAudioSessionActive", args]);
         return;
 
       case 'answerButtonPressed':
@@ -1797,8 +1814,8 @@ class Softphone implements SipUaHelperListener {
 
   void switchToHeadsetWhenConnected(
       String defaultOutputDeviceId, String defaultInputDeviceId) {
-    List<List<String>> defaultMic = this
-        .devicesList
+    print(["here123", devicesList]);
+    List<List<String>> defaultMic = devicesList
         .where((element) => element[2] == "Microphone")
         .toList()
         .cast<List<String>>();
