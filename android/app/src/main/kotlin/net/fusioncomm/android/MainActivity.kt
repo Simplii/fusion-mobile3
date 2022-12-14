@@ -61,16 +61,6 @@ class MainActivity : FlutterFragmentActivity() {
             // This listner will be triggered when switching audioDevice in call only
             var newDevice: Array<String> = arrayOf(audioDevice.id, audioDevice.type.name);
 
-            // Getting default Mic to set it as default input if the new device selected was
-            // a phone/speaker and the bluetooth is still connected
-//            var defaultMic = ""
-//            for (device in core.extendedAudioDevices) {
-//                Log.d("device form list", "input " + device.id)
-//               if(device.type == AudioDevice.Type.Microphone && device.id.contains("AAudio")){
-//                   defaultMic = device.id
-//               }
-//            }
-
            if(!newDevice.isNullOrEmpty()){
 
                 var gson = Gson();
@@ -89,7 +79,6 @@ class MainActivity : FlutterFragmentActivity() {
             // This callback will be triggered when the available devices list has changed,
             // for example after a bluetooth headset has been connected/disconnected.
             var devicesList: Array<Array<String>> = arrayOf()
-            Log.d("lnAudioDeviceListUpdated", "new devices list")
             for (device in core.extendedAudioDevices) {
                 devicesList = devicesList.plus(
                     arrayOf(device.deviceName, device.id, device.type.name)
@@ -281,8 +270,8 @@ class MainActivity : FlutterFragmentActivity() {
             )
         )
         core.natPolicy?.enableTurn(true)
-//        core.enableEchoLimiter(true)
-//        core.enableEchoCancellation(true)
+        core.enableEchoLimiter(true)
+        core.enableEchoCancellation(true)
 
         if (core.hasBuiltinEchoCanceller()) {
             print("Device has built in echo canceler, disabling software echo canceler");
