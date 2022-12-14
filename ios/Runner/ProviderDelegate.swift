@@ -79,10 +79,8 @@ print("audiointerruption")
                 print(session.mode)
                // try session.setActive(true)
                 print("did set audiosessionactive")
-                print("sessionCurrent \(session.currentRoute)")
                 if (callkitChannel != nil) {
-                   
-                    callkitChannel.invokeMethod("setAudioSessionActive", arguments: [session.currentRoute])
+                    callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
                 }
             } catch let error as NSError {
                 if (callkitChannel != nil) {
@@ -219,10 +217,8 @@ print("audiointerruption")
                 self.callkitChannel.invokeMethod("lnCallError", arguments: [uuid])
             }
         }, onAudioDeviceChanged: { (core: Core, device: AudioDevice) in
-            print("deviceChanged")
             self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName, ""])
         }, onAudioDevicesListUpdated: { (core: Core) in
-            print("deviceListUpdated")
             self.sendDevices()
         }, onAccountRegistrationStateChanged: { (core: Core, account: Account, state: RegistrationState, message: String) in
             NSLog("New registration state is \(state) for user id \( String(describing: account.params?.identityAddress?.asString()))\n")
@@ -444,16 +440,15 @@ print("audiointerruption")
         }
     }
 
-    @objc func handleRouteChange(notification: AVAudioSession) {
-        print("here1 \(notification)")
-        mCore?.audioRouteChanged()
+    @objc func handleRouteChange(notification: Notification) {
+            mCore?.audioRouteChanged()
     }
     
     public func sendDevices() {
         print("sending devices from swift")
         var devices: [[String]] = []
         mCore?.extendedAudioDevices.forEach({ device in
-            devices.append([device.deviceName, device.id])
+            devices.append([device.deviceName, device.id, device.type == .Microphone ? "Microphone" : "Speaker"])
         })
         let jsonEncoder = JSONEncoder()
         do {
