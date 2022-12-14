@@ -1,15 +1,12 @@
 package net.fusioncomm.android
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.util.JsonWriter
 import android.util.Log
-import android.widget.Toast
 import com.tekartik.sqflite.SqflitePlugin;
 
 import com.google.gson.Gson
@@ -66,13 +63,13 @@ class MainActivity : FlutterFragmentActivity() {
 
             // Getting default Mic to set it as default input if the new device selected was
             // a phone/speaker and the bluetooth is still connected
-            var defaultMic = ""
-            for (device in core.extendedAudioDevices) {
-                Log.d("device form list", "input " + device.id)
-               if(device.type == AudioDevice.Type.Microphone && device.id.contains("AAudio")){
-                   defaultMic = device.id
-               }
-            }
+//            var defaultMic = ""
+//            for (device in core.extendedAudioDevices) {
+//                Log.d("device form list", "input " + device.id)
+//               if(device.type == AudioDevice.Type.Microphone && device.id.contains("AAudio")){
+//                   defaultMic = device.id
+//               }
+//            }
 
            if(!newDevice.isNullOrEmpty()){
 
@@ -82,7 +79,7 @@ class MainActivity : FlutterFragmentActivity() {
                         "lnAudioDeviceChanged",
                        mapOf(Pair("audioDevice", gson.toJson(newDevice)),
                             Pair("activeCallOutput", core.currentCall?.outputAudioDevice?.id),
-                            Pair("defaultMic", gson.toJson(defaultMic)))
+                            Pair("defaultMic", core.defaultOutputAudioDevice.id))
                     );
            }
             
@@ -92,8 +89,8 @@ class MainActivity : FlutterFragmentActivity() {
             // This callback will be triggered when the available devices list has changed,
             // for example after a bluetooth headset has been connected/disconnected.
             var devicesList: Array<Array<String>> = arrayOf()
-
-            for (device in core.audioDevices) {
+            Log.d("lnAudioDeviceListUpdated", "new devices list")
+            for (device in core.extendedAudioDevices) {
                 devicesList = devicesList.plus(
                     arrayOf(device.deviceName, device.id, device.type.name)
                 )
@@ -357,6 +354,13 @@ class MainActivity : FlutterFragmentActivity() {
             devicesList = devicesList.plus(
                 arrayOf(device.deviceName, device.id, device.type.name)
             )
+            if(device.type == AudioDevice.Type.Microphone && device.id.contains("openSLES")){
+                core.defaultInputAudioDevice = device
+            }
+
+            if(device.type == AudioDevice.Type.Speaker && device.id.contains("openSLES")){
+                core.defaultOutputAudioDevice = device
+            }
         }
 
         var gson = Gson();
@@ -548,25 +552,30 @@ class MainActivity : FlutterFragmentActivity() {
 //                 sendDevices()
             } else if(call.method == "lpSetActiveCallOutput") {
                 var args = call.arguments as List<Any>
+
                 for (audioDevice in core.audioDevices) {
                     if (audioDevice.id == args[0]) {
+                        Log.d("lpSetActiveCallOutput", "args" +args[0])
+                        Log.d("lpSetActiveCallOutput", "audio device" +audioDevice.id)
+
                         core.currentCall?.outputAudioDevice = audioDevice
-                        // for  (call in core.calls) {
-                        //     call.outputAudioDevice = audioDevice
-                        // }
                     }
                 }
             }
-            
             else if (call.method == "lpSetSpeaker") {
                 var args = call.arguments as List<Any>
                 var enableSpeaker = args[0] as Boolean
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
 
+                Log.d("lpSetActiveCallOutput" , "set speaker")
                 for (audioDevice in core.audioDevices) {
                     if (!enableSpeaker && audioDevice.type == AudioDevice.Type.Earpiece) {
                         core.currentCall?.outputAudioDevice = audioDevice
+                        audioManager.isSpeakerphoneOn = false
                     } else if (enableSpeaker && audioDevice.type == AudioDevice.Type.Speaker) {
                         core.currentCall?.outputAudioDevice = audioDevice
+                        audioManager.isSpeakerphoneOn = true
                     }
                 }
 //                sendDevices()
