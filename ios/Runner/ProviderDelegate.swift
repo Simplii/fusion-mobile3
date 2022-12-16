@@ -432,8 +432,16 @@ print("audiointerruption")
         }
     }
 
+    func toggleBluetooth() {
+        for audioDevice in mCore!.audioDevices {
+             if (audioDevice.type == AudioDeviceType.Bluetooth) {
+                 mCore!.currentCall?.outputAudioDevice = audioDevice
+             }
+        }
+    }
+
     @objc func handleRouteChange(notification: Notification) {
-        mCore?.audioRouteChanged()
+            mCore?.audioRouteChanged()
     }
     
     public func sendDevices() {
@@ -639,6 +647,15 @@ print("audiointerruption")
                 do {
                     let speakerOn = args[0] as! Bool
                     toggleSpeaker(speakerOn: speakerOn)
+                } catch let error as NSError {
+                    print("error holding/unholding call");
+                    print(error);
+                }
+                sendDevices()
+            }
+            else if (call.method == "lpSetBluetooth") {
+                do {
+                    toggleBluetooth();
                 } catch let error as NSError {
                     print("error holding/unholding call");
                     print(error);
