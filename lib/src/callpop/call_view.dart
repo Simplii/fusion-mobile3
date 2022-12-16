@@ -269,7 +269,7 @@ class _CallViewState extends State<CallView> {
       ["assets/icons/call_view/audio_speaker.png", "Speaker", "speaker"],
       ["assets/icons/call_view/bluetooth.png", "Bluetooth", "bluetooth"],
     ];
-
+    print(["call_view", _softphone.activeCallOutput, _softphone.outputDevice]);
     String callAudioOutput = _softphone.activeCallOutput != ''
         ? _softphone.activeCallOutput
         : _softphone.outputDevice;
@@ -277,7 +277,7 @@ class _CallViewState extends State<CallView> {
         ? _softphone.activeCallOutputDevice
         : _softphone.defaultOutput;
     bool muted = _softphone.getMuted(_activeCall);
-    
+
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
