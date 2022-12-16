@@ -73,9 +73,13 @@ class Softphone implements SipUaHelperListener {
   bool echoCancellationEnabled = false;
   String echoCancellationFilterName = "";
   bool isTestingEcho = false;
-
   Function _onUnregister = null;
   List<String> callIdsAnswered = [];
+
+  String activeCallOutput = "";
+  String activeCallOutputDevice = "";
+  bool bluetoothAvailable = false;
+  String bluetoothDeviceId = "";
   //IncallManager incallManager = new IncallManager();
 
   final Aps.AudioCache _audioCache = Aps.AudioCache(
@@ -93,7 +97,7 @@ class Softphone implements SipUaHelperListener {
   String btConnectionStatus = "NONE";
   String btReceivedMessage;
 
- // List<BtDevice> devices = [];
+  // List<BtDevice> devices = [];
   String _savedLogin;
   String _savedAor;
   String _savedPassword;
@@ -114,7 +118,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   _initBluetooth() {
-  /*  flutterbluetoothadapter
+    /*  flutterbluetoothadapter
         .initBlutoothConnection(Uuid().toString());
     flutterbluetoothadapter.initBlutoothConnection(Uuid().toString());
     print("initing bluetooth");
@@ -170,7 +174,8 @@ class Softphone implements SipUaHelperListener {
       }
     } else if (Platform.isAndroid) {
       Aps.AudioCache cache = Aps.AudioCache();
-      if (path == _outboundAudioPath) {return true;
+      if (path == _outboundAudioPath) {
+        return true;
         if (_outboundPlayer == null) {
           _outboundPlayer = Aps.AudioPlayer();
           cache.loop(_outboundAudioPath).then((Aps.AudioPlayer playing) {
@@ -180,17 +185,15 @@ class Softphone implements SipUaHelperListener {
           });
         }
       } else if (path == _inboundAudioPath) {
-
-        if (!(calls.length > 1
-            && activeCall.state != CallStateEnum.CONNECTING
-            && activeCall.state != CallStateEnum.PROGRESS)) {
-           _ringingInbound = true;
-           FlutterAudioManager.changeToSpeaker();
+        if (!(calls.length > 1 &&
+            activeCall.state != CallStateEnum.CONNECTING &&
+            activeCall.state != CallStateEnum.PROGRESS)) {
+          _ringingInbound = true;
+          FlutterAudioManager.changeToSpeaker();
           RingtonePlayer.ringtone(
               alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
                   "ic_alarm_notification",
-                  contentTitle: "Phone Call",
-                  contentText: "IncomingPhoneCall"),
+                  contentTitle: "Phone Call", contentText: "IncomingPhoneCall"),
               volume: 1.0);
         } else {
           _inboundPlayer = Aps.AudioPlayer();
@@ -338,7 +341,8 @@ class Softphone implements SipUaHelperListener {
   }
 
   void _setLpCallState(LnCall call, CallStateEnum stateEnum) {
-    print("setting state");print(stateEnum.name);
+    print("setting state");
+    print(stateEnum.name);
     CallState state = CallState(stateEnum);
     print("setstateoncall");
     print(state);
@@ -349,32 +353,33 @@ class Softphone implements SipUaHelperListener {
     print("done");
   }
 
-   setDefaultInput(String deviceId) {
-    print("heresetit");
-     _android.invokeMethod(
-         "lpSetDefaultInput", [deviceId]);
-     defaultInput = deviceId;
-     _updateListeners();
-   }
+  setDefaultInput(String deviceId) {
+    _android.invokeMethod("lpSetDefaultInput", [deviceId]);
+    defaultInput = deviceId;
+    _updateListeners();
+  }
 
-   setDefaultOutput(String deviceId) {
-    print("setdefaultoutput");
-     _android.invokeMethod(
-         "lpSetDefaultOutput", [deviceId]);
-     defaultOutput = deviceId;
-     _updateListeners();
-   }
+  setDefaultOutput(String deviceId) {
+    _android.invokeMethod("lpSetDefaultOutput", [deviceId]);
+    defaultOutput = deviceId;
+    _updateListeners();
+  }
 
-   Future<dynamic> _callKitHandler(MethodCall methodCall) async {
-  //  Sentry.captureMessage("callkitmethod:" + methodCall.method);
+  setActiveCallOutputDevice(String deviceId) {
+    _getMethodChannel().invokeMethod("lpSetActiveCallOutput", [deviceId]);
+    activeCallOutputDevice = deviceId;
+    _updateListeners();
+  }
+
+  Future<dynamic> _callKitHandler(MethodCall methodCall) async {
+    //  Sentry.captureMessage("callkitmethod:" + methodCall.method);
     print("callkitmethod:" + methodCall.method);
-    print(methodCall.method);
+    print(methodCall);
     print("themethod: '" + methodCall.method + "'");
     var args = methodCall.arguments;
-    print(args);
-    if (Platform.isAndroid) {
 
-      switch (methodCall.method ) {
+    if (Platform.isAndroid) {
+      switch (methodCall.method) {
         case "lnNewDevicesList":
           if (Platform.isAndroid) {
             var decoded = json.decode(args['devicesList']);
@@ -388,19 +393,42 @@ class Softphone implements SipUaHelperListener {
             echoLimiterEnabled = args['echoLimiterEnabled'] as bool;
             echoCancellationEnabled = args['echoCancellationEnabled'] as bool;
             echoCancellationFilterName =
-            args['echoCancellationFilterName'] as String;
+                args['echoCancellationFilterName'] as String;
             args = [
               args['devicesList'] as String,
               args["defaultInput"] as String,
-              args["defaultOutput"] as String];
+              args["defaultOutput"] as String
+            ];
           }
           break;
         case "lnOutgoingInit":
           args = [args['uuid'], args['callId'], args['remoteAddress']];
           break;
         case "lnIncomingReceived":
-          args = [args['callId'], args['remoteContact'],
-            args['remoteAddress'], args['uuid'], args['displayName']];
+          args = [
+            args['callId'],
+            args['remoteContact'],
+            args['remoteAddress'],
+            args['uuid'],
+            args['displayName']
+          ];
+          break;
+        case "lnAudioDeviceChanged":
+          args = [
+            args['audioDevice'] as String,
+            args['defaultMic'] as String,
+            args['activeCallOutput'] as String
+          ];
+          ;
+          break;
+        case "lnAudioDeviceListUpdated":
+          args = [
+            args['devicesList'] as String,
+            args["defaultInput"] as String,
+            args["defaultOutput"] as String,
+            args["activeCallOutput"] as String
+          ];
+
           break;
         default:
           args = [args['uuid']];
@@ -409,37 +437,36 @@ class Softphone implements SipUaHelperListener {
       if (methodCall.method == "lnNewDevicesList") {
         print("newdeviceslist");
         print(args);
-            devicesList = [];
-            var decoded = json.decode(args[0] as String);
-            for (dynamic item in decoded) {
-              print("onedeviceitem");
-              print(item);
-              devicesList.add([item[0], item[1], item[2]]);
-            }
-            print("updatedeeviceslist");
-            print(devicesList);
-            defaultInput = args[4] as String;
-            defaultOutput = args[5] as String;
-            echoLimiterEnabled = args[1] as bool;
-            echoCancellationEnabled = args[2] as bool;
-            echoCancellationFilterName = args[3] as String;
-          }
+        devicesList = [];
+        var decoded = json.decode(args[0] as String);
+        for (dynamic item in decoded) {
+          print("onedeviceitem");
+          print(item);
+          devicesList.add([item[0], item[1], item[2]]);
+        }
+        print("updatedeeviceslist");
+        print(devicesList);
+        defaultInput = args[4] as String;
+        defaultOutput = args[5] as String;
+        echoLimiterEnabled = args[1] as bool;
+        echoCancellationEnabled = args[2] as bool;
+        echoCancellationFilterName = args[3] as String;
+      }
     }
     print("gotargs");
     print(args);
     print("switchnow");
-switch (methodCall.method) {
+    switch (methodCall.method) {
       case "lnOutgoingInit":
-        _addCall(
-            _linkLnCallWithUuid(_cleanToAddress(args[2]), args[1], args[0], args[2], "OUTGOING")
-        );
+        _addCall(_linkLnCallWithUuid(
+            _cleanToAddress(args[2]), args[1], args[0], args[2], "OUTGOING"));
         break;
       case "lnOutgoingProgress":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
         break;
       case "lnOutgoingRinging":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
-      // [uuid]
+        // [uuid]
         break;
       case "lnCallConnected":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.CONFIRMED);
@@ -450,29 +477,33 @@ switch (methodCall.method) {
       case "lnCallPaused":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.HOLD);
         break;
-  case "lnConnected":
+      case "lnConnected":
       case "lnCallConnected":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.CONFIRMED);
         break;
-  case "lnStreamsRunning":
+      case "lnStreamsRunning":
       case "lnCallStreamsRunning":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.STREAM);
         break;
-  case "lnPaused":
+      case "lnPaused":
       case "lnCallPaused":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.HOLD);
         break;
-  case "lnPausedByRemote":
+      case "lnPausedByRemote":
       case "lnCallPausedByRemote":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.HOLD);
         break;
       case "lnCallUpdatedByRemote":
-//        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
+        //        _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.PROGRESS);
         break;
 
-  case "lnReleased":
+      case "lnReleased":
       case "lnCallReleased":
-        print("released call");print(args[0]);print(_getCallByUuid(args[0]));
+        print("released call");
+        print(args[0]);
+        print(_getCallByUuid(args[0]));
+        activeCallOutput = "";
+        activeCallOutputDevice = "";
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.ENDED);
         break;
       case "lnIncomingReceived":
@@ -486,27 +517,78 @@ switch (methodCall.method) {
         toAddress = _cleanToAddress(toAddress);
         var callerId = args[4] as String;
 
-        LnCall call = _linkLnCallWithUuid(
-            toAddress,
-            args[0] as String,
-            args[3] as String,
-            callerId,
-            "INCOMING");
-        print("incoming");print(call);
+        LnCall call = _linkLnCallWithUuid(toAddress, args[0] as String,
+            args[3] as String, callerId, "INCOMING");
+        print("incoming");
+        print(call);
         _addCall(call);
         break;
-  case "lnError":
+      case "lnError":
       case "lnCallError":
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.FAILED);
         break;
       case "lnAudioDeviceChanged":
-      // [device.id, device.deviceName, device.driverName, device.capabilities.rawValue]
+        // this method triggers while in call only Android
+        if (Platform.isIOS) {
+          print(['lnAudioDeviceChanged args', args[0]]);
+          bool outputDeviceIsBluetooth =
+              RegExp(r'(AU Bluetooth capture, playback:).*').hasMatch(args[0]);
+          bool outputDeviceIsSpeaker =
+              RegExp(r'(AU Speaker:).*').hasMatch(args[0]);
+          bluetoothAvailable = outputDeviceIsBluetooth;
+          activeCallOutputDevice = outputDeviceIsBluetooth
+              ? "Bluetooth"
+              : outputDeviceIsSpeaker
+                  ? "Speaker"
+                  : "Phone";
+          return;
+        }
+        var deviceChanged = json.decode(args[0] as String);
+        /* 
+         Speaker is weird on Android 13 Galaxy Devices, it must have a
+         default input and output as openSLES and we can not set default 
+         device on current call, so we had to make the app default outputDevice
+         and inputDevice as openSLES Mic/Speaker
+        */
+        if (deviceChanged[1] == 'Speaker') {
+          var device = devicesList
+              .firstWhere((element) => element[1].contains('openSLES Speaker'));
+
+          var device2 = devicesList
+              .where((element) => element[2] == "Microphone")
+              .firstWhere((element) => element[1].contains('openSLES'));
+
+          setActiveCallOutputDevice(device[1]);
+          activeCallOutput = deviceChanged[1];
+          _updateListeners();
+          return;
+        }
+
+        activeCallOutput =
+            deviceChanged[1] == 'Earpiece' ? 'Phone' : deviceChanged[1];
+        setActiveCallOutputDevice(deviceChanged[0]);
+        _updateListeners();
         break;
       case "lnAudioDeviceListUpdated":
-      // []
+        
+        if (Platform.isIOS) {
+          return;
+        }
+
+        devicesList = [];
+        var decoded = json.decode(args[0] as String);
+
+        for (dynamic item in decoded) {
+          devicesList.add([item[0], item[1], item[2]]);
+        }
+
+        String defaultOutputDevice = args[2] as String;
+
+        switchToHeadsetWhenConnected(defaultOutputDevice);
+
         break;
       case "lnNewDevicesList":
-  /*      print("newdevicesList");
+        /*      print("newdevicesList");
         print(devicesList);
         print(args[0]);
         print(args);
@@ -517,17 +599,15 @@ switch (methodCall.method) {
         defaultOutput = args[2];
         print(defaultInput);
         print(defaultOutput);*/
-        _updateListeners();
+        switchToHeadsetWhenConnected(null);
         break;
       case "lnRegistrationOk":
-        registrationStateChanged(RegistrationState(
-            state: RegistrationStateEnum.REGISTERED
-        ));
+        registrationStateChanged(
+            RegistrationState(state: RegistrationStateEnum.REGISTERED));
         break;
       case "lnRegistrationCleared":
-        registrationStateChanged(RegistrationState(
-            state: RegistrationStateEnum.UNREGISTERED
-        ));
+        registrationStateChanged(
+            RegistrationState(state: RegistrationStateEnum.UNREGISTERED));
         break;
       case 'setPushToken':
         String token = methodCall.arguments[0] as String;
@@ -535,6 +615,7 @@ switch (methodCall.method) {
         return;
 
       case 'setAudioSessionActive':
+        print(["args setAudioSessionActive", args]);
         return;
 
       case 'answerButtonPressed':
@@ -611,8 +692,7 @@ switch (methodCall.method) {
   }
 
   register(String login, String password, String aor) {
-      registerLinphone(login, password, aor);
-
+    registerLinphone(login, password, aor);
   }
 
   _getMethodChannel() {
@@ -626,17 +706,17 @@ switch (methodCall.method) {
     _savedPassword = password;
     _savedAor = aor;
     _getMethodChannel().invokeMethod(
-          "lpRegister", [aor.split("@")[0], password, aor.split("@")[1]]);
+        "lpRegister", [aor.split("@")[0], password, aor.split("@")[1]]);
   }
 
   _unregisterLinphone() {
     print("iosunreg");
-    _getMethodChannel().invokeMethod(
-        "lpUnregister", []);
+    _getMethodChannel().invokeMethod("lpUnregister", []);
   }
 
   _cleanToAddress(toAddress) {
-    toAddress = toAddress.replaceFirst(RegExp(r".*<sip:"), "")
+    toAddress = toAddress
+        .replaceFirst(RegExp(r".*<sip:"), "")
         .replaceFirst(RegExp(">.*"), "")
         .replaceFirst(RegExp(r"@.*$"), "");
     toAddress = toAddress.replaceFirst(RegExp(r"<.*?> *$"), "");
@@ -685,7 +765,7 @@ switch (methodCall.method) {
 
   reregister() {
     print("reregistering...");
-      registerLinphone(_savedLogin, _savedPassword, _savedAor);
+    registerLinphone(_savedLogin, _savedPassword, _savedAor);
   }
 
   setupPermissions() {
@@ -707,13 +787,13 @@ switch (methodCall.method) {
   }
 
   doMakeCall(String destination) async {
-      _playAudio(_outboundAudioPath, false);
+    _playAudio(_outboundAudioPath, false);
 
-      if (!destination.contains("sip:")) destination = "sip:" + destination;
-      if (!destination.contains("@"))
-        destination += "@" + _fusionConnection.getDomain();
+    if (!destination.contains("sip:")) destination = "sip:" + destination;
+    if (!destination.contains("@"))
+      destination += "@" + _fusionConnection.getDomain();
 
-      _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+    _getMethodChannel().invokeMethod("lpStartCall", [destination]);
   }
 
   makeActiveCall(Call call) {
@@ -811,12 +891,20 @@ switch (methodCall.method) {
   }
 
   setSpeaker(bool useSpeaker) {
-    _savedOutput = useSpeaker;
 
     print("lpsetspeaker");
     _getMethodChannel().invokeMethod("lpSetSpeaker", [useSpeaker]);
 
-    this.outputDevice = useSpeaker ? 'Speaker' : 'Phone';
+    if (Platform.isIOS) {
+      _savedOutput = useSpeaker;
+      this.outputDevice = 'Speaker';
+    }
+
+    this._updateListeners();
+  }
+
+  setBluetooth() {
+    _getMethodChannel().invokeMethod("lpSetBluetooth");
     this._updateListeners();
   }
 
@@ -827,7 +915,7 @@ switch (methodCall.method) {
   setHold(Call call, bool setOnHold, bool fromUi) async {
     _setCallDataValue(call.id, "onHold", setOnHold);
 
-    if ( fromUi) {
+    if (fromUi) {
       if (setOnHold) {
         if (Platform.isAndroid) {
           _callKeep.setOnHold(_uuidFor(call), true);
@@ -839,7 +927,8 @@ switch (methodCall.method) {
       } else {
         if (Platform.isAndroid) {
           _callKeep.setOnHold(_uuidFor(call), false);
-          _getMethodChannel().invokeMethod("lpSetHold", [_uuidFor(call), false]);
+          _getMethodChannel()
+              .invokeMethod("lpSetHold", [_uuidFor(call), false]);
         }
         print("setholdinvoke");
         _getMethodChannel().invokeMethod("setUnhold", [_uuidFor(call)]);
@@ -920,7 +1009,7 @@ switch (methodCall.method) {
         print(mediaStream);
         try {
           mediaStream =
-          await navigator.mediaDevices.getUserMedia(mediaConstraints);
+              await navigator.mediaDevices.getUserMedia(mediaConstraints);
         } catch (e) {
           toast("unable to connect to microphone, check permissions");
           print("unable to connect");
@@ -1063,7 +1152,6 @@ switch (methodCall.method) {
 
   _removeCall(Call call) {
     if (Platform.isIOS) {
-
       _getMethodChannel().invokeMethod("lpEndCall", [_uuidFor(call)]);
       _getMethodChannel().invokeMethod("endCall", [_uuidFor(call)]);
     } else if (Platform.isAndroid) {
@@ -1099,7 +1187,7 @@ switch (methodCall.method) {
       print("setholdinvoke");
       _getMethodChannel().invokeMethod("setUnhold", [_uuidFor(call)]);
       _setLpCallState(call, CallStateEnum.CONFIRMED);
-     _setCallDataValue(call.id, "onHold", false);
+      _setCallDataValue(call.id, "onHold", false);
     } else {
       setCallOutput(call, "phone");
     }
@@ -1122,15 +1210,21 @@ switch (methodCall.method) {
 
   _linkLnCallWithUuid(toAddress, callId, uuid, callerId, direction) {
     print("cid");
-    print(callId.toString());print(toAddress);
+    print(callId.toString());
+    print(toAddress);
     var call = LnCall.makeLnCall(callId.toString(), toAddress);
-    print(call);print(direction);
+    print(call);
+    print(direction);
     call.setIdentities(toAddress, callerId, direction);
     call.setChannel(_getMethodChannel(), uuid);
-    print("getdatabyid");print(call.id);
+    print("getdatabyid");
+    print(call.id);
     Map<String, dynamic> data = _getCallDataById(call.id);
     data['uuid'] = uuid;
-    print("linking call");print(callId);print(uuid);print(data.toString());
+    print("linking call");
+    print(callId);
+    print(uuid);
+    print(data.toString());
     return call;
   }
 
@@ -1149,12 +1243,13 @@ switch (methodCall.method) {
   }
 
   toggleEchoLimiterEnabled() {
-    _getMethodChannel().invokeMethod("lpSetEchoLimiterEnabled", [!echoLimiterEnabled]);
+    _getMethodChannel()
+        .invokeMethod("lpSetEchoLimiterEnabled", [!echoLimiterEnabled]);
   }
 
-
   toggleEchoCancellationEnabled() {
-    _getMethodChannel().invokeMethod("lpSetEchoCancellationEnabled", [!echoCancellationEnabled]);
+    _getMethodChannel().invokeMethod(
+        "lpSetEchoCancellationEnabled", [!echoCancellationEnabled]);
   }
 
   _linkUuidFor(Call call) {
@@ -1207,7 +1302,8 @@ switch (methodCall.method) {
   _getCallById(String id) {
     print("finding call" + id);
     for (Call call in calls) {
-      print(call);print(call.id);
+      print(call);
+      print(call.id);
       if (call.id == id) {
         return call;
       }
@@ -1251,7 +1347,12 @@ switch (methodCall.method) {
 
   _addCall(Call call) async {
     if (!_callIsAdded(call)) {
-      if (Platform.isAndroid) {}
+      if (Platform.isAndroid) {
+        setCallOutput(call, outputDevice.toLowerCase());
+        if (bluetoothDeviceId != '') {
+          setActiveCallOutputDevice(bluetoothDeviceId);
+        }
+      }
       calls.add(call);
       _linkUuidFor(call);
 
@@ -1298,8 +1399,7 @@ switch (methodCall.method) {
       _setCallDataValue(call.id, "startTime", DateTime.now());
     }
 
-    if (callIdsAnswered.contains(_uuidFor(call)))
-      answerCall(call);
+    if (callIdsAnswered.contains(_uuidFor(call))) answerCall(call);
   }
 
   onUpdate(Function listener) {
@@ -1307,11 +1407,11 @@ switch (methodCall.method) {
   }
 
   _updateListeners() {
-    if (_ringingInbound
-        && (activeCall == null ||
-            (activeCall.state != CallStateEnum.CONNECTING
-                && activeCall.state != null
-                && activeCall.state != CallStateEnum.PROGRESS))) {
+    if (_ringingInbound &&
+        (activeCall == null ||
+            (activeCall.state != CallStateEnum.CONNECTING &&
+                activeCall.state != null &&
+                activeCall.state != CallStateEnum.PROGRESS))) {
       if (activeCall != null) {
         print("stoppingringtone");
         print(activeCall.state);
@@ -1416,11 +1516,19 @@ switch (methodCall.method) {
   }
 
   getCallOutput(Call call) {
-    return this.outputDevice == 'Speaker' ? 'speaker' : 'phone';
+    return this.outputDevice == 'Speaker'
+        ? 'speaker'
+        : this.outputDevice == 'Bluetooth'
+            ? 'bluetooth'
+            : 'phone';
   }
 
   setCallOutput(Call call, String outputDevice) {
-    setSpeaker(outputDevice == 'speaker');
+    if (outputDevice == 'bluetooth') {
+      setBluetooth();
+    } else {
+      setSpeaker(outputDevice == 'speaker');
+    }
   }
 
   isCallMerged(Call call) {
@@ -1539,7 +1647,7 @@ switch (methodCall.method) {
                     callState.originator.toString(),
                 duration: Toast.LENGTH_LONG);
 
-           /* Sentry.captureMessage(
+            /* Sentry.captureMessage(
                 "callkit failed:" +
                     callState.refer.toString() +
                     callState.toString() +
@@ -1576,9 +1684,9 @@ switch (methodCall.method) {
           print("confirmed now");
           stopOutbound();
           stopInbound();
-          if (Platform.isAndroid) {
-            setCallOutput(call, getCallOutput(call));
-          }
+          // if (Platform.isAndroid) {
+          //   setCallOutput(call, getCallOutput(call));
+          // }
           _setCallDataValue(call.id, "answerTime", DateTime.now());
 
           _blockingEvent = true;
@@ -1702,6 +1810,39 @@ switch (methodCall.method) {
   }
 
   void onUnregister(Function() fn) {
-      _onUnregister = fn;
+    _onUnregister = fn;
+  }
+
+  void forceupdateOutputDevice(String deviceId) {
+    _savedOutput = true;
+    setDefaultOutput(deviceId);
+  }
+
+  void switchToHeadsetWhenConnected(String defaultOutputDeviceId) {
+    bool bluetoothDevice = false;
+
+    devicesList.forEach((element) {
+      final validBluetoothDevice =
+          RegExp(r'(openSLES Bluetooth:).*').hasMatch(element[1]);
+
+      if (validBluetoothDevice &&
+          defaultOutput != element[1] &&
+          !_savedOutput) {
+        setBluetooth();
+        this.outputDevice = 'Bluetooth';
+        bluetoothDevice = true;
+        this.bluetoothAvailable = true;
+        this.bluetoothDeviceId = element[1];
+      }
+      _updateListeners();
+    });
+
+    //when bluetooth disconnect fallback to default out/input devices
+    if (!bluetoothDevice && defaultOutputDeviceId != null) {
+      bluetoothDeviceId = "";
+      activeCallOutput = activeCallOutput == "Speaker" ? "Speaker" : "Phone";
+      bluetoothAvailable = false;
+      this.outputDevice = "Phone";
+    }
   }
 }

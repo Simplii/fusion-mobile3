@@ -21,6 +21,7 @@ class CallHistory extends FusionModel {
   CrmContact crmContact;
   bool missed;
   String direction;
+  String callerId;
 
   isInternal(String domain) {
     if (direction == 'inbound')
@@ -47,6 +48,7 @@ class CallHistory extends FusionModel {
     duration = obj['duration'];
     recordingUrl = obj['recordingUrl'];
     direction = obj['direction'];
+    callerId = obj['callerId'];
     if (direction == 'Incoming') {
       direction = 'inbound';
     } else if (direction == 'Outgoing') {
