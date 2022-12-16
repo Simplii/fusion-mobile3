@@ -366,7 +366,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   setActiveCallOutputDevice(String deviceId) {
-    _getMethodChannel().invokeMethod("lpSetActiveCallOutput", [deviceId]);
+    _android.invokeMethod("lpSetActiveCallOutput", [deviceId]);
     activeCallOutputDevice = deviceId;
     _updateListeners();
   }
@@ -528,15 +528,21 @@ class Softphone implements SipUaHelperListener {
         _setLpCallState(_getCallByUuid(args[0]), CallStateEnum.FAILED);
         break;
       case "lnAudioDeviceChanged":
+        print(["lnAudioDeviceChanged", args]);
+
         // this method triggers while in call only Android
         if (Platform.isIOS) {
-          print(['lnAudioDeviceChanged args', args[0]]);
-          bool outputDeviceIsBluetooth =
+          // here we can check if the device is connected to BT device on first Call
+          bool currentRouteisBluetooth =
               RegExp(r'(AU Bluetooth capture, playback:).*').hasMatch(args[0]);
           bool outputDeviceIsSpeaker =
               RegExp(r'(AU Speaker:).*').hasMatch(args[0]);
-          bluetoothAvailable = outputDeviceIsBluetooth;
-          activeCallOutputDevice = outputDeviceIsBluetooth
+
+          // this is needed for after the inital call
+          if (currentRouteisBluetooth) {
+            this.bluetoothAvailable = true;
+          } 
+          activeCallOutput = currentRouteisBluetooth
               ? "Bluetooth"
               : outputDeviceIsSpeaker
                   ? "Speaker"
@@ -570,11 +576,19 @@ class Softphone implements SipUaHelperListener {
         _updateListeners();
         break;
       case "lnAudioDeviceListUpdated":
-        
+        print(["lnAudioDeviceListUpdated", args]);
         if (Platform.isIOS) {
+          var bluetoothDeviceAvailable = devicesList
+              .where((element) =>
+                  element[1].contains("AU Bluetooth capture, playback"))
+              .isNotEmpty;
+          if (bluetoothDeviceAvailable) {
+            this.bluetoothAvailable = true;
+          } else {
+            this.bluetoothAvailable = false;
+          }
           return;
         }
-
         devicesList = [];
         var decoded = json.decode(args[0] as String);
 
@@ -586,6 +600,9 @@ class Softphone implements SipUaHelperListener {
 
         switchToHeadsetWhenConnected(defaultOutputDevice);
 
+        break;
+      case "btDisconnected":
+        print(["btDis", args]);
         break;
       case "lnNewDevicesList":
         /*      print("newdevicesList");
@@ -599,7 +616,9 @@ class Softphone implements SipUaHelperListener {
         defaultOutput = args[2];
         print(defaultInput);
         print(defaultOutput);*/
-        switchToHeadsetWhenConnected(null);
+        if (Platform.isAndroid) {
+          switchToHeadsetWhenConnected(null);
+        }
         break;
       case "lnRegistrationOk":
         registrationStateChanged(
@@ -891,13 +910,11 @@ class Softphone implements SipUaHelperListener {
   }
 
   setSpeaker(bool useSpeaker) {
-
     print("lpsetspeaker");
     _getMethodChannel().invokeMethod("lpSetSpeaker", [useSpeaker]);
 
     if (Platform.isIOS) {
-      _savedOutput = useSpeaker;
-      this.outputDevice = 'Speaker';
+      this.activeCallOutput = useSpeaker ? 'Speaker' : "Phone";
     }
 
     this._updateListeners();
@@ -905,6 +922,9 @@ class Softphone implements SipUaHelperListener {
 
   setBluetooth() {
     _getMethodChannel().invokeMethod("lpSetBluetooth");
+    if (Platform.isIOS) {
+      this.outputDevice = "Bluetooth";
+    }
     this._updateListeners();
   }
 
@@ -1189,7 +1209,9 @@ class Softphone implements SipUaHelperListener {
       _setLpCallState(call, CallStateEnum.CONFIRMED);
       _setCallDataValue(call.id, "onHold", false);
     } else {
-      setCallOutput(call, "phone");
+      if (Platform.isAndroid) {
+        setCallOutput(call, "phone");
+      }
     }
 
     _updateListeners();
@@ -1524,7 +1546,10 @@ class Softphone implements SipUaHelperListener {
   }
 
   setCallOutput(Call call, String outputDevice) {
+    print("lnAudioDeviceChanged $outputDevice");
+
     if (outputDevice == 'bluetooth') {
+      print("lnAudioDeviceChanged set blue");
       setBluetooth();
     } else {
       setSpeaker(outputDevice == 'speaker');
@@ -1624,11 +1649,11 @@ class Softphone implements SipUaHelperListener {
             }
             // for some reason ios defaults to speakerphone and wont let me change
             // that until after this event.
-            for (var i = 1250; i < 10000; i += 1500) {
-              var future = new Future.delayed(Duration(milliseconds: i), () {
-                setCallOutput(call, getCallOutput(call));
-              });
-            }
+            // for (var i = 1250; i < 10000; i += 1500) {
+            //   var future = new Future.delayed(Duration(milliseconds: i), () {
+            //     setCallOutput(call, getCallOutput(call));
+            //   });
+            // }
           }
           break;
         case CallStateEnum.ENDED:
