@@ -18,6 +18,7 @@ import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:sip_ua/sip_ua.dart';
+import '../utils.dart';
 
 import 'answered_while_on_call.dart';
 
@@ -159,7 +160,6 @@ class _CallViewState extends State<CallView> {
         .where((element) => element[2] == "Microphone")
         .toList()
         .cast<List<String>>();
-    print('here2 $options');
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -211,6 +211,9 @@ class _CallViewState extends State<CallView> {
         .where((element) => element[2] != "Microphone")
         .toList()
         .cast<List<String>>() : _softphone.devicesList;
+    String callDefaultOutputDeviceId = _softphone.activeCallOutputDevice != ''
+        ? _softphone.activeCallOutputDevice
+        : _softphone.defaultOutput;
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -228,15 +231,14 @@ class _CallViewState extends State<CallView> {
                     children: options.map((List<String> option) {
                       return GestureDetector(
                           onTap: () {
-                            // _softphone.setDefaultOutput(option[1]);
-                            _softphone.forceupdateOutputDevice(option[1]);
+                            _softphone.setActiveCallOutputDevice(option[1]);
                             Navigator.pop(context);
                           },
                           child: Container(
                               padding: EdgeInsets.only(
                                   top: 12, bottom: 12, left: 8, right: 8),
                               decoration: BoxDecoration(
-                                  color: option[1] == _softphone.defaultOutput
+                                  color: option[1] == callDefaultOutputDeviceId
                                       ? lightHighlight
                                       : Colors.transparent,
                                   border: Border(
@@ -249,7 +251,7 @@ class _CallViewState extends State<CallView> {
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700)),
                                 Spacer(),
-                                if (_softphone.defaultOutput == option[1])
+                                if (callDefaultOutputDeviceId == option[1])
                                   Image.asset(
                                       "assets/icons/call_view/check.png",
                                       width: 16,
@@ -262,14 +264,20 @@ class _CallViewState extends State<CallView> {
     print("audiopress");
     print(_softphone.devicesList);
     print(_softphone.defaultInput);
-    print(_softphone.defaultOutput);
     List<List<String>> options = [
       ["assets/icons/call_view/audio_phone.png", "Phone", "phone"],
       ["assets/icons/call_view/audio_speaker.png", "Speaker", "speaker"],
-      ["assets/icons/call_view/audio_speaker.png", "Bluetooth", "bluetooth"],
+      ["assets/icons/call_view/bluetooth.png", "Bluetooth", "bluetooth"],
     ];
-    String callAudioOutput = _softphone.getCallOutput(_activeCall);
+
+    String callAudioOutput = _softphone.activeCallOutput != ''
+        ? _softphone.activeCallOutput
+        : _softphone.outputDevice;
+    String callDefaultOutputDeviceId = _softphone.activeCallOutputDevice != ''
+        ? _softphone.activeCallOutputDevice
+        : _softphone.defaultOutput;
     bool muted = _softphone.getMuted(_activeCall);
+    
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -300,9 +308,9 @@ class _CallViewState extends State<CallView> {
                                         offset: Offset.zero,
                                         blurRadius: 36)
                                   ]),
-                              child: Text(_softphone.defaultOutput.replaceAll('Microphone', 'Earpiece'),
+                              child: Text(callDefaultOutputDeviceId.replaceAll('Microphone', 'Earpiece'),
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: Colors.white70,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
                                     height: 1.4,
@@ -334,7 +342,7 @@ class _CallViewState extends State<CallView> {
                                   ]),
                               child: Text(_softphone.defaultInput,
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: Colors.white70,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
                                     height: 1.4,
@@ -375,7 +383,7 @@ class _CallViewState extends State<CallView> {
             bottomChild: Container(
                 constraints: BoxConstraints(
                     minHeight: 24,
-                    maxHeight: 100,
+                    maxHeight: 160,
                     minWidth: 90,
                     maxWidth: MediaQuery.of(context).size.width - 136),
                 child: ListView(
@@ -383,6 +391,10 @@ class _CallViewState extends State<CallView> {
                     children: options.map((List<String> option) {
                       return GestureDetector(
                           onTap: () {
+                            if (option[1] == "Bluetooth" &&
+                                !_softphone.bluetoothAvailable) {
+                              return;
+                            }
                             _softphone.setCallOutput(_activeCall, option[2]);
                             Navigator.pop(context);
                           },
@@ -390,7 +402,7 @@ class _CallViewState extends State<CallView> {
                               padding: EdgeInsets.only(
                                   top: 12, bottom: 12, left: 18, right: 18),
                               decoration: BoxDecoration(
-                                  color: option[2] == callAudioOutput
+                                  color: option[1] == callAudioOutput
                                       ? lightHighlight
                                       : Colors.transparent,
                                   border: Border(
@@ -401,11 +413,14 @@ class _CallViewState extends State<CallView> {
                                 Container(width: 12),
                                 Text(option[1],
                                     style: TextStyle(
-                                        color: Colors.white,
+                                        color: option[1] == "Bluetooth" &&
+                                                !_softphone.bluetoothAvailable
+                                            ? Colors.white60
+                                            : Colors.white,
                                         fontSize: 18,
                                         fontWeight: FontWeight.w700)),
                                 Spacer(),
-                                if (callAudioOutput == option[2])
+                                if (callAudioOutput == option[1])
                                   Image.asset(
                                       "assets/icons/call_view/check.png",
                                       width: 16,
@@ -587,7 +602,8 @@ class _CallViewState extends State<CallView> {
                             CallHeaderDetails(
                                 callerName: callerName,
                                 companyName: companyName,
-                                callerNumber: callerNumber,
+                                callerNumber:
+                                    callerNumber.toString().formatPhone(),
                                 isRinging: isRinging,
                                 callIsRecording:
                                     _softphone.getRecordState(_activeCall),
