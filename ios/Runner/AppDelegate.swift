@@ -75,6 +75,7 @@ import Firebase
             
             if (callkitChannel != nil) {
                 callkitChannel.invokeMethod("setPushToken", arguments: [deviceToken]);
+                
             }
         }
     }
