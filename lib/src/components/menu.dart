@@ -80,8 +80,6 @@ class _MenuState extends State<Menu> {
   }
 
   _changeDefaultOutputDevice() {
-    print("changeout");
-    print(_softphone.devicesList);
     List<List<String>> options = _softphone.devicesList
         .where((element) => element[2] != "Microphone")
         .toList()

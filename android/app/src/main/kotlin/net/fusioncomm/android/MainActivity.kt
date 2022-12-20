@@ -1,16 +1,13 @@
 package net.fusioncomm.android
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.util.JsonWriter
 import android.util.Log
-import android.view.KeyEvent
-import android.widget.Toast
 import com.tekartik.sqflite.SqflitePlugin;
 
 import com.google.gson.Gson
@@ -29,16 +26,35 @@ import java.security.MessageDigest
 
 class MainActivity : FlutterFragmentActivity() {
     private lateinit var core: Core
-    private lateinit var channel: MethodChannel
+    // private lateinit var channel: MethodChannel
+    // switched it to companion obj to be able to invoke flutter methods from
+    // native boradcastRecivers and services
+    companion object {
+        lateinit var channel: MethodChannel
+    }
     private var username: String = ""
     private var password: String = ""
     private var domain: String = ""
     private var server: String = "mobile-proxy.fusioncomm.net"
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
+    lateinit var volumeReceiver : VolumeReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
         setupCore();
+        setupBroadcastReciver()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(volumeReceiver)
+    }
+
+    private fun setupBroadcastReciver(){
+        volumeReceiver = VolumeReceiver()
+        val filter = IntentFilter()
+        filter.addAction("android.media.VOLUME_CHANGED_ACTION")
+        registerReceiver(volumeReceiver, filter)
     }
 
     private val coreListener = object : CoreListenerStub() {
@@ -62,12 +78,41 @@ class MainActivity : FlutterFragmentActivity() {
         }
 
         override fun onAudioDeviceChanged(core: Core, audioDevice: AudioDevice) {
-        }
+            // This listner will be triggered when switching audioDevice in call only
+            var newDevice: Array<String> = arrayOf(audioDevice.id, audioDevice.type.name);
 
-        override fun onAudioDevicesListUpdated(core: Core) {
+           if(!newDevice.isNullOrEmpty()){
+
+                var gson = Gson();
+
+                channel.invokeMethod(
+                        "lnAudioDeviceChanged",
+                       mapOf(Pair("audioDevice", gson.toJson(newDevice)),
+                            Pair("activeCallOutput", core.currentCall?.outputAudioDevice?.id),
+                            Pair("defaultMic", core.defaultOutputAudioDevice.id))
+                    );
+           }
+            
+        }
+    
+        override fun onAudioDevicesListUpdated(@NonNull core: Core) {
             // This callback will be triggered when the available devices list has changed,
             // for example after a bluetooth headset has been connected/disconnected.
-            sendDevices()
+            var devicesList: Array<Array<String>> = arrayOf()
+            for (device in core.extendedAudioDevices) {
+                devicesList = devicesList.plus(
+                    arrayOf(device.deviceName, device.id, device.type.name)
+                )
+            }
+
+            var gson = Gson();
+
+            channel.invokeMethod(
+                "lnAudioDeviceListUpdated",
+                mapOf(Pair("devicesList", gson.toJson(devicesList)),
+                    Pair("defaultInput", core.defaultInputAudioDevice.id),
+                    Pair("defaultOutput", core.defaultOutputAudioDevice.id)))
+            // sendDevices()
         }
 
         override fun onCallStateChanged(
@@ -245,8 +290,8 @@ class MainActivity : FlutterFragmentActivity() {
             )
         )
         core.natPolicy?.enableTurn(true)
-//        core.enableEchoLimiter(true)
-//        core.enableEchoCancellation(true)
+        core.enableEchoLimiter(true)
+        core.enableEchoCancellation(true)
 
         if (core.hasBuiltinEchoCanceller()) {
             print("Device has built in echo canceler, disabling software echo canceler");
@@ -318,6 +363,13 @@ class MainActivity : FlutterFragmentActivity() {
             devicesList = devicesList.plus(
                 arrayOf(device.deviceName, device.id, device.type.name)
             )
+            if(device.type == AudioDevice.Type.Microphone && device.id.contains("openSLES")){
+                core.defaultInputAudioDevice = device
+            }
+
+            if(device.type == AudioDevice.Type.Speaker && device.id.contains("openSLES")){
+                core.defaultOutputAudioDevice = device
+            }
         }
 
         var gson = Gson();
@@ -402,18 +454,6 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun findCallByUuid(uuid: String): Call? {
         return uuidCalls.get(uuid)
-    }
-
-    override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-        //this only work when the app is in the foreground for now..
-        var action = event?.action;
-        var keycode = event?.keyCode;
-
-        if(KeyEvent.ACTION_DOWN == action && KeyEvent.KEYCODE_VOLUME_DOWN == keycode){
-            Log.d("vol", "trues ");
-            channel.invokeMethod("volDown",true);
-        }
-        return super.dispatchKeyEvent(event)
     }
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
@@ -502,35 +542,59 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                     }
                 }
-                sendDevices()
+//                 sendDevices()
             } else if (call.method == "lpSetDefaultOutput") {
                 var args = call.arguments as List<Any>
                 for (audioDevice in core.extendedAudioDevices) {
-                                        Log.d("setou8tput", "out checking audio device" + audioDevice.id)
+                    Log.d("setou8tput", "out checking audio device" + audioDevice.id)
                     Log.d("output", "out checking against" + args[0])
 
                     if (audioDevice.id == args[0]) {
                         core.defaultOutputAudioDevice = audioDevice;
                         for  (call in core.calls) {
-                                                        Log.d("setinput", "setting the default input for a call")
+                    Log.d("setinput", "setting the default input for a call")
 
                             call.outputAudioDevice = audioDevice
                         }
                     }
                 }
-                sendDevices()
-            } else if (call.method == "lpSetSpeaker") {
+//                 sendDevices()
+            } else if(call.method == "lpSetActiveCallOutput") {
                 var args = call.arguments as List<Any>
-                var enableSpeaker = args[0] as Boolean
 
                 for (audioDevice in core.audioDevices) {
-                    if (!enableSpeaker && audioDevice.type == AudioDevice.Type.Earpiece) {
-                        core.currentCall?.outputAudioDevice = audioDevice
-                    } else if (enableSpeaker && audioDevice.type == AudioDevice.Type.Speaker) {
+                    if (audioDevice.id == args[0]) {
+                        Log.d("lpSetActiveCallOutput", "args" +args[0])
+                        Log.d("lpSetActiveCallOutput", "audio device" +audioDevice.id)
+
                         core.currentCall?.outputAudioDevice = audioDevice
                     }
                 }
-                sendDevices()
+            }
+            else if (call.method == "lpSetSpeaker") {
+                var args = call.arguments as List<Any>
+                var enableSpeaker = args[0] as Boolean
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+
+                Log.d("lpSetActiveCallOutput" , "set speaker")
+                for (audioDevice in core.audioDevices) {
+                    if (!enableSpeaker && audioDevice.type == AudioDevice.Type.Earpiece) {
+                        core.currentCall?.outputAudioDevice = audioDevice
+                        audioManager.isSpeakerphoneOn = false
+                    } else if (enableSpeaker && audioDevice.type == AudioDevice.Type.Speaker) {
+                        core.currentCall?.outputAudioDevice = audioDevice
+                        audioManager.isSpeakerphoneOn = true
+                    }
+                }
+//                sendDevices()
+            } else if (call.method == "lpSetBluetooth"){
+                for (audioDevice in core.audioDevices) {
+                    if (audioDevice.type == AudioDevice.Type.Bluetooth) {
+                        core.currentCall?.outputAudioDevice = audioDevice
+                    }
+                }
+//                sendDevices()
             } else if (call.method == "lpMuteCall") {
                 var args = call.arguments as List<Any>
                 var lpCall = findCallByUuid(args[0] as String)
