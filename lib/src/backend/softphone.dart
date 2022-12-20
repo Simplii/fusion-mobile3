@@ -532,16 +532,17 @@ class Softphone implements SipUaHelperListener {
       case "lnAudioDeviceChanged":
         // this method triggers while in call only, Android/IOS
         if (Platform.isIOS) {
-          // here we can check if the device is connected to BT device on first Call
+          // handle switching output devices
           bool currentRouteisBluetooth =
               RegExp(r'(AU Bluetooth capture, playback:).*').hasMatch(args[0]);
           bool outputDeviceIsSpeaker =
               RegExp(r'(AU Speaker:).*').hasMatch(args[0]);
 
-          // this is needed for after the inital call
+          // if the new selected device is bluetooth
           if (currentRouteisBluetooth) {
             this.bluetoothAvailable = true;
           }
+          // setting the active call output device
           activeCallOutput = currentRouteisBluetooth
               ? "Bluetooth"
               : outputDeviceIsSpeaker
@@ -585,7 +586,6 @@ class Softphone implements SipUaHelperListener {
               .where((element) =>
                   element[1].contains("AU Bluetooth capture, playback"))
               .isNotEmpty;
-          print(["lnAudioDeviceListUpdated blue", bluetoothDeviceAvailable]);
 
           if (bluetoothDeviceAvailable) {
             this.bluetoothAvailable = true;
@@ -649,11 +649,8 @@ class Softphone implements SipUaHelperListener {
         String token = methodCall.arguments[0] as String;
         _fusionConnection.setPushkitToken(token);
         return;
-
       case 'setAudioSessionActive':
-        print(["args setAudioSessionActive", args]);
         return;
-
       case 'answerButtonPressed':
         String callUuid = methodCall.arguments[0] as String;
         callIdsAnswered.add(callUuid);
