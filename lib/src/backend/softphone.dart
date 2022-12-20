@@ -413,8 +413,7 @@ class Softphone implements SipUaHelperListener {
             args['displayName']
           ];
           break;
-        case "volDown":
-          args = args;
+        case "stopRinger":
           RingtonePlayer.stop();
           break;
         case "lnAudioDeviceChanged":

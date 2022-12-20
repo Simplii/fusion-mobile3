@@ -7,8 +7,8 @@ import android.content.Intent
 class VolumeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent) {
         // this will stop ringer if VOLUP/VOLDOWN key pressed
-        if (intent.getAction().equals("android.media.VOLUME_CHANGED_ACTION")) {
-            MainActivity.channel.invokeMethod("volDown",true);
+        if (intent.action.equals("android.media.VOLUME_CHANGED_ACTION")) {
+            MainActivity.channel.invokeMethod("stopRinger",true);
         }
     }
 }
