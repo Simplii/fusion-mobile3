@@ -1567,10 +1567,9 @@ class Softphone implements SipUaHelperListener {
   }
 
   setCallOutput(Call call, String outputDevice) {
-    print("lnAudioDeviceChanged $outputDevice");
+    print("setCallOutput to $outputDevice");
 
     if (Platform.isAndroid && outputDevice == 'bluetooth') {
-      print("lnAudioDeviceChanged set blue");
       setBluetooth();
     } else {
       setSpeaker(outputDevice == 'speaker', outputDevice == 'bluetooth');
@@ -1673,6 +1672,8 @@ class Softphone implements SipUaHelperListener {
             // for (var i = 1250; i < 10000; i += 1500) {
             //   var future = new Future.delayed(Duration(milliseconds: i), () {
             //     setCallOutput(call, getCallOutput(call));
+            //     might need to switch it to
+            //     setCallOutput(call, bluetoothAvailable ? "bluetooth" : "phone");
             //   });
             // }
           }

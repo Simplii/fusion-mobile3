@@ -104,7 +104,6 @@ print("audiointerruption")
     public func setupLinphone() {
         LoggingService.Instance.logLevel = LogLevel.Debug
         let factory = Factory.Instance
-        print("setup linphone")
         try! mCore = factory.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
         try! mCore?.start()
 //        sendDevices()
@@ -241,7 +240,6 @@ print("audiointerruption")
                 self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName])
 //            }
         }, onAudioDevicesListUpdated: { (core: Core) in
-            print("themethod ios onAudioDevicesListUpdated")
             var devices: [[String]] = []
             core.audioDevices.forEach({ device in
                 devices.append([device.deviceName, device.id, device.type == .Microphone ? "Microphone" : "Speaker"])
@@ -251,7 +249,7 @@ print("audiointerruption")
                 let devicesString = try jsonEncoder.encode(devices)
                 self.callkitChannel.invokeMethod("lnAudioDeviceListUpdated", arguments: [String(data: devicesString, encoding: .utf8)])
             }  catch let error as NSError {
-                print("was an error sending newdeviceslist")
+                print("was an error sending lnAudioDeviceListUpdated")
             }
             
             //            self.sendDevices()
@@ -449,7 +447,6 @@ print("audiointerruption")
         // We can get a list of all available audio devices using
         // Note that on tablets for example, there may be no Earpiece device
         for audioDevice in mCore!.audioDevices {
-            print("lnAudioDeviceChanged from ios ")
             // For IOS, the Speaker is an exception, Linphone cannot differentiate Input and Output.
             // This means that the default output device, the earpiece, is paired with the default phone microphone.
             // Setting the output audio device to the microphone will redirect the sound to the earpiece.
