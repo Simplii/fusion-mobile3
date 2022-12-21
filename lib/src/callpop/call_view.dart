@@ -191,7 +191,7 @@ class _CallViewState extends State<CallView> {
                                       bottom: BorderSide(
                                           color: lightDivider, width: 1.0))),
                               child: Row(children: [
-                                Text(option[1],
+                                Text(option[0],
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -207,10 +207,10 @@ class _CallViewState extends State<CallView> {
   }
 
   _changeDefaultOutputDevice() {
-    List<List<String>> options = _softphone.devicesList
+    List<List<String>> options = Platform.isAndroid ? _softphone.devicesList
         .where((element) => element[2] != "Microphone")
         .toList()
-        .cast<List<String>>();
+        .cast<List<String>>() : _softphone.devicesList;
     String callDefaultOutputDeviceId = _softphone.activeCallOutputDevice != ''
         ? _softphone.activeCallOutputDevice
         : _softphone.defaultOutput;
@@ -245,7 +245,7 @@ class _CallViewState extends State<CallView> {
                                       bottom: BorderSide(
                                           color: lightDivider, width: 1.0))),
                               child: Row(children: [
-                                Text(option[1],
+                                Text(option[0].replaceAll('Microphone', 'Earpiece'),
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -269,7 +269,6 @@ class _CallViewState extends State<CallView> {
       ["assets/icons/call_view/audio_speaker.png", "Speaker", "speaker"],
       ["assets/icons/call_view/bluetooth.png", "Bluetooth", "bluetooth"],
     ];
-
     String callAudioOutput = _softphone.activeCallOutput != ''
         ? _softphone.activeCallOutput
         : _softphone.outputDevice;
@@ -277,7 +276,7 @@ class _CallViewState extends State<CallView> {
         ? _softphone.activeCallOutputDevice
         : _softphone.defaultOutput;
     bool muted = _softphone.getMuted(_activeCall);
-    
+
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -285,7 +284,7 @@ class _CallViewState extends State<CallView> {
         builder: (contact) => PopupMenu(
             label: "AUDIO SOURCE",
             topChild: Column(children: [
-              if (Platform.isAndroid)
+              // if (Platform.isAndroid)
                 Row(children: [
                   Expanded(
                       child: GestureDetector(
@@ -308,7 +307,7 @@ class _CallViewState extends State<CallView> {
                                         offset: Offset.zero,
                                         blurRadius: 36)
                                   ]),
-                              child: Text(callDefaultOutputDeviceId,
+                              child: Text(callDefaultOutputDeviceId.replaceAll('Microphone', 'Earpiece'),
                                   style: TextStyle(
                                     color: Colors.white70,
                                     fontWeight: FontWeight.w700,
@@ -317,7 +316,7 @@ class _CallViewState extends State<CallView> {
                                   )))))
                 ]),
               if (Platform.isAndroid) Container(height: 4),
-              if (Platform.isAndroid)
+              // if (Platform.isAndroid)
                 Row(children: [
                   Expanded(
                       child: GestureDetector(

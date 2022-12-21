@@ -4,7 +4,7 @@ import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
-
+import 'dart:io';
 import '../backend/fusion_connection.dart';
 import '../backend/softphone.dart';
 import '../styles.dart';
@@ -64,7 +64,7 @@ class _MenuState extends State<Menu> {
                                       bottom: BorderSide(
                                           color: lightDivider, width: 1.0))),
                               child: Row(children: [
-                                Text(option[1],
+                                Text(option[0],
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -80,10 +80,11 @@ class _MenuState extends State<Menu> {
   }
 
   _changeDefaultOutputDevice() {
-    List<List<String>> options = _softphone.devicesList
+    print(_softphone.devicesList);
+    List<List<String>> options = Platform.isAndroid ? _softphone.devicesList
         .where((element) => element[2] != "Microphone")
         .toList()
-        .cast<List<String>>();
+        .cast<List<String>>() : _softphone.devicesList;
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -116,7 +117,7 @@ class _MenuState extends State<Menu> {
                                       bottom: BorderSide(
                                           color: lightDivider, width: 1.0))),
                               child: Row(children: [
-                                Text(option[1],
+                                Text(option[0].replaceAll('Microphone', 'Earpiece'),
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -161,7 +162,7 @@ class _MenuState extends State<Menu> {
                                       offset: Offset.zero,
                                       blurRadius: 36)
                                 ]),
-                            child: Text(_softphone.defaultOutput,
+                            child: Text(_softphone.defaultOutput.replaceAll('Microphone', 'Earpiece'),
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -206,7 +207,7 @@ class _MenuState extends State<Menu> {
                     minHeight: 24,
                     maxHeight: 200,
                     minWidth: 90,
-                    maxWidth: MediaQuery.of(context).size.width - 136),
+                    maxWidth: MediaQuery.of(context).size.width - 135),
                 child: ListView(padding: EdgeInsets.all(8), children: [
                   GestureDetector(
                       onTap: () {
@@ -261,7 +262,7 @@ class _MenuState extends State<Menu> {
                       },
                       child: Container(
                           padding: EdgeInsets.only(
-                              top: 12, bottom: 12, left: 18, right: 18),
+                              top: 12, bottom: 12, left: 18, right: 0),
                           decoration: BoxDecoration(
                               color: Colors.transparent,
                               border: Border(
