@@ -413,13 +413,15 @@ class Softphone implements SipUaHelperListener {
             args['displayName']
           ];
           break;
+        case "stopRinger":
+          RingtonePlayer.stop();
+          break;
         case "lnAudioDeviceChanged":
           args = [
             args['audioDevice'] as String,
             args['defaultMic'] as String,
             args['activeCallOutput'] as String
           ];
-          ;
           break;
         case "lnAudioDeviceListUpdated":
           args = [
