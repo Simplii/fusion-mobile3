@@ -1,6 +1,7 @@
 package net.fusioncomm.android
 
 import android.content.Context
+import android.content.IntentFilter
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
@@ -25,16 +26,35 @@ import java.security.MessageDigest
 
 class MainActivity : FlutterFragmentActivity() {
     private lateinit var core: Core
-    private lateinit var channel: MethodChannel
+    // private lateinit var channel: MethodChannel
+    // switched it to companion obj to be able to invoke flutter methods from
+    // native boradcastRecivers and services
+    companion object {
+        lateinit var channel: MethodChannel
+    }
     private var username: String = ""
     private var password: String = ""
     private var domain: String = ""
     private var server: String = "mobile-proxy.fusioncomm.net"
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
+    lateinit var volumeReceiver : VolumeReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
         setupCore();
+        setupBroadcastReciver()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(volumeReceiver)
+    }
+
+    private fun setupBroadcastReciver(){
+        volumeReceiver = VolumeReceiver()
+        val filter = IntentFilter()
+        filter.addAction("android.media.VOLUME_CHANGED_ACTION")
+        registerReceiver(volumeReceiver, filter)
     }
 
     private val coreListener = object : CoreListenerStub() {
