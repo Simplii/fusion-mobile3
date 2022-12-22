@@ -1,5 +1,6 @@
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'dart:convert' as convert;
 
 import 'carbon_date.dart';
@@ -126,10 +127,14 @@ class Contact extends FusionModel {
   }
 
   Contact(Map<String, dynamic> contactObject) {
+    Map<String, dynamic> createdAtDateObj =
+        checkDateObj(contactObject['created_at']);
+    Map<String, dynamic> updatedAtDateObj =
+        checkDateObj(contactObject['updated_at']);
     this.addresses = contactObject['addresses'];
     this.company = contactObject['company'];
     this.contacts = contactObject['contacts'];
-    this.createdAt = CarbonDate(contactObject['created_at']);
+    this.createdAt = CarbonDate(createdAtDateObj);
     this.deleted = contactObject['deleted'];
     this.domain = contactObject['domain'];
     this.emails = contactObject['emails'];
@@ -157,7 +162,7 @@ class Contact extends FusionModel {
     if (contactObject['uid'].runtimeType == String) {
       this.uid = contactObject['uid'];
     }
-    this.updatedAt = CarbonDate(contactObject['updated_at']);
+    this.updatedAt = CarbonDate(updatedAtDateObj);
     this.crmUrl = contactObject['crm_url'];
     this.crmName = contactObject['crm_name'];
     this.crmId = contactObject['crm_id'].runtimeType == int

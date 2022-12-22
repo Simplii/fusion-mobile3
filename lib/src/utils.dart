@@ -95,3 +95,12 @@ bool iphoneIsLarge() {
     return false;
   }
 }
+
+Map<String, dynamic> checkDateObj(dynamic dateToCheck) {
+  if (dateToCheck.runtimeType == String) {
+    final date = DateTime.parse(dateToCheck).toLocal();
+    return {"date": date, "timezone": "MST", "timezone_type": 3};
+  } else {
+    return dateToCheck;
+  }
+}
