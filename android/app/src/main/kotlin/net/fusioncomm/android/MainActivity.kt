@@ -1,14 +1,13 @@
 package net.fusioncomm.android
 
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
-import android.util.JsonWriter
 import android.util.Log
-import com.tekartik.sqflite.SqflitePlugin;
 
 import com.google.gson.Gson
 
@@ -18,7 +17,6 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
-import io.flutter.util.ViewUtils.getActivity
 import org.linphone.core.*
 import org.linphone.core.CoreListenerStub
 import java.math.BigInteger
@@ -35,7 +33,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var username: String = ""
     private var password: String = ""
     private var domain: String = ""
-    private var server: String = "zaid-fusion-dev.fusioncomm.net"
+    private var server: String = "mobile-proxy.fusioncomm.net"
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
     lateinit var volumeReceiver : VolumeReceiver
 
@@ -47,6 +45,10 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // terminating call here not reliable, this function sometimes won't fire if
+        // app is closed from recent apps list or killed by android system, we can test it
+        // for now, otherwise we need to set a service for that or use linphone service.
+//        core?.currentCall?.terminate()
         unregisterReceiver(volumeReceiver)
     }
 
@@ -55,6 +57,13 @@ class MainActivity : FlutterFragmentActivity() {
         val filter = IntentFilter()
         filter.addAction("android.media.VOLUME_CHANGED_ACTION")
         registerReceiver(volumeReceiver, filter)
+    }
+
+    private fun startFusionService(){
+        Log.d("fusionService","Started")
+        Intent(this, FusionService::class.java).also { intent ->
+            startService(intent)
+        }
     }
 
     private val coreListener = object : CoreListenerStub() {
@@ -183,6 +192,7 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Connected -> {
+                    startFusionService()
                     channel.invokeMethod(
                         "lnConnected",
                         mapOf(Pair("uuid", uuid))
@@ -305,7 +315,7 @@ class MainActivity : FlutterFragmentActivity() {
         core.natPolicy?.stunServer = "services.fusioncomm.net"
         core.remoteRingbackTone = "android.resource://net.fusioncomm.android/" + R.raw.outgoing
         core.ring = "android.resource://net.fusioncomm.android/" + R.raw.inbound;
-
+        core.config.setBool("audio", "android_pause_calls_when_audio_focus_lost", false)
     }
 
     private fun register() {
@@ -316,7 +326,7 @@ class MainActivity : FlutterFragmentActivity() {
         val identity = Factory.instance().createAddress("sip:$username@$domain")
         accountParams.identityAddress = identity
 
-        val address = Factory.instance().createAddress("sip:zaid-fusion-dev.fusioncomm.net:5060")
+        val address = Factory.instance().createAddress("sip:mobile-proxy.fusioncomm.net:5060")
         address?.transport = transportType
         accountParams.serverAddress = address
         accountParams.registerEnabled = true
@@ -390,8 +400,8 @@ class MainActivity : FlutterFragmentActivity() {
     ): ProxyConfig {
         var address = core.createAddress(aor)
         proxyConfig.identityAddress = address
-        proxyConfig.serverAddr = "<sip:zaid-fusion-dev.fusioncomm.net:5060;transport=tcp>"
-        proxyConfig.setRoute("<sip:zaid-fusion-dev.fusioncomm.net:5060;transport=tcp>")
+        proxyConfig.serverAddr = "<sip:mobile-proxy.fusioncomm.net:5060;transport=tcp>"
+        proxyConfig.setRoute("<sip:mobile-proxy.fusioncomm.net:5060;transport=tcp>")
         proxyConfig.realm = authInfo.realm
         proxyConfig.enableRegister(true)
         proxyConfig.avpfMode = AVPFMode.Disabled
