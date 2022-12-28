@@ -62,9 +62,13 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun startFusionService(){
-        Log.d("fusionService","Started")
-        Intent(this, FusionService::class.java).also { intent ->
-            startService(intent)
+        if(!FusionService.serviceStarted){
+            Log.d("fusionService","Start")
+            Intent(this, FusionService::class.java).also { intent ->
+                startService(intent)
+            }
+        } else {
+            Log.d("fusionService","Service running")
         }
     }
 
@@ -592,10 +596,14 @@ class MainActivity : FlutterFragmentActivity() {
                 Log.d("lpSetActiveCallOutput" , "set speaker")
                 for (audioDevice in core.audioDevices) {
                     if (!enableSpeaker && audioDevice.type == AudioDevice.Type.Earpiece) {
-                        core.currentCall?.outputAudioDevice = audioDevice
+                        for  (call in core.calls) {
+                            call.outputAudioDevice = audioDevice
+                        }
                         audioManager.isSpeakerphoneOn = false
                     } else if (enableSpeaker && audioDevice.type == AudioDevice.Type.Speaker) {
-                        core.currentCall?.outputAudioDevice = audioDevice
+                        for  (call in core.calls) {
+                            call.outputAudioDevice = audioDevice
+                        }
                         audioManager.isSpeakerphoneOn = true
                     }
                 }

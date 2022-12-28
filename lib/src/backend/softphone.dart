@@ -936,6 +936,7 @@ class Softphone implements SipUaHelperListener {
               : "Phone";
     } else {
       _getMethodChannel().invokeMethod("lpSetSpeaker", [useSpeaker]);
+      this.outputDevice = useSpeaker ? 'Speaker' : "Phone";
     }
 
     this._updateListeners();
@@ -1389,6 +1390,10 @@ class Softphone implements SipUaHelperListener {
     if (!_callIsAdded(call)) {
       if (Platform.isAndroid) {
         setCallOutput(call, outputDevice.toLowerCase());
+        print("setCallOutput outputdevice " +
+            outputDevice +
+            " active device " +
+            activeCallOutputDevice);
         if (bluetoothDeviceId != '') {
           setActiveCallOutputDevice(bluetoothDeviceId);
         }
@@ -1762,7 +1767,7 @@ class Softphone implements SipUaHelperListener {
         case CallStateEnum.CALL_INITIATION:
           _addCall(call);
           if (Platform.isAndroid) {
-            setCallOutput(call, getCallOutput(call));
+            // setCallOutput(call, getCallOutput(call));
 
             if (isIncoming(call)) {
               _callKeep.displayIncomingCall(
