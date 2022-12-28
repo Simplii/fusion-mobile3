@@ -40,6 +40,7 @@ class SMSMessage extends FusionModel {
   String user;
 
   SMSMessage(Map<String, dynamic> map) {
+    Map<String, dynamic> timeDateObj = checkDateObj(map['time']);
     this.convertedMms = map.containsKey('converted_mms') ? true : false;
     this.domain = map['domain'].runtimeType == String ? map['domain'] : null;
     this.from = map['from'];
@@ -57,7 +58,7 @@ class SMSMessage extends FusionModel {
         : null);
     this.smsWebhookId =
         map['sms_webhook_id'].runtimeType == int ? map['sms_webhook_id'] : 0;
-    this.time = CarbonDate(map['time']);
+    this.time = CarbonDate(timeDateObj);
     this.to = map['to'];
     this.type = map['type'];
     this.unixtime = map['unixtime'];
