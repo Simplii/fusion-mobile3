@@ -96,7 +96,11 @@
           </intent-filter>
         </service>
 
-
+        <service
+            android:enabled="true"
+            android:name=".FusionService"
+            android:exported="false"
+            android:stopWithTask="false" />
         <!--<service android:name="com.example.flutter_voip_kit.VoipConnectionService"-->
         <!--android:label="VoipConnectionService"-->
         <!--android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE">-->
