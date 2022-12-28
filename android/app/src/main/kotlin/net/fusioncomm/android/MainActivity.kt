@@ -7,7 +7,9 @@ import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.util.JsonWriter
 import android.util.Log
+import com.tekartik.sqflite.SqflitePlugin;
 
 import com.google.gson.Gson
 
@@ -17,6 +19,7 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
+import io.flutter.util.ViewUtils.getActivity
 import org.linphone.core.*
 import org.linphone.core.CoreListenerStub
 import java.math.BigInteger
@@ -46,9 +49,8 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         // terminating call here not reliable, this function sometimes won't fire if
-        // app is closed from recent apps list or killed by android system, we can test it
-        // for now, otherwise we need to set a service for that or use linphone service.
-//        core?.currentCall?.terminate()
+        // app is closed from recent apps list or killed by android system.
+        // core?.currentCall?.terminate()
         unregisterReceiver(volumeReceiver)
     }
 
@@ -601,7 +603,9 @@ class MainActivity : FlutterFragmentActivity() {
             } else if (call.method == "lpSetBluetooth"){
                 for (audioDevice in core.audioDevices) {
                     if (audioDevice.type == AudioDevice.Type.Bluetooth) {
-                        core.currentCall?.outputAudioDevice = audioDevice
+                        for  (call in core.calls) {
+                            call.outputAudioDevice = audioDevice
+                        }
                     }
                 }
 //                sendDevices()
