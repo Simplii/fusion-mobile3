@@ -25,9 +25,7 @@ class FusionService: Service() {
     override fun onTaskRemoved(rootIntent: Intent?) {
         Log.d("fusionService","onTaskRemoved called")
         val core = CoreManager.instance().core
-        for ( call in core.calls){
-            call.terminate()
-        }
+        core.terminateAllCalls()
         super.onTaskRemoved(rootIntent)
         //stop service
         this.stopSelf()
