@@ -5,25 +5,24 @@ PODS:
     - Flutter
   - audioplayers (0.0.1):
     - Flutter
-  - awesome_notifications (0.0.3):
+  - awesome_notifications (0.0.5):
     - Flutter
-  - bluetoothadapter (0.0.1):
-    - Flutter
+    - IosAwnCore (= 0.7.3)
   - callkeep (0.0.1):
     - Flutter
-  - Firebase/CoreOnly (9.5.0):
-    - FirebaseCore (= 9.5.0)
-  - Firebase/Messaging (9.5.0):
+  - Firebase/CoreOnly (9.6.0):
+    - FirebaseCore (= 9.6.0)
+  - Firebase/Messaging (9.6.0):
     - Firebase/CoreOnly
-    - FirebaseMessaging (~> 9.5.0)
-  - firebase_core (1.22.0):
-    - Firebase/CoreOnly (= 9.5.0)
+    - FirebaseMessaging (~> 9.6.0)
+  - firebase_core (1.24.0):
+    - Firebase/CoreOnly (= 9.6.0)
     - Flutter
   - firebase_messaging (11.4.4):
-    - Firebase/Messaging (= 9.5.0)
+    - Firebase/Messaging (= 9.6.0)
     - firebase_core
     - Flutter
-  - FirebaseCore (9.5.0):
+  - FirebaseCore (9.6.0):
     - FirebaseCoreDiagnostics (~> 9.0)
     - FirebaseCoreInternal (~> 9.0)
     - GoogleUtilities/Environment (~> 7.7)
@@ -40,7 +39,7 @@ PODS:
     - GoogleUtilities/Environment (~> 7.7)
     - GoogleUtilities/UserDefaults (~> 7.7)
     - PromisesObjC (~> 2.1)
-  - FirebaseMessaging (9.5.0):
+  - FirebaseMessaging (9.6.0):
     - FirebaseCore (~> 9.0)
     - FirebaseInstallations (~> 9.0)
     - GoogleDataTransport (< 10.0.0, >= 9.1.4)
@@ -62,9 +61,9 @@ PODS:
     - Flutter
   - flutter_local_notifications (0.0.1):
     - Flutter
-  - flutter_webrtc (0.9.4):
+  - flutter_webrtc (0.9.13):
     - Flutter
-    - WebRTC-SDK (= 104.5112.02)
+    - WebRTC-SDK (= 104.5112.06)
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/standard (2.7.5)
@@ -91,21 +90,22 @@ PODS:
     - GoogleUtilities/Logger
   - image_picker_ios (0.0.1):
     - Flutter
+  - IosAwnCore (0.7.3)
   - just_audio (0.0.1):
     - Flutter
-  - linphone-sdk (5.1.62):
-    - linphone-sdk/all-frameworks (= 5.1.62)
-    - linphone-sdk/app-extension (= 5.1.62)
-    - linphone-sdk/app-extension-swift (= 5.1.62)
-    - linphone-sdk/basic-frameworks (= 5.1.62)
-    - linphone-sdk/swift (= 5.1.62)
-  - linphone-sdk/all-frameworks (5.1.62)
-  - linphone-sdk/app-extension (5.1.62)
-  - linphone-sdk/app-extension-swift (5.1.62):
+  - linphone-sdk (5.1.67):
+    - linphone-sdk/all-frameworks (= 5.1.67)
+    - linphone-sdk/app-extension (= 5.1.67)
+    - linphone-sdk/app-extension-swift (= 5.1.67)
+    - linphone-sdk/basic-frameworks (= 5.1.67)
+    - linphone-sdk/swift (= 5.1.67)
+  - linphone-sdk/all-frameworks (5.1.67)
+  - linphone-sdk/app-extension (5.1.67)
+  - linphone-sdk/app-extension-swift (5.1.67):
     - linphone-sdk/app-extension
-  - linphone-sdk/basic-frameworks (5.1.62):
+  - linphone-sdk/basic-frameworks (5.1.67):
     - linphone-sdk/app-extension
-  - linphone-sdk/swift (5.1.62):
+  - linphone-sdk/swift (5.1.67):
     - linphone-sdk/app-extension-swift
     - linphone-sdk/basic-frameworks
   - nanopb (2.30909.0):
@@ -130,7 +130,7 @@ PODS:
     - Flutter
   - video_player_avfoundation (0.0.1):
     - Flutter
-  - WebRTC-SDK (104.5112.02)
+  - WebRTC-SDK (104.5112.06)
   - websocket_manager (0.0.1):
     - Flutter
     - Starscream (~> 3.1.1)
@@ -140,7 +140,6 @@ DEPENDENCIES:
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - audioplayers (from `.symlinks/plugins/audioplayers/ios`)
   - awesome_notifications (from `.symlinks/plugins/awesome_notifications/ios`)
-  - bluetoothadapter (from `.symlinks/plugins/bluetoothadapter/ios`)
   - callkeep (from `.symlinks/plugins/callkeep/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
@@ -165,9 +164,7 @@ DEPENDENCIES:
   - websocket_manager (from `.symlinks/plugins/websocket_manager/ios`)
 
 SPEC REPOS:
-  https://gitlab.linphone.org/BC/public/podspec.git:
-    - linphone-sdk
-  trunk:
+  https://github.com/CocoaPods/Specs.git:
     - Firebase
     - FirebaseCore
     - FirebaseCoreDiagnostics
@@ -177,10 +174,13 @@ SPEC REPOS:
     - FMDB
     - GoogleDataTransport
     - GoogleUtilities
+    - IosAwnCore
     - nanopb
     - PromisesObjC
     - Starscream
     - WebRTC-SDK
+  https://gitlab.linphone.org/BC/public/podspec.git:
+    - linphone-sdk
 
 EXTERNAL SOURCES:
   all_sensors:
@@ -191,8 +191,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/audioplayers/ios"
   awesome_notifications:
     :path: ".symlinks/plugins/awesome_notifications/ios"
-  bluetoothadapter:
-    :path: ".symlinks/plugins/bluetoothadapter/ios"
   callkeep:
     :path: ".symlinks/plugins/callkeep/ios"
   firebase_core:
@@ -240,17 +238,16 @@ SPEC CHECKSUMS:
   all_sensors: 13f46502204bebbd1e06b65ff3d7cdaa03d88b26
   audio_session: 4f3e461722055d21515cf3261b64c973c062f345
   audioplayers: 455322b54050b30ea4b1af7cd9e9d105f74efa8c
-  awesome_notifications: 04530aafec8dac4635244ed4b4072f4aea6cc938
-  bluetoothadapter: 82749e00216e8563659c01ed9ae2a76ad3a0a898
+  awesome_notifications: d63d9a25f126860f9a600850d99772237895b3ba
   callkeep: 6b21abbd46786a36e482190816db99b391ada1e3
-  Firebase: 800f16f07af493d98d017446a315c27af0552f41
-  firebase_core: 31872a49ffe0bf6f834e7044c7334e433536735a
-  firebase_messaging: 5180a2b828b1997ea70b7e7d14c0bcefa14938b7
-  FirebaseCore: 25c0400b670fd1e2f2104349cd3b5dcce8d9418f
+  Firebase: 5ae8b7cf8efce559a653aef0ad95bab3f427c351
+  firebase_core: 7c28ecc1e5dd74e03829ac3e9ff5ba3314e737a9
+  firebase_messaging: fc1151f90dd4534756fae713d651695acca6f122
+  FirebaseCore: 2082fffcd855f95f883c0a1641133eb9bbe76d40
   FirebaseCoreDiagnostics: 99a495094b10a57eeb3ae8efa1665700ad0bdaa6
   FirebaseCoreInternal: bca76517fe1ed381e989f5e7d8abb0da8d85bed3
   FirebaseInstallations: 0a115432c4e223c5ab20b0dbbe4cbefa793a0e8e
-  FirebaseMessaging: 732623518591384f61c287e3d8f65294beb7ffb3
+  FirebaseMessaging: a4d7910e4af663c9cbfc1071c5bef34651690949
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   flutter_apns_only: 3d91c0ca9dbef4439874858590909a19f8ed06a4
   flutter_audio_manager: 5945fdba99ff5e6c54d7e9b78d35b3a3bd574a9b
@@ -258,13 +255,14 @@ SPEC CHECKSUMS:
   flutter_incall_manager: 1a6aea8d37fb46d63aaa30ac7ea225e121704eab
   flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
-  flutter_webrtc: aa130dfe1eca6625c2e2e51ce830abb495bdb06e
+  flutter_webrtc: 6e85da5004f21fd21255228a76c2d4867c3b8972
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   GoogleDataTransport: 1c8145da7117bd68bbbed00cf304edb6a24de00f
   GoogleUtilities: 1d20a6ad97ef46f67bbdec158ce00563a671ebb7
   image_picker_ios: b786a5dcf033a8336a657191401bfdf12017dabb
+  IosAwnCore: 6494e0e174d49f04f513e8a002187be226889a37
   just_audio: baa7252489dbcf47a4c7cc9ca663e9661c99aafa
-  linphone-sdk: e818c385fa4ac85c27cad9fea39ef08285b33702
+  linphone-sdk: 05ccedff0c9a14584baad6b959339a37f40ccd2b
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
   permission_handler: ccb20a9fad0ee9b1314a52b70b76b473c5f8dab0
@@ -275,9 +273,9 @@ SPEC CHECKSUMS:
   Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
   url_launcher_ios: 839c58cdb4279282219f5e248c3321761ff3c4de
   video_player_avfoundation: e489aac24ef5cf7af82702979ed16f2a5ef84cff
-  WebRTC-SDK: e0589abeb63db07a4ca1f45c82ba0f1a72e61622
+  WebRTC-SDK: 85ee61404eb5698cf23a69a27008271db07159fc
   websocket_manager: cadb93f3b88cf3f5d60fca8629824c1b50f30e1b
 
-PODFILE CHECKSUM: fec9af9b1406382196465b8a658746cd0bc5df32
+PODFILE CHECKSUM: 1909fd217ce883407ed9c653fd5c12c861965f6d
 
 COCOAPODS: 1.11.3

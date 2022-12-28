@@ -103,6 +103,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
 
   initState() {
     super.initState();
+    _softphone.checkMicrophoneAccess(context);
   }
 
   @override
@@ -428,7 +429,11 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
       return _historyItem.contact.name;
     } else if (_historyItem.crmContact != null) {
       return _historyItem.crmContact.name;
-    } else {
+    } 
+    // else if (_historyItem.callerId != '') {
+    //    return _historyItem.callerId;
+    // } Backend not pushed for this one yet i will uncomment it new PR  
+    else {
       return _historyItem.direction == 'inbound'
           ? _historyItem.fromDid.formatPhone()
           : _historyItem.toDid.formatPhone();

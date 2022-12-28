@@ -33,6 +33,9 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     var isCallIncoming : Bool = false
     var isMicrophoneEnabled : Bool = false
     var isSpeakerEnabled : Bool = false
+    var wasAudioInterrupted : Bool = false
+    var unpausePauseState : Int = 0
+    var unpausePauseUuid : String = ""
 
     var coreVersion: String = Core.getVersion
     
@@ -48,7 +51,14 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
                 return
         }
 print("audiointerruption")
-        print(type);
+        print(type.rawValue);
+        switch type {
+        case .began :
+            wasAudioInterrupted = true
+            break
+        case .ended:
+            break
+        }
         return;
         // Switch over the interruption type.
         switch type {
@@ -94,9 +104,9 @@ print("audiointerruption")
     public func setupLinphone() {
         LoggingService.Instance.logLevel = LogLevel.Debug
         let factory = Factory.Instance
-        
         try! mCore = factory.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
         try! mCore?.start()
+//        sendDevices()
         mCore?.ipv6Enabled = false
 
         var mCoreDelegate = CoreDelegateStub( onCallStateChanged: { (core: Core, call: Call, state: Call.State, message: String) in
@@ -135,6 +145,26 @@ print("audiointerruption")
                 self.callkitChannel.invokeMethod("lnOutgoingRinging", arguments: [uuid])                // This state will be reached upon reception of the 180 RINGING
             } else if (state == .Connected) {
                 self.callkitChannel.invokeMethod("lnCallConnected", arguments: [uuid])                // When the 200 OK has been received
+                var bluetoothRoutes: [AVAudioSession.Port] = [.bluetoothHFP, .carAudio, .bluetoothA2DP, .bluetoothLE]
+                
+                func bluetoothAudioDevice() -> AVAudioSessionPortDescription? {
+                        return audioDevice(fromTypes: bluetoothRoutes)
+                    }
+
+                func audioDevice(fromTypes types: [AVAudioSession.Port]?) -> AVAudioSessionPortDescription? {
+                        let routes = AVAudioSession.sharedInstance().availableInputs
+                        for route in routes ?? [] {
+                            if types?.contains(route.portType) ?? false {
+                                return route
+                            }
+                        }
+                        return nil
+                    }
+                var isBluetooth = bluetoothAudioDevice()
+                if(isBluetooth != nil){
+//                    self.toggleSpeaker(speakerOn: false, bluetoothOn: true)
+                    self.callkitChannel.invokeMethod("lnCurrentRoute", arguments: [isBluetooth!.portName,isBluetooth!.portType])
+                }
             } else if (state == .StreamsRunning) {
                 print("outoging call info streamsrunning here")
                 print(call.callLog!)
@@ -145,12 +175,23 @@ print("audiointerruption")
                 // or after the ICE negotiation completes
                 // Wait for the call to be connected before allowing a call update
                 self.isCallRunning = true
-                
                 // Only enable toggle camera button if there is more than 1 camera
                 // We check if core.videoDevicesList.size > 2 because of the fake camera with static image created by our SDK (see below)e
                 self.canChangeCamera = core.videoDevicesList.count > 2
             } else if (state == .Paused) {
                 self.callkitChannel.invokeMethod("lnCallPaused", arguments: [uuid])                // When you put a call in pause, it will became Paused
+                if (self.unpausePauseState == 2 && uuid == self.unpausePauseUuid) {
+                    print("unpause2")
+                    self.unpausePauseState = 0
+                    self.unpausePauseUuid = ""
+                    
+                    let holdAction = CXSetHeldCallAction(call: UUID(uuidString: uuid!)!,
+                                                         onHold: false)
+                    let transaction = CXTransaction(action: holdAction)
+                    self.requestTransaction(transaction)
+                
+                }
+                
                 self.canChangeCamera = false
             } else if (state == .PausedByRemote) {
                 self.callkitChannel.invokeMethod("lnCallPausedByRemote", arguments: [uuid])                // When the remote end of the call pauses it, it will be PausedByRemote
@@ -159,9 +200,25 @@ print("audiointerruption")
             } else if (state == .UpdatedByRemote) {
                 self.callkitChannel.invokeMethod("lnCallUpdatedByRemote", arguments: [uuid])                // When the remote requests a call update
             } else if (state == .Released) {
+                self.ringingDidTimeout(uuid: uuid ?? "")
                 self.callkitChannel.invokeMethod("lnCallReleased", arguments: [uuid])                // Call state will be released shortly after the End state
                 self.isCallRunning = false
                 self.canChangeCamera = false
+                print("unpausetest")
+                print(self.unpausePauseState)
+                print(self.unpausePauseUuid)
+                print(uuid)
+                
+                if (self.unpausePauseState == 1 && uuid == self.unpausePauseUuid) {
+                    print("unpause1")
+                    self.unpausePauseState = 2
+                    
+                    let holdAction = CXSetHeldCallAction(call: UUID(uuidString: uuid ?? "")!,
+                                                         onHold: true)
+                    let transaction = CXTransaction(action: holdAction)
+                    self.requestTransaction(transaction)
+                
+                }
             } else if (state == .IncomingReceived) { // When a call is received
                 do {
                     try uuid = self.uuidFromString(str: call.callLog!.callId).uuidString
@@ -178,9 +235,24 @@ print("audiointerruption")
                 self.callkitChannel.invokeMethod("lnCallError", arguments: [uuid])
             }
         }, onAudioDeviceChanged: { (core: Core, device: AudioDevice) in
-            self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName, device.capabilities.rawValue])
+            print("themethod ios OnAudioDeviceChanged")
+//            if(device.type != .Microphone){
+                self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName])
+//            }
         }, onAudioDevicesListUpdated: { (core: Core) in
-            self.callkitChannel.invokeMethod("lnAudioDeviceListUpdated", arguments: [])
+            var devices: [[String]] = []
+            core.audioDevices.forEach({ device in
+                devices.append([device.deviceName, device.id, device.type == .Microphone ? "Microphone" : "Speaker"])
+            })
+            let jsonEncoder = JSONEncoder()
+            do {
+                let devicesString = try jsonEncoder.encode(devices)
+                self.callkitChannel.invokeMethod("lnAudioDeviceListUpdated", arguments: [String(data: devicesString, encoding: .utf8)])
+            }  catch let error as NSError {
+                print("was an error sending lnAudioDeviceListUpdated")
+            }
+            
+            //            self.sendDevices()
         }, onAccountRegistrationStateChanged: { (core: Core, account: Account, state: RegistrationState, message: String) in
             NSLog("New registration state is \(state) for user id \( String(describing: account.params?.identityAddress?.asString()))\n")
             
@@ -194,7 +266,7 @@ print("audiointerruption")
                 self.loggedIn = false
             }
         })
-
+        sendDevices()
         mCore?.callkitEnabled = true
         mCore?.stunServer = "turn:services.fusioncomm.net"
         mCore?.natPolicy?.turnEnabled = true
@@ -217,6 +289,7 @@ print("audiointerruption")
         print("ringtone")
         print(mCore?.ring)
         print(mCore?.remoteRingbackTone)
+
     }
     
     public func registerPhone() {
@@ -269,6 +342,7 @@ print("audiointerruption")
             var proxyConfig = try createProxyConfig(proxyConfig: defaultProxyConfig!, aor: "sip:" + username + "@" + domain, authInfo: authInfo)
             try mCore?.addProxyConfig(config: proxyConfig)
             mCore?.defaultProxyConfig = proxyConfig
+            sendDevices()
         } catch {print("error registering");
             NSLog(error.localizedDescription) }
     }
@@ -364,7 +438,7 @@ print("audiointerruption")
         isMicrophoneEnabled = !isMicrophoneEnabled
     }
     
-    func toggleSpeaker(speakerOn: Bool) {
+    func toggleSpeaker(speakerOn: Bool, bluetoothOn: Bool) {
         // Get the currently used audio device
         let currentAudioDevice = mCore?.currentCall?.outputAudioDevice
         let speakerEnabled = currentAudioDevice?.type == AudioDeviceType.Speaker
@@ -373,26 +447,40 @@ print("audiointerruption")
         // We can get a list of all available audio devices using
         // Note that on tablets for example, there may be no Earpiece device
         for audioDevice in mCore!.audioDevices {
-            
             // For IOS, the Speaker is an exception, Linphone cannot differentiate Input and Output.
             // This means that the default output device, the earpiece, is paired with the default phone microphone.
             // Setting the output audio device to the microphone will redirect the sound to the earpiece.
-            if (!speakerOn && audioDevice.type == AudioDeviceType.Microphone) {
+            if (!speakerOn && !bluetoothOn && audioDevice.type == AudioDeviceType.Microphone) {
                 mCore!.currentCall?.outputAudioDevice = audioDevice
                 isSpeakerEnabled = false
-            } else if (speakerOn && audioDevice.type == AudioDeviceType.Speaker) {
+            } else if (speakerOn && !bluetoothOn && audioDevice.type == AudioDeviceType.Speaker) {
                 mCore!.currentCall?.outputAudioDevice = audioDevice
                 isSpeakerEnabled = true
+            } else if (bluetoothOn && audioDevice.type == AudioDeviceType.Bluetooth) {
+                mCore!.currentCall?.outputAudioDevice = audioDevice
             }
-            /* If we wanted to route the audio to a bluetooth headset
-            else if (audioDevice.type == AudioDevice.Type.Bluetooth) {
-            core.currentCall?.outputAudioDevice = audioDevice
-            }*/
         }
     }
 
     @objc func handleRouteChange(notification: Notification) {
-        mCore?.audioRouteChanged()
+            mCore?.audioRouteChanged()
+    }
+    
+    public func sendDevices() {
+        print("sending devices from swift")
+        var devices: [[String]] = []
+        mCore?.extendedAudioDevices.forEach({ device in
+            devices.append([device.deviceName, device.id, device.type == .Microphone ? "Microphone" : "Speaker"])
+        })
+        let jsonEncoder = JSONEncoder()
+        do {
+            let devicesString = try jsonEncoder.encode(devices)
+            self.callkitChannel.invokeMethod("lnNewDevicesList",
+                                             arguments: [String(data: devicesString, encoding: .utf8), mCore?.echoLimiterEnabled, mCore?.echoCancellationEnabled, "notused", mCore?.defaultInputAudioDevice!.id, mCore?.defaultOutputAudioDevice!.id])                // Right after outgoing init
+        } catch let error as NSError {
+            print("was an error sending newdeviceslist")
+        }
+
     }
     
     public init(channel: FlutterMethodChannel) {
@@ -415,9 +503,7 @@ print("audiointerruption")
                          selector: #selector(handleRouteChange),
                          name: AVAudioSession.routeChangeNotification,
                          object: nil)
- 
-       
-
+        
         callkitChannel.setMethodCallHandler({ [self]
           (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             print("callkit method hanlder", call.method)
@@ -426,6 +512,7 @@ print("audiointerruption")
                 let args = call.arguments as! [Any]
                 let speakerOn = args[0] as! Bool
                 setAudioAndSpeakerPhone(speakerOn: speakerOn)
+//                sendDevices()
             }
           //  return;
             if (call.method == "reportOutgoingCall") {
@@ -469,9 +556,20 @@ print("audiointerruption")
                     print("error answering call");
                 }
             }
+            else if (call.method == "lpSendDtmf") {
+                let args = call.arguments as! [Any]
+                let call = findCallByUuid(uuid:args[0] as! String);
+                do {
+                    try call?.sendDtmfs(dtmfs: args[1] as! String);
+                } catch {
+                    print("error sending dtmf")
+                }
+            }
             else if (call.method == "lpSetHold") {
                 let args = call.arguments as! [Any]
                 let call = findCallByUuid(uuid:args[0] as! String);
+                print("toholdhere")
+                print(call!.state)
                 do {
                     let toHold = args[1] as! Bool
                     if (toHold) {
@@ -480,23 +578,103 @@ print("audiointerruption")
                         }
                     } else {
                         if (call!.state == .Paused || call!.state == .PausedByRemote || call!.state == .Pausing) {
+                            if (wasAudioInterrupted) {
+                                print("unpause0 set to 1")
+                                wasAudioInterrupted = false
+                                unpausePauseState = 0
+                                unpausePauseUuid = args[0] as! String
+                                print(unpausePauseUuid)
+                            }
                             try call!.resume();
+                        } else if (call!.state == .Resuming){
+                            let uuid = args[0] as! String
+
+                            self.callkitChannel.invokeMethod("lnCallConnected", arguments: [uuid])                // Call state will be released shortly after the End state
+
                         }
                     }
                 } catch let error as NSError {
                     print("error holding/unholding call");
                     print(error);
+                    
+                
                 }
+            }
+            else if (call.method == "lpSetEchoCancellationEnabled") {
+                let args = call.arguments as! [Any]
+                mCore?.echoCancellationEnabled = args[0] as! Bool
+            }
+            else if (call.method == "lpCalibrateEcho") {
+                do {
+                        try mCore?.startEchoCancellerCalibration()
+                }catch let error as NSError {
+                    print("error holding/unholding call");
+                    print(error);
+                    
+                
+                }
+            }
+            else if (call.method == "lpTestEcho") {
+                do {
+                 try   mCore?.startEchoTester(rate: 10)
+                }catch let error as NSError {
+                    print("error holding/unholding call");
+                    print(error);
+                    
+                
+                }
+            }
+            else if (call.method == "lpStopTestEcho") {
+                do {
+                  try  mCore?.stopEchoTester()
+                }catch let error as NSError {
+                    print("error holding/unholding call");
+                    print(error);
+                    
+                
+                }
+                self.sendDevices()
+            }
+            else if (call.method == "lpSetEchoLimiterEnabled") {
+                let args = call.arguments as! [Any]
+                mCore?.echoLimiterEnabled = args[0] as! Bool
+                self.sendDevices()
+            }
+            else if (call.method == "lpSetDefaultInput") {
+                let args = call.arguments as! [Any]
+                let deviceId = args[0] as! String
+                mCore?.extendedAudioDevices.forEach({ device in
+                    if (device.id == deviceId) {
+                        mCore?.defaultInputAudioDevice = device
+                        mCore?.calls.forEach { call in
+                            call.inputAudioDevice = device
+                        }
+                    }
+                })
+            }
+            else if (call.method == "lpSetDefaultOutput") {
+                let args = call.arguments as! [Any]
+                let deviceId = args[0] as! String
+                mCore?.extendedAudioDevices.forEach({ device in
+                    if (device.id == deviceId) {
+                        mCore?.defaultOutputAudioDevice = device
+                        mCore?.calls.forEach { call in
+                            call.outputAudioDevice = device
+                        }
+                    }
+                })
             }
             else if (call.method == "lpSetSpeaker") {
                 let args = call.arguments as! [Any]
                 do {
                     let speakerOn = args[0] as! Bool
-                    toggleSpeaker(speakerOn: speakerOn)
+                    let bluetoothOn = args[1] as! Bool
+                    toggleSpeaker(speakerOn: speakerOn,bluetoothOn: bluetoothOn)
                 } catch let error as NSError {
                     print("error holding/unholding call");
                     print(error);
                 }
+//                sendDevices()
             }
             else if (call.method == "lpMuteCall") {
                 let args = call.arguments as! [Any]
@@ -573,7 +751,7 @@ print("audiointerruption")
                                     do {
                                         try session.setCategory(.playback, mode: .voiceChat, options: .mixWithOthers)
                                         try session.overrideOutputAudioPort(.speaker)
-                                        try session.setActive(true) 
+                                        try session.setActive(true)
                 
                                         print(session.category)
                                         print(session.mode)
@@ -891,6 +1069,10 @@ print("webrtc workaround didactivate")
       } catch (let error) {print("adioerror");print(error)
           //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
       }*/
+      if (!action.isOnHold) {
+          print("holdbuttonpressed configure audio")
+          mCore?.configureAudioSession()
+      }
       callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
       action.fulfill()
   }

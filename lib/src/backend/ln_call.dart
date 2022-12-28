@@ -42,6 +42,10 @@ class LnCall extends Call {
     nativeChannel.invokeMethod("lpSetHold", [uuid, hold]);
   }
 
+  sendDTMF(String digits, [Map<String, dynamic> arg]) {
+    nativeChannel.invokeMethod("lpSendDtmf", [uuid, digits]);
+  }
+
   hold() {
     setHold(true);
   }
@@ -57,12 +61,6 @@ class LnCall extends Call {
   }
   hangup([Map<String, dynamic> x = null]) {
     nativeChannel.invokeMethod("lpEndCall", [uuid]);
-  }
-
-  sendDTMF(String letters, [Map<String, dynamic> x = null]) {
-    if (Platform.isAndroid) {
-      nativeChannel.invokeMethod("lpSendDtmf", [uuid, letters]);
-    }
   }
 
   mute([bool x, bool y]) {
