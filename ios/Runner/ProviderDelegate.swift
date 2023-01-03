@@ -216,17 +216,19 @@ print("audiointerruption")
             } else if (state == .Error) {
                 self.callkitChannel.invokeMethod("lnCallError", arguments: [uuid])
             }
-        }, onAudioDeviceChanged: { (core: Core, device: AudioDevice) in
-            print("THIS RAN onAudioDeviceChanged", device.deviceName)
-//            self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName, ""])
-        }, onAudioDevicesListUpdated: { (core: Core) in
+        },
+//        onAudioDeviceChanged: { (core: Core, device: AudioDevice) in
+//            print("THIS RAN onAudioDeviceChanged", device.deviceName)
+////            self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName, ""])
+//        },
+        onAudioDevicesListUpdated: { (core: Core) in
 //            let devices = AVAudioSession.sharedInstance().availableInputs
-            let devices = core.audioDevices
-//            for(device in devices){
-////                print("THIS RAN onAudioDevicesListUpdated", devic)
-//            }
-            
-            self.sendDevices()
+            let btDevice = core.audioDevices.filter({$0.type == .Bluetooth || $0.type == .BluetoothA2DP})
+            if(!btDevice.isEmpty){
+                self.callkitChannel.invokeMethod("lnAudioDeviceListUpdated", arguments: [btDevice[0].id, btDevice[0].deviceName, btDevice[0].driverName])
+            } else {
+                self.callkitChannel.invokeMethod("lnAudioDeviceListUpdated", arguments: [])
+            }
         }, onAccountRegistrationStateChanged: { (core: Core, account: Account, state: RegistrationState, message: String) in
             NSLog("New registration state is \(state) for user id \( String(describing: account.params?.identityAddress?.asString()))\n")
             
@@ -497,10 +499,10 @@ print("audiointerruption")
         print("setup audiosesssion observer")
         
         let nc = NotificationCenter.default
-          nc.addObserver(self,
-                         selector: #selector(handleInterruption),
-                         name: AVAudioSession.interruptionNotification,
-                         object: AVAudioSession.sharedInstance())
+         nc.addObserver(self,
+                        selector: #selector(handleInterruption),
+                        name: AVAudioSession.interruptionNotification,
+                        object: AVAudioSession.sharedInstance())
         
           nc.addObserver(self,
                          selector: #selector(handleRouteChange),
@@ -757,47 +759,47 @@ print("audiointerruption")
 
             } else if (call.method == "attemptAudioSessionActiveRingtone") {
                 return;
-                let session = AVAudioSession.sharedInstance()
-                                    print("try to set audio active")
-                                    do {
-                                        try session.setCategory(.playback, mode: .voiceChat, options: .mixWithOthers)
-                                        try session.overrideOutputAudioPort(.speaker)
-                                        try session.setActive(true)
-                
-                                        print(session.category)
-                                        print(session.mode)
-                                        print("did set audiosessionactive")
-                                        let url = URL(fileURLWithPath: "outgoing.wav")
-                                        let player = try? AVAudioPlayer(contentsOf: url)
-                                        player?.numberOfLoops = -1
-                                        player?.setVolume(1.0,  fadeDuration: 0)
-                                        player?.play()
-                                        print("played audiosession ringtone")
-                                    } catch let error as NSError {
-                                        print("Unable to activate audiosession:  \(error.localizedDescription)")
-                                    }
-                                }
+//                let session = AVAudioSession.sharedInstance()
+//                                    print("try to set audio active")
+//                                    do {
+//                                        try session.setCategory(.playback, mode: .voiceChat, options: .mixWithOthers)
+//                                        try session.overrideOutputAudioPort(.speaker)
+//                                        try session.setActive(true)
+//
+//                                        print(session.category)
+//                                        print(session.mode)
+//                                        print("did set audiosessionactive")
+//                                        let url = URL(fileURLWithPath: "outgoing.wav")
+//                                        let player = try? AVAudioPlayer(contentsOf: url)
+//                                        player?.numberOfLoops = -1
+//                                        player?.setVolume(1.0,  fadeDuration: 0)
+//                                        player?.play()
+//                                        print("played audiosession ringtone")
+//                                    } catch let error as NSError {
+//                                        print("Unable to activate audiosession:  \(error.localizedDescription)")
+//                                    }
+            }
             else if (call.method == "attemptAudioSessionActive") {
                 return;
-                let session = AVAudioSession.sharedInstance()
-                print("try to set audio active")
-                do {
-                    print(session.category)
-                    print(session.mode)
-                    try session.setCategory(.playAndRecord)
-                    try session.setMode(.voiceChat)
-                    try session.setActive(true)
-                    setAudioAndSpeakerPhone(speakerOn: speakerTurnedOn)
-                    print("did set audiosessionactive")
-                } catch let error as NSError {
-                    print("Unable to activate audiosession:  \(error.localizedDescription)")
-                }
-                
-                  var userInfo: Dictionary<AnyHashable, Any> = [:]
-                  userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
-                  NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
-                                                  object: self, userInfo: userInfo)
-                  print("just sent it")
+//                let session = AVAudioSession.sharedInstance()
+//                print("try to set audio active")
+//                do {
+//                    print(session.category)
+//                    print(session.mode)
+//                    try session.setCategory(.playAndRecord)
+//                    try session.setMode(.voiceChat)
+//                    try session.setActive(true)
+//                    setAudioAndSpeakerPhone(speakerOn: speakerTurnedOn)
+//                    print("did set audiosessionactive")
+//                } catch let error as NSError {
+//                    print("Unable to activate audiosession:  \(error.localizedDescription)")
+//                }
+//
+//                  var userInfo: Dictionary<AnyHashable, Any> = [:]
+//                  userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
+//                  NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
+//                                                  object: self, userInfo: userInfo)
+//                  print("just sent it")
             } else if (call.method == "attemptAudioSessionInActive") {
                 return;
                 let session = AVAudioSession.sharedInstance()
@@ -991,29 +993,29 @@ extension ProviderDelegate: CXProviderDelegate {
     print("provider didreset callkit");
   }
     
-    func configureAudioSession() {
-        let session = AVAudioSession.sharedInstance();
-        do {
-            try session.setCategory(.playAndRecord,
-                                    mode: .voiceChat,
-                                    options: []);
-        } catch {
-            print("!!!!error setting audio session");
-        }
-        
-        do {
-            try session.setPreferredSampleRate(44100.0)
-            try session.setPreferredIOBufferDuration(0.005)
-        } catch {
-            print("!!!!!!error setting sample/iobufferduration")
-        }
-        
-        do {
-            try session.setActive(true)
-        } catch {
-            print("!!!!!!!!error setting session active")
-        }
-    }
+//    func configureAudioSession() {
+//        let session = AVAudioSession.sharedInstance();
+//        do {
+//            try session.setCategory(.playAndRecord,
+//                                    mode: .voiceChat,
+//                                    options: []);
+//        } catch {
+//            print("!!!!error setting audio session");
+//        }
+//
+//        do {
+//            try session.setPreferredSampleRate(44100.0)
+//            try session.setPreferredIOBufferDuration(0.005)
+//        } catch {
+//            print("!!!!!!error setting sample/iobufferduration")
+//        }
+//
+//        do {
+//            try session.setActive(true)
+//        } catch {
+//            print("!!!!!!!!error setting session active")
+//        }
+//    }
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
       callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
