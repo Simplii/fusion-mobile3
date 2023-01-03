@@ -80,7 +80,6 @@ class Softphone implements SipUaHelperListener {
   String activeCallOutputDevice = "";
   bool bluetoothAvailable = false;
   String bluetoothDeviceId = "";
-  bool answeredFromPhone = false; //for IOS
   //IncallManager incallManager = new IncallManager();
 
   final Aps.AudioCache _audioCache = Aps.AudioCache(

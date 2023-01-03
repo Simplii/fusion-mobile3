@@ -41,7 +41,6 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     
     var mAccount: Account?
     var mCoreDelegate : CoreDelegate!
-    var bluetoothOn: Bool = false
 
     
     @objc func handleInterruption(notification: Notification) {
@@ -456,7 +455,6 @@ print("audiointerruption")
     func toggleBluetooth() {
         for audioDevice in mCore!.audioDevices {
              if (audioDevice.type == AudioDeviceType.Bluetooth) {
-                 bluetoothOn = true
                  mCore!.currentCall?.outputAudioDevice = audioDevice
              }
         }
