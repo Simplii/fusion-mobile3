@@ -96,7 +96,7 @@ class Softphone implements SipUaHelperListener {
   StreamSubscription _btConnectionStatusListener, _btReceivedMessageListener;
   String btConnectionStatus = "NONE";
   String btReceivedMessage;
-
+  String appVersion = "";
   // List<BtDevice> devices = [];
   String _savedLogin;
   String _savedAor;
@@ -423,6 +423,9 @@ class Softphone implements SipUaHelperListener {
             args['activeCallOutput'] as String
           ];
           break;
+        case "setAppVersion":
+          args = [json.decode(args)];
+          break;
         case "lnAudioDeviceListUpdated":
           args = [
             args['devicesList'] as String,
@@ -627,6 +630,9 @@ class Softphone implements SipUaHelperListener {
         if (Platform.isAndroid) {
           switchToHeadsetWhenConnected(null);
         }
+        break;
+      case "setAppVersion":
+        this.appVersion = args[0];
         break;
       case "lnRegistrationOk":
         registrationStateChanged(
