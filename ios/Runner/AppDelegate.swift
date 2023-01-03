@@ -146,6 +146,7 @@ import Firebase
             print(session.category)
             print(session.mode)
             try session.setActive(true)
+            try session.setCategory(.playAndRecord, options: [.allowBluetooth])
             print("did set audiosessionactive")
             if (callkitChannel != nil) {
                 callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
