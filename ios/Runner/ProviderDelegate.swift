@@ -42,7 +42,6 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     var mAccount: Account?
     var mCoreDelegate : CoreDelegate!
 
-
     
     @objc func handleInterruption(notification: Notification) {
         guard let userInfo = notification.userInfo,
@@ -104,9 +103,10 @@ print("audiointerruption")
     public func setupLinphone() {
         LoggingService.Instance.logLevel = LogLevel.Debug
         let factory = Factory.Instance
+        
         try! mCore = factory.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
         try! mCore?.start()
-//        sendDevices()
+        sendDevices()
         mCore?.ipv6Enabled = false
 
         var mCoreDelegate = CoreDelegateStub( onCallStateChanged: { (core: Core, call: Call, state: Call.State, message: String) in
@@ -145,26 +145,6 @@ print("audiointerruption")
                 self.callkitChannel.invokeMethod("lnOutgoingRinging", arguments: [uuid])                // This state will be reached upon reception of the 180 RINGING
             } else if (state == .Connected) {
                 self.callkitChannel.invokeMethod("lnCallConnected", arguments: [uuid])                // When the 200 OK has been received
-                var bluetoothRoutes: [AVAudioSession.Port] = [.bluetoothHFP, .carAudio, .bluetoothA2DP, .bluetoothLE]
-                
-                func bluetoothAudioDevice() -> AVAudioSessionPortDescription? {
-                        return audioDevice(fromTypes: bluetoothRoutes)
-                    }
-
-                func audioDevice(fromTypes types: [AVAudioSession.Port]?) -> AVAudioSessionPortDescription? {
-                        let routes = AVAudioSession.sharedInstance().availableInputs
-                        for route in routes ?? [] {
-                            if types?.contains(route.portType) ?? false {
-                                return route
-                            }
-                        }
-                        return nil
-                    }
-                var isBluetooth = bluetoothAudioDevice()
-                if(isBluetooth != nil){
-//                    self.toggleSpeaker(speakerOn: false, bluetoothOn: true)
-                    self.callkitChannel.invokeMethod("lnCurrentRoute", arguments: [isBluetooth!.portName,isBluetooth!.portType])
-                }
             } else if (state == .StreamsRunning) {
                 print("outoging call info streamsrunning here")
                 print(call.callLog!)
@@ -175,6 +155,7 @@ print("audiointerruption")
                 // or after the ICE negotiation completes
                 // Wait for the call to be connected before allowing a call update
                 self.isCallRunning = true
+                
                 // Only enable toggle camera button if there is more than 1 camera
                 // We check if core.videoDevicesList.size > 2 because of the fake camera with static image created by our SDK (see below)e
                 self.canChangeCamera = core.videoDevicesList.count > 2
@@ -234,25 +215,19 @@ print("audiointerruption")
             } else if (state == .Error) {
                 self.callkitChannel.invokeMethod("lnCallError", arguments: [uuid])
             }
-        }, onAudioDeviceChanged: { (core: Core, device: AudioDevice) in
-            print("themethod ios OnAudioDeviceChanged")
-//            if(device.type != .Microphone){
-                self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName])
-//            }
-        }, onAudioDevicesListUpdated: { (core: Core) in
-            var devices: [[String]] = []
-            core.audioDevices.forEach({ device in
-                devices.append([device.deviceName, device.id, device.type == .Microphone ? "Microphone" : "Speaker"])
-            })
-            let jsonEncoder = JSONEncoder()
-            do {
-                let devicesString = try jsonEncoder.encode(devices)
-                self.callkitChannel.invokeMethod("lnAudioDeviceListUpdated", arguments: [String(data: devicesString, encoding: .utf8)])
-            }  catch let error as NSError {
-                print("was an error sending lnAudioDeviceListUpdated")
+        },
+//        onAudioDeviceChanged: { (core: Core, device: AudioDevice) in
+//            print("THIS RAN onAudioDeviceChanged", device.deviceName)
+////            self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [device.id, device.deviceName, device.driverName, ""])
+//        },
+        onAudioDevicesListUpdated: { (core: Core) in
+//            let devices = AVAudioSession.sharedInstance().availableInputs
+            let btDevice = core.audioDevices.filter({$0.type == .Bluetooth || $0.type == .BluetoothA2DP})
+            if(!btDevice.isEmpty){
+                self.callkitChannel.invokeMethod("lnAudioDeviceListUpdated", arguments: [btDevice[0].id, btDevice[0].deviceName, btDevice[0].driverName])
+            } else {
+                self.callkitChannel.invokeMethod("lnAudioDeviceListUpdated", arguments: [])
             }
-            
-            //            self.sendDevices()
         }, onAccountRegistrationStateChanged: { (core: Core, account: Account, state: RegistrationState, message: String) in
             NSLog("New registration state is \(state) for user id \( String(describing: account.params?.identityAddress?.asString()))\n")
             
@@ -266,7 +241,7 @@ print("audiointerruption")
                 self.loggedIn = false
             }
         })
-        sendDevices()
+
         mCore?.callkitEnabled = true
         mCore?.stunServer = "turn:services.fusioncomm.net"
         mCore?.natPolicy?.turnEnabled = true
@@ -289,7 +264,7 @@ print("audiointerruption")
         print("ringtone")
         print(mCore?.ring)
         print(mCore?.remoteRingbackTone)
-
+        sendDevices()
     }
     
     public func registerPhone() {
@@ -438,38 +413,66 @@ print("audiointerruption")
         isMicrophoneEnabled = !isMicrophoneEnabled
     }
     
-    func toggleSpeaker(speakerOn: Bool, bluetoothOn: Bool) {
+    func toggleSpeaker(speakerOn: Bool) {
         // Get the currently used audio device
-        let currentAudioDevice = mCore?.currentCall?.outputAudioDevice
-        let speakerEnabled = currentAudioDevice?.type == AudioDeviceType.Speaker
+        // let currentAudioDevice = mCore?.currentCall?.outputAudioDevice
+        // let speakerEnabled = currentAudioDevice?.type == AudioDeviceType.Speaker
         
-        let test = currentAudioDevice?.deviceName
+        let session = AVAudioSession.sharedInstance()
+        var outputDataSources: [AVAudioSessionPortDescription] = session.availableInputs!
+        let currentRoute = session.currentRoute
+        // let test = currentAudioDevice?.deviceName
         // We can get a list of all available audio devices using
         // Note that on tablets for example, there may be no Earpiece device
         for audioDevice in mCore!.audioDevices {
             // For IOS, the Speaker is an exception, Linphone cannot differentiate Input and Output.
             // This means that the default output device, the earpiece, is paired with the default phone microphone.
             // Setting the output audio device to the microphone will redirect the sound to the earpiece.
-            if (!speakerOn && !bluetoothOn && audioDevice.type == AudioDeviceType.Microphone) {
+            if (!speakerOn && audioDevice.type == AudioDeviceType.Microphone) {
                 mCore!.currentCall?.outputAudioDevice = audioDevice
+                
+                //work around to switch current audio session
+                let mic = outputDataSources.filter({$0.portType == .builtInMic})[0]
+                do {
+                    print("THIS RAN 3")
+                    try session.setPreferredInput(mic)
+                }catch{
+                    print("failed to set user preferred input/output")
+                }
+                
                 isSpeakerEnabled = false
-            } else if (speakerOn && !bluetoothOn && audioDevice.type == AudioDeviceType.Speaker) {
-                mCore!.currentCall?.outputAudioDevice = audioDevice
+            } else if (speakerOn && audioDevice.type == AudioDeviceType.Speaker) {
+                mCore?.currentCall?.outputAudioDevice = audioDevice
                 isSpeakerEnabled = true
-            } else if (bluetoothOn && audioDevice.type == AudioDeviceType.Bluetooth) {
-                mCore!.currentCall?.outputAudioDevice = audioDevice
             }
+            /* If we wanted to route the audio to a bluetooth headset
+            else if (audioDevice.type == AudioDevice.Type.Bluetooth) {
+            core.currentCall?.outputAudioDevice = audioDevice
+            }*/
+        }
+    }
+
+    func toggleBluetooth() {
+        for audioDevice in mCore!.audioDevices {
+             if (audioDevice.type == AudioDeviceType.Bluetooth) {
+                 mCore!.currentCall?.outputAudioDevice = audioDevice
+             }
         }
     }
 
     @objc func handleRouteChange(notification: Notification) {
-            mCore?.audioRouteChanged()
+        let currentRoute: [AVAudioSessionPortDescription] = AVAudioSession.sharedInstance().currentRoute.outputs
+        if(!currentRoute.isEmpty){
+            print("THIS RAN handleRouteChange", currentRoute)
+            self.callkitChannel.invokeMethod("lnAudioDeviceChanged", arguments: [currentRoute[0].portType.rawValue, currentRoute[0].portName, ""])
+        }
+//        mCore?.audioRouteChanged()
     }
     
     public func sendDevices() {
         print("sending devices from swift")
         var devices: [[String]] = []
-        mCore?.extendedAudioDevices.forEach({ device in
+        mCore?.audioDevices.forEach({ device in
             devices.append([device.deviceName, device.id, device.type == .Microphone ? "Microphone" : "Speaker"])
         })
         let jsonEncoder = JSONEncoder()
@@ -494,10 +497,10 @@ print("audiointerruption")
         print("setup audiosesssion observer")
         
         let nc = NotificationCenter.default
-          nc.addObserver(self,
-                         selector: #selector(handleInterruption),
-                         name: AVAudioSession.interruptionNotification,
-                         object: AVAudioSession.sharedInstance())
+         nc.addObserver(self,
+                        selector: #selector(handleInterruption),
+                        name: AVAudioSession.interruptionNotification,
+                        object: AVAudioSession.sharedInstance())
         
           nc.addObserver(self,
                          selector: #selector(handleRouteChange),
@@ -515,7 +518,7 @@ print("audiointerruption")
 //                sendDevices()
             }
           //  return;
-            if (call.method == "reportOutgoingCall") {
+            else if (call.method == "reportOutgoingCall") {
                 print("report outgoing call callkit")
                 let args = call.arguments as! [Any]
                 let phoneNumber = args[1] as! String
@@ -668,8 +671,16 @@ print("audiointerruption")
                 let args = call.arguments as! [Any]
                 do {
                     let speakerOn = args[0] as! Bool
-                    let bluetoothOn = args[1] as! Bool
-                    toggleSpeaker(speakerOn: speakerOn,bluetoothOn: bluetoothOn)
+                    toggleSpeaker(speakerOn: speakerOn)
+                } catch let error as NSError {
+                    print("error holding/unholding call");
+                    print(error);
+                }
+//                sendDevices()
+            }
+            else if (call.method == "lpSetBluetooth") {
+                do {
+                    toggleBluetooth();
                 } catch let error as NSError {
                     print("error holding/unholding call");
                     print(error);
@@ -746,47 +757,47 @@ print("audiointerruption")
 
             } else if (call.method == "attemptAudioSessionActiveRingtone") {
                 return;
-                let session = AVAudioSession.sharedInstance()
-                                    print("try to set audio active")
-                                    do {
-                                        try session.setCategory(.playback, mode: .voiceChat, options: .mixWithOthers)
-                                        try session.overrideOutputAudioPort(.speaker)
-                                        try session.setActive(true)
-                
-                                        print(session.category)
-                                        print(session.mode)
-                                        print("did set audiosessionactive")
-                                        let url = URL(fileURLWithPath: "outgoing.wav")
-                                        let player = try? AVAudioPlayer(contentsOf: url)
-                                        player?.numberOfLoops = -1
-                                        player?.setVolume(1.0,  fadeDuration: 0)
-                                        player?.play()
-                                        print("played audiosession ringtone")
-                                    } catch let error as NSError {
-                                        print("Unable to activate audiosession:  \(error.localizedDescription)")
-                                    }
-                                }
+//                let session = AVAudioSession.sharedInstance()
+//                                    print("try to set audio active")
+//                                    do {
+//                                        try session.setCategory(.playback, mode: .voiceChat, options: .mixWithOthers)
+//                                        try session.overrideOutputAudioPort(.speaker)
+//                                        try session.setActive(true)
+//
+//                                        print(session.category)
+//                                        print(session.mode)
+//                                        print("did set audiosessionactive")
+//                                        let url = URL(fileURLWithPath: "outgoing.wav")
+//                                        let player = try? AVAudioPlayer(contentsOf: url)
+//                                        player?.numberOfLoops = -1
+//                                        player?.setVolume(1.0,  fadeDuration: 0)
+//                                        player?.play()
+//                                        print("played audiosession ringtone")
+//                                    } catch let error as NSError {
+//                                        print("Unable to activate audiosession:  \(error.localizedDescription)")
+//                                    }
+            }
             else if (call.method == "attemptAudioSessionActive") {
                 return;
-                let session = AVAudioSession.sharedInstance()
-                print("try to set audio active")
-                do {
-                    print(session.category)
-                    print(session.mode)
-                    try session.setCategory(.playAndRecord)
-                    try session.setMode(.voiceChat)
-                    try session.setActive(true)
-                    setAudioAndSpeakerPhone(speakerOn: speakerTurnedOn)
-                    print("did set audiosessionactive")
-                } catch let error as NSError {
-                    print("Unable to activate audiosession:  \(error.localizedDescription)")
-                }
-                
-                  var userInfo: Dictionary<AnyHashable, Any> = [:]
-                  userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
-                  NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
-                                                  object: self, userInfo: userInfo)
-                  print("just sent it")
+//                let session = AVAudioSession.sharedInstance()
+//                print("try to set audio active")
+//                do {
+//                    print(session.category)
+//                    print(session.mode)
+//                    try session.setCategory(.playAndRecord)
+//                    try session.setMode(.voiceChat)
+//                    try session.setActive(true)
+//                    setAudioAndSpeakerPhone(speakerOn: speakerTurnedOn)
+//                    print("did set audiosessionactive")
+//                } catch let error as NSError {
+//                    print("Unable to activate audiosession:  \(error.localizedDescription)")
+//                }
+//
+//                  var userInfo: Dictionary<AnyHashable, Any> = [:]
+//                  userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
+//                  NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
+//                                                  object: self, userInfo: userInfo)
+//                  print("just sent it")
             } else if (call.method == "attemptAudioSessionInActive") {
                 return;
                 let session = AVAudioSession.sharedInstance()
@@ -980,33 +991,33 @@ extension ProviderDelegate: CXProviderDelegate {
     print("provider didreset callkit");
   }
     
-    func configureAudioSession() {
-        let session = AVAudioSession.sharedInstance();
-        do {
-            try session.setCategory(.playAndRecord,
-                                    mode: .voiceChat,
-                                    options: []);
-        } catch {
-            print("!!!!error setting audio session");
-        }
-        
-        do {
-            try session.setPreferredSampleRate(44100.0)
-            try session.setPreferredIOBufferDuration(0.005)
-        } catch {
-            print("!!!!!!error setting sample/iobufferduration")
-        }
-        
-        do {
-            try session.setActive(true)
-        } catch {
-            print("!!!!!!!!error setting session active")
-        }
-    }
+//    func configureAudioSession() {
+//        let session = AVAudioSession.sharedInstance();
+//        do {
+//            try session.setCategory(.playAndRecord,
+//                                    mode: .voiceChat,
+//                                    options: []);
+//        } catch {
+//            print("!!!!error setting audio session");
+//        }
+//
+//        do {
+//            try session.setPreferredSampleRate(44100.0)
+//            try session.setPreferredIOBufferDuration(0.005)
+//        } catch {
+//            print("!!!!!!error setting sample/iobufferduration")
+//        }
+//
+//        do {
+//            try session.setActive(true)
+//        } catch {
+//            print("!!!!!!!!error setting session active")
+//        }
+//    }
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
       callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
-      mCore?.configureAudioSession()
+//      mCore?.configureAudioSession()
 //      configureAudioSession()
       action.fulfill();
   }
@@ -1071,7 +1082,7 @@ print("webrtc workaround didactivate")
       }*/
       if (!action.isOnHold) {
           print("holdbuttonpressed configure audio")
-          mCore?.configureAudioSession()
+//          mCore?.configureAudioSession()
       }
       callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
       action.fulfill()
@@ -1079,7 +1090,7 @@ print("webrtc workaround didactivate")
   
   func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
       print("start call action here callkit")
-      mCore?.configureAudioSession()
+//      mCore?.configureAudioSession()
 
     //  configureAudioSession();
       callkitChannel.invokeMethod("startCall", arguments: [action.callUUID.uuidString, action.handle.value, action.contactIdentifier])
