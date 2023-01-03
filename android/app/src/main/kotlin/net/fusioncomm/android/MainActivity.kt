@@ -39,6 +39,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var server: String = "mobile-proxy.fusioncomm.net"
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
     lateinit var volumeReceiver : VolumeReceiver
+    val versionName = BuildConfig.VERSION_NAME
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
@@ -371,6 +372,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
         core.start()
         sendDevices()
+        getAppVersion()
     }
 
     private fun sendDevices() {
@@ -399,6 +401,13 @@ class MainActivity : FlutterFragmentActivity() {
                 Pair("defaultOutput", core.defaultOutputAudioDevice.id)))
     }
 
+    private fun getAppVersion(){
+        var appversion: Array<String> = arrayOf()
+        appversion = appversion.plus(versionName)
+        var gson = Gson();
+        channel.invokeMethod("setAppVersion",  gson.toJson(versionName) )
+    }
+    
     private fun createProxyConfig(
         proxyConfig: ProxyConfig,
         aor: String,

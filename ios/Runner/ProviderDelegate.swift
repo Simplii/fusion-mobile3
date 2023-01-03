@@ -41,7 +41,9 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     
     var mAccount: Account?
     var mCoreDelegate : CoreDelegate!
-
+    var appVersion: String? {
+        return Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+    }
     
     @objc func handleInterruption(notification: Notification) {
         guard let userInfo = notification.userInfo,
@@ -318,6 +320,7 @@ print("audiointerruption")
             try mCore?.addProxyConfig(config: proxyConfig)
             mCore?.defaultProxyConfig = proxyConfig
             sendDevices()
+            getAppVersion()
         } catch {print("error registering");
             NSLog(error.localizedDescription) }
     }
@@ -484,6 +487,12 @@ print("audiointerruption")
             print("was an error sending newdeviceslist")
         }
 
+    }
+    
+    public func getAppVersion(){
+        if(appVersion != nil){
+            self.callkitChannel.invokeMethod("setAppVersion", arguments: [appVersion!])
+        }
     }
     
     public init(channel: FlutterMethodChannel) {
