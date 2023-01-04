@@ -259,12 +259,12 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       ]),
       Row(children: [horizontalLine(16)]),
       Row(children: [
+        Align(alignment: Alignment.centerRight, child: _departmentName()),
         Expanded(child: Container()),
         Container(
           child: Align(
               alignment: Alignment.centerRight, child: _myNumberDropdown()),
         ),
-        Align(alignment: Alignment.centerRight, child: _theirNumberDropdown()),
         Align(
             alignment: Alignment.centerRight,
             child: ClipRRect(
@@ -339,21 +339,20 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             label: "Your phone number"));
   }
 
-  _theirNumberDropdown() {
+  _departmentName() {
+    SMSDepartment department = _fusionConnection.smsDepartments
+        .getDepartmentByPhoneNumber(_conversation.myNumber);
     return Container(
         decoration: dropdownDecoration,
-        margin: EdgeInsets.only(right: 8),
         padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
         height: 36,
         child: FusionDropdown(
-            value: _conversation.number,
-            options: _allTheirNumbers(),
-            onChange: (String newNumber) {
-              this.setState(() {
-                _conversation.number = newNumber;
-              });
-            },
-            label: "Their phone number"));
+            style: TextStyle(fontSize: 14,fontWeight: FontWeight.w500),
+            disabled: true,
+            value: department.groupName.toUpperCase(),
+            options: [],
+            onChange: null,
+            label: "Department"));
   }
 
   _saveImageLocally(XFile image) async {
