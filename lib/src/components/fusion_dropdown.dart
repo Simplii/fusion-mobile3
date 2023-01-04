@@ -12,7 +12,6 @@ class FusionDropdown extends StatefulWidget {
   final TextStyle style;
   final Function(String value) onChange;
   final Widget button;
-  final bool disabled;
 
   FusionDropdown(
       {Key key,
@@ -22,7 +21,6 @@ class FusionDropdown extends StatefulWidget {
       this.label,
       this.value,
       this.style,
-      this.disabled,
       this.options})
       : super(key: key);
 
@@ -44,8 +42,6 @@ class _FusionDropdownState extends State<FusionDropdown> {
   Function(String value) get _onChange => widget.onChange;
 
   Widget get _button => widget.button;
-
-  bool get _disabled => widget.disabled;
 
   _dismissKeyboard() {
     FocusScopeNode currentFocus = FocusScope.of(context);
@@ -109,16 +105,16 @@ class _FusionDropdownState extends State<FusionDropdown> {
     }
 
     return GestureDetector(
-        onTap: _disabled != null ? () => {} : _openPopup,
+        onTap: _openPopup,
         child: this._button != null
             ? this._button
             : Row(children: [
                 Text(selected,
                     style: _style != null ? _style : subHeaderTextStyle),
                 Container(
-                    margin: EdgeInsets.only(left: _disabled != null ? 0 : 6, right: _disabled != null ? 0 : 12),
+                    margin: EdgeInsets.only(left: 6, right: 12),
                     width: 10, height: 5,
-                    child: _disabled != null ? null : Image.asset("assets/icons/down_arrow.png",
+                    child: Image.asset("assets/icons/down_arrow.png",
                         height: 5, width: 10)),
               ]));
   }

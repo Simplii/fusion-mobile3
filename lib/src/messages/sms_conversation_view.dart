@@ -77,7 +77,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   List<XFile> _mediaToSend = [];
   List<SMSMessage> _messages = [];
   List<String> _savedImgPaths = [];
-
+  String _selectedGroupId = "";
   Timer _debounceMessageInput;
 
   initState() {
@@ -91,10 +91,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       List<String> savedImgs =
           prefs.getStringList(_conversation.hash + "_savedImages");
       if (savedImgs != null) {
-        savedImgs.map((e) =>
-        {
-          _mediaToSend.add(XFile("$path/$e"))
-        });
+        savedImgs.map((e) => {_mediaToSend.add(XFile("$path/$e"))});
       }
     });
 
@@ -342,15 +339,23 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _departmentName() {
     SMSDepartment department = _fusionConnection.smsDepartments
         .getDepartmentByPhoneNumber(_conversation.myNumber);
+
+    List departments = _fusionConnection.smsDepartments.allDepartments();
+
+    List<List<String>> options = [];
+
+    for (SMSDepartment department in departments) {
+      options.add([department.groupName, department.id]);
+    }
+
     return Container(
         decoration: dropdownDecoration,
         padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
         height: 36,
         child: FusionDropdown(
-            style: TextStyle(fontSize: 14,fontWeight: FontWeight.w500),
-            disabled: true,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             value: department.groupName.toUpperCase(),
-            options: [],
+            options: options,
             onChange: null,
             label: "Department"));
   }
@@ -428,17 +433,19 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                         topRight: Radius.circular(4),
                         bottomLeft: Radius.circular(4),
                         bottomRight: Radius.circular(4)),
-                    child: (
-                        media.name.toLowerCase().contains("png")
-                            || media.name.toLowerCase().contains("gif")
-                            || media.name.toLowerCase().contains("jpg")
-                            || media.name.toLowerCase().contains("jpeg")
-                            || media.name.toLowerCase().contains("jiff")
-                    )
-                        ?  Image.file(File(media.path), height: 100)
-                        : Container(height: 100,width:100,color:particle,
-                        alignment: Alignment.center,
-                        child: Text("attachment", style: TextStyle(color:coal)))),
+                    child: (media.name.toLowerCase().contains("png") ||
+                            media.name.toLowerCase().contains("gif") ||
+                            media.name.toLowerCase().contains("jpg") ||
+                            media.name.toLowerCase().contains("jpeg") ||
+                            media.name.toLowerCase().contains("jiff"))
+                        ? Image.file(File(media.path), height: 100)
+                        : Container(
+                            height: 100,
+                            width: 100,
+                            color: particle,
+                            alignment: Alignment.center,
+                            child: Text("attachment",
+                                style: TextStyle(color: coal)))),
                 GestureDetector(
                     onTap: () {
                       this.setState(() {
