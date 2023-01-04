@@ -66,5 +66,7 @@
 	<false/>
 	<key>flutter_apns.disable_swizzling</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
