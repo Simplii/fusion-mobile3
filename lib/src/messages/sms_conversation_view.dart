@@ -31,7 +31,7 @@ import '../utils.dart';
 
 class SMSConversationView extends StatefulWidget {
   final FusionConnection _fusionConnection;
-  final SMSConversation _smsConversation;
+  SMSConversation _smsConversation;
   final Softphone _softphone;
 
   SMSConversationView(
@@ -79,7 +79,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   List<String> _savedImgPaths = [];
   String _selectedGroupId = "";
   Timer _debounceMessageInput;
-
+  String _newConvoNumber = "";
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
@@ -103,6 +103,11 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       this.setState(() {
         _loaded = true;
       });
+    });
+    SMSDepartment department = _fusionConnection.smsDepartments
+        .getDepartmentByPhoneNumber(_conversation.myNumber);
+    this.setState(() {
+      _selectedGroupId = department.id;
     });
   }
 
@@ -281,7 +286,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   }
 
   _allMyNumbers() {
-    SMSDepartment dept = _fusionConnection.smsDepartments.lookupRecord("-2");
+    SMSDepartment dept = _fusionConnection.smsDepartments.lookupRecord(_selectedGroupId);
     List<List<String>> opts = [];
 
     for (String number in dept.numbers) {
@@ -291,33 +296,33 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     return opts;
   }
 
-  _allTheirNumbers() {
-    List<List<String>> opts = [];
-    Map<String, String> numbers = {
-      _conversation.number.onlyNumbers(): _conversation.number.onlyNumbers()
-    };
+  // _allTheirNumbers() {
+  //   List<List<String>> opts = [];
+  //   Map<String, String> numbers = {
+  //     _conversation.number.onlyNumbers(): _conversation.number.onlyNumbers()
+  //   };
 
-    for (Contact c in _conversation.contacts) {
-      if (c.phoneNumbers != null) {
-        for (Map<String, dynamic> number in c.phoneNumbers) {
-          numbers[("" + number['number'].toString()).onlyNumbers()] =
-              number['number'];
-        }
-      }
-    }
+  //   for (Contact c in _conversation.contacts) {
+  //     if (c.phoneNumbers != null) {
+  //       for (Map<String, dynamic> number in c.phoneNumbers) {
+  //         numbers[("" + number['number'].toString()).onlyNumbers()] =
+  //             number['number'];
+  //       }
+  //     }
+  //   }
 
-    for (CrmContact c in _conversation.crmContacts) {
-      if (c.phone_number != null) {
-        numbers[c.phone_number.onlyNumbers()] = c.phone_number;
-      }
-    }
+  //   for (CrmContact c in _conversation.crmContacts) {
+  //     if (c.phone_number != null) {
+  //       numbers[c.phone_number.onlyNumbers()] = c.phone_number;
+  //     }
+  //   }
 
-    for (String number in numbers.keys) {
-      opts.add([number.formatPhone(), number.onlyNumbers()]);
-    }
+  //   for (String number in numbers.keys) {
+  //     opts.add([number.formatPhone(), number.onlyNumbers()]);
+  //   }
 
-    return opts;
-  }
+  //   return opts;
+  // }
 
   _myNumberDropdown() {
     return Container(
@@ -326,7 +331,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
         height: 36,
         child: FusionDropdown(
-            value: _conversation.myNumber,
+            value: _newConvoNumber != ""? _newConvoNumber.formatPhone() : _conversation.myNumber,
             options: _allMyNumbers(),
             onChange: (String newNumber) {
               this.setState(() {
@@ -337,14 +342,14 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   }
 
   _departmentName() {
-    SMSDepartment department = _fusionConnection.smsDepartments
-        .getDepartmentByPhoneNumber(_conversation.myNumber);
-
     List departments = _fusionConnection.smsDepartments.allDepartments();
 
     List<List<String>> options = [];
 
     for (SMSDepartment department in departments) {
+      if (department.id == "-2") {
+        continue;
+      }
       options.add([department.groupName, department.id]);
     }
 
@@ -353,11 +358,22 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
         height: 36,
         child: FusionDropdown(
+            departments: departments,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            value: department.groupName.toUpperCase(),
+            value: _selectedGroupId,
             options: options,
-            onChange: null,
-            label: "Department"));
+            onChange: _onDepartmentChange,
+            label: " All Departments"));
+  }
+
+  _onDepartmentChange(String newDeptId) {
+    print("Here-- New $newDeptId");
+    SMSDepartment dept =
+    _fusionConnection.smsDepartments.getDepartment(newDeptId);
+    this.setState(() {
+      _newConvoNumber = dept.numbers[0];
+      _selectedGroupId = newDeptId;
+    });
   }
 
   _saveImageLocally(XFile image) async {
