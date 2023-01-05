@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
 
 import '../styles.dart';
 import 'popup_menu.dart';
@@ -12,7 +16,7 @@ class FusionDropdown extends StatefulWidget {
   final TextStyle style;
   final Function(String value) onChange;
   final Widget button;
-
+  List<SMSDepartment> departments;
   FusionDropdown(
       {Key key,
       this.onChange,
@@ -21,7 +25,8 @@ class FusionDropdown extends StatefulWidget {
       this.label,
       this.value,
       this.style,
-      this.options})
+      this.options,
+      this.departments})
       : super(key: key);
 
   @override
@@ -43,6 +48,8 @@ class _FusionDropdownState extends State<FusionDropdown> {
 
   Widget get _button => widget.button;
 
+  List<SMSDepartment> get _allDepartments => widget.departments;
+
   _dismissKeyboard() {
     FocusScopeNode currentFocus = FocusScope.of(context);
     if (!currentFocus.hasPrimaryFocus) {
@@ -50,10 +57,73 @@ class _FusionDropdownState extends State<FusionDropdown> {
     }
   }
 
+  _bottomSheetOption(List option) {
+    if (_allDepartments != null) {
+      List<String> deptNUmbers = [];
+
+      _allDepartments.forEach((element) {
+        if (element.id == option[1]) {
+          deptNUmbers = element.numbers;
+        }
+      });
+
+      return Container(
+        padding: EdgeInsets.only(top: 12, bottom: 12, left: 5, right: 18),
+        decoration: BoxDecoration(
+            color: option[1] == _value ? lightHighlight : Colors.transparent,
+            border:
+                Border(bottom: BorderSide(color: lightDivider, width: 1.0))),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              option[0],
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700),
+            ),
+            SizedBox(
+                height: deptNUmbers.length * 20.0,
+                width: 150,
+                child: ListView(
+                    primary: false,
+                    padding: EdgeInsets.only(left:8, top:5),
+                    children: deptNUmbers.map((String option) {
+                      return Padding(
+                        padding: EdgeInsets.only(top:3, bottom:3),
+                        child: Text(
+                          option.formatPhone(),
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
+                      );
+                    }).toList()))
+          ],
+        ),
+      );
+    } else {
+      return Container(
+          padding: EdgeInsets.only(top: 12, bottom: 12, left: 18, right: 18),
+          decoration: BoxDecoration(
+              color: option[1] == _value ? lightHighlight : Colors.transparent,
+              border:
+                  Border(bottom: BorderSide(color: lightDivider, width: 1.0))),
+          child: Text(option[0],
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700)));
+    }
+  }
+
   _openPopup() {
     double maxHeight = MediaQuery.of(context).size.height * 0.5;
     double contentHeight = _options.length * 60.0;
-    if (contentHeight > 0 && contentHeight < maxHeight) maxHeight = contentHeight;
+    if (contentHeight > 0 && contentHeight < maxHeight)
+      maxHeight = contentHeight;
 
     _dismissKeyboard();
 
@@ -77,21 +147,7 @@ class _FusionDropdownState extends State<FusionDropdown> {
                             _onChange(option[1]);
                             Navigator.pop(context);
                           },
-                          child: Container(
-                              padding: EdgeInsets.only(
-                                  top: 12, bottom: 12, left: 18, right: 18),
-                              decoration: BoxDecoration(
-                                  color: option[1] == _value
-                                      ? lightHighlight
-                                      : Colors.transparent,
-                                  border: Border(
-                                      bottom: BorderSide(
-                                          color: lightDivider, width: 1.0))),
-                              child: Text(option[0],
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700))));
+                          child: _bottomSheetOption(option));
                     }).toList()))));
   }
 
@@ -105,6 +161,7 @@ class _FusionDropdownState extends State<FusionDropdown> {
     }
 
     return GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: _openPopup,
         child: this._button != null
             ? this._button
@@ -113,7 +170,8 @@ class _FusionDropdownState extends State<FusionDropdown> {
                     style: _style != null ? _style : subHeaderTextStyle),
                 Container(
                     margin: EdgeInsets.only(left: 6, right: 12),
-                    width: 10, height: 5,
+                    width: 10,
+                    height: 5,
                     child: Image.asset("assets/icons/down_arrow.png",
                         height: 5, width: 10)),
               ]));

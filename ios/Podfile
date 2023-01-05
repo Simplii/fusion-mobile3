@@ -96,4 +96,21 @@ post_install do |installer|
 
         end
   end
+
+  projects = installer.aggregate_targets
+  .map{ |t| t.user_project }
+  .uniq{ |p| p.path }
+  .push(installer.pods_project)
+  installer.pods_project.targets.each do |target|
+   flutter_additional_ios_build_settings(target)
+  end
+
+ projects.each do |project|
+  project.build_configurations.each do |config|
+   config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 
+  'arm64'
+  end
+
+  project.save()
+  end
 end
