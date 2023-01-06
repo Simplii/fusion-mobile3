@@ -79,7 +79,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   List<String> _savedImgPaths = [];
   String _selectedGroupId = "";
   Timer _debounceMessageInput;
-  String _newConvoNumber = "";
+
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
@@ -104,6 +104,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         _loaded = true;
       });
     });
+    
     SMSDepartment department = _fusionConnection.smsDepartments
         .getDepartmentByPhoneNumber(_conversation.myNumber);
     this.setState(() {
@@ -261,32 +262,33 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       ]),
       Row(children: [horizontalLine(16)]),
       Row(children: [
-        Align(alignment: Alignment.centerRight, child: _departmentName()),
         Expanded(child: Container()),
-        Container(
-          child: Align(
-              alignment: Alignment.centerRight, child: _myNumberDropdown()),
-        ),
-        Align(
-            alignment: Alignment.centerRight,
-            child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                        image: DecorationImage(
-                            fit: BoxFit.fill,
-                            image: (myImageUrl != null
-                                ? NetworkImage(myImageUrl)
-                                : Image.asset("assets/blank_avatar.png",
-                                    height: 32, width: 32)))))))
+        Align(alignment: Alignment.centerRight, child: _departmentName()),
+        // Container(
+        //   child: Align(
+        //       alignment: Alignment.centerRight, child: _myNumberDropdown()),
+        // ),
+        // Align(
+        //     alignment: Alignment.centerRight,
+        //     child: ClipRRect(
+        //         borderRadius: BorderRadius.circular(16),
+        //         child: Container(
+        //             width: 32,
+        //             height: 32,
+        //             decoration: BoxDecoration(
+        //                 image: DecorationImage(
+        //                     fit: BoxFit.fill,
+        //                     image: (myImageUrl != null
+        //                         ? NetworkImage(myImageUrl)
+        //                         : Image.asset("assets/blank_avatar.png",
+        //                             height: 32, width: 32)))))))
       ])
     ]);
   }
 
-  _allMyNumbers() {
-    SMSDepartment dept = _fusionConnection.smsDepartments.lookupRecord(_selectedGroupId);
+  _departmentNumbers() {
+    SMSDepartment dept =
+        _fusionConnection.smsDepartments.lookupRecord(_selectedGroupId);
     List<List<String>> opts = [];
 
     for (String number in dept.numbers) {
@@ -331,8 +333,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
         height: 36,
         child: FusionDropdown(
-            value: _newConvoNumber != ""? _newConvoNumber.formatPhone() : _conversation.myNumber,
-            options: _allMyNumbers(),
+            value: _conversation.myNumber,
+            options: _departmentNumbers(),
             onChange: (String newNumber) {
               this.setState(() {
                 _conversation.myNumber = newNumber;
@@ -361,18 +363,28 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             departments: departments,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             value: _selectedGroupId,
+            selectedNumber: _conversation.myNumber,
             options: options,
             onChange: _onDepartmentChange,
-            label: " All Departments"));
+            onNumberTap: _onNumberSelect,
+            label: "All Departments"));
   }
 
   _onDepartmentChange(String newDeptId) {
-    print("Here-- New $newDeptId");
     SMSDepartment dept =
-    _fusionConnection.smsDepartments.getDepartment(newDeptId);
-    this.setState(() {
-      _newConvoNumber = dept.numbers[0];
+        _fusionConnection.smsDepartments.getDepartment(newDeptId);
+    setState(() {
+      _conversation.myNumber = dept.numbers[0];
       _selectedGroupId = newDeptId;
+    });
+  }
+  
+  _onNumberSelect(String newNumber) {
+    SMSDepartment dept =
+        _fusionConnection.smsDepartments.getDepartmentByPhoneNumber(newNumber);
+    setState(() {
+      _conversation.myNumber = newNumber;
+      _selectedGroupId = dept.id;
     });
   }
 

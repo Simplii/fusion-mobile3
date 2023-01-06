@@ -251,7 +251,7 @@ class _MessagesListState extends State<MessagesList> {
               Container(
                   height: 80,
                   padding:
-                      EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
+                      EdgeInsets.only(top: 8, left: 16, right: 16, bottom: 32),
                   decoration: BoxDecoration(
                       boxShadow: [],
                       borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -264,7 +264,7 @@ class _MessagesListState extends State<MessagesList> {
                   child: Row(children: [
                     Expanded(
                         child: Align(
-                            alignment: Alignment.topLeft,
+                            alignment: Alignment.centerLeft,
                             child: Text(_selectedDepartmentName().toUpperCase(),
                                 style: headerTextStyle))),
                     FusionDropdown(
