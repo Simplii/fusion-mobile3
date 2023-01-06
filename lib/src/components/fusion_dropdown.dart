@@ -17,6 +17,10 @@ class FusionDropdown extends StatefulWidget {
   final Function(String value) onChange;
   final Widget button;
   List<SMSDepartment> departments;
+  final double maxWidth;
+  final String selectedNumber;
+  final Function(String value) onNumberTap;
+
   FusionDropdown(
       {Key key,
       this.onChange,
@@ -26,7 +30,10 @@ class FusionDropdown extends StatefulWidget {
       this.value,
       this.style,
       this.options,
-      this.departments})
+      this.departments,
+      this.maxWidth,
+      this.selectedNumber,
+      this.onNumberTap})
       : super(key: key);
 
   @override
@@ -50,6 +57,12 @@ class _FusionDropdownState extends State<FusionDropdown> {
 
   List<SMSDepartment> get _allDepartments => widget.departments;
 
+  double get _maxWidth => widget.maxWidth;
+
+  String get _selectedNumber => widget.selectedNumber;
+
+  Function(String value) get _onNumberTap => widget.onNumberTap;
+
   _dismissKeyboard() {
     FocusScopeNode currentFocus = FocusScope.of(context);
     if (!currentFocus.hasPrimaryFocus) {
@@ -68,40 +81,83 @@ class _FusionDropdownState extends State<FusionDropdown> {
       });
 
       return Container(
-        padding: EdgeInsets.only(top: 12, bottom: 12, left: 5, right: 18),
         decoration: BoxDecoration(
-            color: option[1] == _value ? lightHighlight : Colors.transparent,
+            // color: option[1] == _value ? lightHighlight : Colors.transparent,
             border:
                 Border(bottom: BorderSide(color: lightDivider, width: 1.0))),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              option[0],
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700),
-            ),
-            SizedBox(
-                height: deptNUmbers.length * 20.0,
-                width: 150,
-                child: ListView(
-                    primary: false,
-                    padding: EdgeInsets.only(left:8, top:5),
-                    children: deptNUmbers.map((String option) {
-                      return Padding(
-                        padding: EdgeInsets.only(top:3, bottom:3),
-                        child: Text(
+        child: Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {
+                  _onChange(option[1]);
+                  Navigator.pop(context);
+                },
+                child: Row(children: [
+                  Container(
+                    width: 220,
+                    padding: EdgeInsets.only(
+                        bottom:10,
+                        top: 14,
+                        left: 12),
+                    child: Text(
+                      option[0],
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ]),
+              ),
+              Column(
+                  children: deptNUmbers.map((String option) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: _selectedNumber == option
+                        ? lightHighlight
+                        : Colors.transparent,
+                  ),
+                  padding: EdgeInsets.only(
+                      top: 12,
+                      bottom: 12,
+                      left: 12,
+                      right: _selectedNumber == option ? 12 : 0),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: () {
+                      _onNumberTap(option);
+                      Navigator.pop(context);
+                    },
+                    child: Row(
+                      children: [
+                        Text(
                           option.formatPhone(),
                           style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11,
-                          ),
+                              fontSize: 17,
+                              color: _selectedNumber == option
+                                  ? Colors.white
+                                  : Colors.white70,
+                              fontWeight: _selectedNumber == option
+                                  ? FontWeight.w700
+                                  : FontWeight.normal),
                         ),
-                      );
-                    }).toList()))
-          ],
+                        Spacer(),
+                        Visibility(
+                          child: Image.asset("assets/icons/check_mark.png",
+                              height: 17, width: 17),
+                          visible: _selectedNumber == option ? true : false,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList())
+            ],
+          ),
         ),
       );
     } else {
@@ -111,11 +167,17 @@ class _FusionDropdownState extends State<FusionDropdown> {
               color: option[1] == _value ? lightHighlight : Colors.transparent,
               border:
                   Border(bottom: BorderSide(color: lightDivider, width: 1.0))),
-          child: Text(option[0],
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700)));
+          child: GestureDetector(
+            onTap: () {
+              _onChange(option[1]);
+              Navigator.pop(context);
+            },
+            child: Text(option[0],
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700)),
+          ));
     }
   }
 
@@ -142,12 +204,13 @@ class _FusionDropdownState extends State<FusionDropdown> {
                 child: ListView(
                     padding: EdgeInsets.all(8),
                     children: _options.map((List<String> option) {
-                      return GestureDetector(
-                          onTap: () {
-                            _onChange(option[1]);
-                            Navigator.pop(context);
-                          },
-                          child: _bottomSheetOption(option));
+                      return Container(child: _bottomSheetOption(option));
+                      // return GestureDetector(
+                      //     onTap: () {
+                      //       _onChange(option[1]);
+                      //       Navigator.pop(context);
+                      //     },
+                      //     child: _bottomSheetOption(option));
                     }).toList()))));
   }
 
@@ -159,17 +222,30 @@ class _FusionDropdownState extends State<FusionDropdown> {
         selected = opt[0];
       }
     }
-
+    String _selectedNumber2 = "";
+    if (_selectedNumber != null) {
+      _selectedNumber2 = _selectedNumber.formatPhone();
+    }
     return GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: _openPopup,
         child: this._button != null
             ? this._button
             : Row(children: [
-                Text(selected,
-                    style: _style != null ? _style : subHeaderTextStyle),
                 Container(
-                    margin: EdgeInsets.only(left: 6, right: 12),
+                  // width: _maxWidth != null ? _maxWidth : 185,
+                  child: Text(
+                    _selectedNumber != null
+                        ? "$selected $mDash $_selectedNumber2"
+                        : selected,
+                    // maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: _style != null ? _style : subHeaderTextStyle,
+                  ),
+                ),
+                Container(
+                    margin: EdgeInsets.only(left: 3, right: 12),
                     width: 10,
                     height: 5,
                     child: Image.asset("assets/icons/down_arrow.png",

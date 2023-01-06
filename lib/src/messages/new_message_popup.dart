@@ -17,7 +17,8 @@ class NewMessagePopup extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
 
-  NewMessagePopup(this._fusionConnection, this._softphone, {Key key}) : super(key: key);
+  NewMessagePopup(this._fusionConnection, this._softphone, {Key key})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _NewMessagePopupState();
@@ -31,7 +32,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   List<SMSConversation> _convos = [];
   List<CrmContact> _crmContacts = [];
   List<Contact> _contacts = [];
-  String groupId = "-2";
+  String groupId = "-1";
   String myPhoneNumber = "";
   String _query = "";
   String _searchingFor = "";
@@ -39,7 +40,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   initState() {
     super.initState();
     myPhoneNumber =
-        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
+        _fusionConnection.smsDepartments.getDepartment(groupId).numbers[0];
   }
 
   _search(String value) {
@@ -70,48 +71,78 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
 
   _header() {
     String myImageUrl = _fusionConnection.myAvatarUrl();
-    List<SMSDepartment> groups = _fusionConnection.smsDepartments.getRecords();
+    List<SMSDepartment> groups = _fusionConnection.smsDepartments
+        .getRecords()
+        .where((department) => department.id != "-2")
+        .toList();
 
+    groups;
     return Column(children: [
       Container(
           alignment: Alignment.center,
           margin: EdgeInsets.only(bottom: 12),
           child: popupHandle()),
       Row(children: [
-        Text("FROM " + mDash + " ", style: subHeaderTextStyle),
-        FusionDropdown(
-            onChange: (String value) {
-              this.setState(() {
-                groupId = value;
-              });
-            },
-            label: "Who are you representing?",
-            value: groupId,
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-            options: groups
-                .map((SMSDepartment d) {
-                  return [d.groupName, d.id];
-                })
-                .toList()
-                .cast<List<String>>()),
-        Text("USING " + mDash + " ", style: subHeaderTextStyle),
-        FusionDropdown(
-            onChange: (String value) {
-              this.setState(() {
-                myPhoneNumber = value;
-              });
-            },
-            label: "From which phone number?",
-            value: myPhoneNumber,
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-            options: _fusionConnection.smsDepartments
-                .lookupRecord(groupId)
-                .numbers
-                .map((String s) {
-                  return [s.formatPhone(), s.onlyNumbers()];
-                })
-                .toList()
-                .cast<List<String>>())
+        Text("FROM: ", style: subHeaderTextStyle),
+        Container(
+            decoration: dropdownDecoration,
+            margin: EdgeInsets.only(right: 8),
+            padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
+            height: 36,
+            child: FusionDropdown(
+                selectedNumber: myPhoneNumber,
+                departments: _fusionConnection.smsDepartments.allDepartments(),
+                onChange: (String value) {
+                  this.setState(() {
+                    groupId = value;
+                    myPhoneNumber = _fusionConnection.smsDepartments
+                        .getDepartment(groupId)
+                        .numbers[0];
+                  });
+                },
+                onNumberTap: (String value) {
+                  this.setState(() {
+                    myPhoneNumber = value;
+                    groupId = _fusionConnection.smsDepartments
+                        .getDepartmentByPhoneNumber(value)
+                        .id;
+                  });
+                },
+                // maxWidth: 40,
+                label: "Who are you representing?",
+                value: groupId,
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                options: groups
+                    .map((SMSDepartment d) {
+                      return [d.groupName, d.id];
+                      // return ["some really really long long name", d.id];
+                    })
+                    .toList()
+                    .cast<List<String>>())),
+        Spacer(),
+        // Text("USING " + mDash + " ", style: subHeaderTextStyle),
+        // Container(
+        //     decoration: dropdownDecoration,
+        //     margin: EdgeInsets.only(right: 8),
+        //     padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
+        //     height: 36,
+        //     child: FusionDropdown(
+        //         onChange: (String value) {
+        //           this.setState(() {
+        //             myPhoneNumber = value;
+        //           });
+        //         },
+        //         label: "From which phone number?",
+        //         value: myPhoneNumber,
+        //         style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+        //         options: _fusionConnection.smsDepartments
+        //             .lookupRecord(groupId)
+        //             .numbers
+        //             .map((String s) {
+        //               return [s.formatPhone(), s.onlyNumbers()];
+        //             })
+        //             .toList()
+        //             .cast<List<String>>()))
       ]),
       Row(children: [
         Expanded(
@@ -147,7 +178,8 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo));
+        builder: (context) =>
+            SMSConversationView(_fusionConnection, _softphone, convo));
   }
 
   @override
@@ -197,11 +229,20 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                                       fontWeight: FontWeight.w400,
                                     ))))
                         : Container(),
-                    Expanded(child: Container(
-                        child: _convos.length + _contacts.length + _crmContacts.length > 0
-                            ? MessageSearchResults(myPhoneNumber, _convos,
-                                _contacts, _crmContacts, _fusionConnection, _softphone)
-                            : Container()))
+                    Expanded(
+                        child: Container(
+                            child: _convos.length +
+                                        _contacts.length +
+                                        _crmContacts.length >
+                                    0
+                                ? MessageSearchResults(
+                                    myPhoneNumber,
+                                    _convos,
+                                    _contacts,
+                                    _crmContacts,
+                                    _fusionConnection,
+                                    _softphone)
+                                : Container()))
                   ])))
         ]));
   }
