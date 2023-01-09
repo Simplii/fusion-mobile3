@@ -264,84 +264,21 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       Row(children: [
         Expanded(child: Container()),
         Align(alignment: Alignment.centerRight, child: _departmentName()),
-        // Container(
-        //   child: Align(
-        //       alignment: Alignment.centerRight, child: _myNumberDropdown()),
-        // ),
-        // Align(
-        //     alignment: Alignment.centerRight,
-        //     child: ClipRRect(
-        //         borderRadius: BorderRadius.circular(16),
-        //         child: Container(
-        //             width: 32,
-        //             height: 32,
-        //             decoration: BoxDecoration(
-        //                 image: DecorationImage(
-        //                     fit: BoxFit.fill,
-        //                     image: (myImageUrl != null
-        //                         ? NetworkImage(myImageUrl)
-        //                         : Image.asset("assets/blank_avatar.png",
-        //                             height: 32, width: 32)))))))
       ])
     ]);
   }
 
-  _departmentNumbers() {
-    SMSDepartment dept =
-        _fusionConnection.smsDepartments.lookupRecord(_selectedGroupId);
-    List<List<String>> opts = [];
-
-    for (String number in dept.numbers) {
-      opts.add([number.formatPhone(), number.onlyNumbers()]);
-    }
-
-    return opts;
-  }
-
-  // _allTheirNumbers() {
+  // _departmentNumbers() {
+  //   SMSDepartment dept =
+  //       _fusionConnection.smsDepartments.lookupRecord(_selectedGroupId);
   //   List<List<String>> opts = [];
-  //   Map<String, String> numbers = {
-  //     _conversation.number.onlyNumbers(): _conversation.number.onlyNumbers()
-  //   };
 
-  //   for (Contact c in _conversation.contacts) {
-  //     if (c.phoneNumbers != null) {
-  //       for (Map<String, dynamic> number in c.phoneNumbers) {
-  //         numbers[("" + number['number'].toString()).onlyNumbers()] =
-  //             number['number'];
-  //       }
-  //     }
-  //   }
-
-  //   for (CrmContact c in _conversation.crmContacts) {
-  //     if (c.phone_number != null) {
-  //       numbers[c.phone_number.onlyNumbers()] = c.phone_number;
-  //     }
-  //   }
-
-  //   for (String number in numbers.keys) {
+  //   for (String number in dept.numbers) {
   //     opts.add([number.formatPhone(), number.onlyNumbers()]);
   //   }
 
   //   return opts;
   // }
-
-  _myNumberDropdown() {
-    return Container(
-        decoration: dropdownDecoration,
-        margin: EdgeInsets.only(right: 8),
-        padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
-        height: 36,
-        child: FusionDropdown(
-            value: _conversation.myNumber,
-            options: _departmentNumbers(),
-            onChange: (String newNumber) {
-              this.setState(() {
-                _conversation.myNumber = newNumber;
-              });
-            },
-            label: "Your phone number"));
-  }
 
   _departmentName() {
     List departments = _fusionConnection.smsDepartments.allDepartments();

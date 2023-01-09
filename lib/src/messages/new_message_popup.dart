@@ -39,8 +39,13 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
 
   initState() {
     super.initState();
-    myPhoneNumber =
-        _fusionConnection.smsDepartments.getDepartment(groupId).numbers[0];
+    List<String> deptNumbers =
+        _fusionConnection.smsDepartments.getDepartment(groupId).numbers;
+    if (deptNumbers.length > 0) {
+      myPhoneNumber = deptNumbers[0];
+    } else {
+      myPhoneNumber = "Unassigned";
+    }
   }
 
   _search(String value) {
@@ -108,41 +113,16 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                         .id;
                   });
                 },
-                // maxWidth: 40,
                 label: "Who are you representing?",
                 value: groupId,
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                 options: groups
                     .map((SMSDepartment d) {
                       return [d.groupName, d.id];
-                      // return ["some really really long long name", d.id];
                     })
                     .toList()
                     .cast<List<String>>())),
         Spacer(),
-        // Text("USING " + mDash + " ", style: subHeaderTextStyle),
-        // Container(
-        //     decoration: dropdownDecoration,
-        //     margin: EdgeInsets.only(right: 8),
-        //     padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
-        //     height: 36,
-        //     child: FusionDropdown(
-        //         onChange: (String value) {
-        //           this.setState(() {
-        //             myPhoneNumber = value;
-        //           });
-        //         },
-        //         label: "From which phone number?",
-        //         value: myPhoneNumber,
-        //         style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-        //         options: _fusionConnection.smsDepartments
-        //             .lookupRecord(groupId)
-        //             .numbers
-        //             .map((String s) {
-        //               return [s.formatPhone(), s.onlyNumbers()];
-        //             })
-        //             .toList()
-        //             .cast<List<String>>()))
       ]),
       Row(children: [
         Expanded(
