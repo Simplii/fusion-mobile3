@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
@@ -17,7 +15,6 @@ class FusionDropdown extends StatefulWidget {
   final Function(String value) onChange;
   final Widget button;
   List<SMSDepartment> departments;
-  final double maxWidth;
   final String selectedNumber;
   final Function(String value) onNumberTap;
 
@@ -31,7 +28,6 @@ class FusionDropdown extends StatefulWidget {
       this.style,
       this.options,
       this.departments,
-      this.maxWidth,
       this.selectedNumber,
       this.onNumberTap})
       : super(key: key);
@@ -57,8 +53,6 @@ class _FusionDropdownState extends State<FusionDropdown> {
 
   List<SMSDepartment> get _allDepartments => widget.departments;
 
-  double get _maxWidth => widget.maxWidth;
-
   String get _selectedNumber => widget.selectedNumber;
 
   Function(String value) get _onNumberTap => widget.onNumberTap;
@@ -82,10 +76,9 @@ class _FusionDropdownState extends State<FusionDropdown> {
 
       return Container(
         decoration: BoxDecoration(
-            // color: option[1] == _value ? lightHighlight : Colors.transparent,
+            color: option[1] == _value ? lightHighlight : Colors.transparent,
             border:
                 Border(bottom: BorderSide(color: lightDivider, width: 1.0))),
-        child: Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -115,50 +108,49 @@ class _FusionDropdownState extends State<FusionDropdown> {
               ),
               Column(
                   children: deptNUmbers.map((String option) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: _selectedNumber == option
-                        ? lightHighlight
-                        : Colors.transparent,
-                  ),
-                  padding: EdgeInsets.only(
-                      top: 12,
-                      bottom: 12,
-                      left: 12,
-                      right: _selectedNumber == option ? 12 : 0),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: () {
-                      _onNumberTap(option);
-                      Navigator.pop(context);
-                    },
-                    child: Row(
-                      children: [
-                        Text(
-                          option.formatPhone(),
-                          style: TextStyle(
-                              fontSize: 17,
-                              color: _selectedNumber == option
-                                  ? Colors.white
-                                  : Colors.white70,
-                              fontWeight: _selectedNumber == option
-                                  ? FontWeight.w700
-                                  : FontWeight.normal),
+                    return Container(
+                      decoration: BoxDecoration(
+                        // color: _selectedNumber == option
+                        //     ? lightHighlight
+                        //     : Colors.transparent,
+                      ),
+                      padding: EdgeInsets.only(
+                          top: 12,
+                          bottom: 12,
+                          left: 12,
+                          right: _selectedNumber == option ? 12 : 0),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: () {
+                          _onNumberTap(option);
+                          Navigator.pop(context);
+                        },
+                        child: Row(
+                          children: [
+                            Text(
+                              option.formatPhone(),
+                              style: TextStyle(
+                                  fontSize: 17,
+                                  color: _selectedNumber == option
+                                      ? Colors.white
+                                      : Colors.white70,
+                                  fontWeight: _selectedNumber == option
+                                      ? FontWeight.w700
+                                      : FontWeight.normal),
+                            ),
+                            Spacer(),
+                            Visibility(
+                              child: Image.asset("assets/icons/check_white.png",
+                                  height: 17, width: 17),
+                              visible: _selectedNumber == option ? true : false,
+                            ),
+                          ],
                         ),
-                        Spacer(),
-                        Visibility(
-                          child: Image.asset("assets/icons/check_mark.png",
-                              height: 17, width: 17),
-                          visible: _selectedNumber == option ? true : false,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList())
+                      ),
+                    );
+                  }).toList())
             ],
           ),
-        ),
       );
     } else {
       return Container(
@@ -205,12 +197,6 @@ class _FusionDropdownState extends State<FusionDropdown> {
                     padding: EdgeInsets.all(8),
                     children: _options.map((List<String> option) {
                       return Container(child: _bottomSheetOption(option));
-                      // return GestureDetector(
-                      //     onTap: () {
-                      //       _onChange(option[1]);
-                      //       Navigator.pop(context);
-                      //     },
-                      //     child: _bottomSheetOption(option));
                     }).toList()))));
   }
 
@@ -222,10 +208,7 @@ class _FusionDropdownState extends State<FusionDropdown> {
         selected = opt[0];
       }
     }
-    String _selectedNumber2 = "";
-    if (_selectedNumber != null) {
-      _selectedNumber2 = _selectedNumber.formatPhone();
-    }
+
     return GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: _openPopup,
@@ -233,16 +216,16 @@ class _FusionDropdownState extends State<FusionDropdown> {
             ? this._button
             : Row(children: [
                 Container(
-                  // width: _maxWidth != null ? _maxWidth : 185,
-                  child: Text(
-                    _selectedNumber != null
-                        ? "$selected $mDash $_selectedNumber2"
-                        : selected,
-                    // maxLines: 1,
+                  constraints: BoxConstraints(
+                    maxWidth:  MediaQuery.of(context).size.width - 250,),
+                  child: Text(selected,
                     overflow: TextOverflow.ellipsis,
                     softWrap: false,
                     style: _style != null ? _style : subHeaderTextStyle,
                   ),
+                ),
+                Container(
+                  child: Text(" " + mDash + " " + _selectedNumber.formatPhone()),
                 ),
                 Container(
                     margin: EdgeInsets.only(left: 3, right: 12),
