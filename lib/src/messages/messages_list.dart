@@ -251,7 +251,7 @@ class _MessagesListState extends State<MessagesList> {
               Container(
                   height: 80,
                   padding:
-                      EdgeInsets.only(top: 8, left: 16, right: 16, bottom: 32),
+                      EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
                   decoration: BoxDecoration(
                       boxShadow: [],
                       borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -262,11 +262,14 @@ class _MessagesListState extends State<MessagesList> {
                           colors: [Colors.white, translucentWhite(0.0)])),
                   margin: EdgeInsets.only(bottom: 24),
                   child: Row(children: [
-                    Expanded(
+                    Container(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width - 70
+                        ),
                         child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(_selectedDepartmentName().toUpperCase(),
-                                style: headerTextStyle))),
+                            alignment: Alignment.topLeft,
+                            child: Text(_selectedDepartmentName().toString(),
+                                style: headerTextStyle,overflow: TextOverflow.ellipsis,))),
                     FusionDropdown(
                         onChange: _changeGroup,
                         value: _selectedGroupId,

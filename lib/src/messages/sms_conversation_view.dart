@@ -509,6 +509,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                   maxLines: 10,
                   minLines: 1,
                   onChanged: (String changedTo) {
+                    this.setState(() {
+                    });
                     _saveLocalState(changedTo);
                   },
                   decoration: const InputDecoration(
