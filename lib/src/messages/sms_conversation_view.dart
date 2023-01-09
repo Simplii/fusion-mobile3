@@ -31,7 +31,7 @@ import '../utils.dart';
 
 class SMSConversationView extends StatefulWidget {
   final FusionConnection _fusionConnection;
-  SMSConversation _smsConversation;
+  final SMSConversation _smsConversation;
   final Softphone _softphone;
 
   SMSConversationView(

@@ -96,7 +96,8 @@ post_install do |installer|
 
         end
   end
-
+  
+  ## M1 fix for linphone pod 
   projects = installer.aggregate_targets
   .map{ |t| t.user_project }
   .uniq{ |p| p.path }
@@ -105,12 +106,12 @@ post_install do |installer|
    flutter_additional_ios_build_settings(target)
   end
 
- projects.each do |project|
-  project.build_configurations.each do |config|
-   config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 
-  'arm64'
-  end
-
+  projects.each do |project|
+    project.build_configurations.each do |config|
+    config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 
+    'arm64'
+    end
   project.save()
   end
+
 end
