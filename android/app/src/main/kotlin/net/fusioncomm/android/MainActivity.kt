@@ -12,7 +12,9 @@ import android.util.Log
 import com.tekartik.sqflite.SqflitePlugin;
 
 import com.google.gson.Gson
-
+import android.telephony.PhoneStateListener
+import android.telephony.TelephonyCallback
+import android.telephony.TelephonyManager
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -44,6 +46,11 @@ class MainActivity : FlutterFragmentActivity() {
         super.onCreate(savedInstanceState);
         setupCore();
         setupBroadcastReciver()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        phoneStateListener()
     }
 
     override fun onDestroy() {
@@ -371,6 +378,65 @@ class MainActivity : FlutterFragmentActivity() {
         }
         core.start()
         sendDevices()
+    }
+
+    private fun phoneStateListener() {
+        Log.d("phoneStateListener","setting up phone state listener")
+        val telephonyManager: TelephonyManager =
+                getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Log.d("phoneStateListener","android >= 12")
+            telephonyManager.registerTelephonyCallback(
+            mainExecutor,
+            object : TelephonyCallback(), TelephonyCallback.CallStateListener {
+                override fun onCallStateChanged(state: Int) {
+                    Log.d("phoneStateListener","state${state}")
+                    when (state){
+                        TelephonyManager.CALL_STATE_OFFHOOK -> {
+                            channel.invokeMethod(
+                                    "setPhoneState",
+                                    mapOf(Pair("phoneState", true))
+                            )
+                            Log.d("phoneStateListener",
+                                    "Busy: on call")
+                        }
+                        TelephonyManager.CALL_STATE_IDLE ->{
+                            channel.invokeMethod(
+                                    "setPhoneState",
+                                   mapOf(Pair("phoneState", false))
+                            )
+                            Log.d("phoneStateListener",
+                                    "Not Available:: Neither Ringing nor in a Call")
+                        }
+                        else -> Log.d("phoneStateListener", "${state}")
+                    }
+                }
+            })
+        } else {
+            Log.d("phoneStateListener","android <= 12")
+            val callStateListener: PhoneStateListener = object : PhoneStateListener() {
+                override fun onCallStateChanged(state: Int, incomingNumber: String?) {
+                    when(state){
+                        TelephonyManager.CALL_STATE_OFFHOOK -> {
+                            channel.invokeMethod(
+                                    "setPhoneState",
+                                    mapOf(Pair("phoneState",true)) )
+                            Log.d("phoneStateListener","Busy: call call is active")
+                        }
+                        TelephonyManager.CALL_STATE_IDLE -> {
+                            channel.invokeMethod(
+                                    "setPhoneState",
+                                    mapOf(Pair("phoneState",false)))
+                            Log.d("phoneStateListener",
+                                    "Not Available:: Neither Ringing nor in a Call")
+                        }
+                        else -> Log.d("phoneStateListener", "${state}")
+                    }
+                }
+            }
+            telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_CALL_STATE)
+        }
     }
 
     private fun sendDevices() {

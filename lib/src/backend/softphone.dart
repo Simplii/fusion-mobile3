@@ -432,6 +432,9 @@ class Softphone implements SipUaHelperListener {
           ];
 
           break;
+        case "setPhoneState":
+          args = [args];
+          break;
         default:
           args = [args['uuid']];
       }
@@ -709,7 +712,10 @@ class Softphone implements SipUaHelperListener {
         }
 
         return;
-
+      case "setPhoneState":
+        var cellPhoneCallState = args[0];
+        isCellPhoneCallActive = cellPhoneCallState['phoneState'];
+        break;
       default:
         throw MissingPluginException('notImplemented');
     }
@@ -1042,6 +1048,9 @@ class Softphone implements SipUaHelperListener {
         call.answer({});
         if (Platform.isAndroid) {
           _callKeep.answerIncomingCall(_uuidFor(call));
+          if (isCellPhoneCallActive) {
+            activeCall.hold();
+          }
         }
       }
       makeActiveCall(call);
@@ -1534,7 +1543,9 @@ class Softphone implements SipUaHelperListener {
   }
 
   getHoldState(Call call) {
-    return call.state == CallStateEnum.HOLD;
+    return (call != null && isCellPhoneCallActive)
+        ? isCellPhoneCallActive
+        : call.state == CallStateEnum.HOLD;
     return _getCallDataValue(call.id, "onHold", def: false);
   }
 
