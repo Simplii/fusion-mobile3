@@ -251,19 +251,19 @@ class Softphone implements SipUaHelperListener {
       _setupCallKeep();
       _android.setMethodCallHandler(_callKitHandler);
 
-      FlutterPhoneState.rawPhoneEvents.forEach((element) {
-        print("rawphonevent");
-        print(element.type);
-        print(element);
-        if (element.type == RawEventType.connected &&
-            activeCall != null &&
-            !_blockingEvent) {
-          isCellPhoneCallActive = true;
-          activeCall.hold();
-        } else if (element.type == RawEventType.disconnected) {
-          isCellPhoneCallActive = false;
-        }
-      });
+      // FlutterPhoneState.rawPhoneEvents.forEach((element) {
+      //   print("rawphonevent");
+      //   print(element.type);
+      //   print(element);
+      //   if (element.type == RawEventType.connected &&
+      //       activeCall != null &&
+      //       !_blockingEvent) {
+      //     isCellPhoneCallActive = true;
+      //     activeCall.hold();
+      //   } else if (element.type == RawEventType.disconnected) {
+      //     isCellPhoneCallActive = false;
+      //   }
+      // });
     }
   }
 
@@ -714,7 +714,7 @@ class Softphone implements SipUaHelperListener {
         return;
       case "setPhoneState":
         var cellPhoneCallState = args[0];
-        isCellPhoneCallActive = cellPhoneCallState['phoneState'];
+        isCellPhoneCallActive = cellPhoneCallState['onCellPhoneCall'];
         break;
       default:
         throw MissingPluginException('notImplemented');

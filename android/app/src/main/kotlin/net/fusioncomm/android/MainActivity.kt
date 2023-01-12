@@ -53,6 +53,11 @@ class MainActivity : FlutterFragmentActivity() {
         phoneStateListener()
     }
 
+    override fun onPause() {
+        super.onPause()
+        phoneStateListener()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         // terminating call here not reliable, this function sometimes won't fire if
@@ -380,8 +385,33 @@ class MainActivity : FlutterFragmentActivity() {
         sendDevices()
     }
 
+    private fun handleCallStateChange(state: Int){
+        when (state){
+            TelephonyManager.CALL_STATE_OFFHOOK -> {
+                channel.invokeMethod("setPhoneState",
+                    mapOf(Pair("onCellPhoneCall", true)))
+                val calls : Array<Call>? = core?.calls
+                if (calls != null) {
+                    for(call in calls){
+                        call.pause()
+                    }
+                }
+                Log.d("phoneStateListener",
+                    "Busy: At least one call exists that is dialing, active, or on hold, " +
+                            "and no calls are ringing or waiting")
+            }
+            TelephonyManager.CALL_STATE_IDLE ->{
+                channel.invokeMethod("setPhoneState",
+                    mapOf(Pair("onCellPhoneCall", false)))
+                Log.d("phoneStateListener",
+                    "Not Available:: Neither Ringing nor in a Call")
+            }
+            else -> Log.d("phoneStateListener", "callState ${state}")
+        }
+    }
+
     private fun phoneStateListener() {
-        Log.d("phoneStateListener","setting up phone state listener")
+        Log.d("phoneStateListener","starting phone state listener")
         val telephonyManager: TelephonyManager =
                 getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
 
@@ -391,50 +421,19 @@ class MainActivity : FlutterFragmentActivity() {
             mainExecutor,
             object : TelephonyCallback(), TelephonyCallback.CallStateListener {
                 override fun onCallStateChanged(state: Int) {
-                    Log.d("phoneStateListener","state${state}")
-                    when (state){
-                        TelephonyManager.CALL_STATE_OFFHOOK -> {
-                            channel.invokeMethod(
-                                    "setPhoneState",
-                                    mapOf(Pair("phoneState", true))
-                            )
-                            Log.d("phoneStateListener",
-                                    "Busy: on call")
-                        }
-                        TelephonyManager.CALL_STATE_IDLE ->{
-                            channel.invokeMethod(
-                                    "setPhoneState",
-                                   mapOf(Pair("phoneState", false))
-                            )
-                            Log.d("phoneStateListener",
-                                    "Not Available:: Neither Ringing nor in a Call")
-                        }
-                        else -> Log.d("phoneStateListener", "${state}")
-                    }
+                    handleCallStateChange(state)
                 }
             })
         } else {
-            Log.d("phoneStateListener","android <= 12")
+            Log.d("phoneStateListener","android < 12")
             val callStateListener: PhoneStateListener = object : PhoneStateListener() {
                 override fun onCallStateChanged(state: Int, incomingNumber: String?) {
-                    when(state){
-                        TelephonyManager.CALL_STATE_OFFHOOK -> {
-                            channel.invokeMethod(
-                                    "setPhoneState",
-                                    mapOf(Pair("phoneState",true)) )
-                            Log.d("phoneStateListener","Busy: call call is active")
-                        }
-                        TelephonyManager.CALL_STATE_IDLE -> {
-                            channel.invokeMethod(
-                                    "setPhoneState",
-                                    mapOf(Pair("phoneState",false)))
-                            Log.d("phoneStateListener",
-                                    "Not Available:: Neither Ringing nor in a Call")
-                        }
-                        else -> Log.d("phoneStateListener", "${state}")
-                    }
+                    handleCallStateChange(state)
                 }
             }
+            // stopping old listener
+            telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_NONE)
+            // starting new listener
             telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_CALL_STATE)
         }
     }
