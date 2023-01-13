@@ -1,6 +1,7 @@
 package net.fusioncomm.android
 
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
@@ -47,6 +48,10 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+
+        // terminating call here not reliable, this function sometimes won't fire if
+        // app is closed from recent apps list or killed by android system.
+        // core?.currentCall?.terminate()
         unregisterReceiver(volumeReceiver)
     }
 
@@ -55,6 +60,18 @@ class MainActivity : FlutterFragmentActivity() {
         val filter = IntentFilter()
         filter.addAction("android.media.VOLUME_CHANGED_ACTION")
         registerReceiver(volumeReceiver, filter)
+
+    }
+
+    private fun startFusionService(){
+        if(!FusionService.serviceStarted){
+            Log.d("fusionService","Start")
+            Intent(this, FusionService::class.java).also { intent ->
+                startService(intent)
+            }
+        } else {
+            Log.d("fusionService","Service running")
+        }
     }
 
     private val coreListener = object : CoreListenerStub() {
@@ -183,6 +200,7 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Connected -> {
+                    startFusionService()
                     channel.invokeMethod(
                         "lnConnected",
                         mapOf(Pair("uuid", uuid))
@@ -305,7 +323,7 @@ class MainActivity : FlutterFragmentActivity() {
         core.natPolicy?.stunServer = "services.fusioncomm.net"
         core.remoteRingbackTone = "android.resource://net.fusioncomm.android/" + R.raw.outgoing
         core.ring = "android.resource://net.fusioncomm.android/" + R.raw.inbound;
-
+        core.config.setBool("audio", "android_pause_calls_when_audio_focus_lost", false)
     }
 
     private fun register() {
@@ -580,10 +598,15 @@ class MainActivity : FlutterFragmentActivity() {
                 Log.d("lpSetActiveCallOutput" , "set speaker")
                 for (audioDevice in core.audioDevices) {
                     if (!enableSpeaker && audioDevice.type == AudioDevice.Type.Earpiece) {
-                        core.currentCall?.outputAudioDevice = audioDevice
+
+                        for  (call in core.calls) {
+                            call.outputAudioDevice = audioDevice
+                        }
                         audioManager.isSpeakerphoneOn = false
                     } else if (enableSpeaker && audioDevice.type == AudioDevice.Type.Speaker) {
-                        core.currentCall?.outputAudioDevice = audioDevice
+                        for  (call in core.calls) {
+                            call.outputAudioDevice = audioDevice
+                        }
                         audioManager.isSpeakerphoneOn = true
                     }
                 }
@@ -591,7 +614,10 @@ class MainActivity : FlutterFragmentActivity() {
             } else if (call.method == "lpSetBluetooth"){
                 for (audioDevice in core.audioDevices) {
                     if (audioDevice.type == AudioDevice.Type.Bluetooth) {
-                        core.currentCall?.outputAudioDevice = audioDevice
+
+                        for  (call in core.calls) {
+                            call.outputAudioDevice = audioDevice
+                        }
                     }
                 }
 //                sendDevices()
