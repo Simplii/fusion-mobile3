@@ -43,10 +43,10 @@ class _CallHeaderDetailsState extends State<CallHeaderDetails> {
                           color: Colors.white,
                           fontWeight: FontWeight.w700)),
                   Container(width: 12),
-                  Image.asset(
-                    "assets/icons/call_view/edit.png",
-                        width: 20, height: 20
-                  )
+                  // Image.asset(
+                  //   "assets/icons/call_view/edit.png",
+                  //       width: 20, height: 20
+                  // )
                 ]),
                 Text(widget.callerNumber,
                     style: TextStyle(
