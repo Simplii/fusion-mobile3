@@ -409,4 +409,13 @@ print(callpopInfo);
       callback(messages, true);
     });
   }
+
+  void deleteMessage(String id) {
+    print("here123 ${id}");
+    fusionConnection.apiV1Call("post", "/chat/hide_message", {
+      "message_ids": [id],
+    }, callback: (res) {
+      print('here123 ${res}');
+    });
+  }
 }
