@@ -909,10 +909,27 @@ class _SMSMessageViewState extends State<SMSMessageView> {
       ])));
     }
 
-    return Container(
-        decoration: BoxDecoration(color: Colors.white),
-        margin: EdgeInsets.only(bottom: 18),
-        padding: EdgeInsets.only(left: 16, right: 16),
-        child: Row(children: children));
+    return Dismissible(
+      key: UniqueKey(),
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) {
+        _fusionConnection.messages.deleteMessage(this._message.id);
+      },
+      background: Container(
+        color: Colors.red,
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Icon(Icons.delete, color: Colors.white),
+          ),
+        ),
+      ),
+      child: Container(
+          decoration: BoxDecoration(color: Colors.white),
+          margin: EdgeInsets.only(bottom: 18),
+          padding: EdgeInsets.only(left: 16, right: 16),
+          child: Row(children: children)),
+    );
   }
 }
