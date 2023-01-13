@@ -12,7 +12,9 @@ import android.util.Log
 import com.tekartik.sqflite.SqflitePlugin;
 
 import com.google.gson.Gson
-
+import android.telephony.PhoneStateListener
+import android.telephony.TelephonyCallback
+import android.telephony.TelephonyManager
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -39,11 +41,22 @@ class MainActivity : FlutterFragmentActivity() {
     private var server: String = "mobile-proxy.fusioncomm.net"
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
     lateinit var volumeReceiver : VolumeReceiver
+    val versionName = BuildConfig.VERSION_NAME
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
         setupCore();
         setupBroadcastReciver()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        phoneStateListener()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        phoneStateListener()
     }
 
     override fun onDestroy() {
@@ -371,6 +384,60 @@ class MainActivity : FlutterFragmentActivity() {
         }
         core.start()
         sendDevices()
+        getAppVersion()
+    }
+
+    private fun handleCallStateChange(state: Int){
+        when (state){
+            TelephonyManager.CALL_STATE_OFFHOOK -> {
+                channel.invokeMethod("setPhoneState",
+                    mapOf(Pair("onCellPhoneCall", true)))
+                val calls : Array<Call>? = core?.calls
+                if (calls != null) {
+                    for(call in calls){
+                        call.pause()
+                    }
+                }
+                Log.d("phoneStateListener",
+                    "Busy: At least one call exists that is dialing, active, or on hold, " +
+                            "and no calls are ringing or waiting")
+            }
+            TelephonyManager.CALL_STATE_IDLE ->{
+                channel.invokeMethod("setPhoneState",
+                    mapOf(Pair("onCellPhoneCall", false)))
+                Log.d("phoneStateListener",
+                    "Not Available:: Neither Ringing nor in a Call")
+            }
+            else -> Log.d("phoneStateListener", "callState ${state}")
+        }
+    }
+
+    private fun phoneStateListener() {
+        Log.d("phoneStateListener","starting phone state listener")
+        val telephonyManager: TelephonyManager =
+                getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Log.d("phoneStateListener","android >= 12")
+            telephonyManager.registerTelephonyCallback(
+            mainExecutor,
+            object : TelephonyCallback(), TelephonyCallback.CallStateListener {
+                override fun onCallStateChanged(state: Int) {
+                    handleCallStateChange(state)
+                }
+            })
+        } else {
+            Log.d("phoneStateListener","android < 12")
+            val callStateListener: PhoneStateListener = object : PhoneStateListener() {
+                override fun onCallStateChanged(state: Int, incomingNumber: String?) {
+                    handleCallStateChange(state)
+                }
+            }
+            // stopping old listener
+            telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_NONE)
+            // starting new listener
+            telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_CALL_STATE)
+        }
     }
 
     private fun sendDevices() {
@@ -399,6 +466,13 @@ class MainActivity : FlutterFragmentActivity() {
                 Pair("defaultOutput", core.defaultOutputAudioDevice.id)))
     }
 
+    private fun getAppVersion(){
+        var appversion: Array<String> = arrayOf()
+        appversion = appversion.plus(versionName)
+        var gson = Gson();
+        channel.invokeMethod("setAppVersion",  gson.toJson(versionName) )
+    }
+    
     private fun createProxyConfig(
         proxyConfig: ProxyConfig,
         aor: String,

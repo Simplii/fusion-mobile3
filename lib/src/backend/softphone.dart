@@ -96,7 +96,7 @@ class Softphone implements SipUaHelperListener {
   StreamSubscription _btConnectionStatusListener, _btReceivedMessageListener;
   String btConnectionStatus = "NONE";
   String btReceivedMessage;
-
+  String appVersion = "";
   // List<BtDevice> devices = [];
   String _savedLogin;
   String _savedAor;
@@ -251,19 +251,19 @@ class Softphone implements SipUaHelperListener {
       _setupCallKeep();
       _android.setMethodCallHandler(_callKitHandler);
 
-      FlutterPhoneState.rawPhoneEvents.forEach((element) {
-        print("rawphonevent");
-        print(element.type);
-        print(element);
-        if (element.type == RawEventType.connected &&
-            activeCall != null &&
-            !_blockingEvent) {
-          isCellPhoneCallActive = true;
-          activeCall.hold();
-        } else if (element.type == RawEventType.disconnected) {
-          isCellPhoneCallActive = false;
-        }
-      });
+      // FlutterPhoneState.rawPhoneEvents.forEach((element) {
+      //   print("rawphonevent");
+      //   print(element.type);
+      //   print(element);
+      //   if (element.type == RawEventType.connected &&
+      //       activeCall != null &&
+      //       !_blockingEvent) {
+      //     isCellPhoneCallActive = true;
+      //     activeCall.hold();
+      //   } else if (element.type == RawEventType.disconnected) {
+      //     isCellPhoneCallActive = false;
+      //   }
+      // });
     }
   }
 
@@ -423,6 +423,9 @@ class Softphone implements SipUaHelperListener {
             args['activeCallOutput'] as String
           ];
           break;
+        case "setAppVersion":
+          args = [json.decode(args)];
+          break;
         case "lnAudioDeviceListUpdated":
           args = [
             args['devicesList'] as String,
@@ -431,6 +434,9 @@ class Softphone implements SipUaHelperListener {
             args["activeCallOutput"] as String
           ];
 
+          break;
+        case "setPhoneState":
+          args = [args];
           break;
         default:
           args = [args['uuid']];
@@ -628,6 +634,9 @@ class Softphone implements SipUaHelperListener {
           switchToHeadsetWhenConnected(null);
         }
         break;
+      case "setAppVersion":
+        this.appVersion = args[0];
+        break;
       case "lnRegistrationOk":
         registrationStateChanged(
             RegistrationState(state: RegistrationStateEnum.REGISTERED));
@@ -709,7 +718,10 @@ class Softphone implements SipUaHelperListener {
         }
 
         return;
-
+      case "setPhoneState":
+        var cellPhoneCallState = args[0];
+        isCellPhoneCallActive = cellPhoneCallState['onCellPhoneCall'];
+        break;
       default:
         throw MissingPluginException('notImplemented');
     }
@@ -1042,6 +1054,9 @@ class Softphone implements SipUaHelperListener {
         call.answer({});
         if (Platform.isAndroid) {
           _callKeep.answerIncomingCall(_uuidFor(call));
+          if (isCellPhoneCallActive) {
+            activeCall.hold();
+          }
         }
       }
       makeActiveCall(call);
@@ -1534,7 +1549,9 @@ class Softphone implements SipUaHelperListener {
   }
 
   getHoldState(Call call) {
-    return call.state == CallStateEnum.HOLD;
+    return (call != null && isCellPhoneCallActive)
+        ? isCellPhoneCallActive
+        : call.state == CallStateEnum.HOLD;
     return _getCallDataValue(call.id, "onHold", def: false);
   }
 

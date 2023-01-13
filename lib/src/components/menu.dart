@@ -502,12 +502,23 @@ class _MenuState extends State<Menu> {
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.all(Radius.circular(4)),
                             border: Border.all(color: halfSmoke, width: 1.0)),
-                        child: Text(isFusionPlus ? "Fusion Plus" : "Fusion",
+                        child: Column(
+                          children: [
+                            Text(isFusionPlus ? "Fusion Plus" : "Fusion",
                             style: TextStyle(
                                 color: halfSmoke,
                                 fontStyle: FontStyle.italic,
                                 fontSize: 11,
-                                fontWeight: FontWeight.w700)))
+                                fontWeight: FontWeight.w700)),
+                            Text("v."+_softphone.appVersion,
+                            style: TextStyle(
+                                color: halfSmoke,
+                                fontStyle: FontStyle.italic,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700),
+                            )
+                          ],
+                        ))
                   ]))
             ])));
   }
