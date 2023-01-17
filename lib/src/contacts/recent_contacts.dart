@@ -72,7 +72,12 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
   }
 
   _tabBar() {
-    bool v2Domain = _fusionConnection.settings.isFeatureEnabled('uses_v2');
+    bool v2Domain = false;
+    
+    _fusionConnection.settings.options.forEach((key, value) {
+      key == "uses_v2" ? v2Domain = value : null;
+    });
+    
     return Container(
         padding: EdgeInsets.only(left: 12, right: 12),
         child: Row(children: [

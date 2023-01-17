@@ -169,7 +169,7 @@ class _MessagesListState extends State<MessagesList> {
   _messagesList() {
     return _convos.map((convo) {
       return SMSConversationSummaryView(
-          _fusionConnection, _softphone, convo, _getDepartmentName(convo));
+          _fusionConnection, _softphone, convo, _getDepartmentName(convo),_selectedGroupId);
     }).toList();
   }
 
@@ -242,9 +242,14 @@ class _MessagesListState extends State<MessagesList> {
                                     _fusionConnection,
                                     _softphone,
                                     _convos[index - 1],
-                                    _getDepartmentName(_convos[index - 1]));
+                                    _getDepartmentName(_convos[index - 1]),
+                                    _selectedGroupId);
                               } else {
-                                return Container();
+                                return Container(
+                                  child: Text(
+                                    'No conversations',
+                                    textAlign: TextAlign.center,),
+                                );
                               }
                             }))
               ]),
@@ -264,12 +269,14 @@ class _MessagesListState extends State<MessagesList> {
                   child: Row(children: [
                     Container(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width - 70
-                        ),
+                            maxWidth: MediaQuery.of(context).size.width - 70),
                         child: Align(
                             alignment: Alignment.topLeft,
-                            child: Text(_selectedDepartmentName().toString(),
-                                style: headerTextStyle,overflow: TextOverflow.ellipsis,))),
+                            child: Text(
+                              _selectedDepartmentName().toString(),
+                              style: headerTextStyle,
+                              overflow: TextOverflow.ellipsis,
+                            ))),
                     FusionDropdown(
                         onChange: _changeGroup,
                         value: _selectedGroupId,
@@ -300,9 +307,10 @@ class SMSConversationSummaryView extends StatefulWidget {
   final Softphone _softphone;
   final SMSConversation _convo;
   final String _departmentName;
+  final String _selectedGroupId;
 
   SMSConversationSummaryView(this._fusionConnection, this._softphone,
-      this._convo, this._departmentName,
+      this._convo, this._departmentName, this._selectedGroupId,
       {Key key})
       : super(key: key);
 
@@ -320,6 +328,8 @@ class _SMSConversationSummaryViewState
 
   SMSConversation get _convo => widget._convo;
   final _searchInputController = TextEditingController();
+
+  String get _departmentId => widget._selectedGroupId;
 
   _openConversation() {
     _fusionConnection.conversations.markRead(_convo);
@@ -345,17 +355,45 @@ class _SMSConversationSummaryViewState
           direction: DismissDirection.endToStart,
           background: Container(
             color: Colors.red,
-            child:Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Icon(Icons.delete, color: Colors.white),
-                    ),
-                  ),      
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Icon(Icons.delete, color: Colors.white),
+              ),
+            ),
           ),
           onDismissed: (DismissDirection direction) {
-            _fusionConnection.conversations
-                .deleteConversation(_convo.getId(), _convo.number, _convo.myNumber);
+            _fusionConnection.conversations.deleteConversation(_convo.getId(),
+                _convo.number, _convo.myNumber, _departmentId);
+          },
+          confirmDismiss: (DismissDirection direction) async {
+            return await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text("Confirm"),
+                  content: const Text(
+                      "Are you sure you wish to delete this conversation?"),
+                  actions: <Widget>[
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text("DELETE")
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.black,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text("CANCEL"),
+                    ),
+                  ],
+                );
+              },
+            );
           },
           child: Container(
               margin: EdgeInsets.only(bottom: 18, left: 16, right: 16),

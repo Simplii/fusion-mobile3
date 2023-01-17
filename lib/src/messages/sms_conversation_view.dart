@@ -104,7 +104,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         _loaded = true;
       });
     });
-    
+
     SMSDepartment department = _fusionConnection.smsDepartments
         .getDepartmentByPhoneNumber(_conversation.myNumber);
     this.setState(() {
@@ -236,6 +236,13 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                           _softphone,
                           _conversation.contacts[0]));
                 });
+              } else if (chosen == "deleteconversation") {
+                Navigator.pop(context, true);
+                _fusionConnection.conversations.deleteConversation(
+                    _conversation.getId(),
+                    _conversation.number,
+                    _conversation.myNumber,
+                    _selectedGroupId);
               } else {
                 Future.delayed(Duration(milliseconds: 10), () {
                   _openMedia(null);
@@ -246,10 +253,12 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             options: _conversation.contacts.length > 0
                 ? [
                     ["Open Contact Profile", "contactprofile"],
-                    ["Shared Media", "sharedmedia"]
+                    ["Shared Media", "sharedmedia"],
+                    ["Delete Conversation", "deleteconversation"]
                   ]
                 : [
-                    ["Shared Media", "sharedmedia"]
+                    ["Shared Media", "sharedmedia"],
+                    ["Delete Conversation", "deleteconversation"]
                   ],
             label: _conversation.contactName(),
             button: IconButton(

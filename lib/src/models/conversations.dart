@@ -162,7 +162,9 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
   @override
   removeRecord(String id) {
     super.removeRecord(id);
-    //handle deleting from db too
+    fusionConnection.db.delete('sms_conversation',
+        where: 'id = ?',
+        whereArgs: [id]);
   }
 
   persist(SMSConversation record) {
@@ -280,14 +282,12 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     storeRecord(convo);
   }
 
-
-  void deleteConversation(String id, String from, String myNumber) {
+  void deleteConversation(String id, String from, String myNumber, String departmentId) {
+    this.removeRecord(id);
+    getPersisted(departmentId, 100, 0, null);
     fusionConnection.apiV1Call("post", "/chat/archive_conversation", {
       "from_numbers": [myNumber],
       "to_numbers": [from],
-    }, callback: (res) {
-      this.removeRecord(id);
-      print('here123 ${res}');
-    });
+    }, callback: null);
   }
 }
