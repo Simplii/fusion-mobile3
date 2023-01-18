@@ -93,6 +93,9 @@ class _CallViewState extends State<CallView> {
             }, (String xferTo, String xferType) {
               if (xferType == "blind") {
                 _softphone.transfer(_activeCall, _makeXferUrl(xferTo));
+              } else if (xferType == "assisted") {
+                print("MyDebugMessage assisted transfer init");
+                _softphone.assistedTransfer(_activeCall, _makeXferUrl(xferTo));
               }
               Navigator.pop(context);
             }));
@@ -207,10 +210,12 @@ class _CallViewState extends State<CallView> {
   }
 
   _changeDefaultOutputDevice() {
-    List<List<String>> options = Platform.isAndroid ? _softphone.devicesList
-        .where((element) => element[2] != "Microphone")
-        .toList()
-        .cast<List<String>>() : _softphone.devicesList;
+    List<List<String>> options = Platform.isAndroid
+        ? _softphone.devicesList
+            .where((element) => element[2] != "Microphone")
+            .toList()
+            .cast<List<String>>()
+        : _softphone.devicesList;
     String callDefaultOutputDeviceId = _softphone.activeCallOutputDevice != ''
         ? _softphone.activeCallOutputDevice
         : _softphone.defaultOutput;
@@ -245,7 +250,9 @@ class _CallViewState extends State<CallView> {
                                       bottom: BorderSide(
                                           color: lightDivider, width: 1.0))),
                               child: Row(children: [
-                                Text(option[0].replaceAll('Microphone', 'Earpiece'),
+                                Text(
+                                    option[0]
+                                        .replaceAll('Microphone', 'Earpiece'),
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -285,68 +292,70 @@ class _CallViewState extends State<CallView> {
             label: "AUDIO SOURCE",
             topChild: Column(children: [
               // if (Platform.isAndroid)
-                Row(children: [
-                  Expanded(
-                      child: GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
-                            _changeDefaultOutputDevice();
-                          },
-                          child: Container(
-                              alignment: Alignment.center,
-                              margin: EdgeInsets.only(
-                                  bottom: 4, left: 20, right: 20, top: 6),
-                              padding: EdgeInsets.only(top: 12, bottom: 12),
-                              decoration: BoxDecoration(
-                                  color: coal,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(8)),
-                                  boxShadow: [
-                                    BoxShadow(
-                                        color: translucentBlack(0.28),
-                                        offset: Offset.zero,
-                                        blurRadius: 36)
-                                  ]),
-                              child: Text(callDefaultOutputDeviceId.replaceAll('Microphone', 'Earpiece'),
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                    height: 1.4,
-                                  )))))
-                ]),
+              Row(children: [
+                Expanded(
+                    child: GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          _changeDefaultOutputDevice();
+                        },
+                        child: Container(
+                            alignment: Alignment.center,
+                            margin: EdgeInsets.only(
+                                bottom: 4, left: 20, right: 20, top: 6),
+                            padding: EdgeInsets.only(top: 12, bottom: 12),
+                            decoration: BoxDecoration(
+                                color: coal,
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(8)),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: translucentBlack(0.28),
+                                      offset: Offset.zero,
+                                      blurRadius: 36)
+                                ]),
+                            child: Text(
+                                callDefaultOutputDeviceId.replaceAll(
+                                    'Microphone', 'Earpiece'),
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                  height: 1.4,
+                                )))))
+              ]),
               if (Platform.isAndroid) Container(height: 4),
               // if (Platform.isAndroid)
-                Row(children: [
-                  Expanded(
-                      child: GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
-                            _changeDefaultInputDevice();
-                          },
-                          child: Container(
-                              alignment: Alignment.center,
-                              margin: EdgeInsets.only(
-                                  bottom: 16, left: 20, right: 20, top: 6),
-                              padding: EdgeInsets.only(top: 12, bottom: 12),
-                              decoration: BoxDecoration(
-                                  color: coal,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(8)),
-                                  boxShadow: [
-                                    BoxShadow(
-                                        color: translucentBlack(0.28),
-                                        offset: Offset.zero,
-                                        blurRadius: 36)
-                                  ]),
-                              child: Text(_softphone.defaultInput,
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                    height: 1.4,
-                                  )))))
-                ]),
+              Row(children: [
+                Expanded(
+                    child: GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          _changeDefaultInputDevice();
+                        },
+                        child: Container(
+                            alignment: Alignment.center,
+                            margin: EdgeInsets.only(
+                                bottom: 16, left: 20, right: 20, top: 6),
+                            padding: EdgeInsets.only(top: 12, bottom: 12),
+                            decoration: BoxDecoration(
+                                color: coal,
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(8)),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: translucentBlack(0.28),
+                                      offset: Offset.zero,
+                                      blurRadius: 36)
+                                ]),
+                            child: Text(_softphone.defaultInput,
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                  height: 1.4,
+                                )))))
+              ]),
               if (Platform.isAndroid) Container(height: 4),
               Row(children: [
                 Expanded(

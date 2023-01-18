@@ -46,27 +46,26 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
 
     return switchGestureDetector(
         Row(children: [
-
           ContactCircle.withDiameterAndMargin(info != null ? info.contacts : [],
               info != null ? info.crmContacts : [], 24, 8),
-
           Text(softphone.getCallerName(call), style: textStyle),
-      Expanded(child: switchGestureDetector(Container(), call)),
-      if (softphone.getHoldState(call))
-        Text("Hold", style: textStyle),
-      Text(" " + mDash + " " + softphone.getCallRunTimeString(call),
-          style: textStyle),
-      if (!isMerged && false) // disabing until we can support conference calling
-        GestureDetector(
-            onTap: () {
-              softphone.mergeCalls(activeCall, call);
-            },
-            child: Container(
-                decoration: clearBg(),
-                padding: EdgeInsets.only(left: 12, top: 2, bottom: 2),
-                child: Image.asset("assets/icons/call_view/merge.png",
-                    width: 20, height: 20))),
-    ]),call);
+          Expanded(child: switchGestureDetector(Container(), call)),
+          if (softphone.getHoldState(call)) Text("Hold", style: textStyle),
+          Text(" " + mDash + " " + softphone.getCallRunTimeString(call),
+              style: textStyle),
+          if (!isMerged &&
+              false) // disabing until we can support conference calling
+            GestureDetector(
+                onTap: () {
+                  softphone.mergeCalls(activeCall, call);
+                },
+                child: Container(
+                    decoration: clearBg(),
+                    padding: EdgeInsets.only(left: 12, top: 2, bottom: 2),
+                    child: Image.asset("assets/icons/call_view/merge.png",
+                        width: 20, height: 20))),
+        ]),
+        call);
   }
 
   _hangupButton(call) {
@@ -93,21 +92,54 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        height: 42 + 0 + calls.length * 36.0,
-        padding: EdgeInsets.only(top: 42, bottom: 0),
-        decoration: BoxDecoration(
-            color: coal,
-            borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16))),
-        alignment: Alignment.center,
-        child: Container(
-            padding: EdgeInsets.only(left: 12, right: 12, bottom: 12),
-            child: Column(
-                children: calls
-                    .map((Call c) => _callRow(c))
-                    .toList()
-                    .cast<Widget>())));
+    return Column(children: [
+      Container(
+          height: 42 + 0 + calls.length * 36.0,
+          padding: EdgeInsets.only(top: 42, bottom: 0),
+          decoration: BoxDecoration(
+              color: coal,
+              borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16))),
+          alignment: Alignment.center,
+          child: Container(
+              padding: EdgeInsets.only(left: 12, right: 12, bottom: 12),
+              child: Column(
+                  children: calls
+                      .map((Call c) => _callRow(c))
+                      .toList()
+                      .cast<Widget>()))),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            margin: EdgeInsets.only(right: 15, top: 10),
+            alignment: Alignment.centerRight,
+            decoration: BoxDecoration(
+                color: bgBlend,
+                borderRadius: BorderRadius.all(Radius.circular(6))),
+            padding: EdgeInsets.all(10),
+            child: GestureDetector(
+              onTap: () {
+                Call secCall = calls.where((call) => call.id != activeCall.id).first;
+                softphone.completeAssistedTransfer(secCall);
+              },
+              child: Column(children: [
+                Image.asset(
+                  "assets/icons/call_view/merge.png",
+                  width: 20,
+                  height: 20,
+                ),
+                Text(
+                  'Complete',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white),
+                )
+              ]),
+            ),
+          )
+        ],
+      )
+    ]);
   }
 }

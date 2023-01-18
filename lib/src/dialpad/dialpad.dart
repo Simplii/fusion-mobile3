@@ -19,7 +19,7 @@ class DialPad extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
   final Function onQueryChange;
-  final Function(String number) onPlaceCall;
+  final Function(String number, String transferType) onPlaceCall;
 
   @override
   State<StatefulWidget> createState() => _DialPadState();
@@ -36,7 +36,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
   void _scrollToEnd() {
     _dialEntryController.animateTo(
       _dialEntryController.position.maxScrollExtent,
-      duration: Duration(milliseconds:200 ),
+      duration: Duration(milliseconds: 200),
       curve: Curves.fastOutSlowIn,
     );
   }
@@ -75,11 +75,21 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
 
   void placeCall() {
     if (widget.onPlaceCall != null)
-      widget.onPlaceCall(dialedNumber);
+      widget.onPlaceCall(dialedNumber,'');
     else {
       _softphone.makeCall(dialedNumber);
       Navigator.pop(context);
     }
+  }
+  
+  void directTransfer() {
+    if (widget.onPlaceCall != null)
+      widget.onPlaceCall(dialedNumber,"direct");
+  }
+  
+  void assistedTransfer() {
+    if (widget.onPlaceCall != null)
+      widget.onPlaceCall(dialedNumber,"assisted");
   }
 
   var digitAlphas = [
@@ -103,9 +113,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
     final TextPainter textPainter = TextPainter(
       text: TextSpan(
           text: dialedNumber,
-          style: TextStyle(
-              fontSize: 36 * scaleFactor,
-              color: Colors.white)),
+          style: TextStyle(fontSize: 32 * scaleFactor, color: Colors.white)),
       textDirection: TextDirection.ltr,
       maxLines: 1,
     )..layout(minWidth: 0, maxWidth: double.infinity);
@@ -158,7 +166,8 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                                 width: 22,
                                                 height: 16))))),
                             Container(
-                                height: 40 * MediaQuery.of(context).textScaleFactor,
+                                height:
+                                    40 * MediaQuery.of(context).textScaleFactor,
                                 alignment: Alignment.topCenter,
                                 width: MediaQuery.of(context).size.width - 122,
                                 child: ListView(
@@ -167,39 +176,34 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                     children: [
                                       Container(
                                           alignment: Alignment.topCenter,
-                                          width: max(MediaQuery.of(context)
-                                                  .size
-                                                  .width -
-                                              122,
-                                          textWidth.toDouble()),
+                                          width: max(
+                                              MediaQuery.of(context)
+                                                      .size
+                                                      .width -
+                                                  122,
+                                              textWidth.toDouble()),
                                           child: Text(dialedNumber,
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
                                                   fontSize: 36,
                                                   color: Colors.white)))
                                     ])),
-
                             if (dialedNumber != '')
-                              GestureDetector(
-                                  onTap: removeLastDigit,
-                                  child: Opacity(
-                                      opacity: 0.66,
-                                      child: Container(
-                                          decoration: clearBg(),
-                                          height: 42,
-                                          padding: EdgeInsets.only(
-                                              top: 10,
-                                              bottom: 10,
-                                              left: 20,
-                                              right: 0),
-                                          width: 46,
-                                          child: Container(
-                                              width: 20,
-                                              height: 16,
-                                              child: Image.asset(
-                                                  "assets/icons/call_view/backspace.png",
-                                                  width: 20,
-                                                  height: 16)))))
+                              SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: TextButton(
+                                    style: TextButton.styleFrom(
+                                        shape: CircleBorder(),
+                                        padding: EdgeInsets.all(5)),
+                                    onPressed: removeLastDigit,
+                                    child: Opacity(
+                                        opacity: 0.66,
+                                        child: Image.asset(
+                                            "assets/icons/call_view/backspace.png",
+                                            width: 26,
+                                            height: 22))),
+                              )
                           ],
                         ),
                       ),
@@ -284,36 +288,117 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedOpacity(
-                    opacity: dialedNumber == "" ? 0.5 : 1.0,
-                    curve: Curves.easeIn,
-                    duration: const Duration(milliseconds: 200),
-                    child: GestureDetector(
-                      onTap: dialedNumber == "" ? () {} : placeCall,
-                      child: Container(
-                          margin: EdgeInsets.only(top: 12, bottom: 14),
-                          decoration: raisedButtonBorder(successGreen,
-                              lightenAmount: 40, darkenAmount: 40),
-                          padding: EdgeInsets.all(1),
-                          child: Container(
-                              width: 56,
-                              height: 56,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(28)),
-                                color: successGreen,
-                              ),
-                              child: Image.asset(
-                                  "assets/icons/call_view/phone_answer.png",
-                                  width: 24,
-                                  height: 24))),
-                    )),
-              ],
-            )
+            widget.onPlaceCall != null
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      AnimatedOpacity(
+                          opacity: dialedNumber == "" ? 0.5 : 1.0,
+                          curve: Curves.easeIn,
+                          duration: const Duration(milliseconds: 200),
+                          child: GestureDetector(
+                            onTap: dialedNumber == "" ? () {} : assistedTransfer,
+                            child: Container(
+                                margin: EdgeInsets.only(top: 12, bottom: 14),
+                                decoration: raisedButtonBorder(char,
+                                    lightenAmount: 40, darkenAmount: 40),
+                                padding: EdgeInsets.all(1),
+                                child: Container(
+                                    width: 56,
+                                    height: 56,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(28)),
+                                      color: char,
+                                    ),
+                                    child: Image.asset(
+                                        "assets/icons/call_view/merge.png",
+                                        width: 24,
+                                        height: 24))),
+                          )),
+                      AnimatedOpacity(
+                          opacity: dialedNumber == "" ? 0.5 : 1.0,
+                          curve: Curves.easeIn,
+                          duration: const Duration(milliseconds: 200),
+                          child: GestureDetector(
+                            onTap: dialedNumber == "" ? () {} : directTransfer,
+                            child: Container(
+                                margin: EdgeInsets.only(top: 12, bottom: 14),
+                                decoration: raisedButtonBorder(char,
+                                    lightenAmount: 40, darkenAmount: 40),
+                                padding: EdgeInsets.all(1),
+                                child: Container(
+                                    width: 56,
+                                    height: 56,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(28)),
+                                      color: char,
+                                    ),
+                                    child: Image.asset(
+                                        "assets/icons/call_view/transfer.png",
+                                        width: 24,
+                                        height: 24))),
+                          )),
+                      AnimatedOpacity(
+                          opacity: 1.0,
+                          curve: Curves.easeIn,
+                          duration: const Duration(milliseconds: 200),
+                          child: GestureDetector(
+                            onTap: ()=>print("MyDebugMessage send to voicemail"),
+                            child: Container(
+                                margin: EdgeInsets.only(top: 12, bottom: 14),
+                                decoration: raisedButtonBorder(char,
+                                    lightenAmount: 40, darkenAmount: 40),
+                                padding: EdgeInsets.all(1),
+                                child: Container(
+                                    width: 56,
+                                    height: 56,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(28)),
+                                      color: char,
+                                    ),
+                                    child: Image.asset(
+                                        "assets/icons/voicemail.png",
+                                        width: 24,
+                                        height: 24))),
+                          )),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      AnimatedOpacity(
+                          opacity: dialedNumber == "" ? 0.5 : 1.0,
+                          curve: Curves.easeIn,
+                          duration: const Duration(milliseconds: 200),
+                          child: GestureDetector(
+                            onTap: dialedNumber == "" ? () {} : placeCall,
+                            child: Container(
+                                margin: EdgeInsets.only(top: 12, bottom: 14),
+                                decoration: raisedButtonBorder(successGreen,
+                                    lightenAmount: 40, darkenAmount: 40),
+                                padding: EdgeInsets.all(1),
+                                child: Container(
+                                    width: 56,
+                                    height: 56,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(28)),
+                                      color: successGreen,
+                                    ),
+                                    child: Image.asset(
+                                        "assets/icons/call_view/phone_answer.png",
+                                        width: 24,
+                                        height: 24))),
+                          ))
+                    ],
+                  )
           ],
         ));
   }
