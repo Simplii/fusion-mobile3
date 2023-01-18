@@ -16,6 +16,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../backend/fusion_connection.dart';
+import '../components/popup_menu.dart';
 import '../styles.dart';
 import '../utils.dart';
 
@@ -37,9 +38,104 @@ class TransferCallPopup extends StatefulWidget {
 class _TransferCallpopState extends State<TransferCallPopup> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   String _query = "";
+  String expandedId = "";
 
-  _doTransfer(String to) {
+  _directTransfer(String to) {
     widget._onTransfer(to, "blind");
+  }
+
+  _assistedTransfer(String to) {
+    widget._onTransfer(to, "assisted");
+  }
+
+  expand(Contact contact) {
+    this.setState(() {
+      expandedId = contact.id;
+    });
+  }
+
+  _selectTransferType(Contact contact, CrmContact crmContact) {
+    double maxHeight = MediaQuery.of(context).size.height * 0.5;
+
+    return showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (BuildContext buildContext) => PopupMenu(
+              label: 'Transfer type',
+              bottomChild: Container(
+                constraints: BoxConstraints(
+                    minHeight: 24,
+                    minWidth: 90,
+                    maxWidth: MediaQuery.of(context).size.width - 136,
+                    maxHeight: maxHeight),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                            height: 50,
+                            width: MediaQuery.of(context).size.width - 136,
+                            decoration: BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(
+                                        color: lightDivider, width: 1.0))),
+                            child: TextButton(
+                              style: ButtonStyle(
+                                alignment: Alignment.centerLeft,
+                              ),
+                              onPressed: () {
+                                print("here1234");
+                                if (contact != null) {
+                                  _directTransfer(contact.firstNumber());
+                                } else {
+                                  _directTransfer(crmContact.firstNumber());
+                                }
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                "Direct Transfer",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                            height: 50,
+                            width: MediaQuery.of(context).size.width - 136,
+                            decoration: BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(
+                                        color: lightDivider, width: 1.0))),
+                            child: TextButton(
+                              style: ButtonStyle(
+                                alignment: Alignment.centerLeft,
+                              ),
+                              onPressed: () {
+                                _assistedTransfer(contact.firstNumber());
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                "Assisted Transfer",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ))
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ));
   }
 
   @override
@@ -55,16 +151,24 @@ class _TransferCallpopState extends State<TransferCallPopup> {
               margin: EdgeInsets.only(top: 8),
               child: Center(child: popupHandle())),
           if (_query == "")
-            Expanded(child:Container(
-                child: ContactsList(_fusionConnection, widget._softphone,
-                    "Recent Coworkers", "coworkers",
-                    onSelect: (Contact contact, CrmContact crmContact) {
+            Expanded(
+                child: Container(
+                    child: ContactsList(_fusionConnection, widget._softphone,
+                        "Recent Coworkers", "coworkers",
+                        onSelect: (Contact contact, CrmContact crmContact) {
               if (contact != null) {
-                if (contact.firstNumber() != null)
-                  _doTransfer(contact.firstNumber());
+                expand(contact);
+                if (contact.firstNumber() != null) {
+                  print("here1234 ${contact}");
+                  _selectTransferType(contact, null);
+                  // _doTransfer(contact.firstNumber());
+                }
               } else if (crmContact != null) {
-                if (crmContact.firstNumber() != null)
-                  _doTransfer(crmContact.firstNumber());
+                // expand(crmContact);
+                if (crmContact.firstNumber() != null) {
+                  _selectTransferType(null, crmContact);
+                  // _doTransfer(crmContact.firstNumber());
+                }
               }
             }))),
           if (_query != "")
@@ -73,18 +177,25 @@ class _TransferCallpopState extends State<TransferCallPopup> {
                     this._query, "coworkers", embedded: true,
                     onSelect: (Contact contact, CrmContact crmContact) {
               if (contact != null) {
-                if (contact.firstNumber() != null)
-                  _doTransfer(contact.firstNumber());
+                if (contact.firstNumber() != null) {
+                  _selectTransferType(contact, null);
+                  // _doTransfer(contact.firstNumber());
+                }
               } else if (crmContact != null) {
-                if (crmContact.firstNumber() != null)
-                  _doTransfer(crmContact.firstNumber());
+                if (crmContact.firstNumber() != null) {
+                  _selectTransferType(null, crmContact);
+                  // _doTransfer(crmContact.firstNumber());
+                }
               }
             })),
           DialPad(_fusionConnection, widget._softphone,
-              onPlaceCall: (String number) {
-                  _doTransfer(number);
-              },
-              onQueryChange: (String query) {
+              onPlaceCall: (String number, String transferType) {
+            if (transferType == "direct") {
+              _directTransfer(number);
+            } else if (transferType == "assisted") {
+              _assistedTransfer(number);
+            }
+          }, onQueryChange: (String query) {
             setState(() {
               _query = query;
             });

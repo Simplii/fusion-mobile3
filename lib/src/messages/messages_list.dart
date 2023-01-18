@@ -12,6 +12,7 @@ import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
+import '../callpop/transfer_call_popup.dart';
 import '../styles.dart';
 import 'message_search_results.dart';
 import 'sms_conversation_view.dart';
@@ -264,12 +265,14 @@ class _MessagesListState extends State<MessagesList> {
                   child: Row(children: [
                     Container(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width - 70
-                        ),
+                            maxWidth: MediaQuery.of(context).size.width - 70),
                         child: Align(
                             alignment: Alignment.topLeft,
-                            child: Text(_selectedDepartmentName().toString(),
-                                style: headerTextStyle,overflow: TextOverflow.ellipsis,))),
+                            child: Text(
+                              _selectedDepartmentName().toString(),
+                              style: headerTextStyle,
+                              overflow: TextOverflow.ellipsis,
+                            ))),
                     FusionDropdown(
                         onChange: _changeGroup,
                         value: _selectedGroupId,
@@ -329,6 +332,14 @@ class _SMSConversationSummaryViewState
         isScrollControlled: true,
         builder: (context) =>
             SMSConversationView(_fusionConnection, _softphone, _convo));
+            // TransferCallPopup(_fusionConnection, _softphone, () {
+            //   Navigator.pop(context);
+            // }, (String xferTo, String xferType) {
+            //   // if (xferType == "blind") {
+            //   //   _softphone.transfer(_activeCall, _makeXferUrl(xferTo));
+            //   // }
+            //   Navigator.pop(context);
+            // }));
   }
 
   @override
