@@ -719,22 +719,11 @@ class MainActivity : FlutterFragmentActivity() {
                     lpCall.terminate()
                 }
             } else if (call.method == "lpAssistedTransfer") {
-
                 var args = call.arguments as List<Any>
-                var lpCall = findCallByUuid(args[0] as String)
-                var dest = args[1] as String
-                lpCall?.pause()
-                outgoingCall(dest)
+                var lpCallToTransfer = findCallByUuid(args[0] as String)
+                var activeCall = findCallByUuid(args[1] as String)
 
-            } else if (call.method == "lpCompleteAssistedTransfer") {
-
-                var args = call.arguments as List<Any>
-                var lpCallToTransfer = core.calls.find{ call->call.callLog.callId == args[0]}
-                var activeCall = core.calls.find{ call->call.callLog.callId == args[1]}
-                
                 if(lpCallToTransfer != null && activeCall != null){
-                    Log.d("MyDebugMessage",
-                            "transferCallId ${lpCallToTransfer.callLog.callId} activeCallId ${activeCall.callLog.callId}")
                     lpCallToTransfer.transferToAnother(activeCall)
                 }
 

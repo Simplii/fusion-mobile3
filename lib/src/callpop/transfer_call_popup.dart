@@ -54,8 +54,16 @@ class _TransferCallpopState extends State<TransferCallPopup> {
     });
   }
 
-  _selectTransferType(Contact contact, CrmContact crmContact) {
-    double maxHeight = MediaQuery.of(context).size.height * 0.5;
+  _selectTransferType(Contact contact, CrmContact crmContact, String number) {
+    void _selectTransfer() {
+      if (contact != null) {
+        _directTransfer(contact.firstNumber());
+      } else if (crmContact != null) {
+        _directTransfer(crmContact.firstNumber());
+      } else {
+        _directTransfer(number);
+      }
+    }
 
     return showModalBottomSheet(
         context: context,
@@ -65,10 +73,10 @@ class _TransferCallpopState extends State<TransferCallPopup> {
               label: 'Transfer type',
               bottomChild: Container(
                 constraints: BoxConstraints(
-                    minHeight: 24,
+                    minHeight: 100,
                     minWidth: 90,
                     maxWidth: MediaQuery.of(context).size.width - 136,
-                    maxHeight: maxHeight),
+                    maxHeight: 100),
                 child: Column(
                   children: [
                     Row(
@@ -85,11 +93,12 @@ class _TransferCallpopState extends State<TransferCallPopup> {
                                 alignment: Alignment.centerLeft,
                               ),
                               onPressed: () {
-                                print("here1234");
                                 if (contact != null) {
                                   _directTransfer(contact.firstNumber());
-                                } else {
+                                } else if (crmContact != null) {
                                   _directTransfer(crmContact.firstNumber());
+                                } else {
+                                  _directTransfer(number);
                                 }
                                 Navigator.pop(context);
                               },
@@ -118,7 +127,13 @@ class _TransferCallpopState extends State<TransferCallPopup> {
                                 alignment: Alignment.centerLeft,
                               ),
                               onPressed: () {
-                                _assistedTransfer(contact.firstNumber());
+                                if (contact != null) {
+                                  _assistedTransfer(contact.firstNumber());
+                                } else if (crmContact != null) {
+                                  _assistedTransfer(crmContact.firstNumber());
+                                } else {
+                                  _assistedTransfer(number);
+                                }
                                 Navigator.pop(context);
                               },
                               child: Text(
@@ -160,13 +175,13 @@ class _TransferCallpopState extends State<TransferCallPopup> {
                 expand(contact);
                 if (contact.firstNumber() != null) {
                   print("here1234 ${contact}");
-                  _selectTransferType(contact, null);
+                  _selectTransferType(contact, null, '');
                   // _doTransfer(contact.firstNumber());
                 }
               } else if (crmContact != null) {
                 // expand(crmContact);
                 if (crmContact.firstNumber() != null) {
-                  _selectTransferType(null, crmContact);
+                  _selectTransferType(null, crmContact, '');
                   // _doTransfer(crmContact.firstNumber());
                 }
               }
@@ -178,23 +193,19 @@ class _TransferCallpopState extends State<TransferCallPopup> {
                     onSelect: (Contact contact, CrmContact crmContact) {
               if (contact != null) {
                 if (contact.firstNumber() != null) {
-                  _selectTransferType(contact, null);
+                  _selectTransferType(contact, null, '');
                   // _doTransfer(contact.firstNumber());
                 }
               } else if (crmContact != null) {
                 if (crmContact.firstNumber() != null) {
-                  _selectTransferType(null, crmContact);
+                  _selectTransferType(null, crmContact, '');
                   // _doTransfer(crmContact.firstNumber());
                 }
               }
             })),
           DialPad(_fusionConnection, widget._softphone,
-              onPlaceCall: (String number, String transferType) {
-            if (transferType == "direct") {
-              _directTransfer(number);
-            } else if (transferType == "assisted") {
-              _assistedTransfer(number);
-            }
+              onPlaceCall: (String number) {
+            _selectTransferType(null, null, number);
           }, onQueryChange: (String query) {
             setState(() {
               _query = query;
