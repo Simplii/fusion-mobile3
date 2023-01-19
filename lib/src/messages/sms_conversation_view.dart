@@ -925,7 +925,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         _fusionConnection.messages.deleteMessage(this._message.id);
       },
       background: Container(
-        color: Colors.red,
+        color: crimsonDark,
         child: Align(
           alignment: Alignment.centerRight,
           child: Padding(
