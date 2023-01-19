@@ -104,8 +104,7 @@ class Softphone implements SipUaHelperListener {
   List<List<String>> devicesList = [];
 
   //assited transfer vars
-  List<Call> callsToTransfer = [];
-  String assistedTransferDest = "";
+  Call callToTransfer;
 
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
@@ -1015,17 +1014,15 @@ class Softphone implements SipUaHelperListener {
   }
 
   assistedTransfer(Call call, String destination) {
-    // call.hold();
-    callsToTransfer.add(call);
-
-    _android.invokeMethod("lpAssistedTransfer", [_uuidFor(call), destination]);
+    makeCall(destination);
   }
 
-  completeAssistedTransfer(Call toCall) {
-
-    if (callsToTransfer.length > 0 && toCall != null) {
-      _android.invokeMethod("lpCompleteAssistedTransfer",
-          [callsToTransfer[0].id, toCall.id]);
+  completeAssistedTransfer(Call originalCall, Call toCall) {
+    if (originalCall != null && toCall != null) {
+      _getMethodChannel().invokeMethod(
+          "lpAssistedTransfer", [_uuidFor(originalCall), _uuidFor(toCall)]);
+      _removeCall(originalCall);
+      _removeCall(toCall);
     }
   }
 

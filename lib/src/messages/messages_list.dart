@@ -332,14 +332,6 @@ class _SMSConversationSummaryViewState
         isScrollControlled: true,
         builder: (context) =>
             SMSConversationView(_fusionConnection, _softphone, _convo));
-            // TransferCallPopup(_fusionConnection, _softphone, () {
-            //   Navigator.pop(context);
-            // }, (String xferTo, String xferType) {
-            //   // if (xferType == "blind") {
-            //   //   _softphone.transfer(_activeCall, _makeXferUrl(xferTo));
-            //   // }
-            //   Navigator.pop(context);
-            // }));
   }
 
   @override

@@ -121,8 +121,9 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
             padding: EdgeInsets.all(10),
             child: GestureDetector(
               onTap: () {
-                Call secCall = calls.where((call) => call.id != activeCall.id).first;
-                softphone.completeAssistedTransfer(secCall);
+                Call newCall =
+                    calls.where((call) => call.id != activeCall.id).first;
+                softphone.completeAssistedTransfer(activeCall,newCall);
               },
               child: Column(children: [
                 Image.asset(
