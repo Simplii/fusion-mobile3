@@ -354,7 +354,7 @@ class _SMSConversationSummaryViewState
           key: UniqueKey(),
           direction: DismissDirection.endToStart,
           background: Container(
-            color: Colors.red,
+            color: crimsonDark,
             child: Align(
               alignment: Alignment.centerRight,
               child: Padding(
@@ -378,7 +378,7 @@ class _SMSConversationSummaryViewState
                   actions: <Widget>[
                     TextButton(
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.red,
+                        foregroundColor: crimsonDark,
                       ),
                       onPressed: () => Navigator.of(context).pop(true),
                       child: const Text("DELETE")
