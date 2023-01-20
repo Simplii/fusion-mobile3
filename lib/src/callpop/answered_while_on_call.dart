@@ -98,8 +98,8 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
   Widget build(BuildContext context) {
     return Column(children: [
       Container(
-          height: 56 + 0 + calls.length * 36.0,
-          padding: EdgeInsets.only(top: 56, bottom: 0),
+          height: 42 + 0 + calls.length * 36.0,
+          padding: EdgeInsets.only(top: 42, bottom: 0),
           decoration: BoxDecoration(
               color: coal,
               borderRadius: BorderRadius.only(
