@@ -38,7 +38,6 @@ class TransferCallPopup extends StatefulWidget {
 class _TransferCallpopState extends State<TransferCallPopup> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   String _query = "";
-  String expandedId = "";
 
   _directTransfer(String to) {
     widget._onTransfer(to, "blind");
@@ -48,20 +47,20 @@ class _TransferCallpopState extends State<TransferCallPopup> {
     widget._onTransfer(to, "assisted");
   }
 
-  expand(Contact contact) {
-    this.setState(() {
-      expandedId = contact.id;
-    });
-  }
-
   _selectTransferType(Contact contact, CrmContact crmContact, String number) {
-    void _selectTransfer() {
+    void _selectTransfer(String transferType) {
       if (contact != null) {
-        _directTransfer(contact.firstNumber());
+        transferType == "direct" 
+        ? _directTransfer(contact.firstNumber()) 
+        : _assistedTransfer(contact.firstNumber());
       } else if (crmContact != null) {
-        _directTransfer(crmContact.firstNumber());
+         transferType == "direct" 
+        ? _directTransfer(crmContact.firstNumber())
+        : _assistedTransfer(crmContact.firstNumber());
       } else {
-        _directTransfer(number);
+         transferType == "direct" 
+        ? _directTransfer(number)
+        : _assistedTransfer(number);
       }
     }
 
@@ -93,13 +92,7 @@ class _TransferCallpopState extends State<TransferCallPopup> {
                                 alignment: Alignment.centerLeft,
                               ),
                               onPressed: () {
-                                if (contact != null) {
-                                  _directTransfer(contact.firstNumber());
-                                } else if (crmContact != null) {
-                                  _directTransfer(crmContact.firstNumber());
-                                } else {
-                                  _directTransfer(number);
-                                }
+                                _selectTransfer('direct');
                                 Navigator.pop(context);
                               },
                               child: Text(
@@ -127,13 +120,7 @@ class _TransferCallpopState extends State<TransferCallPopup> {
                                 alignment: Alignment.centerLeft,
                               ),
                               onPressed: () {
-                                if (contact != null) {
-                                  _assistedTransfer(contact.firstNumber());
-                                } else if (crmContact != null) {
-                                  _assistedTransfer(crmContact.firstNumber());
-                                } else {
-                                  _assistedTransfer(number);
-                                }
+                               _selectTransfer('assisted');
                                 Navigator.pop(context);
                               },
                               child: Text(
@@ -172,14 +159,11 @@ class _TransferCallpopState extends State<TransferCallPopup> {
                         "Recent Coworkers", "coworkers",
                         onSelect: (Contact contact, CrmContact crmContact) {
               if (contact != null) {
-                expand(contact);
                 if (contact.firstNumber() != null) {
-                  print("here1234 ${contact}");
                   _selectTransferType(contact, null, '');
                   // _doTransfer(contact.firstNumber());
                 }
               } else if (crmContact != null) {
-                // expand(crmContact);
                 if (crmContact.firstNumber() != null) {
                   _selectTransferType(null, crmContact, '');
                   // _doTransfer(crmContact.firstNumber());
