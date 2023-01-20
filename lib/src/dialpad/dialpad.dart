@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../styles.dart';
 import 'dialpad_key.dart';
 
@@ -288,11 +288,27 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 AnimatedOpacity(
-                    opacity: dialedNumber == "" ? 0.5 : 1.0,
+                    opacity: 1.0,
                     curve: Curves.easeIn,
                     duration: const Duration(milliseconds: 200),
                     child: GestureDetector(
-                      onTap: dialedNumber == "" ? () {} : placeCall,
+                      onTap: dialedNumber == ""
+                          ? () async {
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              final String action =
+                                  prefs?.getString('lastCalledNumber');
+                              if (action != null) {
+                                setState(() {
+                                  dialedNumber = action;
+                                  if (widget.onQueryChange != null)
+                                    widget.onQueryChange(action);
+                                });
+                              } else {
+                                print("No number have been called yet");
+                              }
+                            }
+                          : placeCall,
                       child: Container(
                           margin: EdgeInsets.only(top: 12, bottom: 14),
                           decoration: raisedButtonBorder(successGreen,
