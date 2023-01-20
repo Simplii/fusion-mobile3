@@ -264,12 +264,14 @@ class _MessagesListState extends State<MessagesList> {
                   child: Row(children: [
                     Container(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width - 70
-                        ),
+                            maxWidth: MediaQuery.of(context).size.width - 70),
                         child: Align(
                             alignment: Alignment.topLeft,
-                            child: Text(_selectedDepartmentName().toString(),
-                                style: headerTextStyle,overflow: TextOverflow.ellipsis,))),
+                            child: Text(
+                              _selectedDepartmentName().toString(),
+                              style: headerTextStyle,
+                              overflow: TextOverflow.ellipsis,
+                            ))),
                     FusionDropdown(
                         onChange: _changeGroup,
                         value: _selectedGroupId,

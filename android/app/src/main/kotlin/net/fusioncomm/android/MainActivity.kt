@@ -718,6 +718,15 @@ class MainActivity : FlutterFragmentActivity() {
                 if (lpCall != null) {
                     lpCall.terminate()
                 }
+            } else if (call.method == "lpAssistedTransfer") {
+                var args = call.arguments as List<Any>
+                var lpCallToTransfer = findCallByUuid(args[0] as String)
+                var activeCall = findCallByUuid(args[1] as String)
+
+                if(lpCallToTransfer != null && activeCall != null){
+                    lpCallToTransfer.transferToAnother(activeCall)
+                }
+
             } else if (call.method == "lpRegister") {
                 var args = call.arguments as List<Any>
                 username = args[0] as String
