@@ -743,6 +743,23 @@ print("audiointerruption")
                 var uuid = args[0] as! String
                 terminateCall(uuid: uuid)
             }
+            else if (call.method == "lpAssistedTransfer") {
+                let args = call.arguments as! [Any]
+                let uuid = args[0] as! String
+                let uuid1 = args[1] as! String
+                
+                let lpCallToTransfer = findCallByUuid(uuid:uuid)
+                let activeCall = findCallByUuid(uuid:uuid1)
+                
+                if(lpCallToTransfer != nil && activeCall != nil){
+                    do {
+                        try lpCallToTransfer?.transferToAnother(dest: activeCall!)
+                    } catch let error as NSError {
+                        print("error assisted transfer call");print();
+                    }
+                    
+                }
+            }
             else if (call.method == "lpRegister") {
                 let args = call.arguments as! [Any]
 
