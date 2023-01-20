@@ -103,9 +103,6 @@ class Softphone implements SipUaHelperListener {
   String _savedPassword;
   List<List<String>> devicesList = [];
 
-  //assited transfer vars
-  Call callToTransfer;
-
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
       _callKit = MethodChannel('net.fusioncomm.ios/callkit');
