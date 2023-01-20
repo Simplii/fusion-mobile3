@@ -106,8 +106,8 @@ class UserSettings {
     throw "Crm not found (" + crmName + ")";
   }
 
-  List<String> enabledFeatures() {
-    return options['client']['options'] as List<String>;
+  List<dynamic> enabledFeatures() {
+    return options['client']['options'];
   }
 
   bool isFeatureEnabled(featureName) {

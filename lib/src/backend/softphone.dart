@@ -1013,6 +1013,19 @@ class Softphone implements SipUaHelperListener {
     _removeCall(call);
   }
 
+  assistedTransfer(Call call, String destination) {
+    makeCall(destination);
+  }
+
+  completeAssistedTransfer(Call originalCall, Call toCall) {
+    if (originalCall != null && toCall != null) {
+      _getMethodChannel().invokeMethod(
+          "lpAssistedTransfer", [_uuidFor(originalCall), _uuidFor(toCall)]);
+      _removeCall(originalCall);
+      _removeCall(toCall);
+    }
+  }
+
   hangUp(Call call) {
     try {
       call.hangup();
