@@ -32,6 +32,13 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
 
   var dialedNumber = '';
   final _dialEntryController = ScrollController();
+  bool _lastNumberCalledIsSet = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCounter();
+  }
 
   void _scrollToEnd() {
     _dialEntryController.animateTo(
@@ -39,6 +46,13 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
       duration: Duration(milliseconds:200 ),
       curve: Curves.fastOutSlowIn,
     );
+  }
+
+  void _loadCounter() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _lastNumberCalledIsSet = prefs.getString('lastCalledNumber') != null ? true : false;
+    });
   }
 
   void handleDialPadKeyPress(String key) {
@@ -288,7 +302,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 AnimatedOpacity(
-                    opacity: 1.0,
+                    opacity: (_lastNumberCalledIsSet || dialedNumber != "") ? 1.0 : 0.66,
                     curve: Curves.easeIn,
                     duration: const Duration(milliseconds: 200),
                     child: GestureDetector(
@@ -296,13 +310,13 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                           ? () async {
                               final prefs =
                                   await SharedPreferences.getInstance();
-                              final String action =
-                                  prefs?.getString('lastCalledNumber');
-                              if (action != null) {
+                              final String lastDialedNumber =
+                                  prefs.getString('lastCalledNumber');
+                              if (lastDialedNumber != null) {
                                 setState(() {
-                                  dialedNumber = action;
+                                  dialedNumber = lastDialedNumber;
                                   if (widget.onQueryChange != null)
-                                    widget.onQueryChange(action);
+                                    widget.onQueryChange(lastDialedNumber);
                                 });
                               } else {
                                 print("No number have been called yet");
