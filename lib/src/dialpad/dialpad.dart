@@ -278,62 +278,36 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            widget.onPlaceCall != null
-                ? AnimatedOpacity(
-                  opacity: dialedNumber == "" ? 0.5 : 1.0,
-                  curve: Curves.easeIn,
-                  duration: const Duration(milliseconds: 200),
-                  child: GestureDetector(
-                    onTap: dialedNumber == "" ? () {} : placeCall,
-                    child: Container(
-                        margin: EdgeInsets.only(top: 12, bottom: 14),
-                        decoration: raisedButtonBorder(successGreen,
-                            lightenAmount: 40, darkenAmount: 40),
-                        padding: EdgeInsets.all(1),
-                        child: Container(
-                            width: 56,
-                            height: 56,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(28)),
-                              color: successGreen,
-                            ),
-                            child: Image.asset(
-                                "assets/icons/call_view/phone_answer.png",
-                                width: 24,
-                                height: 24))),
-                      ))
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      AnimatedOpacity(
-                          opacity: dialedNumber == "" ? 0.5 : 1.0,
-                          curve: Curves.easeIn,
-                          duration: const Duration(milliseconds: 200),
-                          child: GestureDetector(
-                            onTap: dialedNumber == "" ? () {} : placeCall,
-                            child: Container(
-                                margin: EdgeInsets.only(top: 12, bottom: 14),
-                                decoration: raisedButtonBorder(successGreen,
-                                    lightenAmount: 40, darkenAmount: 40),
-                                padding: EdgeInsets.all(1),
-                                child: Container(
-                                    width: 56,
-                                    height: 56,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(28)),
-                                      color: successGreen,
-                                    ),
-                                    child: Image.asset(
-                                        "assets/icons/call_view/phone_answer.png",
-                                        width: 24,
-                                        height: 24))),
-                          ))
-                    ],
-                  )
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedOpacity(
+                    opacity: dialedNumber == "" ? 0.5 : 1.0,
+                    curve: Curves.easeIn,
+                    duration: const Duration(milliseconds: 200),
+                    child: GestureDetector(
+                      onTap: dialedNumber == "" ? () {} : placeCall,
+                      child: Container(
+                          margin: EdgeInsets.only(top: 12, bottom: 14),
+                          decoration: raisedButtonBorder(successGreen,
+                              lightenAmount: 40, darkenAmount: 40),
+                          padding: EdgeInsets.all(1),
+                          child: Container(
+                              width: 56,
+                              height: 56,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(28)),
+                                color: successGreen,
+                              ),
+                              child: Image.asset(
+                                  "assets/icons/call_view/phone_answer.png",
+                                  width: 24,
+                                  height: 24))),
+                    ))
+              ],
+            )
           ],
         ));
   }
