@@ -4,6 +4,7 @@ import 'package:flutter_gravatar/flutter_gravatar.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
 
 import '../styles.dart';
 
@@ -46,7 +47,7 @@ class _ContactCircleState extends State<ContactCircle> {
     lastName = lastName.replaceAll(r"/[^a-zA-Z]/", '');
     return Gravatar(email).imageUrl(
         size: 120,
-        defaultImage: Uri.encodeComponent(_avatarUrl(firstName, lastName))
+        defaultImage: Uri.encodeComponent(avatarUrl(firstName, lastName))
     );
   }
 
@@ -70,10 +71,6 @@ class _ContactCircleState extends State<ContactCircle> {
     }
   }
 
-  _avatarUrl(String firstName, String lastName) {
-    return "https://fusioncomm.net/api/v2/client/"
-        + "nameAvatar/${firstName}/${lastName}";
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +115,7 @@ class _ContactCircleState extends State<ContactCircle> {
 
     if (imageUrl == null
         && (_contacts.length > 0 || _crmContacts.length > 0)) {
-      imageUrl = _avatarUrl(_firstName(), _lastName());
+      imageUrl = avatarUrl(_firstName(), _lastName());
     }
 
     Widget contactImage = ClipRRect(
