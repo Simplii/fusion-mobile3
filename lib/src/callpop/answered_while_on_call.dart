@@ -46,8 +46,10 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
 
     return switchGestureDetector(
         Row(children: [
+
           ContactCircle.withDiameterAndMargin(info != null ? info.contacts : [],
               info != null ? info.crmContacts : [], 24, 8),
+
           Text(softphone.getCallerName(call), style: textStyle),
           Expanded(child: switchGestureDetector(Container(), call)),
           if (softphone.getHoldState(call)) Text("Hold", style: textStyle),

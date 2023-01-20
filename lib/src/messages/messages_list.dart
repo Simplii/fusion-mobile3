@@ -12,7 +12,6 @@ import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
-import '../callpop/transfer_call_popup.dart';
 import '../styles.dart';
 import 'message_search_results.dart';
 import 'sms_conversation_view.dart';
