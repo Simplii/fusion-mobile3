@@ -104,7 +104,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         _loaded = true;
       });
     });
-    
+
     SMSDepartment department = _fusionConnection.smsDepartments
         .getDepartmentByPhoneNumber(_conversation.myNumber);
     this.setState(() {
@@ -236,6 +236,13 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                           _softphone,
                           _conversation.contacts[0]));
                 });
+              } else if (chosen == "deleteconversation") {
+                Navigator.pop(context, true);
+                _fusionConnection.conversations.deleteConversation(
+                    _conversation.getId(),
+                    _conversation.number,
+                    _conversation.myNumber,
+                    _selectedGroupId);
               } else {
                 Future.delayed(Duration(milliseconds: 10), () {
                   _openMedia(null);
@@ -246,10 +253,12 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             options: _conversation.contacts.length > 0
                 ? [
                     ["Open Contact Profile", "contactprofile"],
-                    ["Shared Media", "sharedmedia"]
+                    ["Shared Media", "sharedmedia"],
+                    ["Delete Conversation", "deleteconversation"]
                   ]
                 : [
-                    ["Shared Media", "sharedmedia"]
+                    ["Shared Media", "sharedmedia"],
+                    ["Delete Conversation", "deleteconversation"]
                   ],
             label: _conversation.contactName(),
             button: IconButton(
@@ -909,10 +918,27 @@ class _SMSMessageViewState extends State<SMSMessageView> {
       ])));
     }
 
-    return Container(
-        decoration: BoxDecoration(color: Colors.white),
-        margin: EdgeInsets.only(bottom: 18),
-        padding: EdgeInsets.only(left: 16, right: 16),
-        child: Row(children: children));
+    return Dismissible(
+      key: UniqueKey(),
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) {
+        _fusionConnection.messages.deleteMessage(this._message.id);
+      },
+      background: Container(
+        color: crimsonDark,
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Icon(Icons.delete, color: Colors.white),
+          ),
+        ),
+      ),
+      child: Container(
+          decoration: BoxDecoration(color: Colors.white),
+          margin: EdgeInsets.only(bottom: 18),
+          padding: EdgeInsets.only(left: 16, right: 16),
+          child: Row(children: children)),
+    );
   }
 }

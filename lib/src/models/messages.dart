@@ -409,4 +409,10 @@ print(callpopInfo);
       callback(messages, true);
     });
   }
+
+  void deleteMessage(String id) {
+    fusionConnection.apiV1Call("post", "/chat/hide_message", {
+      "message_ids": [id],
+    }, callback:null);
+  }
 }

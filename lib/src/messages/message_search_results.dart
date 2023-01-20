@@ -125,7 +125,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
 
   _messagesList() {
     return _conversations.map((SMSConversation convo) {
-      return SMSConversationSummaryView(_fusionConnection, _softphone, convo, "");
+      return SMSConversationSummaryView(_fusionConnection, _softphone, convo, "","");
     }).toList();
   }
 
