@@ -135,7 +135,7 @@ class CoworkerStore extends FusionStore<Coworker> {
     String url = fusionConnection.settings.avatarForUser(c.uid);
     if (url == fusionConnection.defaultAvatar && c.email != "") {
       try {
-        return Gravatar(c.email).imageUrl(defaultImage: fusionConnection.defaultAvatar); }
+        return Gravatar(c.email).imageUrl(defaultImage: avatarUrl(c.firstName, c.lastName)); }
       catch (e) {
         return url;
       }
