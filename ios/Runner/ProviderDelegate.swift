@@ -130,7 +130,7 @@ print("audiointerruption")
                 // wait until .outgoingProgress to notify dart because the callid
                 // doesn't seem to be available during .OutgoingInit
             } else if (state == .OutgoingProgress) {
-                print("outgoing call info progress here")
+                print("1 outgoing call info progress here")
                 print(call.callLog!)
                 print(call.callLog?.toStr())
                 print(call.callLog!.callId)
@@ -1003,14 +1003,16 @@ print("audiointerruption")
 extension ProviderDelegate: CXProviderDelegate {
     func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {
     print("callkit mute pressed")
-        callkitChannel.invokeMethod("muteButtonPressed", arguments: [action.callUUID.uuidString, action.isMuted])
         action.fulfill()
+        callkitChannel.invokeMethod("muteButtonPressed", arguments: [action.callUUID.uuidString, action.isMuted])
+
     }
     
     func provider(_ provider: CXProvider, perform action: CXPlayDTMFCallAction) {
     print("callkit dtmf pressed")
-        callkitChannel.invokeMethod("dtmfPressed", arguments: [action.callUUID.uuidString, action.digits])
         action.fulfill()
+        callkitChannel.invokeMethod("dtmfPressed", arguments: [action.callUUID.uuidString, action.digits])
+    
     }
     
   func providerDidReset(_ provider: CXProvider) {
@@ -1042,10 +1044,11 @@ extension ProviderDelegate: CXProviderDelegate {
 //    }
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
+      action.fulfill();
       callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
 //      mCore?.configureAudioSession()
 //      configureAudioSession()
-      action.fulfill();
+      
   }
   
     func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
@@ -1066,22 +1069,12 @@ extension ProviderDelegate: CXProviderDelegate {
   func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
       mCore?.activateAudioSession(actived: true)
       return;
-//    https://stackoverflow.com/questions/47416493/callkit-can-reactivate-sound-after-swapping-call
-      //https://bugs.chromium.org/p/webrtc/issues/detail?id=8126
-    print("didactivate here provider audiosession callkit", audioSession)
-print("webrtc workaround didactivate")
-      setAudioAndSpeakerPhone(speakerOn: false)
-      var userInfo: Dictionary<AnyHashable, Any> = [:]
-      userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
-      NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
-                                      object: self, userInfo: userInfo)
-      print("just sent it")
   }
   
   func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
       print("theendcallaction from callkit")
-    callkitChannel.invokeMethod("endButtonPressed", arguments: [action.callUUID.uuidString])
-    action.fulfill()
+      action.fulfill()
+      callkitChannel.invokeMethod("endButtonPressed", arguments: [action.callUUID.uuidString])
     // end call
   }
   
@@ -1107,11 +1100,12 @@ print("webrtc workaround didactivate")
           //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
       }*/
       if (!action.isOnHold) {
-          print("holdbuttonpressed configure audio")
+          print("MyDebugMessage holdbuttonpressed configure audio")
 //          mCore?.configureAudioSession()
       }
-      callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
       action.fulfill()
+      callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
+
   }
   
   func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
