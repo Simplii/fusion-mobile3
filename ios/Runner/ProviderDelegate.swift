@@ -130,7 +130,7 @@ print("audiointerruption")
                 // wait until .outgoingProgress to notify dart because the callid
                 // doesn't seem to be available during .OutgoingInit
             } else if (state == .OutgoingProgress) {
-                print("1 outgoing call info progress here")
+                print("outgoing call info progress here")
                 print(call.callLog!)
                 print(call.callLog?.toStr())
                 print(call.callLog!.callId)
@@ -1005,14 +1005,12 @@ extension ProviderDelegate: CXProviderDelegate {
     print("callkit mute pressed")
         action.fulfill()
         callkitChannel.invokeMethod("muteButtonPressed", arguments: [action.callUUID.uuidString, action.isMuted])
-
     }
     
     func provider(_ provider: CXProvider, perform action: CXPlayDTMFCallAction) {
     print("callkit dtmf pressed")
         action.fulfill()
         callkitChannel.invokeMethod("dtmfPressed", arguments: [action.callUUID.uuidString, action.digits])
-    
     }
     
   func providerDidReset(_ provider: CXProvider) {
@@ -1044,11 +1042,10 @@ extension ProviderDelegate: CXProviderDelegate {
 //    }
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
-      action.fulfill();
       callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
 //      mCore?.configureAudioSession()
 //      configureAudioSession()
-      
+      action.fulfill();
   }
   
     func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
@@ -1100,7 +1097,7 @@ extension ProviderDelegate: CXProviderDelegate {
           //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
       }*/
       if (!action.isOnHold) {
-          print("MyDebugMessage holdbuttonpressed configure audio")
+          print("holdbuttonpressed configure audio")
 //          mCore?.configureAudioSession()
       }
       action.fulfill()
