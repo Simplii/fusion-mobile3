@@ -37,7 +37,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _loadCounter();
+    _loadLastCalledNumber();
   }
 
   void _scrollToEnd() {
@@ -48,7 +48,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
     );
   }
 
-  void _loadCounter() async {
+  void _loadLastCalledNumber() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _lastNumberCalledIsSet = prefs.getString('lastCalledNumber') != null ? true : false;
