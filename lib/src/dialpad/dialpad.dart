@@ -296,7 +296,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 AnimatedOpacity(
-                    opacity: (_lastNumberCalledIsSet || dialedNumber != "") ? 1.0 : 0.66,
+                    opacity: (_lastNumberCalledIsSet || dialedNumber != "") ? 1.0 : 0.5,
                     curve: Curves.easeIn,
                     duration: const Duration(milliseconds: 200),
                     child: GestureDetector(
