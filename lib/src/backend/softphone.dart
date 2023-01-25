@@ -846,8 +846,7 @@ class Softphone implements SipUaHelperListener {
     if (Platform.isAndroid) {
       _callKeep.setCurrentCallActive(_uuidFor(call));
     }
-    call.unmute();
-    call.unhold();
+
     print(call.id);
     print(call.direction);
     print("making active callkit call:" + call.id + ":" + call.direction);
@@ -865,9 +864,12 @@ class Softphone implements SipUaHelperListener {
     for (Call c in calls) {
       if (c.id != call.id) {
         print("setholdonothercall");
-        setHold(c, true, false);
+        setHold(c, true, true);
       }
     }
+
+    call.unmute();
+    setHold(call,false,true);
   }
 
   _setApiIds(call, termId, origId) {
@@ -965,6 +967,7 @@ class Softphone implements SipUaHelperListener {
               .invokeMethod("lpSetHold", [_uuidFor(call), false]);
         }
         print("setholdinvoke");
+        call.unhold();
         _getMethodChannel().invokeMethod("setUnhold", [_uuidFor(call)]);
       }
     } else if (setOnHold) {
@@ -1410,7 +1413,7 @@ class Softphone implements SipUaHelperListener {
       calls.add(call);
       _linkUuidFor(call);
 
-      if (activeCall == null) makeActiveCall(call);
+      if (activeCall == null || call.direction == 'OUTGOING') makeActiveCall(call);
 
       if (call.direction == "INCOMING") {
         _playAudio(_inboundAudioPath, false);
