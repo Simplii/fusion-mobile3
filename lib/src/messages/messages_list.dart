@@ -269,6 +269,7 @@ class _MessagesListState extends State<MessagesList> {
                   child: Row(children: [
                     Container(
                         constraints: BoxConstraints(
+
                             maxWidth: MediaQuery.of(context).size.width - 70),
                         child: Align(
                             alignment: Alignment.topLeft,
@@ -378,14 +379,14 @@ class _SMSConversationSummaryViewState
                   actions: <Widget>[
                     TextButton(
                       style: TextButton.styleFrom(
-                        foregroundColor: crimsonDark,
+                        backgroundColor: crimsonDark,
                       ),
                       onPressed: () => Navigator.of(context).pop(true),
                       child: const Text("DELETE")
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.black,
+                        backgroundColor: Colors.black,
                       ),
                       onPressed: () => Navigator.of(context).pop(false),
                       child: const Text("CANCEL"),

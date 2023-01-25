@@ -210,6 +210,7 @@ class _CallViewState extends State<CallView> {
   }
 
   _changeDefaultOutputDevice() {
+
     List<List<String>> options = Platform.isAndroid
         ? _softphone.devicesList
             .where((element) => element[2] != "Microphone")

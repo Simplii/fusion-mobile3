@@ -104,7 +104,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         _loaded = true;
       });
     });
-
     SMSDepartment department = _fusionConnection.smsDepartments
         .getDepartmentByPhoneNumber(_conversation.myNumber);
     this.setState(() {

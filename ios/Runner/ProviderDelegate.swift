@@ -105,7 +105,6 @@ print("audiointerruption")
     public func setupLinphone() {
         LoggingService.Instance.logLevel = LogLevel.Debug
         let factory = Factory.Instance
-        
         try! mCore = factory.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
         try! mCore?.start()
         sendDevices()
@@ -147,6 +146,26 @@ print("audiointerruption")
                 self.callkitChannel.invokeMethod("lnOutgoingRinging", arguments: [uuid])                // This state will be reached upon reception of the 180 RINGING
             } else if (state == .Connected) {
                 self.callkitChannel.invokeMethod("lnCallConnected", arguments: [uuid])                // When the 200 OK has been received
+                var bluetoothRoutes: [AVAudioSession.Port] = [.bluetoothHFP, .carAudio, .bluetoothA2DP, .bluetoothLE]
+                
+                func bluetoothAudioDevice() -> AVAudioSessionPortDescription? {
+                        return audioDevice(fromTypes: bluetoothRoutes)
+                    }
+
+                func audioDevice(fromTypes types: [AVAudioSession.Port]?) -> AVAudioSessionPortDescription? {
+                        let routes = AVAudioSession.sharedInstance().availableInputs
+                        for route in routes ?? [] {
+                            if types?.contains(route.portType) ?? false {
+                                return route
+                            }
+                        }
+                        return nil
+                    }
+                var isBluetooth = bluetoothAudioDevice()
+                if(isBluetooth != nil){
+//                    self.toggleSpeaker(speakerOn: false, bluetoothOn: true)
+                    self.callkitChannel.invokeMethod("lnCurrentRoute", arguments: [isBluetooth!.portName,isBluetooth!.portType])
+                }
             } else if (state == .StreamsRunning) {
                 print("outoging call info streamsrunning here")
                 print(call.callLog!)
@@ -157,7 +176,6 @@ print("audiointerruption")
                 // or after the ICE negotiation completes
                 // Wait for the call to be connected before allowing a call update
                 self.isCallRunning = true
-                
                 // Only enable toggle camera button if there is more than 1 camera
                 // We check if core.videoDevicesList.size > 2 because of the fake camera with static image created by our SDK (see below)e
                 self.canChangeCamera = core.videoDevicesList.count > 2
@@ -243,7 +261,7 @@ print("audiointerruption")
                 self.loggedIn = false
             }
         })
-
+        sendDevices()
         mCore?.callkitEnabled = true
         mCore?.stunServer = "turn:services.fusioncomm.net"
         mCore?.natPolicy?.turnEnabled = true
@@ -266,6 +284,7 @@ print("audiointerruption")
         print("ringtone")
         print(mCore?.ring)
         print(mCore?.remoteRingbackTone)
+
         sendDevices()
     }
     
@@ -416,7 +435,7 @@ print("audiointerruption")
         isMicrophoneEnabled = !isMicrophoneEnabled
     }
     
-    func toggleSpeaker(speakerOn: Bool) {
+    func toggleSpeaker(speakerOn: Bool, bluetoothOn: Bool) {
         // Get the currently used audio device
         // let currentAudioDevice = mCore?.currentCall?.outputAudioDevice
         // let speakerEnabled = currentAudioDevice?.type == AudioDeviceType.Speaker
@@ -431,7 +450,7 @@ print("audiointerruption")
             // For IOS, the Speaker is an exception, Linphone cannot differentiate Input and Output.
             // This means that the default output device, the earpiece, is paired with the default phone microphone.
             // Setting the output audio device to the microphone will redirect the sound to the earpiece.
-            if (!speakerOn && audioDevice.type == AudioDeviceType.Microphone) {
+            if (!speakerOn && !bluetoothOn && audioDevice.type == AudioDeviceType.Microphone) {
                 mCore!.currentCall?.outputAudioDevice = audioDevice
                 
                 //work around to switch current audio session
@@ -444,14 +463,21 @@ print("audiointerruption")
                 }
                 
                 isSpeakerEnabled = false
+
             } else if (speakerOn && audioDevice.type == AudioDeviceType.Speaker) {
                 mCore?.currentCall?.outputAudioDevice = audioDevice
                 isSpeakerEnabled = true
+            } else if (bluetoothOn && audioDevice.type == AudioDeviceType.Bluetooth) {
+                mCore!.currentCall?.outputAudioDevice = audioDevice
             }
-            /* If we wanted to route the audio to a bluetooth headset
-            else if (audioDevice.type == AudioDevice.Type.Bluetooth) {
-            core.currentCall?.outputAudioDevice = audioDevice
-            }*/
+        }
+    }
+
+    func toggleBluetooth() {
+        for audioDevice in mCore!.audioDevices {
+             if (audioDevice.type == AudioDeviceType.Bluetooth) {
+                 mCore!.currentCall?.outputAudioDevice = audioDevice
+             }
         }
     }
 
@@ -609,8 +635,38 @@ print("audiointerruption")
                     print("error holding/unholding call");
                     print(error);
                     
-                
+
                 }
+                self.sendDevices()
+            }
+            else if (call.method == "lpSetEchoLimiterEnabled") {
+                let args = call.arguments as! [Any]
+                mCore?.echoLimiterEnabled = args[0] as! Bool
+                self.sendDevices()
+            }
+            else if (call.method == "lpSetDefaultInput") {
+                let args = call.arguments as! [Any]
+                let deviceId = args[0] as! String
+                mCore?.extendedAudioDevices.forEach({ device in
+                    if (device.id == deviceId) {
+                        mCore?.defaultInputAudioDevice = device
+                        mCore?.calls.forEach { call in
+                            call.inputAudioDevice = device
+                        }
+                    }
+                })
+            }
+            else if (call.method == "lpSetDefaultOutput") {
+                let args = call.arguments as! [Any]
+                let deviceId = args[0] as! String
+                mCore?.extendedAudioDevices.forEach({ device in
+                    if (device.id == deviceId) {
+                        mCore?.defaultOutputAudioDevice = device
+                        mCore?.calls.forEach { call in
+                            call.outputAudioDevice = device
+                        }
+                    }
+                })
             }
             else if (call.method == "lpSetEchoCancellationEnabled") {
                 let args = call.arguments as! [Any]
@@ -680,12 +736,23 @@ print("audiointerruption")
                 let args = call.arguments as! [Any]
                 do {
                     let speakerOn = args[0] as! Bool
-                    toggleSpeaker(speakerOn: speakerOn)
+                    let bluetoothOn = args[1] as! Bool
+                    toggleSpeaker(speakerOn: speakerOn,bluetoothOn: bluetoothOn)
                 } catch let error as NSError {
                     print("error holding/unholding call");
                     print(error);
                 }
 //                sendDevices()
+            }
+            else if (call.method == "lpSetBluetooth") {
+                do {
+                    toggleBluetooth();
+                } catch let error as NSError {
+                    print("error holding/unholding call");
+                    print(error);
+                }
+//                sendDevices()
+
             }
             else if (call.method == "lpSetBluetooth") {
                 do {

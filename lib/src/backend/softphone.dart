@@ -424,6 +424,7 @@ class Softphone implements SipUaHelperListener {
             args['activeCallOutput'] as String
           ];
           break;
+
         case "setAppVersion":
           args = [json.decode(args)];
           break;
@@ -767,11 +768,11 @@ class Softphone implements SipUaHelperListener {
     UaSettings settings = UaSettings();
 
     settings.webSocketSettings.allowBadCertificate = true;
-    settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
+    settings.webSocketUrl = "ws://services.fusioncomm.net:8080";
 
     if (aor == "9812fm@Simplii1" || aor == "9811fm@Simplii1") {
       print("using test push proxy 9811/9812 detected");
-      settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
+      settings.webSocketUrl = "ws://services.fusioncomm.net:9002";
     }
 
     settings.uri = aor;
@@ -930,6 +931,7 @@ class Softphone implements SipUaHelperListener {
   isRegistered() {
     return helper.registered;
   }
+
 
   setSpeaker(bool useSpeaker) {
     print("lpsetspeaker  $useSpeaker ");
