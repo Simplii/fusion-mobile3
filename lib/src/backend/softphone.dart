@@ -18,6 +18,7 @@ import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:ringtone_player/ringtone_player.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 //import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:flutter_audio_manager/flutter_audio_manager.dart';
@@ -820,6 +821,8 @@ class Softphone implements SipUaHelperListener {
 
   makeCall(String destination) async {
     doMakeCall(destination);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('lastCalledNumber', destination);
   }
 
   doMakeCall(String destination) async {
