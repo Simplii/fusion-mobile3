@@ -1493,10 +1493,9 @@ class Softphone implements SipUaHelperListener {
       CallpopInfo data = getCallpopInfo(call.id);
       List<Coworker> coworkers = _fusionConnection.coworkers.getRecords();
       String ext = call.remote_identity.onlyNumbers();
-      Coworker coworker = coworkers.where((coworker) => coworker.extension == ext).first;
-      
-      if (coworker != null)
-          return coworker;
+      List<Coworker> coworker = coworkers.where((coworker) => coworker.extension == ext).toList();
+      if (coworker.length > 0)
+          return coworker.first;
       else if (data != null) {
         if (data.getName().trim().length > 0)
           return data.getName();
