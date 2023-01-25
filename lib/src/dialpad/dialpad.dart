@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../styles.dart';
 import 'dialpad_key.dart';
 
@@ -32,6 +32,13 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
 
   var dialedNumber = '';
   final _dialEntryController = ScrollController();
+  bool _lastNumberCalledIsSet = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastCalledNumber();
+  }
 
   void _scrollToEnd() {
     _dialEntryController.animateTo(
@@ -39,6 +46,13 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
       duration: Duration(milliseconds: 200),
       curve: Curves.fastOutSlowIn,
     );
+  }
+
+  void _loadLastCalledNumber() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _lastNumberCalledIsSet = prefs.getString('lastCalledNumber') != null ? true : false;
+    });
   }
 
   void handleDialPadKeyPress(String key) {
@@ -282,11 +296,27 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 AnimatedOpacity(
-                    opacity: dialedNumber == "" ? 0.5 : 1.0,
+                    opacity: (_lastNumberCalledIsSet || dialedNumber != "") ? 1.0 : 0.5,
                     curve: Curves.easeIn,
                     duration: const Duration(milliseconds: 200),
                     child: GestureDetector(
-                      onTap: dialedNumber == "" ? () {} : placeCall,
+                      onTap: dialedNumber == ""
+                          ? () async {
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              final String lastDialedNumber =
+                                  prefs.getString('lastCalledNumber');
+                              if (lastDialedNumber != null) {
+                                setState(() {
+                                  dialedNumber = lastDialedNumber;
+                                  if (widget.onQueryChange != null)
+                                    widget.onQueryChange(lastDialedNumber);
+                                });
+                              } else {
+                                print("No number have been called yet");
+                              }
+                            }
+                          : placeCall,
                       child: Container(
                           margin: EdgeInsets.only(top: 12, bottom: 14),
                           decoration: raisedButtonBorder(successGreen,
