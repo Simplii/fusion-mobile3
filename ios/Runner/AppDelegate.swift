@@ -136,27 +136,27 @@ import Firebase
     
     override func applicationDidBecomeActive(_ application: UIApplication) {
         print("did become active");
-        let session = AVAudioSession.sharedInstance()
-        do {
-            // 1) Configure your audio session category, options, and mode
-            // 2) Activate your audio session to enable your custom configuration
-//            try session.setMode(.voiceChat)
-  //          try session.setCategory(.playAndRecord)
-            //try session.setPrefersNoInterruptionsFromSystemAlerts(true)
-            print(session.category)
-            print(session.mode)
-            try session.setActive(true)
-            try session.setCategory(.playAndRecord, options: [.allowBluetooth])
-            print("did set audiosessionactive")
-            if (callkitChannel != nil) {
-                callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
-            }
-        } catch let error as NSError {
-            if (callkitChannel != nil) {
-                callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
-            }
-            print("Unable to activate audiosession:  \(error.localizedDescription)")
-        }
+//        let session = AVAudioSession.sharedInstance()
+//        do {
+//            // 1) Configure your audio session category, options, and mode
+//            // 2) Activate your audio session to enable your custom configuration
+////            try session.setMode(.voiceChat)
+//  //          try session.setCategory(.playAndRecord)
+//            //try session.setPrefersNoInterruptionsFromSystemAlerts(true)
+//            print(session.category)
+//            print(session.mode)
+//            try session.setActive(true)
+//            try session.setCategory(.playAndRecord, options: [.allowBluetooth])
+//            print("did set audiosessionactive")
+//            if (callkitChannel != nil) {
+//                callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
+//            }
+//        } catch let error as NSError {
+//            if (callkitChannel != nil) {
+//                callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
+//            }
+//            print("Unable to activate audiosession:  \(error.localizedDescription)")
+//        }
     }
     
     func setupCallkitFlutterLink() {
