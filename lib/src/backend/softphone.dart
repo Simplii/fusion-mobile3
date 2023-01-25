@@ -96,7 +96,6 @@ class Softphone implements SipUaHelperListener {
   StreamSubscription _btConnectionStatusListener, _btReceivedMessageListener;
   String btConnectionStatus = "NONE";
   String btReceivedMessage;
-
   String appVersion = "";
   // List<BtDevice> devices = [];
   String _savedLogin;
@@ -542,7 +541,6 @@ class Softphone implements SipUaHelperListener {
       case "lnAudioDeviceChanged":
         // this method triggers while in call only, Android/IOS
         if (Platform.isIOS) {
-
           print(["currentRoute lnAudioDeviceChanged", args]);
 
           var bluetoothTypes = [
@@ -597,7 +595,6 @@ class Softphone implements SipUaHelperListener {
         break;
       case "lnAudioDeviceListUpdated":
         if (Platform.isIOS) {
-
           List device = args as List;
           print(["lnAduioDeviceListUpdated", device]);
           if (device.length > 0) {
@@ -637,7 +634,6 @@ class Softphone implements SipUaHelperListener {
         if (Platform.isAndroid) {
           switchToHeadsetWhenConnected(null);
         }
-
         break;
       case "setAppVersion":
         this.appVersion = args[0];
@@ -1014,6 +1010,19 @@ class Softphone implements SipUaHelperListener {
   transfer(Call call, String destination) {
     call.refer(destination);
     _removeCall(call);
+  }
+
+  assistedTransfer(Call call, String destination) {
+    makeCall(destination);
+  }
+
+  completeAssistedTransfer(Call originalCall, Call toCall) {
+    if (originalCall != null && toCall != null) {
+      _getMethodChannel().invokeMethod(
+          "lpAssistedTransfer", [_uuidFor(originalCall), _uuidFor(toCall)]);
+      _removeCall(originalCall);
+      _removeCall(toCall);
+    }
   }
 
   hangUp(Call call) {
@@ -1395,7 +1404,6 @@ class Softphone implements SipUaHelperListener {
           setActiveCallOutputDevice(bluetoothDeviceId);
         }
       } else {
-
         // setCallOutput(call, bluetoothAvailable ? "bluetooth" : "phone");
       }
       calls.add(call);
@@ -1556,7 +1564,6 @@ class Softphone implements SipUaHelperListener {
   }
 
   getHoldState(Call call) {
-
     return (call != null && isCellPhoneCallActive)
         ? isCellPhoneCallActive
         : call.state == CallStateEnum.HOLD;
@@ -1573,7 +1580,6 @@ class Softphone implements SipUaHelperListener {
 
   setCallOutput(Call call, String outputDevice) {
     print("setCallOutput to $outputDevice");
-
 
     if (outputDevice == 'bluetooth') {
       setBluetooth();
