@@ -862,6 +862,15 @@ class Softphone implements SipUaHelperListener {
       }
     }
 
+    if (_getCallDataValue(call.id, "isReported") != true &&
+        call.direction == "INCOMING") {
+      if (Platform.isIOS) {
+        _setCallDataValue(call.id, "isReported", true);
+        _getMethodChannel().invokeMethod("reportAnswerCall",
+            [_uuidFor(call), getCallerNumber(call), getCallerName(call)]);
+      }
+    }
+
     for (Call c in calls) {
       if (c.id != call.id) {
         print("setholdonothercall");
@@ -1031,10 +1040,10 @@ class Softphone implements SipUaHelperListener {
   }
 
   hangUp(Call call) {
+    _removeCall(call);
     try {
       call.hangup();
     } catch (e) {}
-    _removeCall(call);
   }
 
   answerCall(Call call) async {
@@ -1493,10 +1502,13 @@ class Softphone implements SipUaHelperListener {
       CallpopInfo data = getCallpopInfo(call.id);
       List<Coworker> coworkers = _fusionConnection.coworkers.getRecords();
       String ext = call.remote_identity.onlyNumbers();
-      List<Coworker> coworker = coworkers.where((coworker) => coworker.extension == ext).toList();
-      if (coworker.length > 0)
-          return coworker.first;
-      else if (data != null) {
+      List<Coworker> coworker =
+          coworkers.where((coworker) => coworker.extension == ext).toList();
+
+      if (coworker.length > 0) {
+        Coworker _coworker = coworker.first;
+        return "${_coworker.firstName} ${_coworker.lastName}";
+      } else if (data != null) {
         if (data.getName().trim().length > 0)
           return data.getName();
         else
