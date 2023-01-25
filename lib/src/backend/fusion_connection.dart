@@ -73,7 +73,7 @@ class FusionConnection {
   Map<String, bool> received_smses = {};
 
   String serverRoot = "http://fusioncomm.net";
-  String defaultAvatar = "https://fusioncomm.net/img/fa-user.png";
+  String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {
     _getCookies();
@@ -160,7 +160,7 @@ class FusionConnection {
     FirebaseMessaging.instance.getToken().then((token) {
       if (_pushkitToken != null) {
         apiV1Call("delete", "/clients/device_token",
-          {"token":  _pushkitToken});
+          {"token":  _pushkitToken });
       }
       apiV1Call("delete", "/clients/device_token",
           {"token": token, "pn_tok": _pushkitToken}, callback: (data) {

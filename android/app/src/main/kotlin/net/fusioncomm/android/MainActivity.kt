@@ -1,19 +1,20 @@
 package net.fusioncomm.android
 
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.util.JsonWriter
 import android.util.Log
-import android.widget.Toast
 import com.tekartik.sqflite.SqflitePlugin;
 
 import com.google.gson.Gson
-
+import android.telephony.PhoneStateListener
+import android.telephony.TelephonyCallback
+import android.telephony.TelephonyManager
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -28,16 +29,60 @@ import java.security.MessageDigest
 
 class MainActivity : FlutterFragmentActivity() {
     private lateinit var core: Core
-    private lateinit var channel: MethodChannel
+    // private lateinit var channel: MethodChannel
+    // switched it to companion obj to be able to invoke flutter methods from
+    // native boradcastRecivers and services
+    companion object {
+        lateinit var channel: MethodChannel
+    }
     private var username: String = ""
     private var password: String = ""
     private var domain: String = ""
     private var server: String = "mobile-proxy.fusioncomm.net"
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
+    lateinit var volumeReceiver : VolumeReceiver
+    val versionName = BuildConfig.VERSION_NAME
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
         setupCore();
+        setupBroadcastReciver()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        phoneStateListener()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        phoneStateListener()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // terminating call here not reliable, this function sometimes won't fire if
+        // app is closed from recent apps list or killed by android system.
+        // core?.currentCall?.terminate()
+        unregisterReceiver(volumeReceiver)
+    }
+
+    private fun setupBroadcastReciver(){
+        volumeReceiver = VolumeReceiver()
+        val filter = IntentFilter()
+        filter.addAction("android.media.VOLUME_CHANGED_ACTION")
+        registerReceiver(volumeReceiver, filter)
+    }
+
+    private fun startFusionService(){
+        if(!FusionService.serviceStarted){
+            Log.d("fusionService","Start")
+            Intent(this, FusionService::class.java).also { intent ->
+                startService(intent)
+            }
+        } else {
+            Log.d("fusionService","Service running")
+        }
     }
 
     private val coreListener = object : CoreListenerStub() {
@@ -61,12 +106,41 @@ class MainActivity : FlutterFragmentActivity() {
         }
 
         override fun onAudioDeviceChanged(core: Core, audioDevice: AudioDevice) {
-        }
+            // This listner will be triggered when switching audioDevice in call only
+            var newDevice: Array<String> = arrayOf(audioDevice.id, audioDevice.type.name);
 
-        override fun onAudioDevicesListUpdated(core: Core) {
+           if(!newDevice.isNullOrEmpty()){
+
+                var gson = Gson();
+
+                channel.invokeMethod(
+                        "lnAudioDeviceChanged",
+                       mapOf(Pair("audioDevice", gson.toJson(newDevice)),
+                            Pair("activeCallOutput", core.currentCall?.outputAudioDevice?.id),
+                            Pair("defaultMic", core.defaultOutputAudioDevice.id))
+                    );
+           }
+            
+        }
+    
+        override fun onAudioDevicesListUpdated(@NonNull core: Core) {
             // This callback will be triggered when the available devices list has changed,
             // for example after a bluetooth headset has been connected/disconnected.
-            sendDevices()
+            var devicesList: Array<Array<String>> = arrayOf()
+            for (device in core.extendedAudioDevices) {
+                devicesList = devicesList.plus(
+                    arrayOf(device.deviceName, device.id, device.type.name)
+                )
+            }
+
+            var gson = Gson();
+
+            channel.invokeMethod(
+                "lnAudioDeviceListUpdated",
+                mapOf(Pair("devicesList", gson.toJson(devicesList)),
+                    Pair("defaultInput", core.defaultInputAudioDevice.id),
+                    Pair("defaultOutput", core.defaultOutputAudioDevice.id)))
+            // sendDevices()
         }
 
         override fun onCallStateChanged(
@@ -137,6 +211,7 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Connected -> {
+                    startFusionService()
                     channel.invokeMethod(
                         "lnConnected",
                         mapOf(Pair("uuid", uuid))
@@ -244,8 +319,8 @@ class MainActivity : FlutterFragmentActivity() {
             )
         )
         core.natPolicy?.enableTurn(true)
-//        core.enableEchoLimiter(true)
-//        core.enableEchoCancellation(true)
+        core.enableEchoLimiter(true)
+        core.enableEchoCancellation(true)
 
         if (core.hasBuiltinEchoCanceller()) {
             print("Device has built in echo canceler, disabling software echo canceler");
@@ -259,7 +334,7 @@ class MainActivity : FlutterFragmentActivity() {
         core.natPolicy?.stunServer = "services.fusioncomm.net"
         core.remoteRingbackTone = "android.resource://net.fusioncomm.android/" + R.raw.outgoing
         core.ring = "android.resource://net.fusioncomm.android/" + R.raw.inbound;
-
+        core.config.setBool("audio", "android_pause_calls_when_audio_focus_lost", false)
     }
 
     private fun register() {
@@ -309,6 +384,60 @@ class MainActivity : FlutterFragmentActivity() {
         }
         core.start()
         sendDevices()
+        getAppVersion()
+    }
+
+    private fun handleCallStateChange(state: Int){
+        when (state){
+            TelephonyManager.CALL_STATE_OFFHOOK -> {
+                channel.invokeMethod("setPhoneState",
+                    mapOf(Pair("onCellPhoneCall", true)))
+                val calls : Array<Call>? = core?.calls
+                if (calls != null) {
+                    for(call in calls){
+                        call.pause()
+                    }
+                }
+                Log.d("phoneStateListener",
+                    "Busy: At least one call exists that is dialing, active, or on hold, " +
+                            "and no calls are ringing or waiting")
+            }
+            TelephonyManager.CALL_STATE_IDLE ->{
+                channel.invokeMethod("setPhoneState",
+                    mapOf(Pair("onCellPhoneCall", false)))
+                Log.d("phoneStateListener",
+                    "Not Available:: Neither Ringing nor in a Call")
+            }
+            else -> Log.d("phoneStateListener", "callState ${state}")
+        }
+    }
+
+    private fun phoneStateListener() {
+        Log.d("phoneStateListener","starting phone state listener")
+        val telephonyManager: TelephonyManager =
+                getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Log.d("phoneStateListener","android >= 12")
+            telephonyManager.registerTelephonyCallback(
+            mainExecutor,
+            object : TelephonyCallback(), TelephonyCallback.CallStateListener {
+                override fun onCallStateChanged(state: Int) {
+                    handleCallStateChange(state)
+                }
+            })
+        } else {
+            Log.d("phoneStateListener","android < 12")
+            val callStateListener: PhoneStateListener = object : PhoneStateListener() {
+                override fun onCallStateChanged(state: Int, incomingNumber: String?) {
+                    handleCallStateChange(state)
+                }
+            }
+            // stopping old listener
+            telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_NONE)
+            // starting new listener
+            telephonyManager.listen(callStateListener, PhoneStateListener.LISTEN_CALL_STATE)
+        }
     }
 
     private fun sendDevices() {
@@ -317,6 +446,13 @@ class MainActivity : FlutterFragmentActivity() {
             devicesList = devicesList.plus(
                 arrayOf(device.deviceName, device.id, device.type.name)
             )
+            if(device.type == AudioDevice.Type.Microphone && device.id.contains("openSLES")){
+                core.defaultInputAudioDevice = device
+            }
+
+            if(device.type == AudioDevice.Type.Speaker && device.id.contains("openSLES")){
+                core.defaultOutputAudioDevice = device
+            }
         }
 
         var gson = Gson();
@@ -330,6 +466,13 @@ class MainActivity : FlutterFragmentActivity() {
                 Pair("defaultOutput", core.defaultOutputAudioDevice.id)))
     }
 
+    private fun getAppVersion(){
+        var appversion: Array<String> = arrayOf()
+        appversion = appversion.plus(versionName)
+        var gson = Gson();
+        channel.invokeMethod("setAppVersion",  gson.toJson(versionName) )
+    }
+    
     private fun createProxyConfig(
         proxyConfig: ProxyConfig,
         aor: String,
@@ -489,35 +632,65 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                     }
                 }
-                sendDevices()
+//                 sendDevices()
             } else if (call.method == "lpSetDefaultOutput") {
                 var args = call.arguments as List<Any>
                 for (audioDevice in core.extendedAudioDevices) {
-                                        Log.d("setou8tput", "out checking audio device" + audioDevice.id)
+                    Log.d("setou8tput", "out checking audio device" + audioDevice.id)
                     Log.d("output", "out checking against" + args[0])
 
                     if (audioDevice.id == args[0]) {
                         core.defaultOutputAudioDevice = audioDevice;
                         for  (call in core.calls) {
-                                                        Log.d("setinput", "setting the default input for a call")
+                    Log.d("setinput", "setting the default input for a call")
 
                             call.outputAudioDevice = audioDevice
                         }
                     }
                 }
-                sendDevices()
-            } else if (call.method == "lpSetSpeaker") {
+//                 sendDevices()
+            } else if(call.method == "lpSetActiveCallOutput") {
                 var args = call.arguments as List<Any>
-                var enableSpeaker = args[0] as Boolean
 
                 for (audioDevice in core.audioDevices) {
-                    if (!enableSpeaker && audioDevice.type == AudioDevice.Type.Earpiece) {
-                        core.currentCall?.outputAudioDevice = audioDevice
-                    } else if (enableSpeaker && audioDevice.type == AudioDevice.Type.Speaker) {
+                    if (audioDevice.id == args[0]) {
+                        Log.d("lpSetActiveCallOutput", "args" +args[0])
+                        Log.d("lpSetActiveCallOutput", "audio device" +audioDevice.id)
+
                         core.currentCall?.outputAudioDevice = audioDevice
                     }
                 }
-                sendDevices()
+            }
+            else if (call.method == "lpSetSpeaker") {
+                var args = call.arguments as List<Any>
+                var enableSpeaker = args[0] as Boolean
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+
+                Log.d("lpSetActiveCallOutput" , "set speaker")
+                for (audioDevice in core.audioDevices) {
+                    if (!enableSpeaker && audioDevice.type == AudioDevice.Type.Earpiece) {
+                        for  (call in core.calls) {
+                            call.outputAudioDevice = audioDevice
+                        }
+                        audioManager.isSpeakerphoneOn = false
+                    } else if (enableSpeaker && audioDevice.type == AudioDevice.Type.Speaker) {
+                        for  (call in core.calls) {
+                            call.outputAudioDevice = audioDevice
+                        }
+                        audioManager.isSpeakerphoneOn = true
+                    }
+                }
+//                sendDevices()
+            } else if (call.method == "lpSetBluetooth"){
+                for (audioDevice in core.audioDevices) {
+                    if (audioDevice.type == AudioDevice.Type.Bluetooth) {
+                        for  (call in core.calls) {
+                            call.outputAudioDevice = audioDevice
+                        }
+                    }
+                }
+//                sendDevices()
             } else if (call.method == "lpMuteCall") {
                 var args = call.arguments as List<Any>
                 var lpCall = findCallByUuid(args[0] as String)
@@ -545,6 +718,15 @@ class MainActivity : FlutterFragmentActivity() {
                 if (lpCall != null) {
                     lpCall.terminate()
                 }
+            } else if (call.method == "lpAssistedTransfer") {
+                var args = call.arguments as List<Any>
+                var lpCallToTransfer = findCallByUuid(args[0] as String)
+                var activeCall = findCallByUuid(args[1] as String)
+
+                if(lpCallToTransfer != null && activeCall != null){
+                    lpCallToTransfer.transferToAnother(activeCall)
+                }
+
             } else if (call.method == "lpRegister") {
                 var args = call.arguments as List<Any>
                 username = args[0] as String

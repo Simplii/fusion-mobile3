@@ -95,3 +95,17 @@ bool iphoneIsLarge() {
     return false;
   }
 }
+
+Map<String, dynamic> checkDateObj(dynamic dateToCheck) {
+  if (dateToCheck.runtimeType == String) {
+    final date = DateTime.parse(dateToCheck).toLocal();
+    return {"date": date, "timezone": "MST", "timezone_type": 3};
+  } else {
+    return dateToCheck;
+  }
+}
+
+String avatarUrl(String firstName, String lastName) {
+    return "https://fusioncomm.net/api/v2/client/" +
+        "nameAvatar/${firstName}/${lastName}";
+}

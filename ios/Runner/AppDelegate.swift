@@ -62,6 +62,25 @@ import Firebase
     }
     
     override func application(
+        _ application: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        let mainQueue = DispatchQueue.main
+        let voipRegistry: PKPushRegistry = PKPushRegistry(queue: mainQueue)
+        voipRegistry.delegate = self
+        voipRegistry.desiredPushTypes = [PKPushType.voIP]
+        
+        if (voipRegistry.pushToken(for: .voIP) != nil) {
+            let deviceToken: String = voipRegistry.pushToken(for: .voIP)!.map { String(format: "%02x", $0 as CVarArg) }.joined();
+            
+            if (callkitChannel != nil) {
+                callkitChannel.invokeMethod("setPushToken", arguments: [deviceToken]);
+                
+            }
+        }
+    }
+
+    override func application(
       _ application: UIApplication,
       didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
@@ -78,6 +97,14 @@ import Firebase
         let voipRegistry: PKPushRegistry = PKPushRegistry(queue: mainQueue)
         voipRegistry.delegate = self
         voipRegistry.desiredPushTypes = [PKPushType.voIP]
+        
+        if (voipRegistry.pushToken(for: .voIP) != nil) {
+            let deviceToken: String = voipRegistry.pushToken(for: .voIP)!.map { String(format: "%02x", $0 as CVarArg) }.joined();
+            
+            if (callkitChannel != nil) {
+                callkitChannel.invokeMethod("setPushToken", arguments: [deviceToken]);
+            }
+        }
         
         UNUserNotificationCenter.current()
                     .requestAuthorization(options: [.alert, .sound, .badge]) {
@@ -119,6 +146,7 @@ import Firebase
             print(session.category)
             print(session.mode)
             try session.setActive(true)
+            try session.setCategory(.playAndRecord, options: [.allowBluetooth])
             print("did set audiosessionactive")
             if (callkitChannel != nil) {
                 callkitChannel.invokeMethod("setAudioSessionActive", arguments: [true])
@@ -178,6 +206,7 @@ import Firebase
                         didReceiveIncomingPushWith payload: PKPushPayload,
                         for type: PKPushType, completion: @escaping () -> Void) {
         print("didrecproviderpush callkit", payload, payload.dictionaryPayload)
+    
 
         if let uuidString = payload.dictionaryPayload["uuid"] as? String,
           let identifier = payload.dictionaryPayload["caller_name"] as? String,
