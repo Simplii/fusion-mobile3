@@ -1017,34 +1017,27 @@ extension ProviderDelegate: CXProviderDelegate {
     print("provider didreset callkit");
   }
     
-//    func configureAudioSession() {
-//        let session = AVAudioSession.sharedInstance();
-//        do {
-//            try session.setCategory(.playAndRecord,
-//                                    mode: .voiceChat,
-//                                    options: []);
-//        } catch {
-//            print("!!!!error setting audio session");
-//        }
-//
-//        do {
-//            try session.setPreferredSampleRate(44100.0)
-//            try session.setPreferredIOBufferDuration(0.005)
-//        } catch {
-//            print("!!!!!!error setting sample/iobufferduration")
-//        }
-//
-//        do {
-//            try session.setActive(true)
-//        } catch {
-//            print("!!!!!!!!error setting session active")
-//        }
-//    }
+    func configureAudioSession() {
+        
+        let session = AVAudioSession.sharedInstance()
+        do {
+            //try session.setPrefersNoInterruptionsFromSystemAlerts(true)
+            try session.setCategory(.playAndRecord, options: [.allowBluetooth])
+            try session.setMode(.voiceChat)
+            try session.setActive(true)
+            print(session.category)
+            print(session.mode)
+            print("MyDebugMessage AudioSession did activate")
+        } catch let error as NSError {
+            print("MyDebugMessage unable to activate AudioSession:  \(error.localizedDescription)")
+        }
+    }
+    
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
+      configureAudioSession()
       callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
 //      mCore?.configureAudioSession()
-//      configureAudioSession()
       action.fulfill();
   }
   
@@ -1118,7 +1111,7 @@ print("webrtc workaround didactivate")
       print("start call action here callkit")
 //      mCore?.configureAudioSession()
 
-    //  configureAudioSession();
+      configureAudioSession();
       callkitChannel.invokeMethod("startCall", arguments: [action.callUUID.uuidString, action.handle.value, action.contactIdentifier])
     action.fulfill()
   }
