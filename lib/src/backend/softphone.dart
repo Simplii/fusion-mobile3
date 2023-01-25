@@ -18,6 +18,7 @@ import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:ringtone_player/ringtone_player.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 //import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:flutter_audio_manager/flutter_audio_manager.dart';
@@ -821,6 +822,8 @@ class Softphone implements SipUaHelperListener {
 
   makeCall(String destination) async {
     doMakeCall(destination);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('lastCalledNumber', destination);
   }
 
   doMakeCall(String destination) async {
@@ -844,8 +847,7 @@ class Softphone implements SipUaHelperListener {
     if (Platform.isAndroid) {
       _callKeep.setCurrentCallActive(_uuidFor(call));
     }
-    call.unmute();
-    call.unhold();
+
     print(call.id);
     print(call.direction);
     print("making active callkit call:" + call.id + ":" + call.direction);
@@ -863,9 +865,12 @@ class Softphone implements SipUaHelperListener {
     for (Call c in calls) {
       if (c.id != call.id) {
         print("setholdonothercall");
-        setHold(c, true, false);
+        setHold(c, true, true);
       }
     }
+
+    call.unmute();
+    setHold(call,false,true);
   }
 
   _setApiIds(call, termId, origId) {
@@ -964,6 +969,7 @@ class Softphone implements SipUaHelperListener {
               .invokeMethod("lpSetHold", [_uuidFor(call), false]);
         }
         print("setholdinvoke");
+        call.unhold();
         _getMethodChannel().invokeMethod("setUnhold", [_uuidFor(call)]);
       }
     } else if (setOnHold) {
@@ -1409,7 +1415,7 @@ class Softphone implements SipUaHelperListener {
       calls.add(call);
       _linkUuidFor(call);
 
-      if (activeCall == null) makeActiveCall(call);
+      if (activeCall == null || call.direction == 'OUTGOING') makeActiveCall(call);
 
       if (call.direction == "INCOMING") {
         _playAudio(_inboundAudioPath, false);
