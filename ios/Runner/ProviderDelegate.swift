@@ -779,6 +779,7 @@ print("audiointerruption")
 
                 let endCallAction = CXEndCallAction(call: UUID(uuidString: uuid)!)
                 let transaction = CXTransaction(action: endCallAction)
+                terminateCall(uuid: uuid)
                 self.requestTransaction(transaction)
 
             } else if (call.method == "attemptAudioSessionActiveRingtone") {
@@ -887,9 +888,10 @@ print("audiointerruption")
                 setAudioAndSpeakerPhone(speakerOn: speakerOn)
             }
             else if (call.method == "answerCall") {
-                print("answer call callkit")
+                
                 let args = call.arguments as! [Any]
                 let uuid = args[0] as! String
+                print("MyDebugMessage answer call callkit")
                 let answerAction = CXAnswerCallAction(call:  UUID(uuidString: uuid)!)
                 let transaction = CXTransaction(action: answerAction)
                 self.requestTransaction(transaction)
@@ -1039,6 +1041,11 @@ extension ProviderDelegate: CXProviderDelegate {
       callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
 //      mCore?.configureAudioSession()
       action.fulfill();
+      print("MyDebugMessage report answerCall")
+      callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
+
+//      configureAudioSession()
+
   }
   
     func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
