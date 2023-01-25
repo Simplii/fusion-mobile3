@@ -35,7 +35,11 @@ packages:
       name: audio_session
       url: "https://pub.dartlang.org"
     source: hosted
+<<<<<<< HEAD
+    version: "0.1.13"
+=======
     version: "0.1.11"
+>>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   audioplayers:
     dependency: "direct main"
     description:
@@ -49,7 +53,11 @@ packages:
       name: awesome_notifications
       url: "https://pub.dartlang.org"
     source: hosted
+<<<<<<< HEAD
+    version: "0.7.3"
+=======
     version: "0.7.4+1"
+>>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   boolean_selector:
     dependency: transitive
     description:
@@ -126,7 +134,11 @@ packages:
       name: dart_webrtc
       url: "https://pub.dartlang.org"
     source: hosted
+<<<<<<< HEAD
+    version: "1.0.12"
+=======
     version: "1.0.11"
+>>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   dbus:
     dependency: transitive
     description:
@@ -360,7 +372,11 @@ packages:
       name: flutter_webrtc
       url: "https://pub.dartlang.org"
     source: hosted
+<<<<<<< HEAD
+    version: "0.9.19"
+=======
     version: "0.9.16"
+>>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   html:
     dependency: transitive
     description:
@@ -395,7 +411,7 @@ packages:
       name: image_picker_android
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.8.5+3"
+    version: "0.8.5+4"
   image_picker_for_web:
     dependency: transitive
     description:
@@ -409,7 +425,7 @@ packages:
       name: image_picker_ios
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.8.6+1"
+    version: "0.8.6+5"
   image_picker_platform_interface:
     dependency: transitive
     description:
@@ -437,7 +453,11 @@ packages:
       name: just_audio
       url: "https://pub.dartlang.org"
     source: hosted
+<<<<<<< HEAD
+    version: "0.9.31"
+=======
     version: "0.9.30"
+>>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   just_audio_platform_interface:
     dependency: transitive
     description:
@@ -584,7 +604,7 @@ packages:
       name: path_provider_macos
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.6"
+    version: "2.0.7"
   path_provider_platform_interface:
     dependency: transitive
     description:
@@ -634,6 +654,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.1.0"
+  platform_detect:
+    dependency: transitive
+    description:
+      name: platform_detect
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.7"
   plugin_platform_interface:
     dependency: transitive
     description:
@@ -648,6 +675,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.2.4"
+  pub_semver:
+    dependency: transitive
+    description:
+      name: pub_semver
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.1.2"
   random_string:
     dependency: transitive
     description:
@@ -689,7 +723,7 @@ packages:
       name: shared_preferences
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.15"
+    version: "2.0.16"
   shared_preferences_android:
     dependency: transitive
     description:
@@ -697,10 +731,14 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.14"
+<<<<<<< HEAD
+  shared_preferences_foundation:
+=======
   shared_preferences_ios:
+>>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
     dependency: transitive
     description:
-      name: shared_preferences_ios
+      name: shared_preferences_foundation
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.1"
@@ -710,14 +748,7 @@ packages:
       name: shared_preferences_linux
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.1.1"
-  shared_preferences_macos:
-    dependency: transitive
-    description:
-      name: shared_preferences_macos
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.4"
+    version: "2.1.2"
   shared_preferences_platform_interface:
     dependency: transitive
     description:
@@ -738,7 +769,7 @@ packages:
       name: shared_preferences_windows
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.1.1"
+    version: "2.1.2"
   sip_ua:
     dependency: "direct main"
     description:
@@ -918,42 +949,46 @@ packages:
       name: video_player
       url: "https://pub.dartlang.org"
     source: hosted
+<<<<<<< HEAD
+    version: "2.4.10"
+=======
     version: "2.4.8"
+>>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   video_player_android:
     dependency: transitive
     description:
       name: video_player_android
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.3.9"
+    version: "2.3.10"
   video_player_avfoundation:
     dependency: transitive
     description:
       name: video_player_avfoundation
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.3.7"
+    version: "2.3.8"
   video_player_platform_interface:
     dependency: transitive
     description:
       name: video_player_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "5.1.4"
+    version: "6.0.1"
   video_player_web:
     dependency: transitive
     description:
       name: video_player_web
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.12"
+    version: "2.0.13"
   web_socket_channel:
     dependency: "direct main"
     description:
       name: web_socket_channel
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   webrtc_interface:
     dependency: transitive
     description:
@@ -981,7 +1016,7 @@ packages:
       name: xdg_directories
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.0+2"
+    version: "0.2.0+3"
   xml:
     dependency: transitive
     description:

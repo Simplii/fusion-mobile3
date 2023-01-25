@@ -25,6 +25,7 @@ class FusionService: Service() {
     }
     override fun onTaskRemoved(rootIntent: Intent?) {
         Log.d("fusionService","onTaskRemoved called")
+
         val calls : Array<Call> = CoreManager.instance().core.calls
         if(calls.isNotEmpty()){
             for(call in calls){
