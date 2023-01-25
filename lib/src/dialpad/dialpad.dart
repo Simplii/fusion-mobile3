@@ -6,7 +6,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
-
+import 'package:fusion_mobile_revamped/src/utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../styles.dart';
 import 'dialpad_key.dart';
 
@@ -31,13 +32,27 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
 
   var dialedNumber = '';
   final _dialEntryController = ScrollController();
+  bool _lastNumberCalledIsSet = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastCalledNumber();
+  }
 
   void _scrollToEnd() {
     _dialEntryController.animateTo(
       _dialEntryController.position.maxScrollExtent,
-      duration: Duration(milliseconds:200 ),
+      duration: Duration(milliseconds: 200),
       curve: Curves.fastOutSlowIn,
     );
+  }
+
+  void _loadLastCalledNumber() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _lastNumberCalledIsSet = prefs.getString('lastCalledNumber') != null ? true : false;
+    });
   }
 
   void handleDialPadKeyPress(String key) {
@@ -53,9 +68,12 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
   void pasteNumber() async {
     ClipboardData data = await Clipboard.getData(Clipboard.kTextPlain);
     if (data == null) return;
-
+    String pastedNumber = data.text.onlyNumbers();
+    if (pastedNumber.length > 10 && pastedNumber.startsWith("1", 0)) {
+      pastedNumber = pastedNumber.substring(1);
+    }
     setState(() {
-      dialedNumber = data.text;
+      dialedNumber = pastedNumber;
       if (widget.onQueryChange != null) widget.onQueryChange(dialedNumber);
     });
   }
@@ -99,9 +117,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
     final TextPainter textPainter = TextPainter(
       text: TextSpan(
           text: dialedNumber,
-          style: TextStyle(
-              fontSize: 36 * scaleFactor,
-              color: Colors.white)),
+          style: TextStyle(fontSize: 32 * scaleFactor, color: Colors.white)),
       textDirection: TextDirection.ltr,
       maxLines: 1,
     )..layout(minWidth: 0, maxWidth: double.infinity);
@@ -154,7 +170,8 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                                 width: 22,
                                                 height: 16))))),
                             Container(
-                                height: 40 * MediaQuery.of(context).textScaleFactor,
+                                height:
+                                    40 * MediaQuery.of(context).textScaleFactor,
                                 alignment: Alignment.topCenter,
                                 width: MediaQuery.of(context).size.width - 122,
                                 child: ListView(
@@ -163,39 +180,34 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                     children: [
                                       Container(
                                           alignment: Alignment.topCenter,
-                                          width: max(MediaQuery.of(context)
-                                                  .size
-                                                  .width -
-                                              122,
-                                          textWidth.toDouble()),
+                                          width: max(
+                                              MediaQuery.of(context)
+                                                      .size
+                                                      .width -
+                                                  122,
+                                              textWidth.toDouble()),
                                           child: Text(dialedNumber,
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
                                                   fontSize: 36,
                                                   color: Colors.white)))
                                     ])),
-
                             if (dialedNumber != '')
-                              GestureDetector(
-                                  onTap: removeLastDigit,
-                                  child: Opacity(
-                                      opacity: 0.66,
-                                      child: Container(
-                                          decoration: clearBg(),
-                                          height: 42,
-                                          padding: EdgeInsets.only(
-                                              top: 10,
-                                              bottom: 10,
-                                              left: 20,
-                                              right: 0),
-                                          width: 46,
-                                          child: Container(
-                                              width: 20,
-                                              height: 16,
-                                              child: Image.asset(
-                                                  "assets/icons/call_view/backspace.png",
-                                                  width: 20,
-                                                  height: 16)))))
+                              SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: TextButton(
+                                    style: TextButton.styleFrom(
+                                        shape: CircleBorder(),
+                                        padding: EdgeInsets.all(5)),
+                                    onPressed: removeLastDigit,
+                                    child: Opacity(
+                                        opacity: 0.66,
+                                        child: Image.asset(
+                                            "assets/icons/call_view/backspace.png",
+                                            width: 26,
+                                            height: 22))),
+                              )
                           ],
                         ),
                       ),
@@ -284,11 +296,27 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 AnimatedOpacity(
-                    opacity: dialedNumber == "" ? 0.5 : 1.0,
+                    opacity: (_lastNumberCalledIsSet || dialedNumber != "") ? 1.0 : 0.5,
                     curve: Curves.easeIn,
                     duration: const Duration(milliseconds: 200),
                     child: GestureDetector(
-                      onTap: dialedNumber == "" ? () {} : placeCall,
+                      onTap: dialedNumber == ""
+                          ? () async {
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              final String lastDialedNumber =
+                                  prefs.getString('lastCalledNumber');
+                              if (lastDialedNumber != null) {
+                                setState(() {
+                                  dialedNumber = lastDialedNumber;
+                                  if (widget.onQueryChange != null)
+                                    widget.onQueryChange(lastDialedNumber);
+                                });
+                              } else {
+                                print("No number have been called yet");
+                              }
+                            }
+                          : placeCall,
                       child: Container(
                           margin: EdgeInsets.only(top: 12, bottom: 14),
                           decoration: raisedButtonBorder(successGreen,
@@ -307,7 +335,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                   "assets/icons/call_view/phone_answer.png",
                                   width: 24,
                                   height: 24))),
-                    )),
+                    ))
               ],
             )
           ],
