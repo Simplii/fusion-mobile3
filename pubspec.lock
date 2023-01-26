@@ -35,11 +35,7 @@ packages:
       name: audio_session
       url: "https://pub.dartlang.org"
     source: hosted
-<<<<<<< HEAD
     version: "0.1.13"
-=======
-    version: "0.1.11"
->>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   audioplayers:
     dependency: "direct main"
     description:
@@ -53,11 +49,7 @@ packages:
       name: awesome_notifications
       url: "https://pub.dartlang.org"
     source: hosted
-<<<<<<< HEAD
-    version: "0.7.3"
-=======
     version: "0.7.4+1"
->>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   boolean_selector:
     dependency: transitive
     description:
@@ -134,11 +126,7 @@ packages:
       name: dart_webrtc
       url: "https://pub.dartlang.org"
     source: hosted
-<<<<<<< HEAD
     version: "1.0.12"
-=======
-    version: "1.0.11"
->>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   dbus:
     dependency: transitive
     description:
@@ -372,11 +360,7 @@ packages:
       name: flutter_webrtc
       url: "https://pub.dartlang.org"
     source: hosted
-<<<<<<< HEAD
     version: "0.9.19"
-=======
-    version: "0.9.16"
->>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   html:
     dependency: transitive
     description:
@@ -453,11 +437,7 @@ packages:
       name: just_audio
       url: "https://pub.dartlang.org"
     source: hosted
-<<<<<<< HEAD
     version: "0.9.31"
-=======
-    version: "0.9.30"
->>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   just_audio_platform_interface:
     dependency: transitive
     description:
@@ -731,11 +711,7 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.14"
-<<<<<<< HEAD
   shared_preferences_foundation:
-=======
-  shared_preferences_ios:
->>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
     dependency: transitive
     description:
       name: shared_preferences_foundation
@@ -949,11 +925,7 @@ packages:
       name: video_player
       url: "https://pub.dartlang.org"
     source: hosted
-<<<<<<< HEAD
     version: "2.4.10"
-=======
-    version: "2.4.8"
->>>>>>> 2c3d13339805d0a1071b690a8098d9284acdefb5
   video_player_android:
     dependency: transitive
     description:
