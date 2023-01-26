@@ -1031,10 +1031,10 @@ class Softphone implements SipUaHelperListener {
   }
 
   hangUp(Call call) {
-    _removeCall(call);
     try {
       call.hangup();
     } catch (e) {}
+    _removeCall(call);
   }
 
   answerCall(Call call) async {
