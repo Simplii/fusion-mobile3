@@ -862,15 +862,6 @@ class Softphone implements SipUaHelperListener {
       }
     }
 
-    if (_getCallDataValue(call.id, "isReported") != true &&
-        call.direction == "INCOMING") {
-      if (Platform.isIOS) {
-        _setCallDataValue(call.id, "isReported", true);
-        _getMethodChannel().invokeMethod("reportAnswerCall",
-            [_uuidFor(call), getCallerNumber(call), getCallerName(call)]);
-      }
-    }
-
     for (Call c in calls) {
       if (c.id != call.id) {
         print("setholdonothercall");
