@@ -23,6 +23,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:flutter_audio_manager/flutter_audio_manager.dart';
 import '../../main.dart';
+import '../models/coworkers.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
 import 'package:flutter_incall_manager/flutter_incall_manager.dart';
@@ -1492,7 +1493,15 @@ class Softphone implements SipUaHelperListener {
   getCallerName(Call call) {
     if (call != null) {
       CallpopInfo data = getCallpopInfo(call.id);
-      if (data != null) {
+      List<Coworker> coworkers = _fusionConnection.coworkers.getRecords();
+      String ext = call.remote_identity.onlyNumbers();
+      List<Coworker> coworker =
+          coworkers.where((coworker) => coworker.extension == ext).toList();
+
+      if (coworker.length > 0) {
+        Coworker _coworker = coworker.first;
+        return "${_coworker.firstName} ${_coworker.lastName}";
+      } else if (data != null) {
         if (data.getName().trim().length > 0)
           return data.getName();
         else
