@@ -481,14 +481,6 @@ print("audiointerruption")
         }
     }
 
-    func toggleBluetooth() {
-        for audioDevice in mCore!.audioDevices {
-             if (audioDevice.type == AudioDeviceType.Bluetooth) {
-                 mCore!.currentCall?.outputAudioDevice = audioDevice
-             }
-        }
-    }
-
     @objc func handleRouteChange(notification: Notification) {
         let currentRoute: [AVAudioSessionPortDescription] = AVAudioSession.sharedInstance().currentRoute.outputs
         if(!currentRoute.isEmpty){
