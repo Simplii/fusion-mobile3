@@ -779,7 +779,7 @@ print("audiointerruption")
 
                 let endCallAction = CXEndCallAction(call: UUID(uuidString: uuid)!)
                 let transaction = CXTransaction(action: endCallAction)
-                terminateCall(uuid: uuid)
+
                 self.requestTransaction(transaction)
 
             } else if (call.method == "attemptAudioSessionActiveRingtone") {
