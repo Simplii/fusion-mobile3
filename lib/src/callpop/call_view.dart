@@ -588,26 +588,26 @@ class _CallViewState extends State<CallView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            if (Platform.isIOS && isIncoming && isRinging)
-                              CallActionButtons(
-                                  actions: actions,
-                                  isRinging: isRinging,
-                                  isIncoming: isIncoming,
-                                  dialPadOpen: dialpadVisible,
-                                  resumeDisabled:
-                                      _softphone.isCellPhoneCallActive,
-                                  isOnConference:
-                                      _softphone.isCallMerged(_activeCall),
-                                  setDialpad: (bool isOpen) {
-                                    setState(() {
-                                      dialpadVisible = isOpen;
-                                    });
-                                  },
-                                  callIsRecording:
-                                      _softphone.getRecordState(_activeCall),
-                                  callIsMuted: _softphone.getMuted(_activeCall),
-                                  callOnHold:
-                                      _softphone.getHoldState(_activeCall)),
+                            // if (Platform.isIOS && isIncoming && isRinging)
+                            //   CallActionButtons(
+                            //       actions: actions,
+                            //       isRinging: isRinging,
+                            //       isIncoming: isIncoming,
+                            //       dialPadOpen: dialpadVisible,
+                            //       resumeDisabled:
+                            //           _softphone.isCellPhoneCallActive,
+                            //       isOnConference:
+                            //           _softphone.isCallMerged(_activeCall),
+                            //       setDialpad: (bool isOpen) {
+                            //         setState(() {
+                            //           dialpadVisible = isOpen;
+                            //         });
+                            //       },
+                            //       callIsRecording:
+                            //           _softphone.getRecordState(_activeCall),
+                            //       callIsMuted: _softphone.getMuted(_activeCall),
+                            //       callOnHold:
+                            //           _softphone.getHoldState(_activeCall)),
                             CallHeaderDetails(
                                 callerName: callerName,
                                 companyName: companyName,
