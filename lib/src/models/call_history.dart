@@ -24,6 +24,8 @@ class CallHistory extends FusionModel {
   String callerId;
 
   isInternal(String domain) {
+     //getting X1012wp in inbound breaks the recent call list
+    print("MyDebugMessage ${to}");
     if (direction == 'inbound')
       return to.substring(to.length - domain.length)
           .toLowerCase() == domain.toLowerCase();
