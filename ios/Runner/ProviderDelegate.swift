@@ -1084,34 +1084,26 @@ extension ProviderDelegate: CXProviderDelegate {
     print("provider didreset callkit");
   }
     
-//    func configureAudioSession() {
-//        let session = AVAudioSession.sharedInstance();
-//        do {
-//            try session.setCategory(.playAndRecord,
-//                                    mode: .voiceChat,
-//                                    options: []);
-//        } catch {
-//            print("!!!!error setting audio session");
-//        }
-//
-//        do {
-//            try session.setPreferredSampleRate(44100.0)
-//            try session.setPreferredIOBufferDuration(0.005)
-//        } catch {
-//            print("!!!!!!error setting sample/iobufferduration")
-//        }
-//
-//        do {
-//            try session.setActive(true)
-//        } catch {
-//            print("!!!!!!!!error setting session active")
-//        }
-//    }
+    func configureAudioSession() {
+        
+        let session = AVAudioSession.sharedInstance()
+        do {
+            //try session.setPrefersNoInterruptionsFromSystemAlerts(true)
+            try session.setCategory(.playAndRecord, options: [.allowBluetooth])
+            try session.setMode(.voiceChat)
+            try session.setActive(true)
+            print(session.category)
+            print(session.mode)
+            print("AudioSession did activate")
+        } catch let error as NSError {
+            print("unable to activate AudioSession:  \(error.localizedDescription)")
+        }
+    }
+    
   
   func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
+      configureAudioSession()
       callkitChannel.invokeMethod("answerButtonPressed", arguments: [action.callUUID.uuidString]);
-//      mCore?.configureAudioSession()
-//      configureAudioSession()
       action.fulfill();
   }
   
@@ -1143,29 +1135,8 @@ extension ProviderDelegate: CXProviderDelegate {
   }
   
   func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
-/*      let session = AVAudioSession.sharedInstance()
-      do {
-          print("going to set active audio session")
-          print(!action.isOnHold)
-         /* try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.interruptSpokenAudioAndMixWithOthers])
-          try session.overrideOutputAudioPort(.speaker)
-              print("settingitactive")*/
-          if (!action.isOnHold) {
-              try session.setActive(!action.isOnHold)
-              var userInfo: Dictionary<AnyHashable, Any> = [:]
-              userInfo[AVAudioSessionInterruptionTypeKey] = AVAudioSession.InterruptionType.ended.rawValue
-              NotificationCenter.default.post(name: AVAudioSession.interruptionNotification,
-                                              object: self, userInfo: userInfo)
-              print("just sent it")
-          }
-          print("setaudiosession active")
-
-      } catch (let error) {print("adioerror");print(error)
-          //  callkitChannel.invokeMethod("setAudioSessionActive", arguments: [false])
-      }*/
       if (!action.isOnHold) {
           print("holdbuttonpressed configure audio")
-//          mCore?.configureAudioSession()
       }
       action.fulfill()
       callkitChannel.invokeMethod("holdButtonPressed", arguments: [action.callUUID.uuidString, action.isOnHold])
@@ -1174,11 +1145,9 @@ extension ProviderDelegate: CXProviderDelegate {
   
   func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
       print("start call action here callkit")
-//      mCore?.configureAudioSession()
-
-    //  configureAudioSession();
+      configureAudioSession();
       callkitChannel.invokeMethod("startCall", arguments: [action.callUUID.uuidString, action.handle.value, action.contactIdentifier])
-    action.fulfill()
+      action.fulfill()
   }
     
     func uuidFromString(str: String) -> UUID {
