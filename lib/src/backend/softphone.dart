@@ -768,11 +768,11 @@ class Softphone implements SipUaHelperListener {
     UaSettings settings = UaSettings();
 
     settings.webSocketSettings.allowBadCertificate = true;
-    settings.webSocketUrl = "ws://services.fusioncomm.net:8080";
+    settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:8080";
 
     if (aor == "9812fm@Simplii1" || aor == "9811fm@Simplii1") {
       print("using test push proxy 9811/9812 detected");
-      settings.webSocketUrl = "ws://services.fusioncomm.net:9002";
+      settings.webSocketUrl = "ws://mobile-proxy.fusioncomm.net:9002";
     }
 
     settings.uri = aor;
@@ -789,9 +789,9 @@ class Softphone implements SipUaHelperListener {
     }
     settings.iceServers = [
 //      {"urls": "stun:stun.l.google.com:19302"},
-      {"urls": "stun:services.fusioncomm.net:3478"},
+      {"urls": "stun:mobile-proxy.fusioncomm.net:3478"},
       {
-        "urls": "turn:services.fusioncomm.net:3478",
+        "urls": "turn:mobile-proxy.fusioncomm.net:3478",
         "username": "fuser",
         "credential": "fpassword"
       }
