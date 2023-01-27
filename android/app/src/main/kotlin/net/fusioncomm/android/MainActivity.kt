@@ -38,7 +38,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var username: String = ""
     private var password: String = ""
     private var domain: String = ""
-    private var server: String = "services.fusioncomm.net"
+    private var server: String = "mobile-proxy.fusioncomm.net"
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
     lateinit var volumeReceiver : VolumeReceiver
     val versionName = BuildConfig.VERSION_NAME
@@ -311,7 +311,7 @@ class MainActivity : FlutterFragmentActivity() {
         factory.setDebugMode(true, "Hello fusion")
         core = factory.createCore(null, null, this)
         core.enableIpv6(false)
-        core.stunServer = "turn:services.fusioncomm.net"
+        core.stunServer = "turn:mobile-proxy.fusioncomm.net"
         core.natPolicy?.stunServerUsername = "fuser"
         core.addAuthInfo(
             factory.createAuthInfo(
@@ -331,7 +331,7 @@ class MainActivity : FlutterFragmentActivity() {
             core.enableEchoCancellation(true);
         }
 
-        core.natPolicy?.stunServer = "services.fusioncomm.net"
+        core.natPolicy?.stunServer = "mobile-proxy.fusioncomm.net"
         core.remoteRingbackTone = "android.resource://net.fusioncomm.android/" + R.raw.outgoing
         core.ring = "android.resource://net.fusioncomm.android/" + R.raw.inbound;
         core.config.setBool("audio", "android_pause_calls_when_audio_focus_lost", false)
@@ -345,7 +345,7 @@ class MainActivity : FlutterFragmentActivity() {
         val identity = Factory.instance().createAddress("sip:$username@$domain")
         accountParams.identityAddress = identity
 
-        val address = Factory.instance().createAddress("sip:services.fusioncomm.net:5060")
+        val address = Factory.instance().createAddress("sip:mobile-proxy.fusioncomm.net:5060")
         address?.transport = transportType
         accountParams.serverAddress = address
         accountParams.registerEnabled = true
@@ -480,8 +480,8 @@ class MainActivity : FlutterFragmentActivity() {
     ): ProxyConfig {
         var address = core.createAddress(aor)
         proxyConfig.identityAddress = address
-        proxyConfig.serverAddr = "<sip:services.fusioncomm.net:5060;transport=tcp>"
-        proxyConfig.setRoute("<sip:services.fusioncomm.net:5060;transport=tcp>")
+        proxyConfig.serverAddr = "<sip:mobile-proxy.fusioncomm.net:5060;transport=tcp>"
+        proxyConfig.setRoute("<sip:mobile-proxy.fusioncomm.net:5060;transport=tcp>")
         proxyConfig.realm = authInfo.realm
         proxyConfig.enableRegister(true)
         proxyConfig.avpfMode = AVPFMode.Disabled
