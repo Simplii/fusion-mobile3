@@ -1,8 +1,10 @@
 package net.fusioncomm.android
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
@@ -17,6 +19,8 @@ import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -38,7 +42,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var username: String = ""
     private var password: String = ""
     private var domain: String = ""
-    private var server: String = "services.fusioncomm.net"
+    private var server: String = "mobile-proxy.fusioncomm.net"
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
     lateinit var volumeReceiver : VolumeReceiver
     val versionName = BuildConfig.VERSION_NAME
@@ -345,7 +349,7 @@ class MainActivity : FlutterFragmentActivity() {
         val identity = Factory.instance().createAddress("sip:$username@$domain")
         accountParams.identityAddress = identity
 
-        val address = Factory.instance().createAddress("sip:services.fusioncomm.net:5060")
+        val address = Factory.instance().createAddress("sip:${server}:5060")
         address?.transport = transportType
         accountParams.serverAddress = address
         accountParams.registerEnabled = true
@@ -414,20 +418,28 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun phoneStateListener() {
         Log.d("phoneStateListener","starting phone state listener")
-        val telephonyManager: TelephonyManager =
-                getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Log.d("phoneStateListener","android >= 12")
-            telephonyManager.registerTelephonyCallback(
-            mainExecutor,
-            object : TelephonyCallback(), TelephonyCallback.CallStateListener {
-                override fun onCallStateChanged(state: Int) {
-                    handleCallStateChange(state)
-                }
-            })
+            
+            val permission = ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.READ_PHONE_STATE)
+
+            if (permission == PackageManager.PERMISSION_GRANTED){
+                val telephonyManager: TelephonyManager =
+                        getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+                telephonyManager.registerTelephonyCallback(
+                        mainExecutor,
+                        object : TelephonyCallback(), TelephonyCallback.CallStateListener {
+                            override fun onCallStateChanged(state: Int) {
+                                handleCallStateChange(state)
+                            }
+                        })
+            }
+
         } else {
             Log.d("phoneStateListener","android < 12")
+            val telephonyManager: TelephonyManager =
+                    getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
             val callStateListener: PhoneStateListener = object : PhoneStateListener() {
                 override fun onCallStateChanged(state: Int, incomingNumber: String?) {
                     handleCallStateChange(state)
@@ -480,8 +492,8 @@ class MainActivity : FlutterFragmentActivity() {
     ): ProxyConfig {
         var address = core.createAddress(aor)
         proxyConfig.identityAddress = address
-        proxyConfig.serverAddr = "<sip:services.fusioncomm.net:5060;transport=tcp>"
-        proxyConfig.setRoute("<sip:services.fusioncomm.net:5060;transport=tcp>")
+        proxyConfig.serverAddr = "<sip:${server}:5060;transport=tcp>"
+        proxyConfig.setRoute("<sip:${server}:5060;transport=tcp>")
         proxyConfig.realm = authInfo.realm
         proxyConfig.enableRegister(true)
         proxyConfig.avpfMode = AVPFMode.Disabled
