@@ -818,8 +818,9 @@ class _SMSMessageViewState extends State<SMSMessageView> {
   }
 
   _deleteMessage(SMSMessage message){
+    if(widget._deleteMessage == null) return;
     if(_messages.length == 1)
-      widget._deleteMessage(_conversation,null,);
+      widget._deleteMessage(_conversation,null);
     else if(_messages.reversed.last.id == message.id)
       widget._deleteMessage(_conversation,_messages.reversed.elementAt(_messages.length - 2));
     
