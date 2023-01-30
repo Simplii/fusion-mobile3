@@ -454,7 +454,7 @@ class _SMSConversationSummaryViewState
                                                       _departmentName
                                                   : "") +
                                               " \u2014 " +
-                                              _convo.message?.message ?? '',
+                                              _convo.message.message,
                                           style: smallTextStyle,
                                           maxLines: 2,
                                           softWrap: true,

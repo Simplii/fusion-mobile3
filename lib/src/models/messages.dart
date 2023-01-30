@@ -411,13 +411,12 @@ print(callpopInfo);
     });
   }
 
-  void deleteMessage(String id) async {
+  void deleteMessage(String id) {
     this.removeRecord(id);
-    await fusionConnection.db.delete('sms_message',
+    fusionConnection.db.delete('sms_message',
         where: 'id = ?',
         whereArgs: [id]);
-
-    await fusionConnection.apiV1Call("post", "/chat/hide_message", {
+    fusionConnection.apiV1Call("post", "/chat/hide_message", {
       "message_ids": [id],
     }, callback:null);
   }

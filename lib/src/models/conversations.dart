@@ -281,9 +281,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     convo.unread = 0;
     storeRecord(convo);
   }
-  Stream refresh (){
-    return this.getRecords();
-  }
+
   void deleteConversation(String id, String from, String myNumber, String departmentId) {
     this.removeRecord(id);
     fusionConnection.apiV1Call("post", "/chat/archive_conversation", {
