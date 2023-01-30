@@ -281,10 +281,11 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     convo.unread = 0;
     storeRecord(convo);
   }
-
+  Stream refresh (){
+    return this.getRecords();
+  }
   void deleteConversation(String id, String from, String myNumber, String departmentId) {
     this.removeRecord(id);
-    getPersisted(departmentId, 100, 0, null);
     fusionConnection.apiV1Call("post", "/chat/archive_conversation", {
       "from_numbers": [myNumber],
       "to_numbers": [from],

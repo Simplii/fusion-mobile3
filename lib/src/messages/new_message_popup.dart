@@ -159,7 +159,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            SMSConversationView(_fusionConnection, _softphone, convo));
+            SMSConversationView(_fusionConnection, _softphone, convo, null));
   }
 
   @override

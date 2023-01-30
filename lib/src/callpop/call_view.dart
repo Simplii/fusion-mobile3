@@ -155,7 +155,8 @@ class _CallViewState extends State<CallView> {
         _softphone,
         callPopInfo != null
             ? callPopInfo.phoneNumber
-            : _softphone.getCallerNumber(_softphone.activeCall));
+            : _softphone.getCallerNumber(_softphone.activeCall),
+        null);
   }
 
   _changeDefaultInputDevice() {
@@ -210,7 +211,6 @@ class _CallViewState extends State<CallView> {
   }
 
   _changeDefaultOutputDevice() {
-
     List<List<String>> options = Platform.isAndroid
         ? _softphone.devicesList
             .where((element) => element[2] != "Microphone")
@@ -588,26 +588,26 @@ class _CallViewState extends State<CallView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // if (Platform.isIOS && isIncoming && isRinging)
-                            //   CallActionButtons(
-                            //       actions: actions,
-                            //       isRinging: isRinging,
-                            //       isIncoming: isIncoming,
-                            //       dialPadOpen: dialpadVisible,
-                            //       resumeDisabled:
-                            //           _softphone.isCellPhoneCallActive,
-                            //       isOnConference:
-                            //           _softphone.isCallMerged(_activeCall),
-                            //       setDialpad: (bool isOpen) {
-                            //         setState(() {
-                            //           dialpadVisible = isOpen;
-                            //         });
-                            //       },
-                            //       callIsRecording:
-                            //           _softphone.getRecordState(_activeCall),
-                            //       callIsMuted: _softphone.getMuted(_activeCall),
-                            //       callOnHold:
-                            //           _softphone.getHoldState(_activeCall)),
+                            if (Platform.isIOS && isIncoming && isRinging)
+                              CallActionButtons(
+                                  actions: actions,
+                                  isRinging: isRinging,
+                                  isIncoming: isIncoming,
+                                  dialPadOpen: dialpadVisible,
+                                  resumeDisabled:
+                                      _softphone.isCellPhoneCallActive,
+                                  isOnConference:
+                                      _softphone.isCallMerged(_activeCall),
+                                  setDialpad: (bool isOpen) {
+                                    setState(() {
+                                      dialpadVisible = isOpen;
+                                    });
+                                  },
+                                  callIsRecording:
+                                      _softphone.getRecordState(_activeCall),
+                                  callIsMuted: _softphone.getMuted(_activeCall),
+                                  callOnHold:
+                                      _softphone.getHoldState(_activeCall)),
                             CallHeaderDetails(
                                 callerName: callerName,
                                 companyName: companyName,
