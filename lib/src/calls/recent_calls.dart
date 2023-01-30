@@ -470,7 +470,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                     : [],
                 myNumber: number,
                 number: _historyItem.getOtherNumber(
-                    _fusionConnection.getDomain()))));
+                    _fusionConnection.getDomain())),
+            null));
   }
 
   _makeCall() {

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -410,8 +411,13 @@ print(callpopInfo);
     });
   }
 
-  void deleteMessage(String id) {
-    fusionConnection.apiV1Call("post", "/chat/hide_message", {
+  void deleteMessage(String id) async {
+    this.removeRecord(id);
+    await fusionConnection.db.delete('sms_message',
+        where: 'id = ?',
+        whereArgs: [id]);
+
+    await fusionConnection.apiV1Call("post", "/chat/hide_message", {
       "message_ids": [id],
     }, callback:null);
   }
