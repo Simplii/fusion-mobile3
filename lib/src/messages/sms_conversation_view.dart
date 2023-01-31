@@ -33,9 +33,9 @@ class SMSConversationView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final SMSConversation _smsConversation;
   final Softphone _softphone;
-
+  final Function(SMSConversation, SMSMessage) _deleteConvo;
   SMSConversationView(
-      this._fusionConnection, this._softphone, this._smsConversation,
+      this._fusionConnection, this._softphone, this._smsConversation, this._deleteConvo,
       {Key key})
       : super(key: key);
 
@@ -45,7 +45,8 @@ class SMSConversationView extends StatefulWidget {
       List<Contact> contacts,
       List<CrmContact> crmContacts,
       Softphone softphone,
-      String phoneNumber) {
+      String phoneNumber,
+      Function _deleteConvo) {
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -59,7 +60,8 @@ class SMSConversationView extends StatefulWidget {
                 myNumber: fusionConnection.smsDepartments
                     .getDepartment("-2")
                     .numbers[0],
-                number: phoneNumber)));
+                number: phoneNumber),
+            _deleteConvo));
   }
 
   @override
@@ -79,7 +81,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   List<String> _savedImgPaths = [];
   String _selectedGroupId = "";
   Timer _debounceMessageInput;
-
+  Function(SMSConversation, SMSMessage) get _deleteConvo => widget._deleteConvo;
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
@@ -104,6 +106,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         _loaded = true;
       });
     });
+
     SMSDepartment department = _fusionConnection.smsDepartments
         .getDepartmentByPhoneNumber(_conversation.myNumber);
     this.setState(() {
@@ -236,12 +239,15 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                           _conversation.contacts[0]));
                 });
               } else if (chosen == "deleteconversation") {
+                if(_deleteConvo != null){
+                  _deleteConvo(_conversation,null);
+                  _fusionConnection.conversations.deleteConversation(
+                      _conversation.getId(),
+                      _conversation.number,
+                      _conversation.myNumber,
+                      _selectedGroupId);
+                }
                 Navigator.pop(context, true);
-                _fusionConnection.conversations.deleteConversation(
-                    _conversation.getId(),
-                    _conversation.number,
-                    _conversation.myNumber,
-                    _selectedGroupId);
               } else {
                 Future.delayed(Duration(milliseconds: 10), () {
                   _openMedia(null);
@@ -607,7 +613,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                                           _fusionConnection, _conversation,
                                           (List<SMSMessage> messages) {
                                           _messages = messages;
-                                        }, _openMedia)
+                                        }, _openMedia,_deleteConvo)
                                       : Container())
                             ]))),
                   ]))),
@@ -623,9 +629,9 @@ class ConvoMessagesList extends StatefulWidget {
   final SMSConversation _conversation;
   final Function(List<SMSMessage>) _onPulledMessages;
   final Function(SMSMessage) _openMedia;
-
+  final Function(SMSConversation, SMSMessage) _deleteConvo;
   ConvoMessagesList(this._fusionConnection, this._conversation,
-      this._onPulledMessages, this._openMedia,
+      this._onPulledMessages, this._openMedia, this._deleteConvo,
       {Key key})
       : super(key: key);
 
@@ -639,6 +645,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Function(SMSMessage) get _openMedia => widget._openMedia;
+  Function(SMSConversation, SMSMessage) get _deleteMessage => widget._deleteConvo;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSMessage> _messages = [];
   String _subscriptionKey;
@@ -754,7 +761,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
       list.add(SMSMessageView(_fusionConnection, msg, _conversation,
           (SMSMessage message) {
         _openMedia(message);
-      }));
+      },_deleteMessage,_messages));
     }
 
     return list;
@@ -786,9 +793,10 @@ class SMSMessageView extends StatefulWidget {
   final SMSMessage _message;
   final SMSConversation _conversation;
   final Function(SMSMessage) _openMedia;
-
+  final Function(SMSConversation, SMSMessage) _deleteMessage;
+  List<SMSMessage> _messages;
   SMSMessageView(this._fusionConnection, this._message, this._conversation,
-      this._openMedia,
+      this._openMedia, this._deleteMessage, this._messages,
       {Key key})
       : super(key: key);
 
@@ -804,8 +812,19 @@ class _SMSMessageViewState extends State<SMSMessageView> {
   SMSMessage get _message => widget._message;
   final _searchInputController = TextEditingController();
 
+  List<SMSMessage> get _messages => widget._messages;
   _openMedia() {
     widget._openMedia(_message);
+  }
+
+  _deleteMessage(SMSMessage message){
+    if(widget._deleteMessage == null) return;
+    if(_messages.length == 1)
+      widget._deleteMessage(_conversation,null);
+    else if(_messages.reversed.last.id == message.id)
+      widget._deleteMessage(_conversation,_messages.reversed.elementAt(_messages.length - 2));
+    
+    _messages.removeWhere((msg) => msg.id == message.id);
   }
 
   _messageText(String message, TextStyle style) {
@@ -922,6 +941,10 @@ class _SMSMessageViewState extends State<SMSMessageView> {
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {
         _fusionConnection.messages.deleteMessage(this._message.id);
+        _deleteMessage(this._message);
+        if(this._messages.length == 0){
+          Navigator.pop(context);
+        }
       },
       background: Container(
         color: crimsonDark,

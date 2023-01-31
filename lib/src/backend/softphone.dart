@@ -84,6 +84,7 @@ class Softphone implements SipUaHelperListener {
   String bluetoothDeviceId = "";
   //IncallManager incallManager = new IncallManager();
 
+  bool assistedTransferInit = false;
   final Aps.AudioCache _audioCache = Aps.AudioCache(
     fixedPlayer: Aps.AudioPlayer()..setReleaseMode(Aps.ReleaseMode.LOOP),
   );
@@ -1020,6 +1021,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   assistedTransfer(Call call, String destination) {
+    assistedTransferInit = true;
     makeCall(destination);
   }
 
@@ -1029,6 +1031,7 @@ class Softphone implements SipUaHelperListener {
           "lpAssistedTransfer", [_uuidFor(originalCall), _uuidFor(toCall)]);
       _removeCall(originalCall);
       _removeCall(toCall);
+      assistedTransferInit = false;
     }
   }
 
@@ -1249,7 +1252,7 @@ class Softphone implements SipUaHelperListener {
         setCallOutput(call, "phone");
       }
     }
-
+    assistedTransferInit = false;
     _updateListeners();
     if (Platform.isAndroid) {
       flutterLocalNotificationsPlugin.cancel(intIdForString(call.id));
