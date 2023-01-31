@@ -302,7 +302,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           contacts: contacts,
                           crmContacts: [],
                           myNumber: data['to_number'],
-                          number: data['from_number'])));
+                          number: data['from_number']),
+                      null));
             }
           });
         }

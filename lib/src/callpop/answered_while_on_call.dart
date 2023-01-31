@@ -45,30 +45,33 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
     bool isMerged = softphone.isCallMerged(call);
 
     return switchGestureDetector(
-        Row(children: [
+        Padding(
+          padding: const EdgeInsets.only(top:4.0),
+          child: Row(children: [
 
-          ContactCircle.withDiameterAndMargin(info != null ? info.contacts : [],
-              info != null ? info.crmContacts : [], 24, 8),
+            ContactCircle.withDiameterAndMargin(info != null ? info.contacts : [],
+                info != null ? info.crmContacts : [], 24, 8),
 
-          Text(softphone.getCallerName(call), style: textStyle),
-          Expanded(child: switchGestureDetector(Container(), call)),
-          if (softphone.getHoldState(call)) Text("Hold", style: textStyle),
-          Text(" " + mDash + " " + softphone.getCallRunTimeString(call),
-              style: textStyle),
-          if (!isMerged &&
-              false) // disabing until we can support conference calling
-            GestureDetector(
-                onTap: () {
-                  softphone.mergeCalls(activeCall, call);
-                },
-                child: Container(
-                    decoration: clearBg(),
-                    padding: EdgeInsets.only(left: 12, top: 2, bottom: 2),
-                    child: Image.asset("assets/icons/call_view/merge.png",
-                        width: 20, height: 20))),
-          Container(width: 12,),
-          _hangupButton(call)
-        ]),
+            Text(softphone.getCallerName(call), style: textStyle),
+            Expanded(child: switchGestureDetector(Container(), call)),
+            if (softphone.getHoldState(call)) Text("Hold", style: textStyle),
+            Text(" " + mDash + " " + softphone.getCallRunTimeString(call),
+                style: textStyle),
+            if (!isMerged &&
+                false) // disabing until we can support conference calling
+              GestureDetector(
+                  onTap: () {
+                    softphone.mergeCalls(activeCall, call);
+                  },
+                  child: Container(
+                      decoration: clearBg(),
+                      padding: EdgeInsets.only(left: 12, top: 2, bottom: 2),
+                      child: Image.asset("assets/icons/call_view/merge.png",
+                          width: 20, height: 20))),
+            Container(width: 12,),
+            _hangupButton(call)
+          ]),
+        ),
         call);
   }
 
@@ -98,7 +101,7 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
   Widget build(BuildContext context) {
     return Column(children: [
       Container(
-          height: 42 + 0 + calls.length * 36.0,
+          height: 45 + 0 + calls.length * 37.0,
           padding: EdgeInsets.only(top: 42, bottom: 0),
           decoration: BoxDecoration(
               color: coal,
@@ -113,6 +116,7 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
                       .map((Call c) => _callRow(c))
                       .toList()
                       .cast<Widget>()))),
+      if(softphone.assistedTransferInit)
       Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -132,13 +136,16 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
               child: Column(children: [
                 Image.asset(
                   "assets/icons/call_view/merge.png",
-                  width: 20,
-                  height: 20,
+                  width: 28,
+                  height: 28,
                 ),
-                Text(
-                  'Complete',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white),
+                Padding(
+                  padding: const EdgeInsets.only(top:5),
+                  child: Text(
+                    'Complete',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white),
+                  ),
                 )
               ]),
             ),

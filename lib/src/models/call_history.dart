@@ -24,6 +24,7 @@ class CallHistory extends FusionModel {
   String callerId;
 
   isInternal(String domain) {
+    if (to.length < 10) return false;
     if (direction == 'inbound')
       return to.substring(to.length - domain.length)
           .toLowerCase() == domain.toLowerCase();
