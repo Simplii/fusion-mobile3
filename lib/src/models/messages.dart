@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -411,6 +412,10 @@ print(callpopInfo);
   }
 
   void deleteMessage(String id) {
+    this.removeRecord(id);
+    fusionConnection.db.delete('sms_message',
+        where: 'id = ?',
+        whereArgs: [id]);
     fusionConnection.apiV1Call("post", "/chat/hide_message", {
       "message_ids": [id],
     }, callback:null);

@@ -138,7 +138,8 @@ class _VoicemailsState extends State<Voicemails> {
                 contacts: vm.contacts,
                 crmContacts: [],
                 myNumber: number,
-                number: vm.phoneNumber)));
+                number: vm.phoneNumber),
+            null));
   }
 
   Widget _vmRow(Voicemail vm) {

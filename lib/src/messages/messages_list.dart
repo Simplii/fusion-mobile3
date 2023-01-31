@@ -12,6 +12,7 @@ import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
+import '../models/messages.dart';
 import '../styles.dart';
 import 'message_search_results.dart';
 import 'sms_conversation_view.dart';
@@ -118,6 +119,20 @@ class _MessagesListState extends State<MessagesList> {
     }
   }
 
+  void deleteConvo(SMSConversation conversation, SMSMessage lastMessage){
+    this.setState(() {
+      if(conversation!= null && lastMessage != null) {
+        _convos.forEach((convo) {
+            if(convo.getId() == conversation.getId())
+            convo.message.message = lastMessage.message;
+        });
+      } else {
+        _convos.removeWhere((convo) => convo.getId() == conversation.getId());
+      }
+
+    });
+  }
+
   _getDepartmentName(convo) {
     if (_selectedGroupId != "-2")
       return "";
@@ -169,7 +184,7 @@ class _MessagesListState extends State<MessagesList> {
   _messagesList() {
     return _convos.map((convo) {
       return SMSConversationSummaryView(
-          _fusionConnection, _softphone, convo, _getDepartmentName(convo),_selectedGroupId);
+          _fusionConnection, _softphone, convo, _getDepartmentName(convo),_selectedGroupId, deleteConvo);
     }).toList();
   }
 
@@ -243,7 +258,8 @@ class _MessagesListState extends State<MessagesList> {
                                     _softphone,
                                     _convos[index - 1],
                                     _getDepartmentName(_convos[index - 1]),
-                                    _selectedGroupId);
+                                    _selectedGroupId,
+                                    deleteConvo);
                               } else {
                                 return Container(
                                   child: Text(
@@ -309,9 +325,9 @@ class SMSConversationSummaryView extends StatefulWidget {
   final SMSConversation _convo;
   final String _departmentName;
   final String _selectedGroupId;
-
+  Function(SMSConversation, SMSMessage) deleteConvo;
   SMSConversationSummaryView(this._fusionConnection, this._softphone,
-      this._convo, this._departmentName, this._selectedGroupId,
+      this._convo, this._departmentName, this._selectedGroupId, this.deleteConvo,
       {Key key})
       : super(key: key);
 
@@ -331,6 +347,7 @@ class _SMSConversationSummaryViewState
   final _searchInputController = TextEditingController();
 
   String get _departmentId => widget._selectedGroupId;
+  Function(SMSConversation, SMSMessage) get _deleteConvo => widget.deleteConvo;
 
   _openConversation() {
     _fusionConnection.conversations.markRead(_convo);
@@ -339,13 +356,13 @@ class _SMSConversationSummaryViewState
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            SMSConversationView(_fusionConnection, _softphone, _convo));
+            SMSConversationView(_fusionConnection, _softphone, _convo, _deleteConvo));
   }
 
   @override
   Widget build(BuildContext context) {
     DateTime date =
-        DateTime.fromMillisecondsSinceEpoch(_convo.message.unixtime * 1000);
+        DateTime.fromMillisecondsSinceEpoch(1675096165 * 1000);
 
     return GestureDetector(
         onTap: () {
@@ -379,14 +396,14 @@ class _SMSConversationSummaryViewState
                   actions: <Widget>[
                     TextButton(
                       style: TextButton.styleFrom(
-                        backgroundColor: crimsonDark,
+                        foregroundColor: crimsonDark,
                       ),
                       onPressed: () => Navigator.of(context).pop(true),
                       child: const Text("DELETE")
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.black,
                       ),
                       onPressed: () => Navigator.of(context).pop(false),
                       child: const Text("CANCEL"),
