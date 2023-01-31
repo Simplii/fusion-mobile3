@@ -155,7 +155,8 @@ class _CallViewState extends State<CallView> {
         _softphone,
         callPopInfo != null
             ? callPopInfo.phoneNumber
-            : _softphone.getCallerNumber(_softphone.activeCall));
+            : _softphone.getCallerNumber(_softphone.activeCall),
+        null);
   }
 
   _changeDefaultInputDevice() {
@@ -210,7 +211,6 @@ class _CallViewState extends State<CallView> {
   }
 
   _changeDefaultOutputDevice() {
-
     List<List<String>> options = Platform.isAndroid
         ? _softphone.devicesList
             .where((element) => element[2] != "Microphone")

@@ -284,7 +284,6 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
 
   void deleteConversation(String id, String from, String myNumber, String departmentId) {
     this.removeRecord(id);
-    getPersisted(departmentId, 100, 0, null);
     fusionConnection.apiV1Call("post", "/chat/archive_conversation", {
       "from_numbers": [myNumber],
       "to_numbers": [from],
