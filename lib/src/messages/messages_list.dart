@@ -82,7 +82,7 @@ class _MessagesTabState extends State<MessagesTab> {
                   padding:
                       EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
                   child: MessageSearchResults(_myNumber, _convos, _contacts,
-                      _crmContacts, _fusionConnection, _softphone)))
+                      _crmContacts, _fusionConnection, _softphone,null)))
           : _loaded
               ? MessagesList(_fusionConnection, _softphone)
               : Container()
@@ -153,6 +153,7 @@ class _MessagesListState extends State<MessagesList> {
         .getConversations(_selectedGroupId, 100, _page * 100,
             (List<SMSConversation> convos, bool fromServer) {
       if (!mounted) return;
+
       this.setState(() {
         if (fromServer != null && fromServer) {
           lookupState = 2;

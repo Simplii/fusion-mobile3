@@ -8,6 +8,7 @@ import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 
 import '../backend/fusion_connection.dart';
 import '../components/fusion_dropdown.dart';
+import '../components/sms_header_to_box.dart';
 import '../styles.dart';
 import '../utils.dart';
 import 'message_search_results.dart';
@@ -36,6 +37,8 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   String myPhoneNumber = "";
   String _query = "";
   String _searchingFor = "";
+  int chipsCount = 0;
+  List<dynamic> sendToItems = [];
 
   initState() {
     super.initState();
@@ -74,6 +77,38 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
     }
   }
 
+  _deleteChip(int index){
+    setState(() {
+      chipsCount = chipsCount - 1;
+      sendToItems.removeAt(index);
+    });
+  }
+
+  _addChip(_tappedContact){
+    if(_searchTextController.value.text != '' && chipsCount < 10){
+      setState(() {
+        if((sendToItems.length > 0 && _contacts.length == 1) || _tappedContact != null){
+          List<dynamic> contactExisit = _tappedContact != null 
+            ? sendToItems.where((item)=> item is Contact && item.id == _tappedContact.id).toList()
+            : sendToItems.where((item)=> item is Contact && item.id == _contacts[0].id).toList();
+
+          if(contactExisit.isEmpty){
+            chipsCount += 1;
+            sendToItems.add(_tappedContact ?? _contacts[0]);
+            _contacts = [];
+          } 
+        } else if(sendToItems.length == 0 && _contacts.length == 1){
+          chipsCount += 1;
+          sendToItems.add(_contacts[0]);
+        } else {
+          chipsCount += 1;
+          sendToItems.add(_searchTextController.value.text);
+        } 
+        _searchTextController.clear();
+      });
+    } 
+  }
+  
   _header() {
     String myImageUrl = _fusionConnection.myAvatarUrl();
     List<SMSDepartment> groups = _fusionConnection.smsDepartments
@@ -124,35 +159,36 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                     .cast<List<String>>())),
         Spacer(),
       ]),
-      Row(children: [
-        Expanded(
-            child: Container(
-                margin: EdgeInsets.only(top: 16),
-                height: 40,
-                child: TextField(
-                    controller: _searchTextController,
-                    onChanged: _search,
-                    decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(
-                            color: Color.fromARGB(255, 153, 148, 149),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700),
-                        hintText: "Enter a name or phone number"),
-                    style: TextStyle(
-                        color: coal,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700))))
-      ])
+      SendToBox(
+        deleteChip: _deleteChip,
+        addChip: _addChip,
+        sendToItems: sendToItems,
+        search: _search,
+        searchTextController: _searchTextController,
+        chipsCount: chipsCount,
+      )
     ]);
   }
 
-  _startConvo(String number) {
+  _startConvo(String query) {
+    List<String> toNumbers = [myPhoneNumber];
+    List<Contact> toContacts = [];
+    sendToItems.forEach((item) { 
+      if(item is String){
+        toNumbers.add(item);
+      } else {
+        // need to make sure they are masseging the corrent number this is temp
+        toNumbers.add((item as Contact).phoneNumbers[0]['number']);
+        toContacts.add(item);
+      }
+    });
+    print("MyDebugMessage ${toNumbers}");
     SMSConversation convo = SMSConversation.build(
       myNumber: myPhoneNumber,
-      contacts: [],
+      contacts: toContacts,
       crmContacts: [],
-      number: number,
+      number: toNumbers.join(','),
+      isGroup: chipsCount > 1 ?? false
     );
     showModalBottomSheet(
         context: context,
@@ -194,15 +230,15 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                   decoration: BoxDecoration(color: Colors.white),
                   padding: EdgeInsets.only(left: 14, right: 14),
                   child: Column(children: [
-                    isPhone
-                        ? GestureDetector(
-                            onTap: () {
+                    (isPhone || chipsCount > 0)
+                        ? TextButton(
+                            onPressed: () {
                               _startConvo(query);
                             },
                             child: Container(
                                 alignment: Alignment.center,
-                                height: 80,
-                                child: Text("Message this number \u2794",
+                                height: 40,
+                                child: Text("Start new conversation \u2794",
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: coal,
@@ -221,7 +257,8 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                                     _contacts,
                                     _crmContacts,
                                     _fusionConnection,
-                                    _softphone)
+                                    _softphone,
+                                    _addChip)
                                 : Container()))
                   ])))
         ]));

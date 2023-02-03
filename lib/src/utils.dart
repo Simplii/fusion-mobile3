@@ -109,3 +109,9 @@ String avatarUrl(String firstName, String lastName) {
     return "https://fusioncomm.net/api/v2/client/" +
         "nameAvatar/${firstName}/${lastName}";
 }
+
+extension Capitalize on String {
+  String capitalize(){
+    return "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
+  }
+}

@@ -72,8 +72,8 @@ class FusionConnection {
   Function _refreshUi = () {};
   Map<String, bool> received_smses = {};
 
-  String serverRoot = "http://fusioncomm.net";
-  String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
+  String serverRoot = "http://zaid-fusion-dev.fusioncomm.net";
+  String defaultAvatar = "https://zaid-fusion-dev.fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {
     _getCookies();
@@ -127,7 +127,7 @@ class FusionConnection {
   }
 
   final channel = WebSocketChannel.connect(
-    Uri.parse('wss://fusioncomm.net:8443'),
+    Uri.parse('wss://zaid-fusion-dev.fusioncomm.net:8443'),
   );
 
   onLogOut(Function callback) {
@@ -282,7 +282,7 @@ class FusionConnection {
       data['username'] = await _getUsername();
 
       Uri url = Uri.parse(
-          'https://fusioncomm.net/api/v1/clients/api_request?username=' +
+          'https://zaid-fusion-dev.fusioncomm.net/api/v1/clients/api_request?username=' +
               data['username']);
       Map<String, String> headers = await _cookieHeaders(url);
       String body = convert.jsonEncode(data);
@@ -325,7 +325,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
+      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v1' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -345,6 +345,7 @@ class FusionConnection {
           onError();
       }
       else {
+        print("MyDebugMessage ${uriResponse.body}");
         var jsonResponse = convert.jsonDecode(uriResponse.body);
         client.close();
         if (callback != null) callback(jsonResponse);
@@ -375,7 +376,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route + urlParams);
+      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v2' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -408,7 +409,7 @@ class FusionConnection {
     try {
       data['username'] = await _getUsername();
 
-      Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route);
+      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v1' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
       (await _cookieHeaders(url))
           .forEach(
@@ -528,7 +529,7 @@ print(responseBody);
 
   setupSocket() {
     int messageNum = 0;
-    _socket = WebsocketManager("wss://fusioncomm.net:8443/");
+    _socket = WebsocketManager("wss://zaid-fusion-dev.fusioncomm.net:8443/");
     _socket.onClose((dynamic message) {
     });
     _socket.onMessage((dynamic messageData) {
@@ -537,7 +538,7 @@ print(responseBody);
         _heartbeats[message['heartbeat']] = true;
       } else if (message.containsKey('sms_received')) {
         // Receive incoming message platform data
-        SMSMessage newMessage = SMSMessage(message['message_object']);
+        SMSMessage newMessage = SMSMessage.fromV2(message['message_object']);
         if (!received_smses.containsKey(newMessage.id)) {
           received_smses[newMessage.id] = true;
 
