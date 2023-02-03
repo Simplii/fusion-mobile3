@@ -82,6 +82,9 @@ class _ContactCircleState extends State<ContactCircle> {
         if (contact.coworker != null && coworker == null) {
           coworker = contact.coworker;
         }
+        if(contact.pictures.length > 0){
+          imageUrl = contact.pictures.last['url'];
+        }
         if (contact.emails != null) {
           for (Map<String, dynamic> email in contact.emails) {
             try {

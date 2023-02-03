@@ -7,6 +7,7 @@ import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 
 import '../backend/fusion_connection.dart';
+import '../components/sms_header_to_box.dart';
 import '../styles.dart';
 import 'messages_list.dart';
 import 'sms_conversation_view.dart';
@@ -18,9 +19,9 @@ class MessageSearchResults extends StatefulWidget {
   final List<CrmContact> _crmContacts;
   final String _myNumber;
   final Softphone _softphone;
-
+  final Function(dynamic) addChip;
   MessageSearchResults(this._myNumber, this._conversations, this._contacts,
-      this._crmContacts, this._fusionConnection, this._softphone,
+      this._crmContacts, this._fusionConnection, this._softphone, this.addChip,
       {Key key})
       : super(key: key);
 
@@ -37,7 +38,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
   List<Contact> get _contacts => widget._contacts;
 
   List<CrmContact> get _crmContacts => widget._crmContacts;
-
+  Function(dynamic) get _addChip => widget.addChip;
   _openConvo(List<Contact> contacts, List<CrmContact> crmContacts) {
     String theirNumber = "";
     for (Contact c in contacts) {
@@ -73,7 +74,11 @@ class _MessageSearchResults extends State<MessageSearchResults> {
     for (Contact c in _contacts) {
       bubbles.add(GestureDetector(
           onTap: () {
-            _openConvo([c], []);
+            // _openConvo([c], []);
+          if(_addChip != null){
+              _addChip(c);
+              
+            }
           },
           child: Container(
               margin: EdgeInsets.only(top: 12),

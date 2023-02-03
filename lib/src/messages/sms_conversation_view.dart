@@ -563,7 +563,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     setState(() {
       if (_messageInputController.value.text.trim().length > 0) {
         _fusionConnection.messages
-            .sendMessage(_messageInputController.value.text, _conversation);
+            .sendMessage(_messageInputController.value.text, _conversation, _selectedGroupId);
         _messageInputController.text = "";
       }
       if (_mediaToSend.length > 0) {
@@ -613,7 +613,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                                           _fusionConnection, _conversation,
                                           (List<SMSMessage> messages) {
                                           _messages = messages;
-                                        }, _openMedia,_deleteConvo)
+                                        }, _openMedia,_deleteConvo, _selectedGroupId)
                                       : Container())
                             ]))),
                   ]))),
@@ -630,8 +630,9 @@ class ConvoMessagesList extends StatefulWidget {
   final Function(List<SMSMessage>) _onPulledMessages;
   final Function(SMSMessage) _openMedia;
   final Function(SMSConversation, SMSMessage) _deleteConvo;
+  String _selectedGroupId;
   ConvoMessagesList(this._fusionConnection, this._conversation,
-      this._onPulledMessages, this._openMedia, this._deleteConvo,
+      this._onPulledMessages, this._openMedia, this._deleteConvo, this._selectedGroupId,
       {Key key})
       : super(key: key);
 
@@ -649,7 +650,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSMessage> _messages = [];
   String _subscriptionKey;
-
+  String get _selectedGroupId => widget._selectedGroupId;
   String _lookedupNumber = "";
   String _lookedupMyNumber = "";
 
@@ -680,12 +681,14 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     }
   }
 
-  @override
+
   _lookupMessages() {
     lookupState = 1;
     _clearSubscription();
+    print("MyDebugMessage messages");
     _subscriptionKey = _fusionConnection.messages.subscribe(_conversation,
         (List<SMSMessage> messages) {
+          
       if (!mounted) return;
       this.setState(() {
         for (SMSMessage m in messages) {
@@ -701,7 +704,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
         _messages = messages;
         widget._onPulledMessages(_messages);
       });
-    });
+    },_selectedGroupId);
   }
 
   _newConvoMessage() {
@@ -761,7 +764,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
       list.add(SMSMessageView(_fusionConnection, msg, _conversation,
           (SMSMessage message) {
         _openMedia(message);
-      },_deleteMessage,_messages));
+      },_deleteMessage,_messages,_selectedGroupId));
     }
 
     return list;
@@ -795,8 +798,9 @@ class SMSMessageView extends StatefulWidget {
   final Function(SMSMessage) _openMedia;
   final Function(SMSConversation, SMSMessage) _deleteMessage;
   List<SMSMessage> _messages;
+  String _selectedGroupId;
   SMSMessageView(this._fusionConnection, this._message, this._conversation,
-      this._openMedia, this._deleteMessage, this._messages,
+      this._openMedia, this._deleteMessage, this._messages, _selectedGroupId,
       {Key key})
       : super(key: key);
 
@@ -940,7 +944,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
       key: UniqueKey(),
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {
-        _fusionConnection.messages.deleteMessage(this._message.id);
+        _fusionConnection.messages.deleteMessage(this._message.id,widget._selectedGroupId);
         _deleteMessage(this._message);
         if(this._messages.length == 0){
           Navigator.pop(context);
