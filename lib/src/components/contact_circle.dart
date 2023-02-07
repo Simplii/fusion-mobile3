@@ -14,7 +14,7 @@ class ContactCircle extends StatefulWidget {
   Coworker _coworker;
   double _diameter = 60;
   double _margin = null;
-
+  bool _isGroupSms;
   ContactCircle(this._contacts, this._crmContacts, {Key key}) : super(key: key);
   ContactCircle.withCoworker(this._contacts, this._crmContacts, this._coworker,
       {Key key}) : super(key: key);
@@ -30,6 +30,9 @@ class ContactCircle extends StatefulWidget {
       this._contacts, this._crmContacts, this._diameter, this._margin,
       {Key key})
       : super(key: key);
+  ContactCircle.groupSms(
+    this._contacts,this._crmContacts, this._isGroupSms, {Key key,}
+  ) : super(key:key);
 
   @override
   State<StatefulWidget> createState() => _ContactCircleState();
@@ -41,6 +44,7 @@ class _ContactCircleState extends State<ContactCircle> {
   Coworker get _coworker => widget._coworker;
   double get _diameter => widget._diameter;
   double get _margin => widget._margin;
+  bool get _isGroupSms => widget._isGroupSms;
 
   _gravatarUrl(String email, String firstName, String lastName) {
     firstName = firstName.replaceAll(r"/[^a-zA-Z]/", '');
@@ -71,6 +75,37 @@ class _ContactCircleState extends State<ContactCircle> {
     }
   }
 
+
+  Widget _chatHeads(int idx, Contact c){
+    if(idx == 0){
+      return Positioned(
+        left: 0,
+        height: 28,
+        child: Image.asset('assets/blank_avatar.png')
+      );
+    }
+    if(idx == 1){
+      return Positioned(
+        right: 0,
+        height: 28,
+        child: Image.asset('assets/blank_avatar.png')
+      );
+    }
+    if(idx == 2){
+      return Positioned(
+        right: 0,
+        height: 28,
+        child: Image.asset('assets/blank_avatar.png')
+      );
+    }
+    if(idx == 3){
+      return Positioned(
+        right: 0,
+        height: 28,
+        child: Image.asset('assets/blank_avatar.png')
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +176,48 @@ class _ContactCircleState extends State<ContactCircle> {
         || presence == 'progressing') borderColor = informationBlue;
     else if (presence == 'inuse'
         || presence == 'held') borderColor = crimsonLight;
-
+    
+    if(_isGroupSms!=null && _isGroupSms)
+      return Container(
+        margin: EdgeInsets.only(right: _diameter / 3),
+        width: _diameter,
+        height: _diameter,
+        decoration: BoxDecoration(
+          color: particle,
+          borderRadius: BorderRadius.circular(100)
+        ),
+        child:Stack(
+          children: [
+            ..._contacts.asMap().entries.map((e){
+              int idx = e.key;
+              Contact val = e.value;
+              return _chatHeads(idx,val);
+            })
+            // Positioned(
+            //   left: 0,
+            //   height: 28,
+            //   child: Image.asset('assets/blank_avatar.png')
+            // ),
+            // Positioned(
+            //   right: 0,
+            //   height: 28,
+            //   child: Image.asset('assets/blank_avatar.png')
+            // ),
+            // Positioned(
+            //   bottom: 0,
+            //   height: 28,
+            //   child: Image.asset('assets/blank_avatar.png')
+            // ),
+            // Positioned(
+            //   bottom: 0,
+            //   right: 0,
+            //   height: 28,
+            //   child: Image.asset('assets/blank_avatar.png')
+            // ),
+          ]
+        )
+      );
+    
     return Container(
         margin: EdgeInsets.only(
             right: this._margin != null ? this._margin : _diameter / 3),

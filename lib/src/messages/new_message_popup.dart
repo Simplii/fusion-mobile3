@@ -28,6 +28,7 @@ class NewMessagePopup extends StatefulWidget {
 class _NewMessagePopupState extends State<NewMessagePopup> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   final _searchTextController = TextEditingController();
+  final Debounce _debounce = Debounce(Duration(milliseconds: 700));
   Softphone get _softphone => widget._softphone;
   int willSearch = 0;
   List<SMSConversation> _convos = [];
@@ -51,30 +52,34 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
     }
   }
 
+  @override
+  void dispose() {
+    _searchTextController.dispose();
+    _debounce.dispose();
+    super.dispose();
+  }
+
   _search(String value) {
-    if (willSearch == 0) {
-      willSearch = 1;
-
-      Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
-        willSearch = 0;
-        String query = _searchTextController.value.text;
-
-        if (query != _searchingFor) {
-          _searchingFor = query;
-          _fusionConnection.messages.search(query,
-              (List<SMSConversation> convos, List<CrmContact> crmContacts,
-                  List<Contact> contacts) {
+    String query = _searchTextController.value.text;  
+    _debounce((){
+      if(query.length == 0){
+        setState(() {
+          _convos = [];
+          _crmContacts = [];
+          _contacts = [];
+        });
+      } else if (query != _searchingFor) {
+        _searchingFor = query;
+        _fusionConnection.contacts.searchV2(query, 50, 0, 
+          (List<Contact> contacts, bool status){
             if (mounted && query == _searchingFor) {
               setState(() {
-                _convos = convos;
-                _crmContacts = crmContacts;
                 _contacts = contacts;
               });
             }
-          });
-        }
-      });
-    }
+        });
+      }
+    });
   }
 
   _deleteChip(int index){
@@ -87,24 +92,39 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   _addChip(_tappedContact){
     if(_searchTextController.value.text != '' && chipsCount < 10){
       setState(() {
-        if((sendToItems.length > 0 && _contacts.length == 1) || _tappedContact != null){
-          List<dynamic> contactExisit = _tappedContact != null 
-            ? sendToItems.where((item)=> item is Contact && item.id == _tappedContact.id).toList()
-            : sendToItems.where((item)=> item is Contact && item.id == _contacts[0].id).toList();
-
-          if(contactExisit.isEmpty){
+        if(_tappedContact != null){
             chipsCount += 1;
-            sendToItems.add(_tappedContact ?? _contacts[0]);
-            _contacts = [];
-          } 
-        } else if(sendToItems.length == 0 && _contacts.length == 1){
-          chipsCount += 1;
-          sendToItems.add(_contacts[0]);
+            sendToItems.add(_tappedContact);
+        } else if(_searchTextController.value.text.length == 10){
+          Contact contact;
+          List<Map<String,dynamic>> phoneNumbers;
+          for (var c in _contacts) {
+            for (var n in c.phoneNumbers) {
+              if(n['number'] == _searchTextController.value.text){
+                phoneNumbers = [{
+                  'number':n['number'],
+                  'type':n['type']
+                }];
+                break;
+              }
+            }
+            contact = c;
+          }
+          if(contact != null && phoneNumbers !=null){
+            contact.phoneNumbers = phoneNumbers;
+            chipsCount += 1;
+            sendToItems.add(contact);
+          } else {
+            chipsCount += 1;
+            sendToItems.add(_searchTextController.value.text);
+          }
+
         } else {
           chipsCount += 1;
           sendToItems.add(_searchTextController.value.text);
         } 
         _searchTextController.clear();
+        _contacts = [];
       });
     } 
   }
@@ -228,7 +248,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
           Expanded(
               child: Container(
                   decoration: BoxDecoration(color: Colors.white),
-                  padding: EdgeInsets.only(left: 14, right: 14),
+                  // padding: EdgeInsets.only(left: 14, right: 14),
                   child: Column(children: [
                     (isPhone || chipsCount > 0)
                         ? TextButton(
@@ -258,7 +278,8 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                                     _crmContacts,
                                     _fusionConnection,
                                     _softphone,
-                                    _addChip)
+                                    _addChip,
+                                    true)
                                 : Container()))
                   ])))
         ]));

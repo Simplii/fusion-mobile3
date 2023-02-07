@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
@@ -315,7 +316,7 @@ print(callpopInfo);
           'isGroup': conversation.isGroup
         }, callback: (Map<String, dynamic> data) {
           //test sending a message SMSV2
-          print("MyDebugMessage ${data}");
+          // print("MyDebugMessage ${data}");
           SMSMessage message = SMSMessage.fromV2(data);
           storeRecord(message);
         }
@@ -395,8 +396,7 @@ print(callpopInfo);
 
       List<SMSConversation> fullConversations = [];
       for (Map<String, dynamic> item in data['items']) {
-        // searching from v1 call SMSV2
-        SMSMessage message = SMSMessage.fromV2(item);
+        SMSMessage message = SMSMessage(item);
         if (item['conversation_id'] != null && conversations.containsKey(item['conversation_id'])) {
           SMSConversation convo = conversations[item['conversation_id']];
           SMSConversation newConvo = SMSConversation.copy(convo);
@@ -408,6 +408,62 @@ print(callpopInfo);
       callback(fullConversations, crmContacts.values.toList(),
           contacts.values.toList());
     });
+  }
+
+  
+  searchV2(
+      String query,
+      Function(List<SMSConversation> conversations,
+              List<CrmContact> crmContacts, List<Contact> Contacts)
+          callback) {
+    if (query.trim().length == 0) {
+      return;
+    }
+
+    List<SMSConversation> matchedConversations = [];
+
+    Function() _sendFromPersisted = () {
+      callback(matchedConversations, [], []);
+    };
+
+    fusionConnection.conversations.searchPersisted(query, "-2", 100, 0,
+        (List<SMSConversation> convos, fromHttp) {
+      matchedConversations = convos;
+      _sendFromPersisted();
+    });
+
+    fusionConnection.apiV2Call(
+      'get', 
+      '/messaging/group/-2/conversations/query', 
+     {
+      "limit": 200,
+      "offse": 0,
+      "query": query
+    }, callback:(Map<String, dynamic> data){
+        
+      List<dynamic> convoslist = [];
+
+      print("MyDebugMessage convos ${data['items'].runtimeType }");
+
+      if (data['items'] != null) {
+        print("MyDebugMessage is list of map}");
+        convoslist = data['items'];//data['agg']['conversations'];
+      }
+
+      List<SMSConversation> fullConversations = [];
+      for (Map<String, dynamic> item in convoslist) {
+        SMSMessage message = SMSMessage.fromV2(item['lastMessage']);
+        SMSConversation convo = SMSConversation(item);
+        convo.message = message;
+        print("MyDebugMessage -- item ${item}");
+        fullConversations.add(convo);
+      }
+        
+        print("MyDebugMessage -- convos in messages M ${fullConversations.length}");
+      callback(fullConversations, [],[]);
+        
+      });
+
   }
 
   getPersisted(SMSConversation convo, int limit, int offset,
@@ -455,7 +511,7 @@ print(callpopInfo);
           callback(messages, true);
         });
     } else {
-      print("MyDebugMessage single ${convo.number} ${convo.myNumber}");
+      // print("MyDebugMessage single ${convo.number} ${convo.myNumber}");
       fusionConnection.apiV2Call(
       "get", 
       "/messaging/group/${departmentId}/conversations/${convo.number}/${convo.myNumber}/messages", {
@@ -479,7 +535,6 @@ print(callpopInfo);
   }
 
   void deleteMessage(String messageId, String departmentId) {
-    print('MyDebugMessage ${messageId} ${departmentId}');
     this.removeRecord(messageId);
     fusionConnection.db.delete('sms_message',
         where: 'id = ?',

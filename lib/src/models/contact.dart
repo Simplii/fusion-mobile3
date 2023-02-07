@@ -170,14 +170,42 @@ class Contact extends FusionModel {
         : contactObject['crm_id'];
   }
 
+  Contact.fake(String number){
+    String date = DateTime.now().toString();
+    this.addresses = [];
+    this.company = '';
+    this.externalReferences = [];
+    this.createdAt = CarbonDate.fromDate(date);
+    this.deleted = false;
+    this.emails = [];
+    this.firstName = '';
+    this.groups = [];
+    this.id = '';
+    this.jobTitle = '';
+    this.lastName = '';
+    this.name = number.formatPhone();
+    this.owner = '';
+    this.phoneNumbers = [{
+        "number": number,
+        "smsCapable": true,
+        "type": 'Mobile'
+      }];
+    this.pictures = [];
+    this.socials = [];
+    this.type = '';
+    this.updatedAt = CarbonDate.fromDate(date);
+  }
+
   Contact.fromV2(Map<String, dynamic> contactObject) {
     addresses = [];
     var address;
-    for (address in contactObject['addresses']) {
+    if(contactObject['addresses']!= null){
+       for (address in contactObject['addresses']) {
       address['zip-2'] = address['zipPart2'];
       addresses.add([
         address
       ]);
+    }
     }
     this.addresses = contactObject['addresses'];
     this.company = contactObject['company'];
@@ -186,26 +214,28 @@ class Contact extends FusionModel {
     this.deleted = false;
     this.emails = contactObject['emails'];
     this.firstName = contactObject['firstName'];
-    this.groups = contactObject['tags'].cast<String>();
+    this.groups = contactObject['tags'] != null ? contactObject['tags'].cast<String>() : [];
     this.id = contactObject['id'];
     this.jobTitle = contactObject['jobTitle'];
     this.lastName = contactObject['lastName'];
-    this.name = contactObject['firstName'] + ' ' + contactObject['lastName'];
+    this.name = "${contactObject['firstName']} ${contactObject['lastName']}";
     this.owner = contactObject['owner'];
     this.phoneNumbers = [];
-    for (var number in contactObject['phoneNumbers']) {
+    if(contactObject['phoneNumbers'] != null){
+      for (var number in contactObject['phoneNumbers']) {
       this.phoneNumbers.add({
         "number": number['number'].toString(),
-        "sms_capable": number['smsCapable'],
+        "smsCapable": number['smsCapable'],
         "type": number['type']
       });
+    }
     }
     this.pictures = contactObject['pictures'];
     this.socials = contactObject['socials'];
     this.type = contactObject['type'];
     this.updatedAt = CarbonDate.fromDate(contactObject['updatedAt']);
 
-    if (this.externalReferences.length > 0) {
+    if (this.externalReferences != null && this.externalReferences.length > 0) {
       this.crmUrl = externalReferences[0]['url'];
       this.crmName = externalReferences[0]['network'];
       this.crmId = externalReferences[0]['externalId'];
@@ -427,6 +457,36 @@ class ContactsStore extends FusionStore<Contact> {
 
       datas.forEach((dynamic c) {
         Contact contact = Contact(c as Map<String, dynamic>);
+        response.add(contact);
+        storeRecord(contact);
+      });
+
+      callback(response, true);
+    });
+  }
+
+  searchV2(String query, int limit, int offset,
+      Function(List<Contact>, bool) callback) {
+    query = query.toLowerCase();
+
+    searchPersisted(query, limit, offset, callback);
+
+    fusionConnection.apiV2Call("post", "/contacts/query", {
+    "offset": offset,
+    "limit": limit,
+    "contactFilters": {
+        "queries": [
+            query
+        ],
+        "sorts": [],
+        "filters": [],
+        "tagFilters": []
+    },
+  }, callback: (Map<String,dynamic> datas) {
+      List<Contact> response = [];
+
+      datas['items'].forEach((dynamic c) {
+        Contact contact = Contact.fromV2(c as Map<String, dynamic>);
         response.add(contact);
         storeRecord(contact);
       });

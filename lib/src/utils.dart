@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:uuid/uuid.dart';
 import 'dart:ui' as ui;
+import 'dart:async';
 
 uuidFromString(String str) {
   if (str.length == 0)
@@ -111,7 +112,24 @@ String avatarUrl(String firstName, String lastName) {
 }
 
 extension Capitalize on String {
-  String capitalize(){
-    return "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
+  String capitalize() => "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
+  String toTitleCase() => replaceAll(RegExp(' +'), ' ').split(' ').map((str) => str.capitalize()).join(' ');
+}
+
+class Debounce {
+  Duration delay;
+  Timer _timer;
+
+  Debounce(
+    this.delay,
+  );
+
+  call(void Function() callback) {
+    _timer?.cancel();
+    _timer = Timer(delay, callback);
+  }
+
+  dispose() {
+    _timer?.cancel();
   }
 }

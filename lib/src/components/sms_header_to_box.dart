@@ -41,7 +41,11 @@ class _SendToBoxState extends State<SendToBox> {
   Text _chipLabel (int index){
     if(contacts.elementAt(index) is Contact){
       Contact contact = contacts.elementAt(index);
-      return Text(contact.firstName.capitalize() + ' ' + contact.lastName.capitalize());
+      String phoneType = contact.phoneNumbers[0]['type'] != "Mobile" 
+        ? " - "+contact.phoneNumbers[0]['type']
+        : '';
+      String label = "${contact.name.toTitleCase().toTitleCase()}${phoneType}";
+      return Text(label);
     } else {
       return Text(contacts.elementAt(index).toString().formatPhone());
     }

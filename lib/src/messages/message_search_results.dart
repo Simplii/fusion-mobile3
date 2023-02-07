@@ -5,6 +5,7 @@ import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
 
 import '../backend/fusion_connection.dart';
 import '../components/sms_header_to_box.dart';
@@ -20,8 +21,9 @@ class MessageSearchResults extends StatefulWidget {
   final String _myNumber;
   final Softphone _softphone;
   final Function(dynamic) addChip;
+  final bool showContactList;
   MessageSearchResults(this._myNumber, this._conversations, this._contacts,
-      this._crmContacts, this._fusionConnection, this._softphone, this.addChip,
+      this._crmContacts, this._fusionConnection, this._softphone, this.addChip, this.showContactList,
       {Key key})
       : super(key: key);
 
@@ -39,118 +41,200 @@ class _MessageSearchResults extends State<MessageSearchResults> {
 
   List<CrmContact> get _crmContacts => widget._crmContacts;
   Function(dynamic) get _addChip => widget.addChip;
-  _openConvo(List<Contact> contacts, List<CrmContact> crmContacts) {
-    String theirNumber = "";
-    for (Contact c in contacts) {
-      for (Map<String, dynamic> phone in c.phoneNumbers) {
-        theirNumber = phone['number'];
-      }
-    }
-    for (CrmContact c in crmContacts) {
-      if (c.phone_number != null) {
-        theirNumber = c.phone_number;
-      }
-    }
+  bool get _showContactsList => widget.showContactList; 
+ 
+  
+  // _openConvo(List<Contact> contacts, List<CrmContact> crmContacts) {
+  //   String theirNumber = "";
+  //   for (Contact c in contacts) {
+  //     for (Map<String, dynamic> phone in c.phoneNumbers) {
+  //       theirNumber = phone['number'];
+  //     }
+  //   }
+  //   for (CrmContact c in crmContacts) {
+  //     if (c.phone_number != null) {
+  //       theirNumber = c.phone_number;
+  //     }
+  //   }
 
-    String myNumber = _fusionConnection.smsDepartments
-        .lookupRecord("-2")
-        .numbers[0];
+  //   String myNumber = _fusionConnection.smsDepartments
+  //       .lookupRecord("-2")
+  //       .numbers[0];
 
-    SMSConversation convo = SMSConversation.build(
-      myNumber: myNumber,
-      contacts: contacts,
-      crmContacts: crmContacts,
-      number: theirNumber,
-    );
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo, null));
-  }
+  //   SMSConversation convo = SMSConversation.build(
+  //     myNumber: myNumber,
+  //     contacts: contacts,
+  //     crmContacts: crmContacts,
+  //     number: theirNumber,
+  //   );
+  //   showModalBottomSheet(
+  //       context: context,
+  //       backgroundColor: Colors.transparent,
+  //       isScrollControlled: true,
+  //       builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo, null));
+  // }
 
-  _contactBubbles() {
-    List<Widget> bubbles = [];
-    for (Contact c in _contacts) {
-      bubbles.add(GestureDetector(
-          onTap: () {
-            // _openConvo([c], []);
-          if(_addChip != null){
-              _addChip(c);
+  // _contactBubbles() {
+  //   List<Widget> bubbles = [];
+  //   for (Contact c in _contacts) {
+  //     bubbles.add(GestureDetector(
+  //         onTap: () {
+  //           // _openConvo([c], []);
+  //         if(_addChip != null){
+  //             _addChip(c);
               
-            }
-          },
-          child: Container(
-              margin: EdgeInsets.only(top: 12),
-              width: 72,
-              child: Column(children: [
-                ContactCircle.withDiameterAndMargin([c], [], 60, 0),
-                Align(
-                    alignment: Alignment.center,
-                    child: Text(c.firstName,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            color: coal,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700))),
-                Align(
-                    alignment: Alignment.center,
-                    child: Text(c.lastName,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            color: coal,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700)))
-              ]))));
-    }
-    for (CrmContact c in _crmContacts) {
-      bubbles.add(GestureDetector(
-          onTap: () {
-            _openConvo([], [c]);
-          },
-          child: Container(
-              width: 72,
-              margin: EdgeInsets.only(top: 12),
-              child: Column(children: [
-                ContactCircle.withDiameterAndMargin([], [c], 60, 0),
-                Text(c.name.split(r' ')[0],
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        color: coal,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700)),
-                Text(c.name.split(r' ').sublist(1).join(' '),
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        color: coal, fontSize: 12, fontWeight: FontWeight.w700))
-              ]))));
-    }
-    return bubbles;
-  }
+  //           }
+  //         },
+  //         child: Container(
+  //             margin: EdgeInsets.only(top: 12),
+  //             width: 72,
+  //             child: Column(children: [
+  //               ContactCircle.withDiameterAndMargin([c], [], 60, 0),
+  //               Align(
+  //                   alignment: Alignment.center,
+  //                   child: Text(c.firstName,
+  //                       overflow: TextOverflow.ellipsis,
+  //                       style: TextStyle(
+  //                           color: coal,
+  //                           fontSize: 12,
+  //                           fontWeight: FontWeight.w700))),
+  //               Align(
+  //                   alignment: Alignment.center,
+  //                   child: Text(c.lastName,
+  //                       overflow: TextOverflow.ellipsis,
+  //                       style: TextStyle(
+  //                           color: coal,
+  //                           fontSize: 12,
+  //                           fontWeight: FontWeight.w700)))
+  //             ]))));
+  //   }
+  //   for (CrmContact c in _crmContacts) {
+  //     bubbles.add(GestureDetector(
+  //         onTap: () {
+  //           _openConvo([], [c]);
+  //         },
+  //         child: Container(
+  //             width: 72,
+  //             margin: EdgeInsets.only(top: 12),
+  //             child: Column(children: [
+  //               ContactCircle.withDiameterAndMargin([], [c], 60, 0),
+  //               Text(c.name.split(r' ')[0],
+  //                   overflow: TextOverflow.ellipsis,
+  //                   style: TextStyle(
+  //                       color: coal,
+  //                       fontSize: 12,
+  //                       fontWeight: FontWeight.w700)),
+  //               Text(c.name.split(r' ').sublist(1).join(' '),
+  //                   overflow: TextOverflow.ellipsis,
+  //                   style: TextStyle(
+  //                       color: coal, fontSize: 12, fontWeight: FontWeight.w700))
+  //             ]))));
+  //   }
+  //   return bubbles;
+  // }
 
   _messagesList() {
+    print("MyDebugMessage -- messages list ${_conversations[0].serialize()}");
     return _conversations.map((SMSConversation convo) {
       return SMSConversationSummaryView(_fusionConnection, _softphone, convo, "","",null);
     }).toList();
   }
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Column(children: [
+  //     Container(
+  //         height: 100,
+  //         child: ListView(
+  //             children: _contactBubbles(), scrollDirection: Axis.horizontal)),
+  //     Container(
+  //         padding: EdgeInsets.only(top: 14, bottom: 14),
+  //         child: Align(
+  //             alignment: Alignment.centerLeft,
+  //             child: Text("Messages",
+  //                 style: TextStyle(
+  //                     color: coal,
+  //                     fontSize: 24,
+  //                     fontWeight: FontWeight.w700)))),
+  //     Expanded(child: ListView(children: _messagesList()))
+  //   ]);
+  // }
+  
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Container(
-          height: 100,
-          child: ListView(
-              children: _contactBubbles(), scrollDirection: Axis.horizontal)),
-      Container(
-          padding: EdgeInsets.only(top: 14, bottom: 14),
-          child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Messages",
-                  style: TextStyle(
-                      color: coal,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700)))),
-      Expanded(child: ListView(children: _messagesList()))
-    ]);
+  
+    List<Map<String,dynamic>> newContactsList = [];
+    _contacts.forEach((element) { 
+      if(element.phoneNumbers.length > 1){
+        element.phoneNumbers.forEach((number) {
+          newContactsList.add({
+          'contact' : element,
+          'phone' : number['number'],
+          'type' : number['type']
+        });
+        });
+      } 
+      else if(element.phoneNumbers.length == 1) {
+        newContactsList.add({
+          'contact' : element,
+          'phone' : element.phoneNumbers[0]['number']
+        });
+      }
+
+     });
+
+    return _showContactsList ? Scaffold(
+      resizeToAvoidBottomInset: true,
+      body: ListView.separated(
+        shrinkWrap: true,
+        itemCount: newContactsList.length,
+        separatorBuilder: (context, index) => Divider(
+          color: halfSmoke,
+        ),
+        itemBuilder: (BuildContext context, int index){
+          return Container(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                if(_addChip != null){
+                  Contact c = newContactsList[index]['contact'];
+                  c.phoneNumbers = [{ 'number':newContactsList[index]['phone'].toString(),
+                    'type':newContactsList[index]['type']
+                  }];
+                  _addChip(c);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right:8.0),
+                      child: ContactCircle.withDiameterAndMargin([newContactsList[index]['contact']], [], 60, 0),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(newContactsList[index]['contact'].name.toString().toTitleCase(),style: TextStyle(
+                            color: coal,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700),),
+                        Padding(
+                          padding: const EdgeInsets.only(top:4.0),
+                          child: Text(newContactsList[index]['phone'].toString().formatPhone(),style: TextStyle(
+                              color: coal,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600),),
+                        )
+                      ],
+                    ),
+                  ]
+                ),
+              ),
+            ),
+          );
+        }),
+    ) :  ListView(children: _messagesList());
   }
 }

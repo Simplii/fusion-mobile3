@@ -126,7 +126,7 @@ packages:
       name: dart_webrtc
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.12"
+    version: "1.0.11"
   dbus:
     dependency: transitive
     description:
@@ -360,7 +360,7 @@ packages:
       name: flutter_webrtc
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.9.19"
+    version: "0.9.17"
   html:
     dependency: transitive
     description:
