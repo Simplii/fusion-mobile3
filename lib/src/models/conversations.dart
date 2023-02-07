@@ -9,7 +9,6 @@ import 'fusion_model.dart';
 import 'fusion_store.dart';
 import 'messages.dart';
 import 'sms_departments.dart';
-import '../utils.dart';
 
 class SMSConversation extends FusionModel {
   List<CrmContact> crmContacts = [];
@@ -23,7 +22,7 @@ class SMSConversation extends FusionModel {
   String number;
   String myNumber;
   int unread;
-  int conversationId;
+  dynamic conversationId;
 
   String contactName() {
     String name = "Unknown";
@@ -80,7 +79,7 @@ class SMSConversation extends FusionModel {
     String toNumber = map['lastMessage']['from'] == map['myNumber'] 
       ? map['lastMessage']['to']
       : map['lastMessage']['from'];
-    this.conversationId = map['groupId'];
+    this.conversationId = map['conversationId'] ?? map['groupId'];
     this.groupName = map['groupName'];
     this.isGroup = map['isGroup'];
     this.lastContactTime = map['lastContactTime'];
@@ -91,7 +90,7 @@ class SMSConversation extends FusionModel {
     // this.unread = int.parse(map['unread'].toString());
     this.unread = map['unreadCount'];
     // this.crmContacts = map['crm_contacts'];
-    // this.contacts = map['conversationMembers'];
+    this.contacts = map['contacts'];
     // this.hash = map['my_number'] + ':' + map['number'];
     this.hash = map['hash'];
   }
@@ -169,7 +168,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
   @override
   storeRecord(SMSConversation record) {
     super.storeRecord(record);
-    persist(record);
+    // persist(record);
   }
 
   @override
@@ -259,26 +258,41 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       // 'group_id': groupId
     }, callback: (Map<String, dynamic> data) {
       List<SMSConversation> convos = [];
-      // print("MyDebugMessage ${data}");
       for (Map<String, dynamic> item in data['items']) {
         List<CrmContact> leads = [];
         List<Contact> contacts = [];
+        
 
-        if (item.containsKey('contacts') && item['contacts'] != null) {
-          for (Map<String, dynamic> obj in item['contacts']) {
-            contacts.add(Contact(obj));
+        if(item['conversationMembers'] != null){
+          for (Map<String, dynamic> obj in item['conversationMembers']) {
+            List<dynamic> c = obj['contacts'];
+            String number = obj['number'];
+            if(c.length > 0){
+              c.forEach((contact) { 
+                contacts.add(Contact.fromV2(contact));
+              });
+            } else if(c.length == 0 && number != ''){
+              contacts.add(Contact.fake(number));
+            }
           }
         }
 
-        if (item.containsKey('leads') && item['leads'] != null) {
-          for (Map<String, dynamic> obj in item['leads']) {
-            leads.add(CrmContact(obj));
-          }
-        }
+        // if (item.containsKey('contacts') && item['contacts'] != null) {
+        //   for (Map<String, dynamic> obj in item['contacts']) {
+        //     contacts.add(Contact(obj));
+        //   }
+        // }
+
+        // if (item.containsKey('leads') && item['leads'] != null) {
+        //   for (Map<String, dynamic> obj in item['leads']) {
+        //     leads.add(CrmContact(obj));
+        //   }
+        // }
 
         item['contacts'] = contacts;
         item['crm_contacts'] = leads;
         item['message'] = SMSMessage.fromV2(item['lastMessage']);
+        print("MyDebugMessag -- contacts 2 ${contacts.length}");
 
         SMSConversation convo = SMSConversation(item);
         storeRecord(convo);

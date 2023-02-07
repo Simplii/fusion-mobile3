@@ -82,7 +82,7 @@ class _MessagesTabState extends State<MessagesTab> {
                   padding:
                       EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
                   child: MessageSearchResults(_myNumber, _convos, _contacts,
-                      _crmContacts, _fusionConnection, _softphone,null)))
+                      _crmContacts, _fusionConnection, _softphone,null,false)))
           : _loaded
               ? MessagesList(_fusionConnection, _softphone)
               : Container()
@@ -182,12 +182,12 @@ class _MessagesListState extends State<MessagesList> {
     });
   }
 
-  _messagesList() {
-    return _convos.map((convo) {
-      return SMSConversationSummaryView(
-          _fusionConnection, _softphone, convo, _getDepartmentName(convo),_selectedGroupId, deleteConvo);
-    }).toList();
-  }
+  // _messagesList() {
+  //   return _convos.map((convo) {
+  //     return SMSConversationSummaryView(
+  //         _fusionConnection, _softphone, convo, _getDepartmentName(convo),_selectedGroupId, deleteConvo);
+  //   }).toList();
+  // }
 
   _changeGroup(String newGroupId) {
     _selectedGroupId = newGroupId;
@@ -362,9 +362,20 @@ class _SMSConversationSummaryViewState
 
   @override
   Widget build(BuildContext context) {
+    String convoLabel = '';
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(1675096165 * 1000);
+        if(_convo.isGroup){
+    // print("MyDebugMessage -- convo contacts num ${_convo.serialize()}");
 
+          convoLabel = _convo.groupName 
+            ?? 'group conversation'.toTitleCase();
+          print("MyDebugMessage ${_convo.serialize()}");
+        } else {
+          convoLabel = _convo.contactName() == "Unknown"
+              ? _convo.number.formatPhone()
+              : _convo.contactName();
+        }
     return GestureDetector(
         onTap: () {
           _openConversation();
@@ -417,7 +428,7 @@ class _SMSConversationSummaryViewState
           child: Container(
               margin: EdgeInsets.only(bottom: 18, left: 16, right: 16),
               child: Row(children: [
-                ContactCircle(_convo.contacts, _convo.crmContacts),
+                ContactCircle.groupSms(_convo.contacts, _convo.crmContacts,_convo.isGroup),
                 Expanded(
                     child: Container(
                         decoration: BoxDecoration(color: Colors.transparent),
@@ -427,10 +438,7 @@ class _SMSConversationSummaryViewState
                                 child: Column(children: [
                               Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Text(
-                                      _convo.contactName() == "Unknown"
-                                          ? _convo.number.formatPhone()
-                                          : _convo.contactName(),
+                                  child: Text(convoLabel,
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16))),
@@ -523,8 +531,9 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
         String query = _searchInputController.value.text;
         _searchingFor = query;
 
-        _fusionConnection.messages.search(query, (List<SMSConversation> convos,
+        _fusionConnection.messages.searchV2(query, (List<SMSConversation> convos,
             List<CrmContact> crmContacts, List<Contact> contacts) {
+              print("MyDebugMessage -- convos to messagelist ${_onHasResults}");
           if (mounted && query == _searchingFor) {
             this._onHasResults(convos, crmContacts, contacts);
           }
