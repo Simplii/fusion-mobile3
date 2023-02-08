@@ -44,121 +44,118 @@ class _MessageSearchResults extends State<MessageSearchResults> {
   bool get _showContactsList => widget.showContactList; 
  
   
-  // _openConvo(List<Contact> contacts, List<CrmContact> crmContacts) {
-  //   String theirNumber = "";
-  //   for (Contact c in contacts) {
-  //     for (Map<String, dynamic> phone in c.phoneNumbers) {
-  //       theirNumber = phone['number'];
-  //     }
-  //   }
-  //   for (CrmContact c in crmContacts) {
-  //     if (c.phone_number != null) {
-  //       theirNumber = c.phone_number;
-  //     }
-  //   }
+  _openConvo(List<Contact> contacts, List<CrmContact> crmContacts) {
+    String theirNumber = "";
+    for (Contact c in contacts) {
+      for (Map<String, dynamic> phone in c.phoneNumbers) {
+        if(phone['type'] == "Mobile"){
+          theirNumber = phone['number'];
+        }
+      }
+    }
+    for (CrmContact c in crmContacts) {
+      if (c.phone_number != null) {
+        theirNumber = c.phone_number;
+      }
+    }
 
-  //   String myNumber = _fusionConnection.smsDepartments
-  //       .lookupRecord("-2")
-  //       .numbers[0];
+    String myNumber = _fusionConnection.smsDepartments
+        .lookupRecord("-2")
+        .numbers[0];
 
-  //   SMSConversation convo = SMSConversation.build(
-  //     myNumber: myNumber,
-  //     contacts: contacts,
-  //     crmContacts: crmContacts,
-  //     number: theirNumber,
-  //   );
-  //   showModalBottomSheet(
-  //       context: context,
-  //       backgroundColor: Colors.transparent,
-  //       isScrollControlled: true,
-  //       builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo, null));
-  // }
+    SMSConversation convo = SMSConversation.build(
+      myNumber: myNumber,
+      contacts: contacts,
+      crmContacts: crmContacts,
+      number: theirNumber,
+    );
 
-  // _contactBubbles() {
-  //   List<Widget> bubbles = [];
-  //   for (Contact c in _contacts) {
-  //     bubbles.add(GestureDetector(
-  //         onTap: () {
-  //           // _openConvo([c], []);
-  //         if(_addChip != null){
-  //             _addChip(c);
-              
-  //           }
-  //         },
-  //         child: Container(
-  //             margin: EdgeInsets.only(top: 12),
-  //             width: 72,
-  //             child: Column(children: [
-  //               ContactCircle.withDiameterAndMargin([c], [], 60, 0),
-  //               Align(
-  //                   alignment: Alignment.center,
-  //                   child: Text(c.firstName,
-  //                       overflow: TextOverflow.ellipsis,
-  //                       style: TextStyle(
-  //                           color: coal,
-  //                           fontSize: 12,
-  //                           fontWeight: FontWeight.w700))),
-  //               Align(
-  //                   alignment: Alignment.center,
-  //                   child: Text(c.lastName,
-  //                       overflow: TextOverflow.ellipsis,
-  //                       style: TextStyle(
-  //                           color: coal,
-  //                           fontSize: 12,
-  //                           fontWeight: FontWeight.w700)))
-  //             ]))));
-  //   }
-  //   for (CrmContact c in _crmContacts) {
-  //     bubbles.add(GestureDetector(
-  //         onTap: () {
-  //           _openConvo([], [c]);
-  //         },
-  //         child: Container(
-  //             width: 72,
-  //             margin: EdgeInsets.only(top: 12),
-  //             child: Column(children: [
-  //               ContactCircle.withDiameterAndMargin([], [c], 60, 0),
-  //               Text(c.name.split(r' ')[0],
-  //                   overflow: TextOverflow.ellipsis,
-  //                   style: TextStyle(
-  //                       color: coal,
-  //                       fontSize: 12,
-  //                       fontWeight: FontWeight.w700)),
-  //               Text(c.name.split(r' ').sublist(1).join(' '),
-  //                   overflow: TextOverflow.ellipsis,
-  //                   style: TextStyle(
-  //                       color: coal, fontSize: 12, fontWeight: FontWeight.w700))
-  //             ]))));
-  //   }
-  //   return bubbles;
-  // }
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo, null));
+  }
+
+  _contactBubbles() {
+    List<Widget> bubbles = [];
+    for (Contact c in _contacts) {
+      bubbles.add(GestureDetector(
+          onTap: () {
+            _openConvo([c], []);
+          },
+          child: Container(
+              margin: EdgeInsets.only(top: 12),
+              width: 72,
+              child: Column(children: [
+                ContactCircle.withDiameterAndMargin([c], [], 60, 0),
+                Align(
+                    alignment: Alignment.center,
+                    child: Text(c.firstName,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: coal,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700))),
+                Align(
+                    alignment: Alignment.center,
+                    child: Text(c.lastName,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: coal,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700)))
+              ]))));
+    }
+    for (CrmContact c in _crmContacts) {
+      bubbles.add(GestureDetector(
+          onTap: () {
+            _openConvo([], [c]);
+          },
+          child: Container(
+              width: 72,
+              margin: EdgeInsets.only(top: 12),
+              child: Column(children: [
+                ContactCircle.withDiameterAndMargin([], [c], 60, 0),
+                Text(c.name.split(r' ')[0],
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: coal,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700)),
+                Text(c.name.split(r' ').sublist(1).join(' '),
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: coal, fontSize: 12, fontWeight: FontWeight.w700))
+              ]))));
+    }
+    return bubbles;
+  }
 
   _messagesList() {
-    print("MyDebugMessage -- messages list ${_conversations[0].serialize()}");
     return _conversations.map((SMSConversation convo) {
       return SMSConversationSummaryView(_fusionConnection, _softphone, convo, "","",null);
     }).toList();
   }
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Column(children: [
-  //     Container(
-  //         height: 100,
-  //         child: ListView(
-  //             children: _contactBubbles(), scrollDirection: Axis.horizontal)),
-  //     Container(
-  //         padding: EdgeInsets.only(top: 14, bottom: 14),
-  //         child: Align(
-  //             alignment: Alignment.centerLeft,
-  //             child: Text("Messages",
-  //                 style: TextStyle(
-  //                     color: coal,
-  //                     fontSize: 24,
-  //                     fontWeight: FontWeight.w700)))),
-  //     Expanded(child: ListView(children: _messagesList()))
-  //   ]);
-  // }
+  Widget SearchInConversationView (){
+    return Column(children: [
+      Container(
+          height: 100,
+          child: ListView(
+              children: _contactBubbles(), scrollDirection: Axis.horizontal)),
+      Container(
+          padding: EdgeInsets.only(top: 14, bottom: 14),
+          child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text("Messages",
+                  style: TextStyle(
+                      color: coal,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700)))),
+      Expanded(child: ListView(children: _messagesList()))
+    ]);
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -235,6 +232,6 @@ class _MessageSearchResults extends State<MessageSearchResults> {
             ),
           );
         }),
-    ) :  ListView(children: _messagesList());
+    ) :  SearchInConversationView();
   }
 }

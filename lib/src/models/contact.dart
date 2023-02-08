@@ -170,7 +170,7 @@ class Contact extends FusionModel {
         : contactObject['crm_id'];
   }
 
-  Contact.fake(String number){
+  Contact.fake(dynamic number){
     String date = DateTime.now().toString();
     this.addresses = [];
     this.company = '';
@@ -183,7 +183,7 @@ class Contact extends FusionModel {
     this.id = '';
     this.jobTitle = '';
     this.lastName = '';
-    this.name = number.formatPhone();
+    this.name = number.toString().formatPhone();
     this.owner = '';
     this.phoneNumbers = [{
         "number": number,

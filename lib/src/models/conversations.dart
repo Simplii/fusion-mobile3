@@ -22,7 +22,7 @@ class SMSConversation extends FusionModel {
   String number;
   String myNumber;
   int unread;
-  dynamic conversationId;
+  int conversationId;
 
   String contactName() {
     String name = "Unknown";
@@ -50,8 +50,9 @@ class SMSConversation extends FusionModel {
       this.contacts,
       this.crmContacts,
       this.conversationId,
-      this.isGroup}) {
-    this.hash = this.myNumber + ":" + this.number;
+      this.isGroup,
+      this.hash}) {
+    this.hash = this.hash ?? this.myNumber + ":" + this.number;
     this.unread = 0;
     if (this.message != null) {
       this.lastContactTime = message.time.date;
@@ -75,7 +76,7 @@ class SMSConversation extends FusionModel {
   }
 
   SMSConversation(Map<String, dynamic> map) {
-    print("MyDebugMessage ${map['lastMessage']['from']} - ${map['myNumber']}");
+    // print("MyDebugMessage ${map['lastMessage']['from']} - ${map['myNumber']}");
     String toNumber = map['lastMessage']['from'] == map['myNumber'] 
       ? map['lastMessage']['to']
       : map['lastMessage']['from'];
@@ -91,7 +92,6 @@ class SMSConversation extends FusionModel {
     this.unread = map['unreadCount'];
     // this.crmContacts = map['crm_contacts'];
     this.contacts = map['contacts'];
-    // this.hash = map['my_number'] + ':' + map['number'];
     this.hash = map['hash'];
   }
 
@@ -168,7 +168,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
   @override
   storeRecord(SMSConversation record) {
     super.storeRecord(record);
-    // persist(record);
+    persist(record);
   }
 
   @override
@@ -248,7 +248,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
         fusionConnection.smsDepartments.getDepartment(groupId);
     List<String> numbers = department.numbers;
 
-    // getPersisted(groupId, limit, offset, callback);
+    getPersisted(groupId, limit, offset, callback);
     fusionConnection.refreshUnreads();
 
     fusionConnection.apiV2Call("get", "/messaging/group/${groupId}/conversations", {
@@ -266,7 +266,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
         if(item['conversationMembers'] != null){
           for (Map<String, dynamic> obj in item['conversationMembers']) {
             List<dynamic> c = obj['contacts'];
-            String number = obj['number'];
+            dynamic number = obj['number'];
             if(c.length > 0){
               c.forEach((contact) { 
                 contacts.add(Contact.fromV2(contact));
@@ -292,7 +292,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
         item['contacts'] = contacts;
         item['crm_contacts'] = leads;
         item['message'] = SMSMessage.fromV2(item['lastMessage']);
-        print("MyDebugMessag -- contacts 2 ${contacts.length}");
+        // print("MyDebugMessag -- contacts 2 ${contacts.length}");
 
         SMSConversation convo = SMSConversation(item);
         storeRecord(convo);
