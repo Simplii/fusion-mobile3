@@ -366,15 +366,11 @@ class _SMSConversationSummaryViewState
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(1675096165 * 1000);
         if(_convo.isGroup){
-    // print("MyDebugMessage -- convo contacts num ${_convo.serialize()}");
-
-          convoLabel = _convo.groupName 
-            ?? 'group conversation'.toTitleCase();
-          print("MyDebugMessage ${_convo.serialize()}");
+          convoLabel = _convo.groupName ?? 'group conversation'.toTitleCase();
         } else {
-          convoLabel = _convo.contactName() == "Unknown"
-              ? _convo.number.formatPhone()
-              : _convo.contactName();
+          convoLabel = _convo.contactName() == "Unknown" &&  _convo.number!= null 
+            ?_convo.number.formatPhone()
+            : _convo.contactName();
         }
     return GestureDetector(
         onTap: () {
@@ -428,7 +424,7 @@ class _SMSConversationSummaryViewState
           child: Container(
               margin: EdgeInsets.only(bottom: 18, left: 16, right: 16),
               child: Row(children: [
-                ContactCircle.groupSms(_convo.contacts, _convo.crmContacts,_convo.isGroup),
+                ContactCircle.forSMS(_convo.contacts, _convo.crmContacts,_convo.isGroup),
                 Expanded(
                     child: Container(
                         decoration: BoxDecoration(color: Colors.transparent),
@@ -533,7 +529,8 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
 
         _fusionConnection.messages.searchV2(query, (List<SMSConversation> convos,
             List<CrmContact> crmContacts, List<Contact> contacts) {
-              print("MyDebugMessage -- convos to messagelist ${_onHasResults}");
+              if(!mounted)return;
+              print("MyDebugMessage -- convos to messagelist ${mounted}");
           if (mounted && query == _searchingFor) {
             this._onHasResults(convos, crmContacts, contacts);
           }

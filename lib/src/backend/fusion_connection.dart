@@ -192,6 +192,7 @@ class FusionConnection {
       openDatabase(p.join(path, "fusion.db"), version: 1, onOpen: (db) {
         print(db.execute('''
           CREATE TABLE IF NOT EXISTS sms_conversation(
+          conversationId int,
           id TEXT PRIMARY key,
           groupName TEXT,
           isGroup int,

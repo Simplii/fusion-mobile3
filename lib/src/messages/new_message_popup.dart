@@ -71,10 +71,11 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
       } else if (query != _searchingFor) {
         _searchingFor = query;
         _fusionConnection.contacts.searchV2(query, 50, 0, 
-          (List<Contact> contacts, bool status){
+          (List<Contact> contacts, bool fromServer){
             if (mounted && query == _searchingFor) {
               setState(() {
                 _contacts = contacts;
+                _searchingFor='';
               });
             }
         });
@@ -191,24 +192,26 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   }
 
   _startConvo(String query) {
-    List<String> toNumbers = [myPhoneNumber];
+    List<String> toNumbers = [];
     List<Contact> toContacts = [];
     sendToItems.forEach((item) { 
       if(item is String){
         toNumbers.add(item);
       } else {
-        // need to make sure they are masseging the corrent number this is temp
         toNumbers.add((item as Contact).phoneNumbers[0]['number']);
         toContacts.add(item);
       }
     });
-    print("MyDebugMessage ${toNumbers}");
+    
+    print("MyDebugMessage -- start convo ${toNumbers}");
+    
     SMSConversation convo = SMSConversation.build(
       myNumber: myPhoneNumber,
       contacts: toContacts,
       crmContacts: [],
       number: toNumbers.join(','),
-      isGroup: chipsCount > 1 ?? false
+      isGroup: chipsCount > 1 ?? false,
+      hash: "$myPhoneNumber:${toNumbers.join(':')}"
     );
     showModalBottomSheet(
         context: context,
