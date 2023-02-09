@@ -189,9 +189,66 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               onPageChanged: (int page) {},
             )));
   }
-
+ 
   _header() {
     String myImageUrl = _fusionConnection.myAvatarUrl();
+  
+    List<Widget> singleMessageHeader = [
+      ContactCircle(_conversation.contacts, _conversation.crmContacts),
+      Expanded(child: Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(_conversation.contactName(), style: headerTextStyle)),
+          Align(
+          alignment: Alignment.centerLeft,
+          child: Text(_conversation.number.formatPhone(),
+              style: subHeaderTextStyle))]
+        )
+      ),
+    ];
+    
+    Widget groupMessageHeader = 
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8,7,8,3),
+          child: LimitedBox(
+          maxHeight: 50,
+          maxWidth: 50,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _conversation.contacts.length,
+            shrinkWrap: true,
+            itemBuilder: (context, index) {
+              String imageUrl = _conversation.contacts[index].pictures.length > 0 
+              ? _conversation.contacts[index].pictures.last['url'] 
+              : avatarUrl(_conversation.contacts[index].firstName, 
+                _conversation.contacts[index].lastName);
+              return Align(
+                widthFactor: 0.6,
+                child: ClipRRect(
+                  borderRadius:BorderRadius.circular(60),
+                  child: Container(
+                      height:50,
+                      width: 50,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius:BorderRadius.circular(60),
+                          border: Border.all(color: particle, width: 2),
+                          image: DecorationImage(
+                            fit: BoxFit.cover,
+                            image: NetworkImage(imageUrl)
+                          )
+                        ),
+                      )
+                  ),
+                ),
+              );
+            },
+          ),
+      ),
+        )
+    );
 
     return Column(children: [
       Center(
@@ -202,17 +259,11 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               width: 36,
               height: 5)),
       Row(children: [
-        ContactCircle(_conversation.contacts, _conversation.crmContacts),
-        Expanded(
-            child: Column(children: [
-          Align(
-              alignment: Alignment.centerLeft,
-              child: Text(_conversation.contactName(), style: headerTextStyle)),
-          Align(
-              alignment: Alignment.centerLeft,
-              child: Text(_conversation.number.formatPhone(),
-                  style: subHeaderTextStyle))
-        ])),
+        if(_conversation.isGroup != null && _conversation.isGroup)
+          groupMessageHeader,
+        if(_conversation.isGroup == null || !_conversation.isGroup)
+          ...singleMessageHeader,
+        if(_conversation.isGroup == null || !_conversation.isGroup)
         IconButton(
             icon: Opacity(
                 opacity: 0.66,
@@ -524,8 +575,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                   minLines: 1,
                   onChanged: (String changedTo) {
                     this.setState(() {
+                      _saveLocalState(changedTo);
                     });
-                    _saveLocalState(changedTo);
                   },
                   decoration: const InputDecoration(
                       contentPadding:
@@ -916,9 +967,25 @@ class _SMSMessageViewState extends State<SMSMessageView> {
 
     List<Widget> children = [];
 
+    
+
     if (_message.from != _conversation.myNumber) {
+      List<Contact> matchedContact;
+      _conversation.contacts.forEach((element){
+        Contact c = element;
+        bool match = false;
+        for (var numberObj in c.phoneNumbers) {
+          if(_message.from == numberObj['number']){
+            match = true;
+            break;
+          }
+        }
+        if(match){
+          matchedContact = [element];
+        }
+      });
       children.add(ContactCircle.withDiameter(
-          _conversation.contacts, _conversation.crmContacts, 44));
+          matchedContact ?? _conversation.contacts, _conversation.crmContacts, 44));
       children.add(Expanded(
           child: Column(children: [
         Align(

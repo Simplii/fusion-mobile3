@@ -191,28 +191,36 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
     ]);
   }
 
-  _startConvo(String query) {
+  _startConvo(String query) async {
     List<String> toNumbers = [];
     List<Contact> toContacts = [];
-    sendToItems.forEach((item) { 
-      if(item is String){
-        toNumbers.add(item);
-      } else {
-        toNumbers.add((item as Contact).phoneNumbers[0]['number']);
-        toContacts.add(item);
-      }
-    });
+
+    if(sendToItems.isEmpty && _searchTextController.value.text !=''){
+      toNumbers.add(_searchTextController.value.text);
+    } else {
+      sendToItems.forEach((item) { 
+        if(item is String || _searchTextController.value.text != ''){
+          toNumbers.add(item);
+        } else {
+          toNumbers.add((item as Contact).phoneNumbers[0]['number']);
+          toContacts.add(item);
+        }
+      });
+    }
     
-    print("MyDebugMessage -- start convo ${toNumbers}");
+    SMSConversation convo = await _fusionConnection.messages.checkExisitingConversation(groupId,
+      myPhoneNumber,toNumbers,toContacts);
     
-    SMSConversation convo = SMSConversation.build(
-      myNumber: myPhoneNumber,
-      contacts: toContacts,
-      crmContacts: [],
-      number: toNumbers.join(','),
-      isGroup: chipsCount > 1 ?? false,
-      hash: "$myPhoneNumber:${toNumbers.join(':')}"
-    );
+    print("MyDebugMessage -- start convo ${myPhoneNumber} ${toNumbers}");
+
+    // SMSConversation convo = SMSConversation.build(
+    //   myNumber: myPhoneNumber,
+    //   contacts: toContacts,
+    //   crmContacts: [],
+    //   number: toNumbers.join(','),
+    //   isGroup: chipsCount > 1 ?? false,
+    //   hash: "${toNumbers.join(':')}"
+    // );
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
