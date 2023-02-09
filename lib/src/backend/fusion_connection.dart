@@ -535,6 +535,7 @@ print(responseBody);
     });
     _socket.onMessage((dynamic messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
+      print("MyDebugMessage webSocket message ${message}");
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
       } else if (message.containsKey('sms_received')) {

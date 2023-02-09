@@ -105,14 +105,9 @@ class SMSConversation extends FusionModel {
       'myNumber': myNumber,
       'number': number,
       'members': members,
-      'message': message.serialize(),
+      'message': message?.serialize(),
       'unread': unread,
-      'crmContacts': crmContacts
-          .map((CrmContact c) {
-            return c.serialize();
-          })
-          .toList()
-          .cast<String>(),
+      'crmContacts': '',
       'contacts': contacts
           .map((Contact c) {
             return c.serialize();
@@ -248,7 +243,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
         fusionConnection.smsDepartments.getDepartment(groupId);
     List<String> numbers = department.numbers;
 
-    getPersisted(groupId, limit, offset, callback);
+    // getPersisted(groupId, limit, offset, callback);
     fusionConnection.refreshUnreads();
 
     fusionConnection.apiV2Call("get", "/messaging/group/${groupId}/conversations", {

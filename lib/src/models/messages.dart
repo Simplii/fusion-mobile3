@@ -7,6 +7,7 @@ import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart';
 
 import '../backend/fusion_connection.dart';
 import '../utils.dart';
@@ -266,6 +267,33 @@ print(callpopInfo);
     });
   }
 
+  Future<SMSConversation> checkExisitingConversation(String departmentId, String myNumber, 
+    List<String> numbers, List<Contact> contacts) async {
+     
+    SMSConversation convo;
+    await fusionConnection.apiV2Call(
+      "post", 
+      "/messaging/group/${departmentId}/conversations/exisit", {
+        'identifiers': [myNumber,...numbers]
+        }, callback: (Map<String, dynamic> data) {
+
+          if(data['lastMessage'] != null){
+            List<SMSConversation>convos = fusionConnection.conversations.getRecords();
+            convo = convos.where((c) => c.conversationId == data['groupId']).toList()?.first;
+          } else {
+            convo = SMSConversation.build(
+              conversationId: 1,
+              myNumber: myNumber,
+              contacts: contacts,
+              crmContacts: [],
+              number: numbers.join(','),
+              isGroup: false
+            );
+          }
+    }); 
+    return convo; 
+  }
+
   sendMessage(String text, SMSConversation conversation, String departmentId) {
     // fusionConnection.apiV1Call("post", "/chat/send_sms", {
     //   'number': conversation.myNumber,
@@ -283,29 +311,47 @@ print(callpopInfo);
     //   SMSMessage message = SMSMessage.fromV2(data);
     //   storeRecord(message);
     // });
-    if(conversation.conversationId == null){
+    if(conversation.isGroup){
       List<String> numbers = conversation.number.split(',');
+       print("MyDebugMessage -- start convo ${numbers}");
+
       fusionConnection.apiV2Call(
         "post", 
-        "/messaging/group/${departmentId}/conversations", {
-          'identifiers': [conversation.myNumber,...numbers]
-          }, callback: (Map<String, dynamic> data) {
-              fusionConnection.apiV2Call(
-              "post", 
-              "/messaging/group/${departmentId}/conversations/${data['groupId']}/messages", {
-                'myIdentifier': data['myNumber'],
-                'schedule': null,
-                'isMms': false,
-                'text': text,
-                'isGroup': conversation.isGroup
-              }, callback: (Map<String, dynamic> data) {
-                //test sending a message SMSV2
-                print("MyDebugMessage new message id ${data['id']}");
-                SMSMessage message = SMSMessage.fromV2(data);
-                storeRecord(message);
-              }
-            );
-        });  
+        "/messaging/group/${departmentId}/conversations/${conversation.conversationId}/messages", {
+          'myIdentifier': conversation.myNumber,
+          'schedule': null,
+          'isMms': false,
+          'text': text,
+          'isGroup': true
+        }, callback: (Map<String, dynamic> data) {
+          //test sending a message SMSV2
+          print("MyDebugMessage new message id ${data['id']}");
+          SMSMessage message = SMSMessage.fromV2(data);
+          conversation.message = message;
+          storeRecord(message);
+        }
+      );
+      // fusionConnection.apiV2Call(
+      //   "post", 
+      //   "/messaging/group/${departmentId}/conversations", {
+      //     'identifiers': [conversation.myNumber,...numbers]
+      //     }, callback: (Map<String, dynamic> data) {
+      //         fusionConnection.apiV2Call(
+      //         "post", 
+      //         "/messaging/group/${departmentId}/conversations/${data['groupId']}/messages", {
+      //           'myIdentifier': data['myNumber'],
+      //           'schedule': null,
+      //           'isMms': false,
+      //           'text': text,
+      //           'isGroup': conversation.isGroup
+      //         }, callback: (Map<String, dynamic> data) {
+      //           //test sending a message SMSV2
+      //           print("MyDebugMessage new message id ${data['id']}");
+      //           SMSMessage message = SMSMessage.fromV2(data);
+      //           storeRecord(message);
+      //         }
+      //       );
+      //   });  
     } else {
       fusionConnection.apiV2Call(
         "post", 
@@ -317,8 +363,8 @@ print(callpopInfo);
           'isGroup': conversation.isGroup
         }, callback: (Map<String, dynamic> data) {
           //test sending a message SMSV2
-          // print("MyDebugMessage ${data}");
           SMSMessage message = SMSMessage.fromV2(data);
+          conversation.message = message;
           storeRecord(message);
         }
       );
@@ -520,52 +566,6 @@ print(callpopInfo);
           callback(messages, true);
         });
     }
-    else if(convo.isGroup){
-      List<SMSConversation> conversations = fusionConnection.conversations.getRecords();
-      SMSConversation exisit; 
-      List<String> toNumbers = convo.hash.split(':'); 
-      
-      conversations.forEach((element) {
-        bool match = false;
-        if(element.isGroup && element.myNumber == convo.myNumber){
-          for (var member in element.members) {
-            if(toNumbers.contains(member['number'])){
-              match = true;
-            }
-          }
-        }
-        if(match){
-          exisit = element;
-        }
-      });
-      
-
-      if(exisit != null){
-        String convoId = exisit.conversationId.toString();
-        fusionConnection.apiV2Call(
-          "get", 
-          "/messaging/group/-1/conversations/${convoId}/messages", {
-            'isGroup': exisit.isGroup,
-            'limit': limit,
-            'offset': offset,
-          }, callback: (Map<String, dynamic> data){
-            List<SMSMessage> messages = [];
-            print("MyDebugMessage -- messagessss ${data['items']}");
-            for (Map<String, dynamic> item in data['items']) {
-              //test getting a message SMSV2
-              SMSMessage message = SMSMessage.fromV2(item);
-              storeRecord(message);
-              messages.add(message);
-              
-            }
-            callback(messages,true);
-          });
-
-      }
-
-      
-
-    } 
     else {
       // String toNumbers = convo.isGroup
       // print("MyDebugMessage single ${convo.number} ${convo.myNumber}");

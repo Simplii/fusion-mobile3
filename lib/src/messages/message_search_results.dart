@@ -44,7 +44,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
   bool get _showContactsList => widget.showContactList; 
  
   
-  _openConvo(List<Contact> contacts, List<CrmContact> crmContacts) {
+  _openConvo(List<Contact> contacts, List<CrmContact> crmContacts) async {
     String theirNumber = "";
     for (Contact c in contacts) {
       for (Map<String, dynamic> phone in c.phoneNumbers) {
@@ -63,12 +63,15 @@ class _MessageSearchResults extends State<MessageSearchResults> {
         .lookupRecord("-2")
         .numbers[0];
 
-    SMSConversation convo = SMSConversation.build(
-      myNumber: myNumber,
-      contacts: contacts,
-      crmContacts: crmContacts,
-      number: theirNumber,
-    );
+      SMSConversation convo = await _fusionConnection.messages.checkExisitingConversation('-1',
+      myNumber,[theirNumber],contacts);
+
+    // SMSConversation convo = SMSConversation.build(
+    //   myNumber: myNumber,
+    //   contacts: contacts,
+    //   crmContacts: crmContacts,
+    //   number: theirNumber,
+    // );
 
     showModalBottomSheet(
         context: context,
@@ -182,56 +185,59 @@ class _MessageSearchResults extends State<MessageSearchResults> {
 
     return _showContactsList ? Scaffold(
       resizeToAvoidBottomInset: true,
-      body: ListView.separated(
-        shrinkWrap: true,
-        itemCount: newContactsList.length,
-        separatorBuilder: (context, index) => Divider(
-          color: halfSmoke,
-        ),
-        itemBuilder: (BuildContext context, int index){
-          return Container(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () {
-                if(_addChip != null){
-                  Contact c = newContactsList[index]['contact'];
-                  c.phoneNumbers = [{ 'number':newContactsList[index]['phone'].toString(),
-                    'type':newContactsList[index]['type']
-                  }];
-                  _addChip(c);
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right:8.0),
-                      child: ContactCircle.withDiameterAndMargin([newContactsList[index]['contact']], [], 60, 0),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(newContactsList[index]['contact'].name.toString().toTitleCase(),style: TextStyle(
-                            color: coal,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700),),
-                        Padding(
-                          padding: const EdgeInsets.only(top:4.0),
-                          child: Text(newContactsList[index]['phone'].toString().formatPhone(),style: TextStyle(
+      body: Padding(
+        padding: const EdgeInsets.only(top:8.0),
+        child: ListView.separated(
+          shrinkWrap: true,
+          itemCount: newContactsList.length,
+          separatorBuilder: (context, index) => Divider(
+            color: halfSmoke,
+          ),
+          itemBuilder: (BuildContext context, int index){
+            return Container(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {
+                  if(_addChip != null){
+                    Contact c = newContactsList[index]['contact'];
+                    c.phoneNumbers = [{ 'number':newContactsList[index]['phone'].toString(),
+                      'type':newContactsList[index]['type']
+                    }];
+                    _addChip(c);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right:8.0),
+                        child: ContactCircle.withDiameterAndMargin([newContactsList[index]['contact']], [], 60, 0),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(newContactsList[index]['contact'].name.toString().toTitleCase(),style: TextStyle(
                               color: coal,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600),),
-                        )
-                      ],
-                    ),
-                  ]
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700),),
+                          Padding(
+                            padding: const EdgeInsets.only(top:4.0),
+                            child: Text(newContactsList[index]['phone'].toString().formatPhone(),style: TextStyle(
+                                color: coal,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600),),
+                          )
+                        ],
+                      ),
+                    ]
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }),
+      ),
     ) :  SearchInConversationView();
   }
 }
