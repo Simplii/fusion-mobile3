@@ -243,15 +243,15 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
 
   getConversations(String groupId, int limit, int offset,
       Function(List<SMSConversation> conversations, bool fromServer) callback) {
-    SMSDepartment department =
-        fusionConnection.smsDepartments.getDepartment(groupId);
-    List<String> numbers = department.numbers;
+    // SMSDepartment department =
+    //     fusionConnection.smsDepartments.getDepartment(groupId);
+    // List<String> numbers = department.numbers;
 
-    getPersisted(groupId, limit, offset, callback);
+    // getPersisted(groupId, limit, offset, callback);
     fusionConnection.refreshUnreads();
 
     fusionConnection.apiV2Call("get", "/messaging/group/${groupId}/conversations", {
-      'numbers': numbers.join(","),
+      // 'numbers': numbers.join(","),
       'limit': limit,
       'offset': offset,
       // 'group_id': groupId
@@ -291,7 +291,6 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
         item['contacts'] = contacts;
         item['crm_contacts'] = leads;
         item['message'] = SMSMessage.fromV2(item['lastMessage']);
-        // print("MyDebugMessag -- contacts 2 ${contacts.length}");
 
         SMSConversation convo = SMSConversation(item);
         storeRecord(convo);

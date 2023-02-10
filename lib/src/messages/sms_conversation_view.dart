@@ -850,7 +850,7 @@ class SMSMessageView extends StatefulWidget {
   List<SMSMessage> _messages;
   String _selectedGroupId;
   SMSMessageView(this._fusionConnection, this._message, this._conversation,
-      this._openMedia, this._deleteMessage, this._messages, _selectedGroupId,
+      this._openMedia, this._deleteMessage, this._messages, this._selectedGroupId,
       {Key key})
       : super(key: key);
 
