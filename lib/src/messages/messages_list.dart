@@ -264,7 +264,7 @@ class _MessagesListState extends State<MessagesList> {
                               } else {
                                 return Container(
                                   child: Text(
-                                    'No conversations',
+                                    _convos.isEmpty ?'No conversations' : '',
                                     textAlign: TextAlign.center,),
                                 );
                               }
@@ -390,8 +390,7 @@ class _SMSConversationSummaryViewState
             ),
           ),
           onDismissed: (DismissDirection direction) {
-            _fusionConnection.conversations.deleteConversation(_convo.getId(),
-                _convo.number, _convo.myNumber, _departmentId);
+            _fusionConnection.conversations.deleteConversation(_convo, _departmentId);
           },
           confirmDismiss: (DismissDirection direction) async {
             return await showDialog(
@@ -530,7 +529,6 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
         _fusionConnection.messages.searchV2(query, (List<SMSConversation> convos,
             List<CrmContact> crmContacts, List<Contact> contacts) {
               if(!mounted)return;
-              print("MyDebugMessage -- convos to messagelist ${mounted}");
           if (mounted && query == _searchingFor) {
             this._onHasResults(convos, crmContacts, contacts);
           }

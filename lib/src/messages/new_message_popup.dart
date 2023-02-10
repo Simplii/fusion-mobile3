@@ -199,8 +199,9 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
       toNumbers.add(_searchTextController.value.text);
     } else {
       sendToItems.forEach((item) { 
-        if(item is String || _searchTextController.value.text != ''){
+        if(item is String){
           toNumbers.add(item);
+          toContacts.add(Contact.fake(item));
         } else {
           toNumbers.add((item as Contact).phoneNumbers[0]['number']);
           toContacts.add(item);
@@ -211,8 +212,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
     SMSConversation convo = await _fusionConnection.messages.checkExisitingConversation(groupId,
       myPhoneNumber,toNumbers,toContacts);
     
-    print("MyDebugMessage -- start convo ${myPhoneNumber} ${toNumbers}");
-
+  // print("MyNumber ${convo.serialize()}");
     // SMSConversation convo = SMSConversation.build(
     //   myNumber: myPhoneNumber,
     //   contacts: toContacts,
