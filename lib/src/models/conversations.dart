@@ -1,5 +1,6 @@
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/models/unreads.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'dart:convert' as convert;
 
 import '../backend/fusion_connection.dart';
@@ -39,6 +40,9 @@ class SMSConversation extends FusionModel {
           name = contact.name;
         }
       }
+    }
+    if(this.isGroup){
+      name = this.hash.replaceAll(':', ',').formatPhone();  
     }
     return name;
   }
@@ -243,7 +247,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
         fusionConnection.smsDepartments.getDepartment(groupId);
     List<String> numbers = department.numbers;
 
-    // getPersisted(groupId, limit, offset, callback);
+    getPersisted(groupId, limit, offset, callback);
     fusionConnection.refreshUnreads();
 
     fusionConnection.apiV2Call("get", "/messaging/group/${groupId}/conversations", {
@@ -305,11 +309,16 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     storeRecord(convo);
   }
 
-  void deleteConversation(String id, String from, String myNumber, String departmentId) {
-    this.removeRecord(id);
-    fusionConnection.apiV1Call("post", "/chat/archive_conversation", {
-      "from_numbers": [myNumber],
-      "to_numbers": [from],
+  void deleteConversation(SMSConversation convo, String departmentId) {
+    this.removeRecord(convo.getId());
+    // fusionConnection.apiV1Call("post", "/chat/archive_conversation", {
+    //   "from_numbers": [myNumber],
+    //   "to_numbers": [from],
+    // }, callback: null);
+
+    print("MyDebugMessage deleteConversation id ${convo.isGroup} ${convo.conversationId}");
+    fusionConnection
+      .apiV2Call("post", "/messaging/group/${departmentId}/conversations/${convo.conversationId}/archive", {
     }, callback: null);
   }
 }

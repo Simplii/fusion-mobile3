@@ -94,6 +94,27 @@ class SMSMessage extends FusionModel {
         .replaceFirst(RegExp("@.*"), "") : null;
   }
 
+  SMSMessage.empty() {
+    String date = DateTime.now().toString();
+    this.convertedMms = false;
+    this.domain = null;
+    this.from = "";
+    this.fromMe = true;
+    this.id = UniqueKey().toString();
+    this.isGroup = true;
+    this.message = 'test';
+    this.messageStatus = null;
+    this.mime = null;
+    this.read = true;
+    this.scheduledAt = null;
+    this.smsWebhookId = 0;
+    this.time = CarbonDate.fromDate(date);
+    this.to = '';
+    this.type = "sms";
+    this.unixtime = DateTime.parse(date).millisecondsSinceEpoch ~/ 1000;
+    this.user = null;
+  }
+
   serialize() {
     return convert.jsonEncode({
       'convertedMms': convertedMms,
@@ -221,7 +242,7 @@ print(callpopInfo);
       'read': record.read != null && record.read ? 1 : 0,
       'time': record.unixtime,
       'to': record.to,
-      // 'user': record.user,
+      'user': record.user,
       'raw': record.serialize()
     });
   }
@@ -278,19 +299,20 @@ print(callpopInfo);
         }, callback: (Map<String, dynamic> data) {
 
           if(data['lastMessage'] != null){
-            List<SMSConversation>convos = fusionConnection.conversations.getRecords();
-            convo = convos.where((c) => c.conversationId == data['groupId']).toList()?.first;
+            convo = SMSConversation(data);
+            convo.contacts = contacts;
           } else {
             convo = SMSConversation.build(
-              conversationId: 1,
               myNumber: myNumber,
               contacts: contacts,
               crmContacts: [],
               number: numbers.join(','),
-              isGroup: false
+              isGroup: numbers.length > 1,
+              hash: myNumber +':'+numbers.join(':')
             );
           }
-    }); 
+    });
+
     return convo; 
   }
 
@@ -311,48 +333,8 @@ print(callpopInfo);
     //   SMSMessage message = SMSMessage.fromV2(data);
     //   storeRecord(message);
     // });
-    if(conversation.isGroup){
-      List<String> numbers = conversation.number.split(',');
-       print("MyDebugMessage -- start convo ${numbers}");
-
-      fusionConnection.apiV2Call(
-        "post", 
-        "/messaging/group/${departmentId}/conversations/${conversation.conversationId}/messages", {
-          'myIdentifier': conversation.myNumber,
-          'schedule': null,
-          'isMms': false,
-          'text': text,
-          'isGroup': true
-        }, callback: (Map<String, dynamic> data) {
-          //test sending a message SMSV2
-          print("MyDebugMessage new message id ${data['id']}");
-          SMSMessage message = SMSMessage.fromV2(data);
-          conversation.message = message;
-          storeRecord(message);
-        }
-      );
-      // fusionConnection.apiV2Call(
-      //   "post", 
-      //   "/messaging/group/${departmentId}/conversations", {
-      //     'identifiers': [conversation.myNumber,...numbers]
-      //     }, callback: (Map<String, dynamic> data) {
-      //         fusionConnection.apiV2Call(
-      //         "post", 
-      //         "/messaging/group/${departmentId}/conversations/${data['groupId']}/messages", {
-      //           'myIdentifier': data['myNumber'],
-      //           'schedule': null,
-      //           'isMms': false,
-      //           'text': text,
-      //           'isGroup': conversation.isGroup
-      //         }, callback: (Map<String, dynamic> data) {
-      //           //test sending a message SMSV2
-      //           print("MyDebugMessage new message id ${data['id']}");
-      //           SMSMessage message = SMSMessage.fromV2(data);
-      //           storeRecord(message);
-      //         }
-      //       );
-      //   });  
-    } else {
+    if(conversation.conversationId != null){
+      
       fusionConnection.apiV2Call(
         "post", 
         "/messaging/group/${departmentId}/conversations/${conversation.conversationId}/messages", {
@@ -366,8 +348,33 @@ print(callpopInfo);
           SMSMessage message = SMSMessage.fromV2(data);
           conversation.message = message;
           storeRecord(message);
+          print("MyDebugMessage new group messageObj created ${message.serialize()}");
         }
-      );
+      ); 
+    } else {
+      List<String> numbers = conversation.number.split(',');
+
+      fusionConnection.apiV2Call(
+        "post", 
+        "/messaging/group/${departmentId}/conversations", {
+          'identifiers': [conversation.myNumber,...numbers]
+          }, callback: (Map<String, dynamic> data) async {
+              fusionConnection.apiV2Call(
+              "post", 
+              "/messaging/group/${departmentId}/conversations/${data['groupId']}/messages", {
+                'myIdentifier': data['myNumber'],
+                'schedule': null,
+                'isMms': false,
+                'text': text,
+                'isGroup': data['isGroup']
+              }, callback: (Map<String, dynamic> data) {
+                SMSMessage message = SMSMessage.fromV2(data);
+                conversation.message = message;
+                storeRecord(message);
+                print("MyDebugMessage new messageObj created ${message.serialize()}");
+              }
+            );
+        }); 
     }
   }
 
@@ -544,7 +551,7 @@ print(callpopInfo);
 
   getMessages(SMSConversation convo, int limit, int offset,
       Function(List<SMSMessage> messages, bool fromServer) callback, String departmentId) {
-    // getPersisted(convo, limit, offset, callback);
+    getPersisted(convo, limit, offset, callback);
     if(convo.conversationId != null && convo.isGroup){
       fusionConnection.apiV2Call(
         "get", 
@@ -566,9 +573,12 @@ print(callpopInfo);
           callback(messages, true);
         });
     }
+    else if(convo.conversationId == null && convo.isGroup){
+      SMSMessage message = SMSMessage.empty();
+      storeRecord(message);
+      callback([message], true);
+    }
     else {
-      // String toNumbers = convo.isGroup
-      // print("MyDebugMessage single ${convo.number} ${convo.myNumber}");
       fusionConnection.apiV2Call(
       "get", 
       "/messaging/group/${departmentId}/conversations/${convo.number}/${convo.myNumber}/messages", {

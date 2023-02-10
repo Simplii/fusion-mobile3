@@ -259,11 +259,11 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               width: 36,
               height: 5)),
       Row(children: [
-        if(_conversation.isGroup != null && _conversation.isGroup)
+        if(_conversation.isGroup)
           groupMessageHeader,
-        if(_conversation.isGroup == null || !_conversation.isGroup)
+        if(!_conversation.isGroup)
           ...singleMessageHeader,
-        if(_conversation.isGroup == null || !_conversation.isGroup)
+        if(!_conversation.isGroup)
         IconButton(
             icon: Opacity(
                 opacity: 0.66,
@@ -293,9 +293,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                 if(_deleteConvo != null){
                   _deleteConvo(_conversation,null);
                   _fusionConnection.conversations.deleteConversation(
-                      _conversation.getId(),
-                      _conversation.number,
-                      _conversation.myNumber,
+                      _conversation,
                       _selectedGroupId);
                 }
                 Navigator.pop(context, true);
@@ -720,6 +718,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
 
   _addMessage(SMSMessage message) {
     bool matched = false;
+      print("MyDebugMessage messages add message sss");
 
     for (SMSMessage savedMessage in _messages) {
       if (savedMessage.id == message.id) {
@@ -728,6 +727,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     }
 
     if (!matched) {
+      print("MyDebugMessage messages add message");
       _messages.add(message);
     }
   }
@@ -736,7 +736,6 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   _lookupMessages() {
     lookupState = 1;
     _clearSubscription();
-    print("MyDebugMessage messages");
     _subscriptionKey = _fusionConnection.messages.subscribe(_conversation,
         (List<SMSMessage> messages) {
           
@@ -998,11 +997,29 @@ class _SMSMessageViewState extends State<SMSMessageView> {
     } else {
       children.add(Expanded(
           child: Column(children: [
-        Align(
-            alignment: Alignment.centerRight,
-            child: Text(DateFormat.jm().format(date),
-                style: TextStyle(
-                    fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: 
+                _message.messageStatus == 'delivered' 
+                  ? Icon (Icons.check,size: 10, color:smoke,)
+                  : _message.messageStatus == 'failed'
+                    ? Icon(Icons.clear,size: 10, color: smoke,)
+                    : Container(),
+              ),
+            ),
+            Align(
+                alignment: Alignment.centerRight,
+                child: Text(DateFormat.jm().format(date),
+                    style: TextStyle(
+                        fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
+          ],
+        ),
+        
         _renderMessage()
       ])));
     }
