@@ -390,7 +390,10 @@ class _SMSConversationSummaryViewState
             ),
           ),
           onDismissed: (DismissDirection direction) {
-            _fusionConnection.conversations.deleteConversation(_convo, _departmentId);
+            if(_deleteConvo != null){
+              _fusionConnection.conversations.deleteConversation(_convo, _departmentId);
+              _deleteConvo(_convo,null);
+            }
           },
           confirmDismiss: (DismissDirection direction) async {
             return await showDialog(

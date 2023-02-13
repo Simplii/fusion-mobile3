@@ -63,7 +63,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
         .lookupRecord("-2")
         .numbers[0];
 
-      SMSConversation convo = await _fusionConnection.messages.checkExisitingConversation('-1',
+      SMSConversation convo = await _fusionConnection.messages.checkExisitingConversation('-2',
       myNumber,[theirNumber],contacts);
 
     // SMSConversation convo = SMSConversation.build(
@@ -184,9 +184,10 @@ class _MessageSearchResults extends State<MessageSearchResults> {
      });
 
     return _showContactsList ? Scaffold(
+      extendBody: true,
       resizeToAvoidBottomInset: true,
-      body: Padding(
-        padding: const EdgeInsets.only(top:8.0),
+      body: Container(
+        height: MediaQuery.of(context).size.height,
         child: ListView.separated(
           shrinkWrap: true,
           itemCount: newContactsList.length,
@@ -195,6 +196,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
           ),
           itemBuilder: (BuildContext context, int index){
             return Container(
+              margin: EdgeInsets.only(top: index == 0 ? 8 : 0),
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: () {
@@ -225,7 +227,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
                           Padding(
                             padding: const EdgeInsets.only(top:4.0),
                             child: Text(newContactsList[index]['phone'].toString().formatPhone(),style: TextStyle(
-                                color: coal,
+                                color: char,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600),),
                           )

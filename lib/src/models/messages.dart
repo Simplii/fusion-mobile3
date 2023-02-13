@@ -199,6 +199,13 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
   SMSMessagesStore(FusionConnection _fusionConnection)
       : super(_fusionConnection);
 
+  @override
+  removeRecord(id){
+    super.removeRecord(id);
+      fusionConnection.db.delete('sms_message',
+      where: 'id = ?',
+      whereArgs: [id]);
+  }
   notifyMessage(SMSMessage message) {
     if (!notifiedMessages.containsKey(message.id)) {
       notifiedMessages[message.id] = true;
@@ -334,7 +341,6 @@ print(callpopInfo);
     //   storeRecord(message);
     // });
     if(conversation.conversationId != null){
-      
       fusionConnection.apiV2Call(
         "post", 
         "/messaging/group/${departmentId}/conversations/${conversation.conversationId}/messages", {
@@ -344,11 +350,9 @@ print(callpopInfo);
           'text': text,
           'isGroup': conversation.isGroup
         }, callback: (Map<String, dynamic> data) {
-          //test sending a message SMSV2
           SMSMessage message = SMSMessage.fromV2(data);
           conversation.message = message;
           storeRecord(message);
-          print("MyDebugMessage new group messageObj created ${message.serialize()}");
         }
       ); 
     } else {
@@ -368,10 +372,10 @@ print(callpopInfo);
                 'text': text,
                 'isGroup': data['isGroup']
               }, callback: (Map<String, dynamic> data) {
+                conversation.number = data['to'];  
                 SMSMessage message = SMSMessage.fromV2(data);
                 conversation.message = message;
                 storeRecord(message);
-                print("MyDebugMessage new messageObj created ${message.serialize()}");
               }
             );
         }); 
@@ -602,10 +606,8 @@ print(callpopInfo);
   }
 
   void deleteMessage(String messageId, String departmentId) {
-    this.removeRecord(messageId);
-    fusionConnection.db.delete('sms_message',
-        where: 'id = ?',
-        whereArgs: [messageId]);
-    fusionConnection.apiV2Call("post", "/messaging/message/${messageId}/${departmentId}/archive", {}, callback:null);
+    removeRecord(messageId);
+    fusionConnection.apiV2Call("post", 
+    "/messaging/message/${messageId}/${departmentId}/archive", {}, callback:null);
   }
 }

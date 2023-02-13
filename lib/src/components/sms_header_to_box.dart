@@ -41,7 +41,6 @@ class _SendToBoxState extends State<SendToBox> {
   Text _chipLabel (int index){
     if(contacts.elementAt(index) is Contact){
       Contact contact = contacts.elementAt(index);
-      print("MyDebugMessage -- chipLabel ${contact.phoneNumbers}");
       String phoneType = (contact.phoneNumbers[0]['type'] != null  
         && contact.phoneNumbers[0]['type'] != "Mobile" )
           ? " - "+contact.phoneNumbers[0]['type']
@@ -58,41 +57,54 @@ class _SendToBoxState extends State<SendToBox> {
     return Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Wrap(
-          spacing:5,
-          children: List<Widget>.generate(chipsCount, (index){
-            return InputChip(
-              labelPadding: EdgeInsets.only(left: 3,right: 1),
-              backgroundColor: ash,
-              avatar: contacts.elementAt(index) is Contact 
-                ? CircleAvatar(
-                    backgroundColor: Colors.blueGrey,
-                    child: Container(
+        Container(
+          constraints: BoxConstraints(
+            maxHeight: 80,
+            minWidth: MediaQuery.of(context).size.width
+          ),
+          child: RawScrollbar(
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              reverse: true,   
+              child: Wrap(
+                runSpacing: -10,
+                spacing:5,
+                children: List<Widget>.generate(chipsCount, (index){
+                  return InputChip(
+                    labelPadding: EdgeInsets.only(left: 3,right: 1),
+                    backgroundColor: ash,
+                    avatar: contacts.elementAt(index) is Contact 
+                      ? CircleAvatar(
+                          backgroundColor: Colors.blueGrey,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: DecorationImage(
+                                fit: BoxFit.cover,
+                                image: _chipAvatar(index))
+                            ),)
+                        )
+                      : null,
+                    label: _chipLabel(index),
+                    labelStyle: TextStyle(color: Colors.black,fontSize: 12.0),
+                    onDeleted: ()=> _deleteChip(index),
+                    elevation: 1,
+                    deleteIcon: DecoratedBox(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        image: DecorationImage(
-                          fit: BoxFit.cover,
-                          image: _chipAvatar(index))
-                      ),)
-                  )
-                : null,
-              label: _chipLabel(index),
-              labelStyle: TextStyle(color: Colors.black,fontSize: 12.0),
-              onDeleted: ()=> _deleteChip(index),
-              elevation: 1,
-              deleteIcon: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: translucentSmoke
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(2.0),
-                  child: Icon(Icons.clear,color: coal, size: 15),
-                )));
-          })
+                        color: translucentSmoke
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Icon(Icons.clear,color: coal, size: 15),
+                      )));
+                })
+              ),
+            ),
+          ),
         ),
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [Container(
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width - 58,

@@ -80,7 +80,6 @@ class SMSConversation extends FusionModel {
   }
 
   SMSConversation(Map<String, dynamic> map) {
-    // print("MyDebugMessage ${map['lastMessage']['from']} - ${map['myNumber']}");
     String toNumber = map['lastMessage']['from'] == map['myNumber'] 
       ? map['lastMessage']['to']
       : map['lastMessage']['from'];
@@ -247,7 +246,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     //     fusionConnection.smsDepartments.getDepartment(groupId);
     // List<String> numbers = department.numbers;
 
-    // getPersisted(groupId, limit, offset, callback);
+    getPersisted(groupId, limit, offset, callback);
     fusionConnection.refreshUnreads();
 
     fusionConnection.apiV2Call("get", "/messaging/group/${groupId}/conversations", {
@@ -308,14 +307,20 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
     storeRecord(convo);
   }
 
+  void clearPersistedConvoMessages(SMSConversation convo){
+    fusionConnection.db.delete('sms_message',
+         where: '(`to` = ? and `from` = ?) or (`from` = ? and `to` = ?)',
+        whereArgs: [
+          convo.myNumber,
+          convo.number,
+          convo.myNumber,
+          convo.number]);
+
+  }
   void deleteConversation(SMSConversation convo, String departmentId) {
     this.removeRecord(convo.getId());
-    // fusionConnection.apiV1Call("post", "/chat/archive_conversation", {
-    //   "from_numbers": [myNumber],
-    //   "to_numbers": [from],
-    // }, callback: null);
+    clearPersistedConvoMessages(convo);
 
-    print("MyDebugMessage deleteConversation id ${convo.isGroup} ${convo.conversationId}");
     fusionConnection
       .apiV2Call("post", "/messaging/group/${departmentId}/conversations/${convo.conversationId}/archive", {
     }, callback: null);

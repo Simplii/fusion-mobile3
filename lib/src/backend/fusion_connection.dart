@@ -231,6 +231,13 @@ class FusionConnection {
           );
           '''));
       }).then((Database db) {
+        db.rawQuery('SELECT conversationId FROM sms_conversation')
+          .then((value) => print("MyDebugMessage db conversationId exisit ${value}"))
+          .catchError((error)=>{
+            db.rawQuery('ALTER TABLE sms_conversation ADD COLUMN conversationId')
+              .then((value) => print("MyDebugMessage db conversationId created ${value}"))
+              .catchError((onError)=> print("MyDebugMessage db couldn't create conversationId col"))
+          });
         this.db = db;
       }).catchError((error) {
       });
@@ -346,7 +353,6 @@ class FusionConnection {
           onError();
       }
       else {
-        print("MyDebugMessage ${uriResponse.body}");
         var jsonResponse = convert.jsonDecode(uriResponse.body);
         client.close();
         if (callback != null) callback(jsonResponse);
@@ -535,7 +541,6 @@ print(responseBody);
     });
     _socket.onMessage((dynamic messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
-      print("MyDebugMessage webSocket message ${message}");
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
       } else if (message.containsKey('sms_received')) {

@@ -197,6 +197,18 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
 
     if(sendToItems.isEmpty && _searchTextController.value.text !=''){
       toNumbers.add(_searchTextController.value.text);
+      if(_contacts.length > 0){
+        _contacts.forEach((contact) { 
+          Contact matchedContactTophone;
+          contact.phoneNumbers
+          .forEach((phone){
+            if( phone['number'] == _searchTextController.value.text){
+              matchedContactTophone = contact;
+            }
+          });
+          toContacts.add(matchedContactTophone);
+        });
+      }
     } else {
       sendToItems.forEach((item) { 
         if(item is String){
