@@ -718,7 +718,6 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
 
   _addMessage(SMSMessage message) {
     bool matched = false;
-      print("MyDebugMessage messages add message sss");
 
     for (SMSMessage savedMessage in _messages) {
       if (savedMessage.id == message.id) {
@@ -727,7 +726,6 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     }
 
     if (!matched) {
-      print("MyDebugMessage messages add message");
       _messages.add(message);
     }
   }
