@@ -112,7 +112,9 @@ String avatarUrl(String firstName, String lastName) {
 }
 
 extension Capitalize on String {
-  String capitalize() => "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
+  String capitalize() => this.length > 0 
+    ? "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}" 
+    : this;
   String toTitleCase() => replaceAll(RegExp(' +'), ' ').split(' ').map((str) => str.capitalize()).join(' ');
 }
 
