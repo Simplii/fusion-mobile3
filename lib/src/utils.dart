@@ -5,11 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:ui' as ui;
-<<<<<<< Updated upstream
-=======
 import 'dart:async';
 import 'package:http/http.dart' as http;
->>>>>>> Stashed changes
 
 uuidFromString(String str) {
   if (str.length == 0)
