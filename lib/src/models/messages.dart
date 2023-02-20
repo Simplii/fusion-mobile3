@@ -301,7 +301,7 @@ print(callpopInfo);
     SMSConversation convo;
     await fusionConnection.apiV2Call(
       "post", 
-      "/messaging/group/${departmentId}/conversations/exisit", {
+      "/messaging/group/${departmentId}/conversations/existing", {
         'identifiers': [myNumber,...numbers]
         }, callback: (Map<String, dynamic> data) {
 

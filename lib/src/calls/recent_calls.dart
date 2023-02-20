@@ -121,10 +121,12 @@ class _RecentCallsListState extends State<RecentCallsList> {
   }
 
   _lookupQuery() {
+    List historyPage = _filteredHistoryItems();
     if (lookupState == 1) return;
     lookupState = 1;
 
     if (_page == -1) return;
+    if(_pageSize > historyPage.length) return;
     _page += 1;
     _lookupHistory();
   }
