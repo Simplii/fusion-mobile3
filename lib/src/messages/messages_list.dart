@@ -365,13 +365,15 @@ class _SMSConversationSummaryViewState
     String convoLabel = '';
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(1675096165 * 1000);
-        if(_convo.isGroup){
-          convoLabel = _convo.groupName ?? 'group conversation'.toTitleCase();
-        } else {
-          convoLabel = _convo.contactName() == "Unknown" &&  _convo.number!= null 
-            ?_convo.number.formatPhone()
-            : _convo.contactName();
-        }
+    
+    if(_convo.isGroup){
+      convoLabel = _convo.groupName ?? 'group conversation'.toTitleCase();
+    } else {
+      convoLabel = _convo.contactName() == "Unknown" &&  _convo.number!= null 
+        ?_convo.number.formatPhone()
+        : _convo.contactName();
+    }
+
     return GestureDetector(
         onTap: () {
           _openConversation();

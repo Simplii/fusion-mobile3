@@ -289,9 +289,11 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
 
         item['contacts'] = contacts;
         item['crm_contacts'] = leads;
-        item['message'] = SMSMessage.fromV2(item['lastMessage']);
-
-        SMSConversation convo = SMSConversation(item);
+        if(item['lastMessage'] != null ){
+          item['message'] = SMSMessage.fromV2(item['lastMessage']);
+        } 
+        if(item['message']== null)break;
+        SMSConversation convo =  SMSConversation(item);
         storeRecord(convo);
         convos.add(convo);
       }
