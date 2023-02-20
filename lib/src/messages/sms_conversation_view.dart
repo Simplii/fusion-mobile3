@@ -5,7 +5,6 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
@@ -82,7 +81,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   List<String> _savedImgPaths = [];
   String _selectedGroupId = "";
   Timer _debounceMessageInput;
-  int length = 0;
   Function(SMSConversation, SMSMessage) get _deleteConvo => widget._deleteConvo;
   initState() {
     super.initState();
@@ -135,8 +133,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _mediaGallery(SMSMessage activeMessage) {
     List<SMSMessage> galleryItems = _messages
         .where((SMSMessage message) {
-          return message.mime != null && (message.mime.contains("image") ||
-              message.mime.contains("video"));
+          return message.mime != null && message.mime.contains("image") ||
+              message.mime.contains("video");
         })
         .toList()
         .cast<SMSMessage>();
@@ -525,23 +523,9 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                   maxLines: 10,
                   minLines: 1,
                   onChanged: (String changedTo) {
-                    if (_messageInputController.text.length - length > 1){
-                      _messageInputController.text = "";
-
-                      SharedPreferences.getInstance().then((SharedPreferences prefs) {
-                        String imageUrl = prefs.getString("copiedImagePath");
-                        
-                        setState(() {
-                          _mediaToSend.add(XFile('$imageUrl'));
-                          // _saveImageLocally(imageFile);
-                        });
-                      },);
-                      print("paste ${_messageInputController.text}");
-                    }
-                    length = _messageInputController.text.length;
-                    // this.setState(() {
-                    //   _saveLocalState(changedTo);
-                    // });
+                    this.setState(() {
+                    });
+                    _saveLocalState(changedTo);
                   },
                   decoration: const InputDecoration(
                       contentPadding:
@@ -828,7 +812,6 @@ class _SMSMessageViewState extends State<SMSMessageView> {
   SMSMessage get _message => widget._message;
   final _searchInputController = TextEditingController();
 
-  final GlobalKey<TooltipState> tooltipkey = GlobalKey<TooltipState>();
   List<SMSMessage> get _messages => widget._messages;
   _openMedia() {
     widget._openMedia(_message);
@@ -882,21 +865,6 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         child: _message.mime != null &&
                 _message.mime.toString().contains('image')
             ? GestureDetector(
-                onLongPress: () async {
-                  await Clipboard.setData(ClipboardData(text: _message.message));
-                  Clipboard.getData(Clipboard.kTextPlain)
-                    .then((value){
-                      if(value.text != ''){
-                        tooltipkey.currentState?.ensureTooltipVisible();
-                        urlToXFile(Uri.parse(value.text)).then((value) {
-                          SharedPreferences.getInstance().then((SharedPreferences prefs) {
-                            prefs.setString("copiedImagePath", value.path);
-                          });
-                        },);
-                        
-                      }
-                    });
-                },
                 onTap: _openMedia,
                 child: ClipRRect(
                     borderRadius: BorderRadius.only(
@@ -914,15 +882,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                                 image: DecorationImage(
                                     fit: BoxFit.fitWidth,
                                     image: */
-                            child: Tooltip(
-                              message:'Copied',
-                              key: tooltipkey,
-                              triggerMode: TooltipTriggerMode.manual,
-                              child: Image.network(_message.message),
-                            )
-                          )
-                        )
-                  )) //))
+                            child: Image.network(_message.message))))) //))
             : Container(
                 constraints: BoxConstraints(maxWidth: maxWidth),
                 margin: EdgeInsets.only(top: 2),

@@ -1,12 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:ui' as ui;
-import 'dart:async';
-import 'package:http/http.dart' as http;
 
 uuidFromString(String str) {
   if (str.length == 0)
@@ -113,38 +109,3 @@ String avatarUrl(String firstName, String lastName) {
     return "https://fusioncomm.net/api/v2/client/" +
         "nameAvatar/${firstName}/${lastName}";
 }
-
-extension Capitalize on String {
-  String capitalize() => 
-    this.length > 0 ? "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}" : this;
-  String toTitleCase() => replaceAll(RegExp(' +'), ' ').split(' ').map((str) => str.capitalize()).join(' ');
-}
- 
-class Debounce {
-  Duration delay;
-  Timer _timer;
-
-  Debounce(
-    this.delay,
-  );
-
-  call(void Function() callback) {
-    _timer?.cancel();
-    _timer = Timer(delay, callback);
-  }
-
-  dispose() {
-    _timer?.cancel();
-  }
-}
-
-  Future<XFile> urlToXFile(Uri imageUrl) async {
-    var rng = new Random();
-    Directory tempDir = await getTemporaryDirectory();
-    String tempPath = tempDir.path;
-    File file  = new File('$tempPath'+ (rng.nextInt(100)).toString() +'.png');
-    http.Response response = await http.get(imageUrl);
-    await file.writeAsBytes(response.bodyBytes);
-    XFile xfile = new XFile(file.path);
-    return xfile;
-  }
