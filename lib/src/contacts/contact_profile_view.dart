@@ -561,7 +561,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
         setState(() {
           this._editing = false;
         });
-      });
+      },null);
     } else {
       bodyContainer = Column(children: [
         _header(),
