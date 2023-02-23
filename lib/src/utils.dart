@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:ui' as ui;
 import 'dart:async';
+import 'package:http/http.dart' as http;
 
 uuidFromString(String str) {
   if (str.length == 0)
@@ -59,6 +62,7 @@ extension durations on int {
 
 extension PhoneNumbers on String {
   String formatPhone() {
+    if(this == null)return '';
     if (this.contains("@"))
       return this;
     else if (this.length < 10)
@@ -135,3 +139,14 @@ class Debounce {
     _timer?.cancel();
   }
 }
+
+  Future<XFile> urlToXFile(Uri imageUrl) async {
+    var rng = new Random();
+    Directory tempDir = await getTemporaryDirectory();
+    String tempPath = tempDir.path;
+    File file  = new File('$tempPath'+ (rng.nextInt(100)).toString() +'.png');
+    http.Response response = await http.get(imageUrl);
+    await file.writeAsBytes(response.bodyBytes);
+    XFile xfile = new XFile(file.path);
+    return xfile;
+  }
