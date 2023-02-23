@@ -189,9 +189,66 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               onPageChanged: (int page) {},
             )));
   }
-
+ 
   _header() {
     String myImageUrl = _fusionConnection.myAvatarUrl();
+  
+    List<Widget> singleMessageHeader = [
+      ContactCircle(_conversation.contacts, _conversation.crmContacts),
+      Expanded(child: Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(_conversation.contactName(), style: headerTextStyle)),
+          Align(
+          alignment: Alignment.centerLeft,
+          child: Text(_conversation.number.formatPhone(),
+              style: subHeaderTextStyle))]
+        )
+      ),
+    ];
+    
+    Widget groupMessageHeader = 
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8,7,8,3),
+          child: LimitedBox(
+          maxHeight: 50,
+          maxWidth: 50,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _conversation.contacts.length,
+            shrinkWrap: true,
+            itemBuilder: (context, index) {
+              String imageUrl = _conversation.contacts[index].pictures.length > 0 
+              ? _conversation.contacts[index].pictures.last['url'] 
+              : avatarUrl(_conversation.contacts[index].firstName, 
+                _conversation.contacts[index].lastName);
+              return Align(
+                widthFactor: 0.6,
+                child: ClipRRect(
+                  borderRadius:BorderRadius.circular(60),
+                  child: Container(
+                      height:50,
+                      width: 50,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius:BorderRadius.circular(60),
+                          border: Border.all(color: particle, width: 2),
+                          image: DecorationImage(
+                            fit: BoxFit.cover,
+                            image: NetworkImage(imageUrl)
+                          )
+                        ),
+                      )
+                  ),
+                ),
+              );
+            },
+          ),
+      ),
+        )
+    );
 
     return Column(children: [
       Center(
@@ -202,17 +259,11 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               width: 36,
               height: 5)),
       Row(children: [
-        ContactCircle(_conversation.contacts, _conversation.crmContacts),
-        Expanded(
-            child: Column(children: [
-          Align(
-              alignment: Alignment.centerLeft,
-              child: Text(_conversation.contactName(), style: headerTextStyle)),
-          Align(
-              alignment: Alignment.centerLeft,
-              child: Text(_conversation.number.formatPhone(),
-                  style: subHeaderTextStyle))
-        ])),
+        if(_conversation.isGroup)
+          groupMessageHeader,
+        if(!_conversation.isGroup)
+          ...singleMessageHeader,
+        if(!_conversation.isGroup)
         IconButton(
             icon: Opacity(
                 opacity: 0.66,
@@ -242,9 +293,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                 if(_deleteConvo != null){
                   _deleteConvo(_conversation,null);
                   _fusionConnection.conversations.deleteConversation(
-                      _conversation.getId(),
-                      _conversation.number,
-                      _conversation.myNumber,
+                      _conversation,
                       _selectedGroupId);
                 }
                 Navigator.pop(context, true);
@@ -524,8 +573,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                   minLines: 1,
                   onChanged: (String changedTo) {
                     this.setState(() {
+                      _saveLocalState(changedTo);
                     });
-                    _saveLocalState(changedTo);
                   },
                   decoration: const InputDecoration(
                       contentPadding:
@@ -563,7 +612,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     setState(() {
       if (_messageInputController.value.text.trim().length > 0) {
         _fusionConnection.messages
-            .sendMessage(_messageInputController.value.text, _conversation);
+            .sendMessage(_messageInputController.value.text, _conversation, _selectedGroupId);
         _messageInputController.text = "";
       }
       if (_mediaToSend.length > 0) {
@@ -613,7 +662,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                                           _fusionConnection, _conversation,
                                           (List<SMSMessage> messages) {
                                           _messages = messages;
-                                        }, _openMedia,_deleteConvo)
+                                        }, _openMedia,_deleteConvo, _selectedGroupId)
                                       : Container())
                             ]))),
                   ]))),
@@ -630,8 +679,9 @@ class ConvoMessagesList extends StatefulWidget {
   final Function(List<SMSMessage>) _onPulledMessages;
   final Function(SMSMessage) _openMedia;
   final Function(SMSConversation, SMSMessage) _deleteConvo;
+  String _selectedGroupId;
   ConvoMessagesList(this._fusionConnection, this._conversation,
-      this._onPulledMessages, this._openMedia, this._deleteConvo,
+      this._onPulledMessages, this._openMedia, this._deleteConvo, this._selectedGroupId,
       {Key key})
       : super(key: key);
 
@@ -649,7 +699,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSMessage> _messages = [];
   String _subscriptionKey;
-
+  String get _selectedGroupId => widget._selectedGroupId;
   String _lookedupNumber = "";
   String _lookedupMyNumber = "";
 
@@ -680,12 +730,13 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     }
   }
 
-  @override
+
   _lookupMessages() {
     lookupState = 1;
     _clearSubscription();
     _subscriptionKey = _fusionConnection.messages.subscribe(_conversation,
         (List<SMSMessage> messages) {
+          
       if (!mounted) return;
       this.setState(() {
         for (SMSMessage m in messages) {
@@ -701,7 +752,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
         _messages = messages;
         widget._onPulledMessages(_messages);
       });
-    });
+    },_selectedGroupId);
   }
 
   _newConvoMessage() {
@@ -761,7 +812,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
       list.add(SMSMessageView(_fusionConnection, msg, _conversation,
           (SMSMessage message) {
         _openMedia(message);
-      },_deleteMessage,_messages));
+      },_deleteMessage,_messages,_selectedGroupId));
     }
 
     return list;
@@ -795,8 +846,9 @@ class SMSMessageView extends StatefulWidget {
   final Function(SMSMessage) _openMedia;
   final Function(SMSConversation, SMSMessage) _deleteMessage;
   List<SMSMessage> _messages;
+  String _selectedGroupId;
   SMSMessageView(this._fusionConnection, this._message, this._conversation,
-      this._openMedia, this._deleteMessage, this._messages,
+      this._openMedia, this._deleteMessage, this._messages, this._selectedGroupId,
       {Key key})
       : super(key: key);
 
@@ -912,9 +964,25 @@ class _SMSMessageViewState extends State<SMSMessageView> {
 
     List<Widget> children = [];
 
+    
+
     if (_message.from != _conversation.myNumber) {
+      List<Contact> matchedContact;
+      _conversation.contacts.forEach((element){
+        Contact c = element;
+        bool match = false;
+        for (var numberObj in c.phoneNumbers) {
+          if(_message.from == numberObj['number']){
+            match = true;
+            break;
+          }
+        }
+        if(match){
+          matchedContact = [element];
+        }
+      });
       children.add(ContactCircle.withDiameter(
-          _conversation.contacts, _conversation.crmContacts, 44));
+          matchedContact ?? _conversation.contacts, _conversation.crmContacts, 44));
       children.add(Expanded(
           child: Column(children: [
         Align(
@@ -927,11 +995,29 @@ class _SMSMessageViewState extends State<SMSMessageView> {
     } else {
       children.add(Expanded(
           child: Column(children: [
-        Align(
-            alignment: Alignment.centerRight,
-            child: Text(DateFormat.jm().format(date),
-                style: TextStyle(
-                    fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: 
+                _message.messageStatus == 'delivered' 
+                  ? Icon (Icons.check,size: 10, color:smoke,)
+                  : _message.messageStatus == 'failed'
+                    ? Icon(Icons.clear,size: 10, color: smoke,)
+                    : Container(),
+              ),
+            ),
+            Align(
+                alignment: Alignment.centerRight,
+                child: Text(DateFormat.jm().format(date),
+                    style: TextStyle(
+                        fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
+          ],
+        ),
+        
         _renderMessage()
       ])));
     }
@@ -940,7 +1026,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
       key: UniqueKey(),
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {
-        _fusionConnection.messages.deleteMessage(this._message.id);
+        _fusionConnection.messages.deleteMessage(this._message.id,widget._selectedGroupId);
         _deleteMessage(this._message);
         if(this._messages.length == 0){
           Navigator.pop(context);

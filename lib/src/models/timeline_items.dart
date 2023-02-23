@@ -38,7 +38,8 @@ class TimelineItem extends FusionModel {
     id = type + ':' + obj['id'].toString();
 
     if (type == 'message') {
-      message = SMSMessage(obj);
+      // test time line messages SMSV2
+      message = SMSMessage.fromV2(obj);
     }
     else {
       callLog = CallLog();

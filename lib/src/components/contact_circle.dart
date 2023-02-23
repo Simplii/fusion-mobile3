@@ -14,7 +14,7 @@ class ContactCircle extends StatefulWidget {
   Coworker _coworker;
   double _diameter = 60;
   double _margin = null;
-
+  bool _isGroupSms;
   ContactCircle(this._contacts, this._crmContacts, {Key key}) : super(key: key);
   ContactCircle.withCoworker(this._contacts, this._crmContacts, this._coworker,
       {Key key}) : super(key: key);
@@ -30,6 +30,9 @@ class ContactCircle extends StatefulWidget {
       this._contacts, this._crmContacts, this._diameter, this._margin,
       {Key key})
       : super(key: key);
+  ContactCircle.forSMS(
+    this._contacts,this._crmContacts, this._isGroupSms, {Key key,}
+  ) : super(key:key);
 
   @override
   State<StatefulWidget> createState() => _ContactCircleState();
@@ -41,6 +44,7 @@ class _ContactCircleState extends State<ContactCircle> {
   Coworker get _coworker => widget._coworker;
   double get _diameter => widget._diameter;
   double get _margin => widget._margin;
+  bool get _isGroupSms => widget._isGroupSms;
 
   _gravatarUrl(String email, String firstName, String lastName) {
     firstName = firstName.replaceAll(r"/[^a-zA-Z]/", '');
@@ -72,15 +76,119 @@ class _ContactCircleState extends State<ContactCircle> {
   }
 
 
+  Widget _chatHeads(int idx, Contact c){
+    String _imageUrl =  
+      c.pictures.length > 0 ? c.pictures.last['url'] : avatarUrl(c.firstName, c.lastName);
+
+    switch (idx) {
+      case 0:
+        return Positioned(
+          left: 0,
+          child: Container(
+            height: 35,
+            width: 35,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(50),
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                image: NetworkImage(_imageUrl) 
+              )
+            ),
+          ),
+        );
+        break;
+      case 1:
+        return  Positioned(
+          right: 0,
+          top: _contacts.length != 2 ? 2 : null,
+          bottom: _contacts.length == 2 ? 0 : null,
+          child: Container(
+            height: _contacts.length == 2 ? 28 : 22,
+            width: _contacts.length == 2 ? 28 : 22,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(50),
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                image: NetworkImage(_imageUrl)
+              )
+            ),
+          ),
+        );
+        break;
+      case 2:
+        return Positioned(
+          bottom: 0,
+          left: _contacts.length == 4 ? 5 : null,
+          right: _contacts.length == 3 ? 0 : null,
+          child: Container(
+            height: _contacts.length == 3 ? 28 : 22,
+            width: _contacts.length == 3 ? 28 : 22,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(50),
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                image: NetworkImage(_imageUrl)
+              )
+            ),
+          ),
+        );
+        break;
+      case 3:
+        return _contacts.length > 4 
+          ? Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: 28,
+              width: 28,
+              decoration: BoxDecoration(
+                // color: coal,
+                color: crimsonDarker,
+                borderRadius: BorderRadius.circular(50)
+              ),
+              child: Center(
+                child: Text("+${(_contacts.length - 3).toString()}",style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600
+                ),),
+              ),
+            ),
+          ) 
+          : Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: 28,
+              width: 28,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(50),
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image:  NetworkImage(_imageUrl) 
+                )
+              ),
+            ),
+          );
+        break;
+      default:
+        return Container();
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String imageUrl = null;
     Coworker coworker = _coworker;
-
+    List<Contact> groupAvatar = _contacts.length > 4 ? _contacts.sublist(0,4) : _contacts;
     if (_contacts != null) {
       for (Contact contact in _contacts) {
         if (contact.coworker != null && coworker == null) {
           coworker = contact.coworker;
+        }
+        if(contact.pictures.length > 0){
+          imageUrl = contact.pictures.last['url'];
         }
         if (contact.emails != null) {
           for (Map<String, dynamic> email in contact.emails) {
@@ -138,7 +246,26 @@ class _ContactCircleState extends State<ContactCircle> {
         || presence == 'progressing') borderColor = informationBlue;
     else if (presence == 'inuse'
         || presence == 'held') borderColor = crimsonLight;
-
+    
+    if(_isGroupSms!=null && _isGroupSms)
+      return Container(
+        margin: EdgeInsets.only(right: _diameter / 3),
+        width: _diameter,
+        height: _diameter,
+        decoration: BoxDecoration(
+          color: particle,
+          borderRadius: BorderRadius.circular(100)
+        ),
+        child:Stack(
+          children: groupAvatar.asMap().entries.map((e){
+              int idx = e.key;
+              Contact val = e.value;
+              return _chatHeads(idx,val);
+            }).toList()
+          
+        )
+      );
+    
     return Container(
         margin: EdgeInsets.only(
             right: this._margin != null ? this._margin : _diameter / 3),
