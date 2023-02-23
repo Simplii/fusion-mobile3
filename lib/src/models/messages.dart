@@ -271,28 +271,28 @@ print(callpopInfo);
     persist(message);
   }
 
-  sendMediaMessage(XFile file, SMSConversation conversation) async {
-    fusionConnection.apiV1Multipart("POST", "/chat/send_sms", {
-      'number': conversation.myNumber,
-      'schedule': 'false',
-      'is_mms': 'true',
-      'from': conversation.myNumber,
-      'is_message': 'true',
-      'to': conversation.number,
-      'from_me': 'true',
-      'destination': conversation.number,
-      'message': ""
-    }, [
-      http.MultipartFile.fromBytes(
-          "file",
-          await file.readAsBytes(),
-          filename: basename(file.path),
-          contentType: MediaType.parse(lookupMimeType(file.path)))
-    ], callback: (Map<String, dynamic> data) {
-      // test send media SMSV2
-      SMSMessage message = SMSMessage.fromV2(data);
-      storeRecord(message);
-    });
+  sendMediaMessage(XFile file, SMSConversation conversation, String departmentId, 
+    dynamic ganeratedConvoId ) async {
+    fusionConnection.apiV2Multipart("POST", 
+      "/messaging/group/${departmentId}/conversations/${ganeratedConvoId ?? conversation.conversationId}/messages", {
+        'myIdentifier': conversation.myNumber,
+        'schedule': null,
+        'isMms': true,
+        'text': '',
+        'isGroup': conversation.isGroup
+      }, [
+        http.MultipartFile.fromBytes(
+            "file",
+            await file.readAsBytes(),
+            filename: basename(file.path),
+            contentType: MediaType.parse(lookupMimeType(file.path)))
+      ], callback: (Map<String, dynamic> data) {
+        conversation.number = data['to'];  
+        SMSMessage message = SMSMessage.fromV2(data);
+        conversation.message = message;
+        storeRecord(message);
+      }
+    );
   }
 
   Future<SMSConversation> checkExisitingConversation(String departmentId, String myNumber, 
@@ -323,38 +323,26 @@ print(callpopInfo);
     return convo; 
   }
 
-  sendMessage(String text, SMSConversation conversation, String departmentId) {
-    // fusionConnection.apiV1Call("post", "/chat/send_sms", {
-    //   'number': conversation.myNumber,
-    //   'schedule': null,
-    //   'is_mms': false,
-    //   'from': conversation.myNumber,
-    //   'is_message': true,
-    //   'to': conversation.number,
-    //   'from_me': true,
-    //   'destination': conversation.number,
-    //   'message': text,
-    //   'is_group': false
-    // }, callback: (Map<String, dynamic> data) {
-    //   //test sending a message SMSV2
-    //   SMSMessage message = SMSMessage.fromV2(data);
-    //   storeRecord(message);
-    // });
+  sendMessage(String text, SMSConversation conversation, String departmentId,XFile mediaFile) async {
     if(conversation.conversationId != null){
-      fusionConnection.apiV2Call(
-        "post", 
-        "/messaging/group/${departmentId}/conversations/${conversation.conversationId}/messages", {
-          'myIdentifier': conversation.myNumber,
-          'schedule': null,
-          'isMms': false,
-          'text': text,
-          'isGroup': conversation.isGroup
-        }, callback: (Map<String, dynamic> data) {
-          SMSMessage message = SMSMessage.fromV2(data);
-          conversation.message = message;
-          storeRecord(message);
-        }
-      ); 
+      if(mediaFile != null){
+        this.sendMediaMessage(mediaFile, conversation, departmentId, null);
+      } else {
+        fusionConnection.apiV2Call(
+          "post", 
+          "/messaging/group/${departmentId}/conversations/${conversation.conversationId}/messages", {
+            'myIdentifier': conversation.myNumber,
+            'schedule': null,
+            'isMms': false,
+            'text': text,
+            'isGroup': conversation.isGroup
+          }, callback: (Map<String, dynamic> data) {
+            SMSMessage message = SMSMessage.fromV2(data);
+            conversation.message = message;
+            storeRecord(message);
+          }
+        ); 
+      }
     } else {
       List<String> numbers = conversation.number.split(',');
 
@@ -363,21 +351,26 @@ print(callpopInfo);
         "/messaging/group/${departmentId}/conversations", {
           'identifiers': [conversation.myNumber,...numbers]
           }, callback: (Map<String, dynamic> data) async {
+            if(mediaFile != null){
+              var ganeratedConvoId = data['groupId'];
+              this.sendMediaMessage(mediaFile, conversation, departmentId, ganeratedConvoId);
+            } else {
               fusionConnection.apiV2Call(
-              "post", 
-              "/messaging/group/${departmentId}/conversations/${data['groupId']}/messages", {
-                'myIdentifier': data['myNumber'],
-                'schedule': null,
-                'isMms': false,
-                'text': text,
-                'isGroup': data['isGroup']
-              }, callback: (Map<String, dynamic> data) {
-                conversation.number = data['to'];  
-                SMSMessage message = SMSMessage.fromV2(data);
-                conversation.message = message;
-                storeRecord(message);
-              }
-            );
+                "post", 
+                "/messaging/group/${departmentId}/conversations/${data['groupId']}/messages", {
+                  'myIdentifier': data['myNumber'],
+                  'schedule': null,
+                  'isMms': false,
+                  'text': text,
+                  'isGroup': data['isGroup']
+                }, callback: (Map<String, dynamic> data) {
+                  conversation.number = data['to'];  
+                  SMSMessage message = SMSMessage.fromV2(data);
+                  conversation.message = message;
+                  storeRecord(message);
+                }
+              );
+            }
         }); 
     }
   }
