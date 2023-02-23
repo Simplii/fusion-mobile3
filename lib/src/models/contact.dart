@@ -262,6 +262,50 @@ class Contact extends FusionModel {
       "uid": uid
     };
   }
+  
+  Map<String, dynamic> serverPayloadV2() {
+    return {
+      "addresses": addresses,
+      "company": company,
+      "emails": emails,
+      "externalReferences": [],
+      "fieldValues": [
+          {
+              "fieldName": "first_name",
+              "value": firstName
+          },
+          {
+              "fieldName": "last_name",
+              "value": lastName
+          },
+          {
+              "fieldName": "company",
+              "value": company
+          },
+          {
+              "fieldName": "job_title",
+              "value": jobTitle
+          },
+          {
+              "fieldName": "owner",
+              "value": owner
+          },
+          {
+              "fieldName": "name",
+              "value": "${firstName} ${lastName}"
+          }
+      ],
+      "firstName": firstName,
+      "jobTitle": jobTitle,
+      "lastName": lastName,
+      "owner": owner,
+      "phoneNumbers": phoneNumbers,
+      "pictures": pictures,
+      "socials": socials,
+      "tags": groups,
+      "type": type != '' ? type : "Contact"
+    };
+  }
 
   serialize() {
     return convert.jsonEncode({
@@ -500,5 +544,15 @@ class ContactsStore extends FusionStore<Contact> {
     fusionConnection.apiV1Call("post", "/clients/filtered_contacts",
         {'contact': edited.serverPayload()},
         callback: (List<dynamic> datas) {});
+  }
+
+  void createContact(Contact contact,Function(Contact) callback) {
+    fusionConnection.apiV2Call("post", "/contacts/create",
+      contact.serverPayloadV2(),
+      callback: (Map<String,dynamic> datas) {
+        contact = Contact.fromV2(datas);
+        storeRecord(contact);
+        callback(contact);
+      });
   }
 }
