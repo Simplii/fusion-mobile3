@@ -409,14 +409,14 @@ class FusionConnection {
     }
   }
 
-  apiV1Multipart(String method, String route, Map<String, dynamic> data,
+  apiV2Multipart(String method, String route, Map<String, dynamic> data,
       List<http.MultipartFile> files,
       {Function callback}) async {
     var client = http.Client();
     try {
       data['username'] = await _getUsername();
 
-      Uri url = Uri.parse('https://fusioncomm.net:444/api/v1' + route);
+      Uri url = Uri.parse('https://fusioncomm.net:444/api/v2' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
       (await _cookieHeaders(url))
           .forEach(
