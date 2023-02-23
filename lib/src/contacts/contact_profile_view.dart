@@ -333,6 +333,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             _fusionConnection,
             _softphone,
             SMSConversation.build(
+                isGroup: false,
                 contacts: [_contact],
                 crmContacts: [],
                 myNumber: number,
