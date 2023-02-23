@@ -465,6 +465,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
             _fusionConnection,
             _softphone,
             SMSConversation.build(
+                isGroup: false,
                 contacts:
                     _historyItem.contact != null ? [_historyItem.contact] : [],
                 crmContacts: _historyItem.crmContact != null

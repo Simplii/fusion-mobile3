@@ -27,6 +27,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
 import '../backend/fusion_connection.dart';
+import '../contacts/edit_contact_view.dart';
 import '../styles.dart';
 import '../utils.dart';
 
@@ -251,6 +252,12 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       ),
         )
     );
+    List<Contact> unknowContacts = 
+      _conversation.contacts.where((contact) => contact.id == '').toList();
+    List<List<String>> contactsToAdd = List.generate(unknowContacts.length, 
+      (index) => ["Add ${unknowContacts[index].name} as new contact", 
+      "addContact-${index} "], 
+         growable: false);
 
     return Column(children: [
       Center(
@@ -299,6 +306,22 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                       _selectedGroupId);
                 }
                 Navigator.pop(context, true);
+              } else if (chosen.contains("addContact")) {
+                int chosenUnknownContactIndex = int.parse(chosen.split('-').last);
+                Future.delayed(Duration(milliseconds: 10), () {
+                  showModalBottomSheet(
+                    constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height - 50),
+                    context: context,
+                    backgroundColor: particle,
+                    isScrollControlled: true,
+                    builder: (context) => EditContactView(
+                      _fusionConnection, 
+                      unknowContacts[chosenUnknownContactIndex], 
+                      (){
+                        Navigator.pop(context, true);
+                      }
+                    ));
+                });
               } else {
                 Future.delayed(Duration(milliseconds: 10), () {
                   _openMedia(null);
@@ -310,7 +333,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                 ? [
                     ["Open Contact Profile", "contactprofile"],
                     ["Shared Media", "sharedmedia"],
-                    ["Delete Conversation", "deleteconversation"]
+                    ["Delete Conversation", "deleteconversation"],
+                    ...contactsToAdd
                   ]
                 : [
                     ["Shared Media", "sharedmedia"],
