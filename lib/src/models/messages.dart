@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
@@ -6,6 +7,7 @@ import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart';
 
 import '../backend/fusion_connection.dart';
 import '../utils.dart';
@@ -86,10 +88,31 @@ class SMSMessage extends FusionModel {
     this.time = CarbonDate.fromDate(map['time']);
     this.to = map['to'];
     this.type = "sms";
-    this.unixtime = (DateTime.parse(map['time']).millisecondsSinceEpoch / 1000) as int;
+    this.unixtime = DateTime.parse(map['time']).millisecondsSinceEpoch ~/ 1000;
     this.user = map['user'].runtimeType == String ? map['user']
         .toString()
         .replaceFirst(RegExp("@.*"), "") : null;
+  }
+
+  SMSMessage.empty() {
+    String date = DateTime.now().toString();
+    this.convertedMms = false;
+    this.domain = null;
+    this.from = "";
+    this.fromMe = true;
+    this.id = UniqueKey().toString();
+    this.isGroup = true;
+    this.message = 'test';
+    this.messageStatus = null;
+    this.mime = null;
+    this.read = true;
+    this.scheduledAt = null;
+    this.smsWebhookId = 0;
+    this.time = CarbonDate.fromDate(date);
+    this.to = '';
+    this.type = "sms";
+    this.unixtime = DateTime.parse(date).millisecondsSinceEpoch ~/ 1000;
+    this.user = null;
   }
 
   serialize() {
@@ -176,6 +199,13 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
   SMSMessagesStore(FusionConnection _fusionConnection)
       : super(_fusionConnection);
 
+  @override
+  removeRecord(id){
+    super.removeRecord(id);
+      fusionConnection.db.delete('sms_message',
+      where: 'id = ?',
+      whereArgs: [id]);
+  }
   notifyMessage(SMSMessage message) {
     if (!notifiedMessages.containsKey(message.id)) {
       notifiedMessages[message.id] = true;
@@ -259,28 +289,97 @@ print(callpopInfo);
           filename: basename(file.path),
           contentType: MediaType.parse(lookupMimeType(file.path)))
     ], callback: (Map<String, dynamic> data) {
-
-      SMSMessage message = SMSMessage(data);
+      // test send media SMSV2
+      SMSMessage message = SMSMessage.fromV2(data);
       storeRecord(message);
     });
   }
 
-  sendMessage(String text, SMSConversation conversation) {
-    fusionConnection.apiV1Call("post", "/chat/send_sms", {
-      'number': conversation.myNumber,
-      'schedule': null,
-      'is_mms': false,
-      'from': conversation.myNumber,
-      'is_message': true,
-      'to': conversation.number,
-      'from_me': true,
-      'destination': conversation.number,
-      'message': text,
-      'is_group': false
-    }, callback: (Map<String, dynamic> data) {
-      SMSMessage message = SMSMessage(data);
-      storeRecord(message);
+  Future<SMSConversation> checkExisitingConversation(String departmentId, String myNumber, 
+    List<String> numbers, List<Contact> contacts) async {
+     
+    SMSConversation convo;
+    await fusionConnection.apiV2Call(
+      "post", 
+      "/messaging/group/${departmentId}/conversations/existing", {
+        'identifiers': [myNumber,...numbers]
+        }, callback: (Map<String, dynamic> data) {
+
+          if(data['lastMessage'] != null){
+            convo = SMSConversation(data);
+            convo.contacts = contacts;
+          } else {
+            convo = SMSConversation.build(
+              myNumber: myNumber,
+              contacts: contacts,
+              crmContacts: [],
+              number: numbers.join(','),
+              isGroup: numbers.length > 1,
+              hash: myNumber +':'+numbers.join(':')
+            );
+          }
     });
+
+    return convo; 
+  }
+
+  sendMessage(String text, SMSConversation conversation, String departmentId) {
+    // fusionConnection.apiV1Call("post", "/chat/send_sms", {
+    //   'number': conversation.myNumber,
+    //   'schedule': null,
+    //   'is_mms': false,
+    //   'from': conversation.myNumber,
+    //   'is_message': true,
+    //   'to': conversation.number,
+    //   'from_me': true,
+    //   'destination': conversation.number,
+    //   'message': text,
+    //   'is_group': false
+    // }, callback: (Map<String, dynamic> data) {
+    //   //test sending a message SMSV2
+    //   SMSMessage message = SMSMessage.fromV2(data);
+    //   storeRecord(message);
+    // });
+    if(conversation.conversationId != null){
+      fusionConnection.apiV2Call(
+        "post", 
+        "/messaging/group/${departmentId}/conversations/${conversation.conversationId}/messages", {
+          'myIdentifier': conversation.myNumber,
+          'schedule': null,
+          'isMms': false,
+          'text': text,
+          'isGroup': conversation.isGroup
+        }, callback: (Map<String, dynamic> data) {
+          SMSMessage message = SMSMessage.fromV2(data);
+          conversation.message = message;
+          storeRecord(message);
+        }
+      ); 
+    } else {
+      List<String> numbers = conversation.number.split(',');
+
+      fusionConnection.apiV2Call(
+        "post", 
+        "/messaging/group/${departmentId}/conversations", {
+          'identifiers': [conversation.myNumber,...numbers]
+          }, callback: (Map<String, dynamic> data) async {
+              fusionConnection.apiV2Call(
+              "post", 
+              "/messaging/group/${departmentId}/conversations/${data['groupId']}/messages", {
+                'myIdentifier': data['myNumber'],
+                'schedule': null,
+                'isMms': false,
+                'text': text,
+                'isGroup': data['isGroup']
+              }, callback: (Map<String, dynamic> data) {
+                conversation.number = data['to'];  
+                SMSMessage message = SMSMessage.fromV2(data);
+                conversation.message = message;
+                storeRecord(message);
+              }
+            );
+        }); 
+    }
   }
 
   search(
@@ -369,6 +468,70 @@ print(callpopInfo);
     });
   }
 
+  
+  searchV2(
+      String query,
+      Function(List<SMSConversation> conversations,
+              List<CrmContact> crmContacts, List<Contact> Contacts)
+          callback) {
+    if (query.trim().length == 0) {
+      return;
+    }
+
+    List<SMSConversation> matchedConversations = [];
+
+    Function() _sendFromPersisted = () {
+      callback(matchedConversations, [], []);
+    };
+
+    fusionConnection.conversations.searchPersisted(query, "-2", 100, 0,
+        (List<SMSConversation> convos, fromHttp) {
+      matchedConversations = convos;
+      _sendFromPersisted();
+    });
+
+    fusionConnection.apiV2Call(
+      'get', 
+      '/messaging/group/-2/conversations/query', 
+     {
+      "limit": 200,
+      "offse": 0,
+      "query": query
+    }, callback:(Map<String, dynamic> data){
+      
+      List<SMSConversation> fullConversations = [];
+      List<Contact> contacts = [];
+
+      for (Map<String, dynamic> item in data['items']) {
+        List<Contact> contactsList = [];
+        
+        for (Map<String, dynamic> obj in item['conversationMembers']) {
+          List<dynamic> c = obj['contacts'];
+          dynamic number = obj['number'] ;
+          if(c.length > 0){
+            Contact _contact = Contact.fromV2(c.last);
+            contactsList.add(_contact);
+            List<Contact> contactExisit = contacts.where((e) => e.id ==_contact.id).toList();
+            contactExisit.isEmpty ? contacts.add(_contact): null;
+          } else if(c.length == 0){
+            contactsList.add(Contact.fake(number));
+          }
+        }
+
+        SMSMessage message = SMSMessage.fromV2(item['lastMessage']);
+        SMSConversation convo = SMSConversation(item);
+        convo.message = message;
+        convo.contacts = contactsList;
+        convo.crmContacts = [];
+        fullConversations.add(convo);
+      }
+
+      callback(fullConversations, [],contacts);
+        
+    });
+
+  }
+
   getPersisted(SMSConversation convo, int limit, int offset,
       Function(List<SMSMessage>, bool) callback) {
     fusionConnection.db.query('sms_message',
@@ -391,33 +554,60 @@ print(callpopInfo);
   }
 
   getMessages(SMSConversation convo, int limit, int offset,
-      Function(List<SMSMessage> messages, bool fromServer) callback) {
+      Function(List<SMSMessage> messages, bool fromServer) callback, String departmentId) {
     getPersisted(convo, limit, offset, callback);
-    fusionConnection.apiV1Call("get", "/chat/conversation/messages", {
-      'my_numbers': convo.myNumber,
-      'their_numbers': convo.number,
-      'limit': limit,
-      'offset': offset,
-      'group_id': -2
-    }, callback: (Map<String, dynamic> data) {
-      List<SMSMessage> messages = [];
+    if(convo.conversationId != null && convo.isGroup){
+      fusionConnection.apiV2Call(
+        "get", 
+        "/messaging/group/${departmentId}}/conversations/${convo.conversationId}/messages", {
+          'isGroup': convo.isGroup,
+          // 'their_numbers': convo.number,
+          'limit': limit,
+          'offset': offset,
+          // 'group_id': -2
+        }, callback: (Map<String, dynamic> data) {
+          List<SMSMessage> messages = [];
 
-      for (Map<String, dynamic> item in data['items']) {
-        SMSMessage message = SMSMessage(item);
-        storeRecord(message);
-        messages.add(message);
-      }
-      callback(messages, true);
-    });
+          for (Map<String, dynamic> item in data['items']) {
+            //test getting a message SMSV2
+            SMSMessage message = SMSMessage.fromV2(item);
+            storeRecord(message);
+            messages.add(message);
+          }
+          callback(messages, true);
+        });
+    }
+    else if(convo.conversationId == null && convo.isGroup){
+      SMSMessage message = SMSMessage.empty();
+      storeRecord(message);
+      callback([message], true);
+    }
+    else {
+      fusionConnection.apiV2Call(
+      "get", 
+      "/messaging/group/${departmentId}/conversations/${convo.number}/${convo.myNumber}/messages", {
+        'isGroup': convo.isGroup,
+        // 'their_numbers': convo.number,
+        'limit': limit,
+        'offset': offset,
+        // 'group_id': -2
+      }, callback: (Map<String, dynamic> data) {
+        List<SMSMessage> messages = [];
+
+        for (Map<String, dynamic> item in data['items']) {
+          //test getting a message SMSV2
+          SMSMessage message = SMSMessage.fromV2(item);
+          storeRecord(message);
+          messages.add(message);
+        }
+        callback(messages, true);
+      });
+    }
   }
 
-  void deleteMessage(String id) {
-    this.removeRecord(id);
-    fusionConnection.db.delete('sms_message',
-        where: 'id = ?',
-        whereArgs: [id]);
-    fusionConnection.apiV1Call("post", "/chat/hide_message", {
-      "message_ids": [id],
-    }, callback:null);
+  void deleteMessage(String messageId, String departmentId) {
+    removeRecord(messageId);
+    fusionConnection.apiV2Call("post", 
+    "/messaging/message/${messageId}/${departmentId}/archive", {}, callback:null);
   }
 }

@@ -477,6 +477,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
       }
 
       if (item.type == "message") {
+        //TEMP SMSMessageView props NEEDS ATTENTION
         list.add(SMSMessageView(
             _fusionConnection,
             item.message,
@@ -489,7 +490,8 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                 crmContacts: []),
             (SMSMessage message) {},
             null,
-            []));
+            [],
+            ''));
       } else {
         String duration = Duration(seconds: item.callLog.duration)
             .toString()
@@ -498,7 +500,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             .padLeft(8, "0");
 
         if (item.callLog.duration < 60 * 60) duration = duration.substring(3);
-
+        //TEMP SMSMessageView props NEEDS ATTENTION
         list.add(SMSMessageView(
             _fusionConnection,
             SMSMessage({
@@ -539,7 +541,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                 contacts: [_contact],
                 crmContacts: []),
             (SMSMessage message) {}, 
-            null,[]));
+            null,[],''));
       }
     }
 

@@ -192,7 +192,7 @@ class _FusionDropdownState extends State<FusionDropdown> {
                     minHeight: 24,
                     minWidth: 90,
                     maxWidth: MediaQuery.of(context).size.width - 136,
-                    maxHeight: maxHeight),
+                    maxHeight: _options.length > 1 ? maxHeight : 120),
                 child: ListView(
                     padding: EdgeInsets.all(8),
                     children: _options.map((List<String> option) {
