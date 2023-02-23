@@ -82,7 +82,7 @@ class _MessagesTabState extends State<MessagesTab> {
                   padding:
                       EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 0),
                   child: MessageSearchResults(_myNumber, _convos, _contacts,
-                      _crmContacts, _fusionConnection, _softphone)))
+                      _crmContacts, _fusionConnection, _softphone,null,false)))
           : _loaded
               ? MessagesList(_fusionConnection, _softphone)
               : Container()
@@ -153,6 +153,7 @@ class _MessagesListState extends State<MessagesList> {
         .getConversations(_selectedGroupId, 100, _page * 100,
             (List<SMSConversation> convos, bool fromServer) {
       if (!mounted) return;
+
       this.setState(() {
         if (fromServer != null && fromServer) {
           lookupState = 2;
@@ -181,12 +182,12 @@ class _MessagesListState extends State<MessagesList> {
     });
   }
 
-  _messagesList() {
-    return _convos.map((convo) {
-      return SMSConversationSummaryView(
-          _fusionConnection, _softphone, convo, _getDepartmentName(convo),_selectedGroupId, deleteConvo);
-    }).toList();
-  }
+  // _messagesList() {
+  //   return _convos.map((convo) {
+  //     return SMSConversationSummaryView(
+  //         _fusionConnection, _softphone, convo, _getDepartmentName(convo),_selectedGroupId, deleteConvo);
+  //   }).toList();
+  // }
 
   _changeGroup(String newGroupId) {
     _selectedGroupId = newGroupId;
@@ -263,7 +264,7 @@ class _MessagesListState extends State<MessagesList> {
                               } else {
                                 return Container(
                                   child: Text(
-                                    'No conversations',
+                                    _convos.isEmpty ?'No conversations' : '',
                                     textAlign: TextAlign.center,),
                                 );
                               }
@@ -361,8 +362,17 @@ class _SMSConversationSummaryViewState
 
   @override
   Widget build(BuildContext context) {
+    String convoLabel = '';
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(1675096165 * 1000);
+    
+    if(_convo.isGroup){
+      convoLabel = _convo.groupName ?? 'group conversation'.toTitleCase();
+    } else {
+      convoLabel = _convo.contactName() == "Unknown" &&  _convo.number!= null 
+        ?_convo.number.formatPhone()
+        : _convo.contactName();
+    }
 
     return GestureDetector(
         onTap: () {
@@ -382,8 +392,10 @@ class _SMSConversationSummaryViewState
             ),
           ),
           onDismissed: (DismissDirection direction) {
-            _fusionConnection.conversations.deleteConversation(_convo.getId(),
-                _convo.number, _convo.myNumber, _departmentId);
+            if(_deleteConvo != null){
+              _fusionConnection.conversations.deleteConversation(_convo, _departmentId);
+              _deleteConvo(_convo,null);
+            }
           },
           confirmDismiss: (DismissDirection direction) async {
             return await showDialog(
@@ -416,7 +428,7 @@ class _SMSConversationSummaryViewState
           child: Container(
               margin: EdgeInsets.only(bottom: 18, left: 16, right: 16),
               child: Row(children: [
-                ContactCircle(_convo.contacts, _convo.crmContacts),
+                ContactCircle.forSMS(_convo.contacts, _convo.crmContacts,_convo.isGroup),
                 Expanded(
                     child: Container(
                         decoration: BoxDecoration(color: Colors.transparent),
@@ -426,10 +438,7 @@ class _SMSConversationSummaryViewState
                                 child: Column(children: [
                               Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Text(
-                                      _convo.contactName() == "Unknown"
-                                          ? _convo.number.formatPhone()
-                                          : _convo.contactName(),
+                                  child: Text(convoLabel,
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16))),
@@ -522,8 +531,9 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
         String query = _searchInputController.value.text;
         _searchingFor = query;
 
-        _fusionConnection.messages.search(query, (List<SMSConversation> convos,
+        _fusionConnection.messages.searchV2(query, (List<SMSConversation> convos,
             List<CrmContact> crmContacts, List<Contact> contacts) {
+              if(!mounted)return;
           if (mounted && query == _searchingFor) {
             this._onHasResults(convos, crmContacts, contacts);
           }
