@@ -133,7 +133,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _mediaGallery(SMSMessage activeMessage) {
     List<SMSMessage> galleryItems = _messages
         .where((SMSMessage message) {
-          return message.mime != null && message.mime.contains("image") ||
+          return message.mime != null && message.mime.contains("image") || message.mime != null &&
               message.mime.contains("video");
         })
         .toList()
@@ -612,12 +612,17 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     setState(() {
       if (_messageInputController.value.text.trim().length > 0) {
         _fusionConnection.messages
-            .sendMessage(_messageInputController.value.text, _conversation, _selectedGroupId);
+            .sendMessage(
+              _messageInputController.value.text, 
+              _conversation, 
+              _selectedGroupId, 
+              null
+            );
         _messageInputController.text = "";
       }
       if (_mediaToSend.length > 0) {
         for (XFile file in _mediaToSend) {
-          _fusionConnection.messages.sendMediaMessage(file, _conversation);
+          _fusionConnection.messages.sendMessage('', _conversation,_selectedGroupId,file);
         }
         _mediaToSend = [];
       }
