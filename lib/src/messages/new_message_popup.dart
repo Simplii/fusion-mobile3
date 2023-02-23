@@ -8,6 +8,7 @@ import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 
 import '../backend/fusion_connection.dart';
 import '../components/fusion_dropdown.dart';
+import '../components/sms_header_to_box.dart';
 import '../styles.dart';
 import '../utils.dart';
 import 'message_search_results.dart';
@@ -27,6 +28,7 @@ class NewMessagePopup extends StatefulWidget {
 class _NewMessagePopupState extends State<NewMessagePopup> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   final _searchTextController = TextEditingController();
+  final Debounce _debounce = Debounce(Duration(milliseconds: 700));
   Softphone get _softphone => widget._softphone;
   int willSearch = 0;
   List<SMSConversation> _convos = [];
@@ -36,6 +38,8 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   String myPhoneNumber = "";
   String _query = "";
   String _searchingFor = "";
+  int chipsCount = 0;
+  List<dynamic> sendToItems = [];
 
   initState() {
     super.initState();
@@ -48,32 +52,84 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
     }
   }
 
-  _search(String value) {
-    if (willSearch == 0) {
-      willSearch = 1;
-
-      Future.delayed(const Duration(seconds: 1)).then((dynamic x) {
-        willSearch = 0;
-        String query = _searchTextController.value.text;
-
-        if (query != _searchingFor) {
-          _searchingFor = query;
-          _fusionConnection.messages.search(query,
-              (List<SMSConversation> convos, List<CrmContact> crmContacts,
-                  List<Contact> contacts) {
-            if (mounted && query == _searchingFor) {
-              setState(() {
-                _convos = convos;
-                _crmContacts = crmContacts;
-                _contacts = contacts;
-              });
-            }
-          });
-        }
-      });
-    }
+  @override
+  void dispose() {
+    _searchTextController.dispose();
+    _debounce.dispose();
+    super.dispose();
   }
 
+  _search(String value) {
+    String query = _searchTextController.value.text;  
+    _debounce((){
+      if(query.length == 0){
+        setState(() {
+          _convos = [];
+          _crmContacts = [];
+          _contacts = [];
+        });
+      } else if (query != _searchingFor) {
+        _searchingFor = query;
+        _fusionConnection.contacts.searchV2(query, 50, 0, 
+          (List<Contact> contacts, bool fromServer){
+            if (mounted && query == _searchingFor) {
+              setState(() {
+                _contacts = contacts;
+                _searchingFor='';
+              });
+            }
+        });
+      }
+    });
+  }
+
+  _deleteChip(int index){
+    setState(() {
+      chipsCount = chipsCount - 1;
+      sendToItems.removeAt(index);
+    });
+  }
+
+  _addChip(_tappedContact){
+    if(_searchTextController.value.text != '' && chipsCount < 10){
+      setState(() {
+        if(_tappedContact != null){
+            chipsCount += 1;
+            sendToItems.add(_tappedContact);
+        } else if(_searchTextController.value.text.length == 10){
+          Contact contact;
+          List<Map<String,dynamic>> phoneNumbers;
+          for (var c in _contacts) {
+            for (var n in c.phoneNumbers) {
+              if(n['number'] == _searchTextController.value.text){
+                phoneNumbers = [{
+                  'number':n['number'],
+                  'type':n['type']
+                }];
+                break;
+              }
+            }
+            contact = c;
+          }
+          if(contact != null && phoneNumbers !=null){
+            contact.phoneNumbers = phoneNumbers;
+            chipsCount += 1;
+            sendToItems.add(contact);
+          } else {
+            chipsCount += 1;
+            sendToItems.add(_searchTextController.value.text);
+          }
+
+        } else {
+          chipsCount += 1;
+          sendToItems.add(_searchTextController.value.text);
+        } 
+        _searchTextController.clear();
+        _contacts = [];
+      });
+    } 
+  }
+  
   _header() {
     String myImageUrl = _fusionConnection.myAvatarUrl();
     List<SMSDepartment> groups = _fusionConnection.smsDepartments
@@ -124,36 +180,59 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                     .cast<List<String>>())),
         Spacer(),
       ]),
-      Row(children: [
-        Expanded(
-            child: Container(
-                margin: EdgeInsets.only(top: 16),
-                height: 40,
-                child: TextField(
-                    controller: _searchTextController,
-                    onChanged: _search,
-                    decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(
-                            color: Color.fromARGB(255, 153, 148, 149),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700),
-                        hintText: "Enter a name or phone number"),
-                    style: TextStyle(
-                        color: coal,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700))))
-      ])
+      SendToBox(
+        deleteChip: _deleteChip,
+        addChip: _addChip,
+        sendToItems: sendToItems,
+        search: _search,
+        searchTextController: _searchTextController,
+        chipsCount: chipsCount,
+      )
     ]);
   }
 
-  _startConvo(String number) {
-    SMSConversation convo = SMSConversation.build(
-      myNumber: myPhoneNumber,
-      contacts: [],
-      crmContacts: [],
-      number: number,
-    );
+  _startConvo(String query) async {
+    List<String> toNumbers = [];
+    List<Contact> toContacts = [];
+
+    if(sendToItems.isEmpty && _searchTextController.value.text !=''){
+      toNumbers.add(_searchTextController.value.text);
+      if(_contacts.length > 0){
+        _contacts.forEach((contact) { 
+          Contact matchedContactTophone;
+          contact.phoneNumbers
+          .forEach((phone){
+            if( phone['number'] == _searchTextController.value.text){
+              matchedContactTophone = contact;
+            }
+          });
+          toContacts.add(matchedContactTophone);
+        });
+      }
+    } else {
+      sendToItems.forEach((item) { 
+        if(item is String){
+          toNumbers.add(item);
+          toContacts.add(Contact.fake(item));
+        } else {
+          toNumbers.add((item as Contact).phoneNumbers[0]['number']);
+          toContacts.add(item);
+        }
+      });
+    }
+    
+    SMSConversation convo = await _fusionConnection.messages.checkExisitingConversation(groupId,
+      myPhoneNumber,toNumbers,toContacts);
+    
+  // print("MyNumber ${convo.serialize()}");
+    // SMSConversation convo = SMSConversation.build(
+    //   myNumber: myPhoneNumber,
+    //   contacts: toContacts,
+    //   crmContacts: [],
+    //   number: toNumbers.join(','),
+    //   isGroup: chipsCount > 1 ?? false,
+    //   hash: "${toNumbers.join(':')}"
+    // );
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -192,17 +271,17 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
           Expanded(
               child: Container(
                   decoration: BoxDecoration(color: Colors.white),
-                  padding: EdgeInsets.only(left: 14, right: 14),
+                  // padding: EdgeInsets.only(left: 14, right: 14),
                   child: Column(children: [
-                    isPhone
-                        ? GestureDetector(
-                            onTap: () {
+                    (isPhone || chipsCount > 0)
+                        ? TextButton(
+                            onPressed: () {
                               _startConvo(query);
                             },
                             child: Container(
                                 alignment: Alignment.center,
-                                height: 80,
-                                child: Text("Message this number \u2794",
+                                height: 40,
+                                child: Text("Start new conversation \u2794",
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: coal,
@@ -221,7 +300,9 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                                     _contacts,
                                     _crmContacts,
                                     _fusionConnection,
-                                    _softphone)
+                                    _softphone,
+                                    _addChip,
+                                    true)
                                 : Container()))
                   ])))
         ]));
