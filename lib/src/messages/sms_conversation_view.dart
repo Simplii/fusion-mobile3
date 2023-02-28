@@ -36,8 +36,13 @@ class SMSConversationView extends StatefulWidget {
   final SMSConversation _smsConversation;
   final Softphone _softphone;
   final Function(SMSConversation, SMSMessage) _deleteConvo;
+  final Function setOnMessagePosted;
   SMSConversationView(
-      this._fusionConnection, this._softphone, this._smsConversation, this._deleteConvo,
+      this._fusionConnection, 
+      this._softphone, 
+      this._smsConversation, 
+      this._deleteConvo,
+      this.setOnMessagePosted,
       {Key key})
       : super(key: key);
 
@@ -48,7 +53,8 @@ class SMSConversationView extends StatefulWidget {
       List<CrmContact> crmContacts,
       Softphone softphone,
       String phoneNumber,
-      Function _deleteConvo) {
+      Function _deleteConvo,
+      Function setOnMessagePosted) {
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -63,7 +69,10 @@ class SMSConversationView extends StatefulWidget {
                     .getDepartment("-2")
                     .numbers[0],
                 number: phoneNumber),
-            _deleteConvo));
+            _deleteConvo,
+            setOnMessagePosted,
+            // refreshView
+            ));
   }
 
   @override
@@ -85,6 +94,11 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   Timer _debounceMessageInput;
   int textLength = 0;
   Function(SMSConversation, SMSMessage) get _deleteConvo => widget._deleteConvo;
+  Function get _setOnMessagePosted => widget.setOnMessagePosted;
+  // Function get _refreshMessageListView => widget.refreshView;
+  bool showSnackBar = false;
+  String snackBarText = "";
+  
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
@@ -255,7 +269,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     List<Contact> unknowContacts = 
       _conversation.contacts.where((contact) => contact.id == '').toList();
     List<List<String>> contactsToAdd = List.generate(unknowContacts.length, 
-      (index) => ["Add ${unknowContacts[index].name} as new contact", 
+      (index) => ["Add ${unknowContacts[index].name} as a new contact", 
       "addContact-${index} "], 
          growable: false);
 
@@ -317,14 +331,10 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                     builder: (context) => EditContactView(
                       _fusionConnection, 
                       unknowContacts[chosenUnknownContactIndex], 
-                      (){
-                        Navigator.pop(context, true);
-                      },
-                      (){
-                       setState(() {
-                         print("MyDebugMessage created");
-                       });
-                      }
+                      () => Navigator.pop(context, true),
+                      () => setState(() { 
+                        _setOnMessagePosted(); 
+                      })
                     ));
                 });
               } else {
@@ -656,6 +666,16 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     return _mediaToSend.length > 0 ||
         _messageInputController.value.text.trim().length > 0;
   }
+  
+  void _largeMMS(){
+    showSnackBar = true;
+    snackBarText = "Sorry you don't have Large MMS turned on";
+    Future.delayed(const Duration(seconds: 3), () {
+      setState(() {
+        showSnackBar = false;
+      });
+    });
+  }
 
   _sendMessage() {
     setState(() {
@@ -665,13 +685,21 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               _messageInputController.value.text, 
               _conversation, 
               _selectedGroupId, 
-              null
+              null,
+              _setOnMessagePosted, 
+              ()=> null
             );
         _messageInputController.text = "";
       }
       if (_mediaToSend.length > 0) {
         for (XFile file in _mediaToSend) {
-          _fusionConnection.messages.sendMessage('', _conversation,_selectedGroupId,file);
+          _fusionConnection.messages.sendMessage(
+            '', 
+            _conversation,
+            _selectedGroupId,
+            file,
+            _setOnMessagePosted,
+            _largeMMS);
         }
         _mediaToSend = [];
       }
@@ -720,6 +748,22 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                                       : Container())
                             ]))),
                   ]))),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.fastOutSlowIn,
+              height: showSnackBar ? 40 : 0,
+              child: Row(
+                children: [Expanded(
+                  child: Container( 
+                    alignment: Alignment.centerLeft,
+                    padding: EdgeInsets.only(left: 10),
+                    color: coal,
+                    child: Text(snackBarText,
+                      style: TextStyle(color: Colors.white ,fontWeight: FontWeight.w600),)
+                  ),
+                )],
+              ),
+            ),
           _sendMessageInput()
         ]),
         padding:

@@ -338,7 +338,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                 crmContacts: [],
                 myNumber: number,
                 number: theirNumber),
-            null));
+            null,null));
   }
 
   _renderField(String type, String label, String value, bool selected) {
