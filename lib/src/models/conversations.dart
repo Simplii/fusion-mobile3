@@ -88,12 +88,13 @@ class SMSConversation extends FusionModel {
     this.isGroup = map['isGroup'];
     this.lastContactTime = map['lastContactTime'];
     this.myNumber = map['myNumber'];
-    this.number = toNumber;
+    this.number = map['isGroup'] != null && map['isGroup'] == true ? map['groupId'].toString() : toNumber;
     this.members = map['conversationMembers']; //map['members'];
     this.message = map['message'];
     // this.unread = int.parse(map['unread'].toString());
     this.unread = map['unreadCount'];
     // this.crmContacts = map['crm_contacts'];
+    this.crmContacts = [];
     this.contacts = map['contacts'];
     this.hash = map['hash'];
   }
@@ -132,13 +133,14 @@ class SMSConversation extends FusionModel {
     this.members = data['conversationMembers'];
     this.message = SMSMessage.unserialize(data['message']);
     this.unread = data['unread'];
-    this.crmContacts = data['crmContacts']
-        .cast<String>()
-        .map((String s) {
-          return CrmContact.unserialize(s);
-        })
-        .toList()
-        .cast<CrmContact>();
+    // this.crmContacts = data['crmContacts']
+    //     .cast<String>()
+    //     .map((String s) {
+    //       return CrmContact.unserialize(s);
+    //     })
+    //     .toList()
+    //     .cast<CrmContact>();
+    // this.crmContacts = [];
     this.contacts = data['contacts']
         .cast<String>()
         .map((String s) {
@@ -189,7 +191,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
               .millisecondsSinceEpoch /
           1000,
       'searchString': record.searchString(),
-      'number': record.number,
+      'number': record.isGroup ? record.conversationId : record.number,
       'myNumber': record.myNumber,
       'unread': record.unread,
       'raw': record.serialize(),

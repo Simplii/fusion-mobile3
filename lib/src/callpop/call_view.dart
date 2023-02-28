@@ -156,7 +156,7 @@ class _CallViewState extends State<CallView> {
         callPopInfo != null
             ? callPopInfo.phoneNumber
             : _softphone.getCallerNumber(_softphone.activeCall),
-        null);
+        null,null);
   }
 
   _changeDefaultInputDevice() {
