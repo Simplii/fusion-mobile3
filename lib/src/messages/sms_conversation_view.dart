@@ -70,8 +70,7 @@ class SMSConversationView extends StatefulWidget {
                     .numbers[0],
                 number: phoneNumber),
             _deleteConvo,
-            setOnMessagePosted,
-            // refreshView
+            setOnMessagePosted
             ));
   }
 
@@ -95,7 +94,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   int textLength = 0;
   Function(SMSConversation, SMSMessage) get _deleteConvo => widget._deleteConvo;
   Function get _setOnMessagePosted => widget.setOnMessagePosted;
-  // Function get _refreshMessageListView => widget.refreshView;
   bool showSnackBar = false;
   String snackBarText = "";
   

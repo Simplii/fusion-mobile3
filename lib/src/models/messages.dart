@@ -248,10 +248,10 @@ print(callpopInfo);
     return name;
   }
 
-  persist(SMSMessage record) {
-    fusionConnection.db
+  persist(SMSMessage record) async {
+    await fusionConnection.db
         .delete('sms_message', where: 'id = ?', whereArgs: [record.getId()]);
-    fusionConnection.db.insert('sms_message', {
+    await fusionConnection.db.insert('sms_message', {
       'id': record.getId(),
       'from': record.from,
       'fromMe': record.fromMe != null && record.fromMe ? 1 : 0,
@@ -578,30 +578,34 @@ print(callpopInfo);
 
   }
 
-  getPersisted(SMSConversation convo, int limit, int offset,
-      Function(List<SMSMessage>, bool) callback) {
-    fusionConnection.db.query('sms_message',
-        limit: limit,
-        offset: offset,
-        where: '(`to` = ? and `from` = ?) or (`from` = ? and `to` = ?)',
-        orderBy: "id desc",
-        whereArgs: [
+  Future<void> getPersisted(
+    SMSConversation convo, 
+    int limit, int offset,
+    Function(List<SMSMessage>, bool) callback) async {
+    await fusionConnection.db.query('sms_message',
+      limit: limit,
+      offset: offset,
+      where: convo.isGroup ? '`to` = ?' : '(`to` = ? and `from` = ?) or (`from` = ? and `to` = ?)',
+      orderBy: "id desc",
+      whereArgs: convo.isGroup 
+        ? [ convo.conversationId ] 
+        : [
           convo.myNumber,
           convo.number,
           convo.myNumber,
           convo.number
         ]).then((List<Map<String, dynamic>> results) {
-      List<SMSMessage> list = [];
-      for (Map<String, dynamic> result in results) {
-        list.add(SMSMessage.unserialize(result['raw']));
-      }
-      callback(list, false);
-    });
+          List<SMSMessage> list = [];
+          for (Map<String, dynamic> result in results) {
+            list.add(SMSMessage.unserialize(result['raw']));
+          }
+          callback(list, false);
+        });
   }
 
   getMessages(SMSConversation convo, int limit, int offset,
-      Function(List<SMSMessage> messages, bool fromServer) callback, String departmentId) {
-    // getPersisted(convo, limit, offset, callback);
+      Function(List<SMSMessage> messages, bool fromServer) callback, String departmentId) async {
+    await getPersisted(convo, limit, offset, callback);
     if(convo.conversationId != null && convo.isGroup){
       fusionConnection.apiV2Call(
         "get", 
