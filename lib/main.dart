@@ -67,7 +67,7 @@ registerNotifications() {
       onSelectNotification: (String s) {});
   return flutterLocalNotificationsPlugin;
 }
-
+@pragma('vm:entry-point')
 Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
   print('backgroundMessage: message => ${message.toString()}');
   print('backgroundMessage: message => ${message.data.toString()}');
@@ -116,8 +116,8 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(backgroundMessageHandler); // }
+  await Firebase.initializeApp();
 
   registerNotifications();
 
@@ -211,7 +211,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isProximityListening = false;
   StreamSubscription<ProximityEvent> _proximitySub;
   List<Did> _dids = [];
-  bool _isBackgroundEnabled = false;
   Function onMessagePosted;
   _logOut() {
     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -266,7 +265,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _onMessage(RemoteMessage m) {
-    onMessagePosted();
+    if(onMessagePosted !=  null){
+      onMessagePosted();
+    }
   }
 
   checkForInitialMessage() async {
@@ -518,16 +519,14 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     if (softphone.activeCall != null &&
         softphone.isConnected(softphone.activeCall) != null
-        && !_isBackgroundEnabled
+        && !FlutterBackground.isBackgroundExecutionEnabled
         && Platform.isAndroid) {
-      _isBackgroundEnabled = true;
       FlutterBackground.enableBackgroundExecution().then(
               (value) => print("enablebgexecutionvalue" + value.toString()));
     }
-    else if (_isBackgroundEnabled
+    else if ( FlutterBackground.isBackgroundExecutionEnabled
         && Platform.isAndroid
         && softphone.activeCall == null) {
-      _isBackgroundEnabled = false;
       FlutterBackground.disableBackgroundExecution().then(
               (value) => print("disablebgexecutionvalue" + value.toString()));
     }
