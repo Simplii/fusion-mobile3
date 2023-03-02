@@ -93,8 +93,8 @@ class SMSConversation extends FusionModel {
     this.message = map['message'];
     // this.unread = int.parse(map['unread'].toString());
     this.unread = map['unreadCount'];
-    // this.crmContacts = map['crm_contacts'];
-    this.crmContacts = [];
+    this.crmContacts = map['crm_contacts'] ?? [];
+    // this.crmContacts = [];
     this.contacts = map['contacts'];
     this.hash = map['hash'];
   }
@@ -122,7 +122,9 @@ class SMSConversation extends FusionModel {
   }
 
   SMSConversation.unserialize(String dataString) {
+    
     Map<String, dynamic> data = convert.jsonDecode(dataString);
+    print("MyDebugMessage from persisted ${data }");
     this.conversationId = data['groupId'];
     this.groupName = data['groupName'];
     this.isGroup = data['isGroup'];
@@ -133,13 +135,13 @@ class SMSConversation extends FusionModel {
     this.members = data['conversationMembers'];
     this.message = SMSMessage.unserialize(data['message']);
     this.unread = data['unread'];
-    // this.crmContacts = data['crmContacts']
-    //     .cast<String>()
-    //     .map((String s) {
-    //       return CrmContact.unserialize(s);
-    //     })
-    //     .toList()
-    //     .cast<CrmContact>();
+    this.crmContacts = data['crmContacts'] != '' ? data['crmContacts']
+        .cast<String>()
+        .map((String s) {
+          return CrmContact.unserialize(s);
+        })
+        .toList()
+        .cast<CrmContact>() : [];
     // this.crmContacts = [];
     this.contacts = data['contacts']
         .cast<String>()
@@ -265,13 +267,20 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
 
         if(item['conversationMembers'] != null){
           for (Map<String, dynamic> obj in item['conversationMembers']) {
-            List<dynamic> c = obj['contacts'];
+            List<dynamic> convoMembebersContacts = obj['contacts'];
+            List<dynamic> convoMembebersLeads = obj['leads'];
             dynamic number = obj['number'];
-            if(c.length > 0){
-              c.forEach((contact) { 
+            if(convoMembebersContacts.length > 0){
+              convoMembebersContacts.forEach((contact) { 
                 contacts.add(Contact.fromV2(contact));
               });
-            } else if(c.length == 0 && number != ''){
+            } 
+            else if(convoMembebersLeads.length > 0){
+              convoMembebersLeads.forEach((lead) { 
+                leads.add(CrmContact.fromExpanded(lead));
+              });
+            }
+            else if(convoMembebersContacts.length == 0 && convoMembebersLeads.length == 0 && number != ''){
               contacts.add(Contact.fake(number));
             }
           }
