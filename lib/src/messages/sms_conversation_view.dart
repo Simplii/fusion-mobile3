@@ -96,13 +96,14 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   Function get _setOnMessagePosted => widget.setOnMessagePosted;
   bool showSnackBar = false;
   String snackBarText = "";
-  
+  bool isSavedMessage = false;
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
       String savedMessage =
           prefs.getString(_conversation.hash + "_savedMessage");
       _messageInputController.text = savedMessage;
+      isSavedMessage = savedMessage.length > 0;
 
       final String path = getApplicationDocumentsDirectory().toString();
       List<String> savedImgs =
@@ -611,7 +612,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                   maxLines: 10,
                   minLines: 1,
                   onChanged: (String changedTo) {
-                    if (_messageInputController.text.length - textLength > 1){
+                    if (_messageInputController.text.length - textLength > 1 && !isSavedMessage){
                       SharedPreferences.getInstance().then((SharedPreferences prefs) {
                         String imageUri = prefs.getString("copiedImagePath");
                         if(imageUri.length == 0){
