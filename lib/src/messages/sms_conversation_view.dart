@@ -103,7 +103,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       String savedMessage =
           prefs.getString(_conversation.hash + "_savedMessage");
       _messageInputController.text = savedMessage;
-      isSavedMessage = savedMessage.length > 0;
+      isSavedMessage = savedMessage != null && savedMessage.length > 0;
 
       final String path = getApplicationDocumentsDirectory().toString();
       List<String> savedImgs =
@@ -1107,7 +1107,9 @@ class _SMSMessageViewState extends State<SMSMessageView> {
           child: Column(children: [
         Align(
             alignment: Alignment.centerLeft,
-            child: Text(DateFormat.jm().format(date),
+            child: Text(matchedContact != null
+              ? "${_conversation.contacts[0].name.toTitleCase()} ${mDash} ${DateFormat.jm().format(date)}" 
+              : "${_message.from.formatPhone()} ${mDash} ${DateFormat.jm().format(date)}",
                 style: TextStyle(
                     fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
         _renderMessage()

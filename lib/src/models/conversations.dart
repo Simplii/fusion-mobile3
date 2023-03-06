@@ -124,7 +124,6 @@ class SMSConversation extends FusionModel {
   SMSConversation.unserialize(String dataString) {
     
     Map<String, dynamic> data = convert.jsonDecode(dataString);
-    print("MyDebugMessage from persisted ${data }");
     this.conversationId = data['groupId'];
     this.groupName = data['groupName'];
     this.isGroup = data['isGroup'];
@@ -268,7 +267,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
         if(item['conversationMembers'] != null){
           for (Map<String, dynamic> obj in item['conversationMembers']) {
             List<dynamic> convoMembebersContacts = obj['contacts'];
-            List<dynamic> convoMembebersLeads = obj['leads'];
+            List<dynamic> convoMembebersLeads = obj['leads'] ?? [];
             dynamic number = obj['number'];
             if(convoMembebersContacts.length > 0){
               convoMembebersContacts.forEach((contact) { 
