@@ -315,7 +315,17 @@ print(callpopInfo);
         }, callback: (Map<String, dynamic> data) {
 
           if(data['lastMessage'] != null){
+            List<CrmContact> leads = [];
+            for (Map<String, dynamic> obj in data['conversationMembers']) {
+              List<dynamic> convoMembebersLeads = obj['leads'];
+              if(convoMembebersLeads.length > 0){
+                convoMembebersLeads.forEach((lead) { 
+                  leads.add(CrmContact.fromExpanded(lead));
+                });
+              }
+            }
             convo = SMSConversation(data);
+            convo.crmContacts = leads;
             convo.contacts = contacts;
           } else {
             convo = SMSConversation.build(
@@ -530,16 +540,22 @@ print(callpopInfo);
 
       for (Map<String, dynamic> item in data['items']) {
         List<Contact> contactsList = [];
-        
+        List<CrmContact> leadsList = [];
+
         for (Map<String, dynamic> obj in item['conversationMembers']) {
           List<dynamic> c = obj['contacts'];
+          List<dynamic> convoMembebersLeads = obj['leads'];
           dynamic number = obj['number'] ;
           if(c.length > 0){
             Contact _contact = Contact.fromV2(c.last);
             contactsList.add(_contact);
-            List<Contact> contactExisit = contacts.where((e) => e.id ==_contact.id).toList();
-            contactExisit.isEmpty ? contacts.add(_contact): null;
-          } else if(c.length == 0){
+            List<Contact> contactExist = contacts.where((e) => e.id ==_contact.id).toList();
+            contactExist.isEmpty ? contacts.add(_contact) : null ;
+          } else if(convoMembebersLeads.length > 0){
+            convoMembebersLeads.forEach((lead) { 
+              leadsList.add(CrmContact(lead));
+            });
+          } else if(c.length == 0 && convoMembebersLeads.length == 0 && number != ''){
             contactsList.add(Contact.fake(number));
           }
         }
@@ -548,7 +564,7 @@ print(callpopInfo);
         SMSConversation convo = SMSConversation(item);
         convo.message = message;
         convo.contacts = contactsList;
-        convo.crmContacts = [];
+        convo.crmContacts = leadsList;
         fullConversations.add(convo);
       }
 
