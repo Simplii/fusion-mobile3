@@ -6,10 +6,6 @@ import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../backend/fusion_connection.dart';
 import '../components/fusion_dropdown.dart';
@@ -82,15 +78,38 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         });
       } else if (query != _searchingFor) {
         _searchingFor = query;
-        _fusionConnection.contacts.searchV2(query, 50, 0, 
-          (List<Contact> contacts, bool fromServer){
-            if (mounted && query == _searchingFor) {
-              setState(() {
-                _contacts = contacts;
-                _searchingFor='';
-              });
-            }
+        bool usesV2 = false;
+    
+        _fusionConnection.settings.options.forEach((key, value) {
+          key == "uses_v2" ? usesV2 = value : null;
         });
+        
+        if(!usesV2){
+          _fusionConnection.contacts.search(query, 50, 0, 
+            (List<Contact> contacts, bool fromServer) {
+              _fusionConnection.integratedContacts.search( query, 50, 0, 
+                (List<Contact> crmContacts, bool fromServer, bool hasMore) {
+                  if (mounted && query == _searchingFor) {
+                    setState(() {
+                      _contacts = [...contacts, ...crmContacts];
+                      _searchingFor='';
+                    });
+                  }
+                }
+              );
+            }
+          );
+        } else {
+          _fusionConnection.contacts.searchV2(query, 50, 0, 
+            (List<Contact> contacts, bool fromServer){
+              if (mounted && query == _searchingFor) {
+                setState(() {
+                  _contacts = contacts;
+                  _searchingFor='';
+                });
+              }
+          });
+        }
       }
     });
   }
