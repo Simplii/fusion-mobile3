@@ -10,6 +10,7 @@ import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../backend/fusion_connection.dart';
 import '../models/messages.dart';
@@ -117,13 +118,18 @@ class _MessagesListState extends State<MessagesList> {
   Softphone get _softphone => widget._softphone;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
-  String _selectedGroupId = "-2";
+  String _selectedGroupId;
   int _page = 0;
 
 
   @override
   void initState(){
     super.initState();
+    SharedPreferences.getInstance().then((prefs) {
+      setState(() {
+        _selectedGroupId = prefs.getString('selectedGroupId') ?? "-2";
+      });
+    },);
     _setOnMessagePosted((){
       if(mounted){
         _page = 0;
@@ -181,6 +187,7 @@ class _MessagesListState extends State<MessagesList> {
   }
 
   _lookupMessages() {
+    if(_selectedGroupId == null)return;
     lookupState = 1;
     _fusionConnection.conversations
         .getConversations(_selectedGroupId, 100, _page * 100,
@@ -222,13 +229,16 @@ class _MessagesListState extends State<MessagesList> {
   //   }).toList();
   // }
 
-  _changeGroup(String newGroupId) {
+  _changeGroup(String newGroupId) async {
     _selectedGroupId = newGroupId;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedGroupId', newGroupId);
     _page = 0;
     _lookupMessages();
   }
 
   _selectedDepartmentName() {
+    if(_selectedGroupId == null) return;
     return _fusionConnection.smsDepartments
         .getDepartment(_selectedGroupId)
         .groupName;
@@ -400,7 +410,7 @@ class _SMSConversationSummaryViewState
   Widget build(BuildContext context) {
     String convoLabel = '';
     DateTime date =
-        DateTime.fromMillisecondsSinceEpoch(1675096165 * 1000);
+        DateTime.fromMillisecondsSinceEpoch(_convo.message.unixtime * 1000);
     
     if(_convo.isGroup){
       convoLabel = _convo.groupName ?? 'group conversation'.toTitleCase();

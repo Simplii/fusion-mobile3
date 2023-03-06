@@ -5,6 +5,11 @@ import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../backend/fusion_connection.dart';
 import '../components/fusion_dropdown.dart';
@@ -44,13 +49,19 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
 
   initState() {
     super.initState();
-    List<String> deptNumbers =
-        _fusionConnection.smsDepartments.getDepartment(groupId).numbers;
-    if (deptNumbers.length > 0) {
-      myPhoneNumber = deptNumbers[0];
-    } else {
-      myPhoneNumber = "Unassigned";
-    }
+    SharedPreferences.getInstance().then((prefs) {
+      setState(() {
+        String _selectedDepartmentId = prefs.getString('selectedGroupId') ?? "-1";
+        groupId = _selectedDepartmentId == "-2" ? "-1" : _selectedDepartmentId;
+        SMSDepartment dep = _fusionConnection.smsDepartments.getDepartment(groupId);
+        List<String> deptNumbers = dep.numbers;
+        if (deptNumbers.length > 0) {
+          myPhoneNumber = deptNumbers[0];
+        } else {
+          myPhoneNumber = "Unassigned";
+        }
+      });
+    },);
   }
 
   @override
