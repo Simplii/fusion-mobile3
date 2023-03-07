@@ -126,7 +126,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     SMSDepartment department = _fusionConnection.smsDepartments
         .getDepartmentByPhoneNumber(_conversation.myNumber);
     this.setState(() {
-      _selectedGroupId = department.id;
+      _selectedGroupId = department.id ?? "-1";
     });
   }
 
@@ -1108,7 +1108,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         Align(
             alignment: Alignment.centerLeft,
             child: Text(matchedContact != null
-              ? "${_conversation.contacts[0].name.toTitleCase()} ${mDash} ${DateFormat.jm().format(date)}" 
+              ? "${matchedContact[0].name.toTitleCase()} ${mDash} ${DateFormat.jm().format(date)}" 
               : "${_message.from.formatPhone()} ${mDash} ${DateFormat.jm().format(date)}",
                 style: TextStyle(
                     fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
