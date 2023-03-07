@@ -24,6 +24,7 @@ class SMSConversation extends FusionModel {
   String myNumber;
   int unread;
   int conversationId;
+  String selectedDepartmentId;
 
   String contactName() {
     String name = "Unknown";
@@ -55,7 +56,8 @@ class SMSConversation extends FusionModel {
       this.crmContacts,
       this.conversationId,
       this.isGroup,
-      this.hash}) {
+      this.hash,
+      this.selectedDepartmentId = "-1"}) {
     this.hash = this.hash ?? this.myNumber + ":" + this.number;
     this.unread = 0;
     if (this.message != null) {
