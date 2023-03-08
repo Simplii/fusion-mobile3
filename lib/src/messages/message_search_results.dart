@@ -77,7 +77,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo, null));
+        builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo, null,null));
   }
 
   _contactBubbles() {
@@ -137,7 +137,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
 
   _messagesList() {
     return _conversations.map((SMSConversation convo) {
-      return SMSConversationSummaryView(_fusionConnection, _softphone, convo, "","",null);
+      return SMSConversationSummaryView(_fusionConnection, _softphone, convo, "","",null,null);
     }).toList();
   }
 

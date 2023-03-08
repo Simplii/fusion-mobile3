@@ -17,8 +17,8 @@ import 'sms_conversation_view.dart';
 class NewMessagePopup extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
-
-  NewMessagePopup(this._fusionConnection, this._softphone, {Key key})
+  final Function setOnMessagePosted;
+  NewMessagePopup(this._fusionConnection, this._softphone, this.setOnMessagePosted, {Key key})
       : super(key: key);
 
   @override
@@ -29,6 +29,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   final _searchTextController = TextEditingController();
   final Debounce _debounce = Debounce(Duration(milliseconds: 700));
+  Function get _setOnMessagePosted => widget.setOnMessagePosted;
   Softphone get _softphone => widget._softphone;
   int willSearch = 0;
   List<SMSConversation> _convos = [];
@@ -233,12 +234,13 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
     //   isGroup: chipsCount > 1 ?? false,
     //   hash: "${toNumbers.join(':')}"
     // );
+    Navigator.pop(this.context);
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            SMSConversationView(_fusionConnection, _softphone, convo, null));
+            SMSConversationView(_fusionConnection, _softphone, convo, null,_setOnMessagePosted));
   }
 
   @override

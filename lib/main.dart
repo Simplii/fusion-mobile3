@@ -212,7 +212,7 @@ class _MyHomePageState extends State<MyHomePage> {
   StreamSubscription<ProximityEvent> _proximitySub;
   List<Did> _dids = [];
   bool _isBackgroundEnabled = false;
-
+  Function onMessagePosted;
   _logOut() {
     Navigator.of(context).popUntil((route) => route.isFirst);
     this.setState(() {
@@ -265,7 +265,9 @@ class _MyHomePageState extends State<MyHomePage> {
     softphone.reregister();
   }
 
-  Future<void> _onMessage(RemoteMessage m) {}
+  Future<void> _onMessage(RemoteMessage m) {
+    onMessagePosted();
+  }
 
   checkForInitialMessage() async {
     await Firebase.initializeApp();
@@ -295,15 +297,17 @@ class _MyHomePageState extends State<MyHomePage> {
                   context: context,
                   backgroundColor: Colors.transparent,
                   isScrollControlled: true,
-                  builder: (context) => SMSConversationView(
+                  builder: (context) => 
+                  SMSConversationView(
                       fusionConnection,
                       softphone,
                       SMSConversation.build(
                           contacts: contacts,
                           crmContacts: [],
+                          isGroup: false,
                           myNumber: data['to_number'],
                           number: data['from_number']),
-                      null));
+                      null,null));
             }
           });
         }
@@ -457,10 +461,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _openNewMessage() {
     showModalBottomSheet(
+        routeSettings: RouteSettings(name: 'newMessagePopup'),
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => NewMessagePopup(fusionConnection, softphone));
+        builder: (context) => NewMessagePopup(fusionConnection, softphone, onMessagePosted));
   }
 
   void _loginSuccess(String username, String password) {
@@ -502,7 +507,11 @@ class _MyHomePageState extends State<MyHomePage> {
         ? RecentCallsTab(fusionConnection, softphone)
         : (_currentIndex == 1
             ? RecentContactsTab(fusionConnection, softphone)
-            : MessagesTab(fusionConnection, softphone)));
+            : MessagesTab(fusionConnection, softphone,(Function func){
+              onMessagePosted = func;
+            },(){
+              onMessagePosted = null;
+            })));
   }
 
   @override
