@@ -333,11 +333,12 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             _fusionConnection,
             _softphone,
             SMSConversation.build(
+                isGroup: false,
                 contacts: [_contact],
                 crmContacts: [],
                 myNumber: number,
                 number: theirNumber),
-            null));
+            null,null));
   }
 
   _renderField(String type, String label, String value, bool selected) {
@@ -560,7 +561,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
         setState(() {
           this._editing = false;
         });
-      });
+      },null);
     } else {
       bodyContainer = Column(children: [
         _header(),

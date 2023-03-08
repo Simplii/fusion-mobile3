@@ -72,8 +72,8 @@ class FusionConnection {
   Function _refreshUi = () {};
   Map<String, bool> received_smses = {};
 
-  String serverRoot = "http://fusioncomm.net:444";
-  String defaultAvatar = "https://fusioncomm.net:444/img/defaultuser.png";
+  String serverRoot = "http://fusioncomm.net";
+  String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {
     _getCookies();
@@ -232,10 +232,10 @@ class FusionConnection {
           '''));
       }).then((Database db) {
         db.rawQuery('SELECT conversationId FROM sms_conversation')
-          .then((value) => print("MyDebugMessage db conversationId exisit ${value}"))
+          .then((value) => null)
           .catchError((error)=>{
             db.rawQuery('ALTER TABLE sms_conversation ADD COLUMN conversationId')
-              .then((value) => print("MyDebugMessage db conversationId created ${value}"))
+              .then((value) => null)
               .catchError((onError)=> print("MyDebugMessage db couldn't create conversationId col"))
           });
         this.db = db;
@@ -290,7 +290,7 @@ class FusionConnection {
       data['username'] = await _getUsername();
 
       Uri url = Uri.parse(
-          'https://fusioncomm.net:444/api/v1/clients/api_request?username=' +
+          'https://fusioncomm.net/api/v1/clients/api_request?username=' +
               data['username']);
       Map<String, String> headers = await _cookieHeaders(url);
       String body = convert.jsonEncode(data);
@@ -333,7 +333,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net:444/api/v1' + route + urlParams);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -383,7 +383,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net:444/api/v2' + route + urlParams);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -416,7 +416,7 @@ class FusionConnection {
     try {
       data['username'] = await _getUsername();
 
-      Uri url = Uri.parse('https://fusioncomm.net:444/api/v2' + route);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
       (await _cookieHeaders(url))
           .forEach(
@@ -560,6 +560,14 @@ print(responseBody);
 
             messages.notifyMessage(newMessage);
             messages.storeRecord(newMessage);
+          }
+        } else if(newMessage.messageStatus != null){
+          List<SMSMessage> msgs = messages.getRecords();
+          for (SMSMessage message in msgs) {
+            if(message.id == newMessage.id){
+              message.messageStatus = newMessage.messageStatus;
+              messages.storeRecord(message);
+            }
           }
         }
       } else if (message.containsKey('new_status')) {

@@ -20,8 +20,10 @@ import 'sms_conversation_view.dart';
 class MessagesTab extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
+  final Function setOnMessagePosted;
+  final Function clearOnMessagePosted;
 
-  MessagesTab(this._fusionConnection, this._softphone, {Key key})
+  MessagesTab(this._fusionConnection, this._softphone,this.setOnMessagePosted, this.clearOnMessagePosted, {Key key})
       : super(key: key);
 
   @override
@@ -30,6 +32,8 @@ class MessagesTab extends StatefulWidget {
 
 class _MessagesTabState extends State<MessagesTab> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+  Function get _setOnMessagePosted => widget.setOnMessagePosted;
+  Function get _clearOnMessagePosted => widget.clearOnMessagePosted;
 
   Softphone get _softphone => widget._softphone;
   SMSConversation openConversation = null;
@@ -84,7 +88,7 @@ class _MessagesTabState extends State<MessagesTab> {
                   child: MessageSearchResults(_myNumber, _convos, _contacts,
                       _crmContacts, _fusionConnection, _softphone,null,false)))
           : _loaded
-              ? MessagesList(_fusionConnection, _softphone)
+              ? MessagesList(_fusionConnection, _softphone,_setOnMessagePosted,_clearOnMessagePosted)
               : Container()
     ];
 
@@ -95,8 +99,10 @@ class _MessagesTabState extends State<MessagesTab> {
 class MessagesList extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
+  final Function setOnMessagePosted;
+  final Function clearOnMessagePosted;
 
-  MessagesList(this._fusionConnection, this._softphone, {Key key})
+  MessagesList(this._fusionConnection, this._softphone,this.setOnMessagePosted, this.clearOnMessagePosted, {Key key})
       : super(key: key);
 
   @override
@@ -105,12 +111,39 @@ class MessagesList extends StatefulWidget {
 
 class _MessagesListState extends State<MessagesList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+  Function get _setOnMessagePosted => widget.setOnMessagePosted;
+  Function get _clearOnMessagePosted => widget.clearOnMessagePosted;
 
   Softphone get _softphone => widget._softphone;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
   String _selectedGroupId = "-2";
   int _page = 0;
+
+
+  @override
+  void initState(){
+    super.initState();
+    _setOnMessagePosted((){
+      if(mounted){
+        _page = 0;
+        _lookupMessages();
+      }
+    });
+  }
+
+  @override
+  void dispose(){
+    super.dispose();
+    _clearOnMessagePosted();
+  }
+
+  refreshView(){
+    setState(() {
+      _page = 0;
+      _lookupMessages();
+    });
+  }
 
   _loadMore() {
     if (_page >= 0 && lookupState != 1) {
@@ -260,7 +293,8 @@ class _MessagesListState extends State<MessagesList> {
                                     _convos[index - 1],
                                     _getDepartmentName(_convos[index - 1]),
                                     _selectedGroupId,
-                                    deleteConvo);
+                                    deleteConvo,
+                                    refreshView);
                               } else {
                                 return Container(
                                   child: Text(
@@ -327,8 +361,9 @@ class SMSConversationSummaryView extends StatefulWidget {
   final String _departmentName;
   final String _selectedGroupId;
   Function(SMSConversation, SMSMessage) deleteConvo;
+  Function refreshView;
   SMSConversationSummaryView(this._fusionConnection, this._softphone,
-      this._convo, this._departmentName, this._selectedGroupId, this.deleteConvo,
+      this._convo, this._departmentName, this._selectedGroupId, this.deleteConvo, this.refreshView,
       {Key key})
       : super(key: key);
 
@@ -349,6 +384,7 @@ class _SMSConversationSummaryViewState
 
   String get _departmentId => widget._selectedGroupId;
   Function(SMSConversation, SMSMessage) get _deleteConvo => widget.deleteConvo;
+  Function get _refreshView => widget.refreshView;
 
   _openConversation() {
     _fusionConnection.conversations.markRead(_convo);
@@ -357,7 +393,7 @@ class _SMSConversationSummaryViewState
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            SMSConversationView(_fusionConnection, _softphone, _convo, _deleteConvo));
+            SMSConversationView(_fusionConnection, _softphone, _convo, _deleteConvo,_refreshView));
   }
 
   @override

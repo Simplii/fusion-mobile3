@@ -21,8 +21,9 @@ class EditContactView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Function() _goBack;
   final Contact _contact;
+  final Function onCreate;
 
-  EditContactView(this._fusionConnection, this._contact, this._goBack,
+  EditContactView(this._fusionConnection, this._contact, this._goBack, this.onCreate,
       {Key key})
       : super(key: key);
 
@@ -35,6 +36,8 @@ class _EditContactViewState extends State<EditContactView> {
 
   Contact get _contact => widget._contact;
   Contact _edited = null;
+  Function get _onCreate => widget.onCreate;
+  bool _saving = false; 
   Map<String, TextEditingController> textControllers = {};
 
   _textControllerFor(name, String value) {
@@ -423,8 +426,14 @@ class _EditContactViewState extends State<EditContactView> {
               color: crimsonLight,
               borderRadius: BorderRadius.all(Radius.circular(50)),
             ),
-            child: Row(children: [
-              Container(
+            child:Row(children: [
+              _saving ? Container(
+                margin: EdgeInsets.only(right: 8),
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(color: Colors.white)
+              ) :
+               Container(
                   child: Image.asset("assets/icons/check_white.png",
                       width: 16, height: 11),
                   margin: EdgeInsets.only(right: 8)),
@@ -441,6 +450,17 @@ class _EditContactViewState extends State<EditContactView> {
     _fusionConnection.contacts.save(_edited);
     _contact.copy(_edited);
     widget._goBack();
+  }
+
+  _createContact() {
+    setState(() {
+      _saving = true;
+    });
+    _fusionConnection.contacts.createContact(_edited,(Contact newContact){
+      _contact.copy(newContact);
+      _onCreate();
+      widget._goBack();
+    });
   }
 
   @override
@@ -475,7 +495,7 @@ class _EditContactViewState extends State<EditContactView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     GestureDetector(
-                        onTap: _saveContact,
+                        onTap: _onCreate != null ? _createContact : _saveContact,
                         child: _saveButton())
                   ]))
       ]))
