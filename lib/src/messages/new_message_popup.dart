@@ -252,7 +252,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
       });
     }
     
-    SMSConversation convo = await _fusionConnection.messages.checkExisitingConversation(groupId,
+    SMSConversation convo = await _fusionConnection.messages.checkExistingConversation(groupId,
       myPhoneNumber,toNumbers,toContacts);
     
   // print("MyNumber ${convo.serialize()}");

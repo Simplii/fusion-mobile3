@@ -1115,29 +1115,39 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         _renderMessage()
       ])));
     } else {
+
+      Contact myContact = _fusionConnection.coworkers.lookupCoworker(_message.user + 
+        "@" +_fusionConnection.getDomain()).toContact();
+
+      
       children.add(Expanded(
           child: Column(children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: 
-                _message.messageStatus == 'delivered' 
-                  ? Icon (Icons.check,size: 10, color:smoke,)
-                  : _message.messageStatus == 'failed'
-                    ? Icon(Icons.clear,size: 10, color: smoke,)
-                    : Container(),
+        Align(
+           alignment: Alignment.bottomRight,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _message.messageStatus == 'delivered' 
+                ? Icon (Icons.check,size: 10, color:smoke)
+                : _message.messageStatus == 'failed'
+                  ? Icon(Icons.clear,size: 10, color: smoke,)
+                  : Container(),
+              Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width - 90
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: Text(myContact.name ?? "", style: TextStyle(
+                          fontSize: 10, fontWeight: FontWeight.w800, color: smoke), 
+                          textWidthBasis: TextWidthBasis.longestLine, 
+                          overflow: TextOverflow.ellipsis, ),
               ),
-            ),
-            Align(
-                alignment: Alignment.centerRight,
-                child: Text(DateFormat.jm().format(date),
-                    style: TextStyle(
-                        fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
-          ],
+              Text(DateFormat.jm().format(date),
+                  style: TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.w800, color: smoke)),
+            ],
+          ),
         ),
         
         _renderMessage()
