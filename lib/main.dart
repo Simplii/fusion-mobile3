@@ -216,6 +216,14 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Did> _dids = [];
   Function onMessagePosted;
   _logOut() {
+    SharedPreferences.getInstance().then((SharedPreferences prefs){
+      prefs.setString("username","");
+      prefs.setString("sub_login","");
+      prefs.setString("aor","");
+      prefs.setString("auth_key","");
+      prefs.setString('selectedGroupId', "-2");
+    });
+    softphone.unregisterLinphone();
     Navigator.of(context).popUntil((route) => route.isFirst);
     this.setState(() {
       _isRegistering = false;
@@ -225,6 +233,9 @@ class _MyHomePageState extends State<MyHomePage> {
       _callInProgress = false;
       _logged_in = false;
     });
+    if(Platform.isAndroid){
+      SystemNavigator.pop();
+    }
   }
 
   @override

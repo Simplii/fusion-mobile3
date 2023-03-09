@@ -206,7 +206,7 @@ print(callpopInfo);
                 background: smoke);
       });
       List<SMSConversation>convos = fusionConnection.conversations.getRecords();
-      SMSConversation lastMessage = await checkExisitingConversation("-2", message.from, [message.to],[]);
+      SMSConversation lastMessage = await checkExistingConversation("-2", message.from, [message.to],[]);
       if(lastMessage.conversationId != null){
         List<SMSConversation> convoToUpdateList = 
           convos.where((element) =>  element.conversationId == lastMessage.conversationId).toList();
@@ -304,7 +304,7 @@ print(callpopInfo);
       }
   }
 
-  Future<SMSConversation> checkExisitingConversation(String departmentId, String myNumber, 
+  Future<SMSConversation> checkExistingConversation(String departmentId, String myNumber, 
     List<String> numbers, List<Contact> contacts) async {
      
     SMSConversation convo;
@@ -317,9 +317,9 @@ print(callpopInfo);
           if(data['lastMessage'] != null){
             List<CrmContact> leads = [];
             for (Map<String, dynamic> obj in data['conversationMembers']) {
-              List<dynamic> convoMembebersLeads = obj['leads'];
-              if(convoMembebersLeads.length > 0){
-                convoMembebersLeads.forEach((lead) { 
+              List<dynamic> convoMembersLeads = obj['leads'];
+              if(convoMembersLeads!= null && convoMembersLeads.length > 0){
+                convoMembersLeads.forEach((lead) { 
                   leads.add(CrmContact.fromExpanded(lead));
                 });
               }
