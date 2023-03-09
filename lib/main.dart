@@ -298,7 +298,7 @@ class _MyHomePageState extends State<MyHomePage> {
       numbers = (jsonDecode(data['numbers']) as List<dynamic>).cast<String>();
     }
     
-    if(data.containsKey('numbers')){
+    if(data.containsKey('members')){
       members = (jsonDecode(data['members']) as List<dynamic>);
     }
 
@@ -325,11 +325,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
       for (Map<String,dynamic> member in members) {
         List<dynamic> memberContacts = member['contacts'];
+        List<dynamic> memberLeads = member['leads'];
         if(memberContacts.isNotEmpty){
           memberContacts.forEach((contact) { 
             convoContacts.add(Contact(contact));
           });
-        } else if(memberContacts.length == 0 && member['number'] != numberUsed){
+        } else if(memberLeads.isNotEmpty){
+          memberLeads.forEach((c) { 
+            Contact contact = Contact.fromV2(c);
+            convoContacts.add(contact);
+          });
+        } else if(memberContacts.isEmpty && 
+          memberLeads.isEmpty && member['number'] != numberUsed){
           convoContacts.add(Contact.fake(member['number']));
         }
       }
@@ -350,7 +357,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 hash: numbers.join(':'),
                 isGroup: isGroup,
                 myNumber: numberUsed,
-                number: data['from_number']),
+                number: data['to_number']),
             null,null));
     }
 
