@@ -103,7 +103,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       String savedMessage =
           prefs.getString(_conversation.hash + "_savedMessage");
       _messageInputController.text = savedMessage;
-      isSavedMessage = savedMessage.length > 0;
+      isSavedMessage = savedMessage != null && savedMessage.length > 0;
 
       final String path = getApplicationDocumentsDirectory().toString();
       List<String> savedImgs =
@@ -126,7 +126,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     SMSDepartment department = _fusionConnection.smsDepartments
         .getDepartmentByPhoneNumber(_conversation.myNumber);
     this.setState(() {
-      _selectedGroupId = department.id;
+      _selectedGroupId = department.id ?? "-1";
     });
   }
 
@@ -1107,35 +1107,47 @@ class _SMSMessageViewState extends State<SMSMessageView> {
           child: Column(children: [
         Align(
             alignment: Alignment.centerLeft,
-            child: Text(DateFormat.jm().format(date),
+            child: Text(matchedContact != null
+              ? "${matchedContact[0].name.toTitleCase()} ${mDash} ${DateFormat.jm().format(date)}" 
+              : "${_message.from.formatPhone()} ${mDash} ${DateFormat.jm().format(date)}",
                 style: TextStyle(
                     fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
         _renderMessage()
       ])));
     } else {
+
+      Contact myContact = _fusionConnection.coworkers.lookupCoworker(_message.user + 
+        "@" +_fusionConnection.getDomain()).toContact();
+
+      
       children.add(Expanded(
           child: Column(children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: 
-                _message.messageStatus == 'delivered' 
-                  ? Icon (Icons.check,size: 10, color:smoke,)
-                  : _message.messageStatus == 'failed'
-                    ? Icon(Icons.clear,size: 10, color: smoke,)
-                    : Container(),
+        Align(
+           alignment: Alignment.bottomRight,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _message.messageStatus == 'delivered' 
+                ? Icon (Icons.check,size: 10, color:smoke)
+                : _message.messageStatus == 'failed'
+                  ? Icon(Icons.clear,size: 10, color: smoke,)
+                  : Container(),
+              Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width - 90
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: Text(myContact.name ?? "", style: TextStyle(
+                          fontSize: 10, fontWeight: FontWeight.w800, color: smoke), 
+                          textWidthBasis: TextWidthBasis.longestLine, 
+                          overflow: TextOverflow.ellipsis, ),
               ),
-            ),
-            Align(
-                alignment: Alignment.centerRight,
-                child: Text(DateFormat.jm().format(date),
-                    style: TextStyle(
-                        fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
-          ],
+              Text(DateFormat.jm().format(date),
+                  style: TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.w800, color: smoke)),
+            ],
+          ),
         ),
         
         _renderMessage()

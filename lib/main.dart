@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
@@ -14,8 +15,10 @@ import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_view.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
+import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -213,6 +216,14 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Did> _dids = [];
   Function onMessagePosted;
   _logOut() {
+    SharedPreferences.getInstance().then((SharedPreferences prefs){
+      prefs.setString("username","");
+      prefs.setString("sub_login","");
+      prefs.setString("aor","");
+      prefs.setString("auth_key","");
+      prefs.setString('selectedGroupId', "-2");
+    });
+    softphone.unregisterLinphone();
     Navigator.of(context).popUntil((route) => route.isFirst);
     this.setState(() {
       _isRegistering = false;
@@ -222,6 +233,9 @@ class _MyHomePageState extends State<MyHomePage> {
       _callInProgress = false;
       _logged_in = false;
     });
+    if(Platform.isAndroid){
+      SystemNavigator.pop();
+    }
   }
 
   @override
@@ -286,7 +300,79 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   checkForIMNotification(Map<String, dynamic> data) {
-    if (data.containsKey('to_number')) {
+    List<String> numbers = [];
+    List<dynamic> members = [];
+    bool isGroup = data['is_group'] == "1" ? true : false;
+    String depId = '';
+
+    if(data.containsKey('numbers')){
+      numbers = (jsonDecode(data['numbers']) as List<dynamic>).cast<String>();
+    }
+    
+    if(data.containsKey('members')){
+      members = (jsonDecode(data['members']) as List<dynamic>);
+    }
+
+    if(data.containsKey('to_number') && isGroup){
+
+      List<SMSDepartment> deps = fusionConnection.smsDepartments.allDepartments();
+      String numberUsed = "";
+
+      for (SMSDepartment dep in deps) {
+        for (String number in dep.numbers) {
+          if(dep.id == "-1"){
+            // in case its a new conversation we didn't start
+            depId = dep.id;
+            numberUsed = number;
+          }
+          if(numbers.contains(number)){
+            depId = dep.id;
+            numberUsed = number;
+          }
+        }
+      } 
+      
+      List<Contact> convoContacts = [];
+
+      for (Map<String,dynamic> member in members) {
+        List<dynamic> memberContacts = member['contacts'];
+        List<dynamic> memberLeads = member['leads'];
+        if(memberContacts.isNotEmpty){
+          memberContacts.forEach((contact) { 
+            convoContacts.add(Contact(contact));
+          });
+        } else if(memberLeads.isNotEmpty){
+          memberLeads.forEach((c) { 
+            Contact contact = Contact.fromV2(c);
+            convoContacts.add(contact);
+          });
+        } else if(memberContacts.isEmpty && 
+          memberLeads.isEmpty && member['number'] != numberUsed){
+          convoContacts.add(Contact.fake(member['number']));
+        }
+      }
+      
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => 
+        SMSConversationView(
+            fusionConnection,
+            softphone,
+            SMSConversation.build(
+                contacts: convoContacts,
+                conversationId: int.parse(data['to_number']),
+                crmContacts: [],
+                selectedDepartmentId: depId,
+                hash: numbers.join(':'),
+                isGroup: isGroup,
+                myNumber: numberUsed,
+                number: data['to_number']),
+            null,null));
+    }
+
+    else if (data.containsKey('to_number') && !isGroup) {
       fusionConnection.contacts.search(data['from_number'], 10, 0,
           (contacts, fromServer) {
         if (fromServer) {
@@ -306,6 +392,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           contacts: contacts,
                           crmContacts: [],
                           isGroup: false,
+                          selectedDepartmentId: depId,
                           myNumber: data['to_number'],
                           number: data['from_number']),
                       null,null));
