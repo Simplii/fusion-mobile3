@@ -51,6 +51,8 @@ class _MessagesTabState extends State<MessagesTab> {
       _loaded = true;
     }
     _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
+      print("MyDebugMessage deps ${list[0].id }  ${list[0].numbers }");
+      print("MyDebugMessage deps ${list[1].id }  ${list[1].numbers }");
       if (!mounted) return;
       this.setState(() {
         _loaded = true;
