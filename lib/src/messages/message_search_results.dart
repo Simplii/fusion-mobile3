@@ -63,7 +63,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
         .lookupRecord("-2")
         .numbers[0];
 
-      SMSConversation convo = await _fusionConnection.messages.checkExisitingConversation('-2',
+      SMSConversation convo = await _fusionConnection.messages.checkExistingConversation('-2',
       myNumber,[theirNumber],contacts);
 
     // SMSConversation convo = SMSConversation.build(

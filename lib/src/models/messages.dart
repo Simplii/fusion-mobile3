@@ -96,27 +96,6 @@ class SMSMessage extends FusionModel {
         .replaceFirst(RegExp("@.*"), "") : null;
   }
 
-  SMSMessage.empty() {
-    String date = DateTime.now().toString();
-    this.convertedMms = false;
-    this.domain = null;
-    this.from = "";
-    this.fromMe = true;
-    this.id = UniqueKey().toString();
-    this.isGroup = true;
-    this.message = 'test';
-    this.messageStatus = null;
-    this.mime = null;
-    this.read = true;
-    this.scheduledAt = null;
-    this.smsWebhookId = 0;
-    this.time = CarbonDate.fromDate(date);
-    this.to = '';
-    this.type = "sms";
-    this.unixtime = DateTime.parse(date).millisecondsSinceEpoch ~/ 1000;
-    this.user = null;
-  }
-
   serialize() {
     return convert.jsonEncode({
       'convertedMms': convertedMms,
@@ -227,7 +206,7 @@ print(callpopInfo);
                 background: smoke);
       });
       List<SMSConversation>convos = fusionConnection.conversations.getRecords();
-      SMSConversation lastMessage = await checkExisitingConversation("-2", message.from, [message.to],[]);
+      SMSConversation lastMessage = await checkExistingConversation("-2", message.from, [message.to],[]);
       if(lastMessage.conversationId != null){
         List<SMSConversation> convoToUpdateList = 
           convos.where((element) =>  element.conversationId == lastMessage.conversationId).toList();
@@ -257,7 +236,7 @@ print(callpopInfo);
       'fromMe': record.fromMe != null && record.fromMe ? 1 : 0,
       'media': record.media != null && record.media ? 1 : 0,
       'message': record.message,
-      'mime': record.mime,
+      'mime': record.mime ?? '',
       'read': record.read != null && record.read ? 1 : 0,
       'time': record.unixtime,
       'to': record.to,
@@ -284,7 +263,7 @@ print(callpopInfo);
   }
 
   sendMediaMessage(XFile file, SMSConversation conversation, String departmentId, 
-    dynamic ganeratedConvoId, Function callback, Function largeMMSCallback ) async {
+    dynamic generatedConvoId, Function callback, Function largeMMSCallback ) async {
       int fileSize = await file.length();
       bool _canSendLargeMMS = true;
       
@@ -299,7 +278,7 @@ print(callpopInfo);
       
       if(_canSendLargeMMS) {
         fusionConnection.apiV2Multipart("POST", 
-          "/messaging/group/${departmentId}/conversations/${ganeratedConvoId ?? conversation.conversationId}/messages", {
+          "/messaging/group/${departmentId}/conversations/${generatedConvoId ?? conversation.conversationId}/messages", {
             'myIdentifier': conversation.myNumber,
             'schedule': null,
             'isMms': true,
@@ -325,7 +304,7 @@ print(callpopInfo);
       }
   }
 
-  Future<SMSConversation> checkExisitingConversation(String departmentId, String myNumber, 
+  Future<SMSConversation> checkExistingConversation(String departmentId, String myNumber, 
     List<String> numbers, List<Contact> contacts) async {
      
     SMSConversation convo;
@@ -336,7 +315,17 @@ print(callpopInfo);
         }, callback: (Map<String, dynamic> data) {
 
           if(data['lastMessage'] != null){
+            List<CrmContact> leads = [];
+            for (Map<String, dynamic> obj in data['conversationMembers']) {
+              List<dynamic> convoMembersLeads = obj['leads'];
+              if(convoMembersLeads!= null && convoMembersLeads.length > 0){
+                convoMembersLeads.forEach((lead) { 
+                  leads.add(CrmContact.fromExpanded(lead));
+                });
+              }
+            }
             convo = SMSConversation(data);
+            convo.crmContacts = leads;
             convo.contacts = contacts;
           } else {
             convo = SMSConversation.build(
@@ -397,13 +386,14 @@ print(callpopInfo);
         "/messaging/group/${departmentId}/conversations", {
           'identifiers': [conversation.myNumber,...numbers]
           }, callback: (Map<String, dynamic> data) async {
+            conversation.conversationId = data['groupId'];
             if(mediaFile != null){
-              var ganeratedConvoId = data['groupId'];
+              var generatedConvoId = data['groupId'];
               this.sendMediaMessage(
                 mediaFile, 
                 conversation, 
                 departmentId, 
-                ganeratedConvoId, 
+                generatedConvoId,
                 callback,
                 largeMMSCallback);
             } else {
@@ -416,7 +406,7 @@ print(callpopInfo);
                   'text': text,
                   'isGroup': data['isGroup']
                 }, callback: (Map<String, dynamic> data) {
-                  conversation.number = data['to'];  
+                  conversation.number = data['to'];
                   SMSMessage message = SMSMessage.fromV2(data);
                   conversation.message = message;
                   storeRecord(message);
@@ -550,16 +540,22 @@ print(callpopInfo);
 
       for (Map<String, dynamic> item in data['items']) {
         List<Contact> contactsList = [];
-        
+        List<CrmContact> leadsList = [];
+
         for (Map<String, dynamic> obj in item['conversationMembers']) {
           List<dynamic> c = obj['contacts'];
+          List<dynamic> convoMembebersLeads = obj['leads'];
           dynamic number = obj['number'] ;
           if(c.length > 0){
             Contact _contact = Contact.fromV2(c.last);
             contactsList.add(_contact);
-            List<Contact> contactExisit = contacts.where((e) => e.id ==_contact.id).toList();
-            contactExisit.isEmpty ? contacts.add(_contact): null;
-          } else if(c.length == 0){
+            List<Contact> contactExist = contacts.where((e) => e.id ==_contact.id).toList();
+            contactExist.isEmpty ? contacts.add(_contact) : null ;
+          } else if(convoMembebersLeads.length > 0){
+            convoMembebersLeads.forEach((lead) { 
+              leadsList.add(CrmContact(lead));
+            });
+          } else if(c.length == 0 && convoMembebersLeads.length == 0 && number != ''){
             contactsList.add(Contact.fake(number));
           }
         }
@@ -568,7 +564,7 @@ print(callpopInfo);
         SMSConversation convo = SMSConversation(item);
         convo.message = message;
         convo.contacts = contactsList;
-        convo.crmContacts = [];
+        convo.crmContacts = leadsList;
         fullConversations.add(convo);
       }
 
@@ -585,9 +581,9 @@ print(callpopInfo);
     await fusionConnection.db.query('sms_message',
       limit: limit,
       offset: offset,
-      where: convo.isGroup ? '`to` = ?' : '(`to` = ? and `from` = ?) or (`from` = ? and `to` = ?)',
+      where: convo.conversationId != null && convo.isGroup ? '`to` = ?' : '(`to` = ? and `from` = ?) or (`from` = ? and `to` = ?)',
       orderBy: "id desc",
-      whereArgs: convo.isGroup 
+      whereArgs: convo.conversationId != null &&  convo.isGroup 
         ? [ convo.conversationId ] 
         : [
           convo.myNumber,
@@ -628,9 +624,7 @@ print(callpopInfo);
         });
     }
     else if(convo.conversationId == null && convo.isGroup){
-      SMSMessage message = SMSMessage.empty();
-      storeRecord(message);
-      callback([message], true);
+      callback([], true);
     }
     else {
       fusionConnection.apiV2Call(

@@ -87,34 +87,34 @@ class CrmContact extends FusionModel {
     this.name = contactObject['name'];
     this.url = contactObject['url'];
     if (contactObject['phone_number'] != null &&
-        contactObject['phone_number'].trim() != '0' &&
-        contactObject['phone_number'].trim() != '') {
-      this.phone_number = contactObject['phone_number'];
+        contactObject['phone_number'].toString().trim() != '0' &&
+        contactObject['phone_number'].toString().trim() != '') {
+      this.phone_number = contactObject['phone_number'].toString();
     }
     if (contactObject['office_number'] != null &&
-        contactObject['office_number'].trim() != '0' &&
-        contactObject['office_number'].trim() != '') {
-      this.phone_number = contactObject['office_number'];
+        contactObject['office_number'].toString().trim() != '0' &&
+        contactObject['office_number'].toString().trim() != '') {
+      this.phone_number = contactObject['office_number'].toString();
     }
     if (contactObject['office_phone'] != null &&
         contactObject['office_phone'] != 0 &&
-        contactObject['office_phone'].trim() != '') {
-      this.phone_number = contactObject['office_phone'];
+        contactObject['office_phone'].toString().trim() != '') {
+      this.phone_number = contactObject['office_phone'].toString();
     }
     if (contactObject['mobile_number'] != null &&
-        contactObject['mobile_number'].trim() != '0' &&
-        contactObject['mobile_number'].trim() != '') {
-      this.phone_number = contactObject['mobile_number'];
+        contactObject['mobile_number'].toString().trim() != '0' &&
+        contactObject['mobile_number'].toString().trim() != '') {
+      this.phone_number = contactObject['mobile_number'].toString();
     }
     if (contactObject['mobile_phone'] != null &&
         contactObject['mobile_phone'] != 0 &&
-        contactObject['mobile_phone'].trim() != '') {
-      this.phone_number = contactObject['mobile_phone'];
+        contactObject['mobile_phone'].toString().trim() != '') {
+      this.phone_number = contactObject['mobile_phone'].toString();
     }
     if (contactObject['home_phone'] != null &&
         contactObject['home_phone'] != 0 &&
-        contactObject['home_phone'].trim() != '') {
-      this.phone_number = contactObject['home_phone'];
+        contactObject['home_phone'].toString().trim() != '') {
+      this.phone_number = contactObject['home_phone'].toString();
     }
     this.company = contactObject['company'];
   }

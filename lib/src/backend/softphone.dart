@@ -749,8 +749,11 @@ class Softphone implements SipUaHelperListener {
         "lpRegister", [aor.split("@")[0], password, aor.split("@")[1]]);
   }
 
-  _unregisterLinphone() {
+  unregisterLinphone() {
     print("iosunreg");
+    _savedLogin = "";
+    _savedPassword = "";
+    _savedAor = "";
     _getMethodChannel().invokeMethod("lpUnregister", []);
   }
 
