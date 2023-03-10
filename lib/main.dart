@@ -579,10 +579,18 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Icon(Icons.dialpad),
       );
     } else if (_currentIndex == 2) {
+      bool _canSendMessage = false;
+      List<SMSDepartment> deps = fusionConnection.smsDepartments.getRecords();
+      for (var dep in deps) {
+        if(dep.numbers.isNotEmpty){
+          _canSendMessage = true;
+          break;
+        }
+      }
       return FloatingActionButton(
-        backgroundColor: crimsonLight,
+        backgroundColor: _canSendMessage ? crimsonLight : crimsonLight.withOpacity(0.5),
         foregroundColor: Colors.white,
-        onPressed: _openNewMessage,
+        onPressed: _canSendMessage ? _openNewMessage : null, 
         child: Icon(Icons.add),
       );
     } else {

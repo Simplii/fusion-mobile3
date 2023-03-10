@@ -553,7 +553,7 @@ print(callpopInfo);
             contactExist.isEmpty ? contacts.add(_contact) : null ;
           } else if(convoMembebersLeads.length > 0){
             convoMembebersLeads.forEach((lead) { 
-              leadsList.add(CrmContact(lead));
+              contactsList.add(CrmContact(lead).toContact());
             });
           } else if(c.length == 0 && convoMembebersLeads.length == 0 && number != ''){
             contactsList.add(Contact.fake(number));

@@ -72,8 +72,8 @@ class FusionConnection {
   Function _refreshUi = () {};
   Map<String, bool> received_smses = {};
 
-  String serverRoot = "http://fusioncomm.net:444";
-  String defaultAvatar = "https://fusioncomm.net:444/img/defaultuser.png";
+  String serverRoot = "http://fusioncomm.net";
+  String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {
     _getCookies();
@@ -290,7 +290,7 @@ class FusionConnection {
       data['username'] = await _getUsername();
 
       Uri url = Uri.parse(
-          'https://fusioncomm.net:444/api/v1/clients/api_request?username=' +
+          'https://fusioncomm.net/api/v1/clients/api_request?username=' +
               data['username']);
       Map<String, String> headers = await _cookieHeaders(url);
       String body = convert.jsonEncode(data);
@@ -333,7 +333,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net:444/api/v1' + route + urlParams);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -383,7 +383,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net:444/api/v2' + route + urlParams);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -416,7 +416,7 @@ class FusionConnection {
     try {
       data['username'] = await _getUsername();
 
-      Uri url = Uri.parse('https://fusioncomm.net:444/api/v2' + route);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
       (await _cookieHeaders(url))
           .forEach(
