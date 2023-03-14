@@ -223,7 +223,6 @@ class _MyHomePageState extends State<MyHomePage> {
       prefs.setString("auth_key","");
       prefs.setString('selectedGroupId', "-2");
     });
-    softphone.unregisterLinphone();
     Navigator.of(context).popUntil((route) => route.isFirst);
     this.setState(() {
       _isRegistering = false;
@@ -236,6 +235,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if(Platform.isAndroid){
       SystemNavigator.pop();
     }
+    softphone.unregisterLinphone();
   }
 
   @override
