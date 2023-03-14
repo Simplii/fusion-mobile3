@@ -41,7 +41,8 @@ class CrmContact extends FusionModel {
 
   CrmContact.unserialize(String data) {
     Map<String, dynamic> obj = convert.jsonDecode(data);
-    this.additions = obj['additions'].cast<Map<String, String>>();
+    if(obj['additions'] != null)
+      this.additions = obj['additions'].cast<Map<String, String>>();
     if (obj['contact'] != null)
       this.contact = Contact.unserialize(obj['contact']);
     this.crm = obj['crm'];
@@ -58,6 +59,36 @@ class CrmContact extends FusionModel {
 
   }
 
+  toContact() {
+    Contact c = Contact({
+      'addresses': [],
+      'company': "",
+      'contacts': [],
+      'deleted': false,
+      'domain': "",
+      'emails': [],
+      'first_contact_diate': '',
+      'first_name': this.name.split(' ')[0],
+      'last_name': this.name.split(' ')[1],
+      'groups': [],
+      'id': this.id,
+      'job_title': '',
+      'lead_creation_date': '',
+      'name': this.name,
+      'owner': '',
+      'parent_id': '',
+      'phone_numbers': [{'number': this.phone_number, 'type': ''}],
+      'pictures': [],
+      'socials': [],
+      'type': '',
+      'updated_at': {'date': '', 'timezone': '', 'timezone_type': 1},
+      'created_at': {'date': '', 'timezone': '', 'timezone_type': 1},
+      'crm_url': '',
+      'crm_name': this.crm,
+      'crm_id': this.id}
+    );
+    return c;
+  }
   CrmContact.fromExpanded(Map<String, dynamic> contactObject) {
     if (contactObject['contact'] != null) {
       this.contact = Contact(contactObject['contact']);

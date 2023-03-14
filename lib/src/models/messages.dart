@@ -72,7 +72,9 @@ class SMSMessage extends FusionModel {
 
   SMSMessage.fromV2(Map<String, dynamic> map) {
     this.convertedMms = map.containsKey('converted_mms') ? true : false;
-    this.domain = map['domain'].runtimeType == String ? map['domain'] : null;
+    this.domain = map['user'].runtimeType == String ? map['user']
+        .toString()
+        .replaceFirst(RegExp(".*@"), "") : null;
     this.from = map['from'];
     this.fromMe = map['fromMe'];
     this.id = map['id'].toString();
@@ -553,7 +555,7 @@ print(callpopInfo);
             contactExist.isEmpty ? contacts.add(_contact) : null ;
           } else if(convoMembebersLeads.length > 0){
             convoMembebersLeads.forEach((lead) { 
-              leadsList.add(CrmContact(lead));
+              contactsList.add(CrmContact(lead).toContact());
             });
           } else if(c.length == 0 && convoMembebersLeads.length == 0 && number != ''){
             contactsList.add(Contact.fake(number));
