@@ -54,7 +54,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         if (deptNumbers.length > 0) {
           myPhoneNumber = deptNumbers[0];
         } else {
-          myPhoneNumber = "Unassigned";
+          myPhoneNumber = _fusionConnection.getUid();
         }
       });
     },);

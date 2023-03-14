@@ -126,7 +126,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     SMSDepartment department = _fusionConnection.smsDepartments
         .getDepartmentByPhoneNumber(_conversation.myNumber);
     this.setState(() {
-      _selectedGroupId = department.id ?? "-1";
+      _selectedGroupId = department?.id ?? "-1";
     });
   }
 
@@ -1116,8 +1116,11 @@ class _SMSMessageViewState extends State<SMSMessageView> {
       ])));
     } else {
 
-      Contact myContact = _fusionConnection.coworkers.lookupCoworker(_message.user + 
-        "@" +_fusionConnection.getDomain()).toContact();
+      Contact myContact = null;
+      if(_message.user != null){
+        myContact = _fusionConnection.coworkers.lookupCoworker(_message.user + 
+          "@" + _fusionConnection.getDomain()).toContact();
+      }
 
       
       children.add(Expanded(
@@ -1138,7 +1141,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                   maxWidth: MediaQuery.of(context).size.width - 90
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 4),
-                child: Text(myContact.name ?? "", style: TextStyle(
+                child: Text(myContact?.name ?? "", style: TextStyle(
                           fontSize: 10, fontWeight: FontWeight.w800, color: smoke), 
                           textWidthBasis: TextWidthBasis.longestLine, 
                           overflow: TextOverflow.ellipsis, ),
