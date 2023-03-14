@@ -49,7 +49,8 @@ class FusionConnection {
   CrmContactsStore crmContacts;
   ContactsStore contacts;
   CallpopInfoStore callpopInfos;
-  WebsocketManager _socket;
+  // WebsocketManager _socket;
+  WebSocketChannel socketChannel;
   SMSConversationsStore conversations;
   SMSMessagesStore messages;
   UserSettings settings;
@@ -509,20 +510,27 @@ print(responseBody);
   }
 
   _reconnectSocket() {
-    _socket.connect().then((val) {
-      _socket.send(convert.jsonEncode({
-        "simplii_identification": [_extension, _domain],
-        "pwd": _password
-      }));
-    });
+    socketChannel.sink.add(convert.jsonEncode({
+      "simplii_identification": [_extension, _domain],
+      "pwd": _password
+    }));
   }
+
+  // _reconnectSocket() {
+  //   _socket.connect().then((val) {
+  //     _socket.send(convert.jsonEncode({
+  //       "simplii_identification": [_extension, _domain],
+  //       "pwd": _password
+  //     }));
+  //   });
+  // }
 
   _sendHeartbeat() {
     String beat = randomString(30);
     _sendToSocket({'heartbeat': beat});
     Future.delayed(const Duration(seconds: 15), () {
       if (_heartbeats[beat] != null && !_heartbeats[beat]) {
-        _socket.close();
+        socketChannel.sink.close();
         setupSocket();
       }
       _heartbeats.remove(beat);
@@ -531,15 +539,14 @@ print(responseBody);
   }
 
   _sendToSocket(Map<String, dynamic> payload) {
-    _socket.send(convert.jsonEncode(payload));
+    socketChannel.sink.add(convert.jsonEncode(payload));
   }
 
   setupSocket() {
     int messageNum = 0;
-    _socket = WebsocketManager("wss://fusioncomm.net:8443/");
-    _socket.onClose((dynamic message) {
-    });
-    _socket.onMessage((dynamic messageData) {
+    final wsUrl = Uri.parse('wss://fusioncomm.net:8443/');
+    socketChannel = WebSocketChannel.connect(wsUrl);
+    socketChannel.stream.listen((messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
