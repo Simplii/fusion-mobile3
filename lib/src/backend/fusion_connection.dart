@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:core';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_apns/src/connector.dart';
@@ -38,7 +39,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 
 import '../utils.dart';
 import 'softphone.dart';
-
+import 'package:encrypt/encrypt.dart' as enc;
 
 class FusionConnection {
   String _extension = '';
@@ -401,7 +402,14 @@ class FusionConnection {
       print(data);
       print(uriResponse.body);
       if (uriResponse.body == '{"error":"invalid_login"}') {
-        this.logOut();
+        final prefs = await SharedPreferences.getInstance();
+        String username = prefs.getString("username");
+        if (username != null) {
+          String domain = username.split('@')[1];
+          this.autoLogin(username, domain);
+        } else {
+          this.logOut();
+        }
       }
       var jsonResponse = convert.jsonDecode(uriResponse.body);
       if (callback != null) callback(jsonResponse);
@@ -496,7 +504,7 @@ print(responseBody);
         SharedPreferences.getInstance().then((SharedPreferences prefs) {
           prefs.setString("username", _username);
         });
-
+        this.encryptFusionData(username,password);
         _username = _username;
         _password = password;
         _domain = _username.split('@')[1];
@@ -595,16 +603,31 @@ print(responseBody);
     _connector = connector;
   }
 
-  void autoLogin(String username, String domain) {
+  void autoLogin(String username, String domain) async {
     _domain = domain;
     _username = username.split('@')[0] + '@' + domain;
     _domain = _username.split('@')[1];
     _extension = _username.split('@')[0];
+    String _pass;
+
+    final prefs = await SharedPreferences.getInstance();
+    _pass = await prefs.getString('fusion-data1');
+    
+    if(_pass != null){
+      final String deviceToken = await FirebaseMessaging.instance.getToken();
+      final String hash = generateMd5(username.toLowerCase() + deviceToken + fusionDataHelper);
+      final enc.Key key = enc.Key.fromUtf8(hash);
+      final enc.IV iv = enc.IV.fromLength(16);
+      final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key));
+      _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
+    }
 
     apiV1Call(
         "get",
         "/clients/lookup_options",
-        {"username": username},
+        _pass != null
+            ? {"username": username, "password": _pass}
+            : {"username": username},
         onError: () {
           logOut();
         },
@@ -622,5 +645,20 @@ print(responseBody);
 
   void setRefreshUi( Function() callback) {
     _refreshUi = callback;
+  }
+
+  void encryptFusionData(String username, String password) async {
+    if(password ==null)return;
+    final String deviceToken = await FirebaseMessaging.instance.getToken();
+    final String hash = generateMd5(username.toLowerCase() + deviceToken +  fusionDataHelper);
+
+    final enc.Key key = enc.Key.fromUtf8(hash);
+    final enc.IV iv = enc.IV.fromLength(16);
+
+    final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key));
+    final enc.Encrypted encrypted = encrypter.encrypt(password, iv: iv);
+
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('fusion-data1', encrypted.base64);
   }
 }
