@@ -231,12 +231,18 @@ class _ContactCircleState extends State<ContactCircle> {
         child: Container(
             width: _diameter - 4,
             height: _diameter - 4,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                  fit: BoxFit.cover,
-                  image: (imageUrl != null
-                      ? NetworkImage(imageUrl)
-                      : AssetImage("assets/blank_avatar.png"))))));
+            child: imageUrl != null 
+              ? CircleAvatar(
+                  //backgroundImage here will be a fallback incase the image we're getting
+                  //from imageUrl was deleted from the server
+                  backgroundImage: NetworkImage(avatarUrl(_firstName(), _lastName())),
+                  foregroundImage: NetworkImage(imageUrl),
+                )
+              : CircleAvatar(
+                  backgroundImage: AssetImage("assets/blank_avatar.png"),
+                ),
+            )
+        );
 
     Color borderColor = Colors.transparent;
     if (presence == "open") borderColor = Color.fromARGB(255, 0, 204, 136);
