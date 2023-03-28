@@ -128,13 +128,13 @@ class SMSConversation extends FusionModel {
   SMSConversation.unserialize(String dataString) {
     
     Map<String, dynamic> data = convert.jsonDecode(dataString);
-    this.conversationId = data['groupId'];
+    this.conversationId = data['groupId'] != null ? data['groupId'] : data['conversationId'];
     this.groupName = data['groupName'];
-    this.isGroup = data['isGroup'];
+    this.isGroup = (data['isGroup'] == 1 || data['isGroup'] == true) ? true : false;
     this.lastContactTime = data['lastContactTime'];
     this.lastContactTime = data['lastContactTime'];
     this.myNumber = data['myNumber'];
-    this.number = data['to'];
+    this.number = data['to'] != null ? data['to'] : data['number'];
     this.members = data['conversationMembers'];
     this.message = SMSMessage.unserialize(data['message']);
     this.unread = data['unread'];
