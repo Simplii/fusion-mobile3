@@ -217,7 +217,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Function onMessagePosted;
   _logOut() {
     SharedPreferences.getInstance().then((SharedPreferences prefs){
-      prefs.setString("username","");
+      prefs.remove('username');
       prefs.setString("sub_login","");
       prefs.setString("aor","");
       prefs.setString("auth_key","");

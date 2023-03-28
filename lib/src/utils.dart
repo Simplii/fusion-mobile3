@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -150,3 +151,9 @@ class Debounce {
     XFile xfile = new XFile(file.path);
     return xfile;
   }
+
+String generateMd5(String input) {
+    return md5.convert(utf8.encode(input)).toString();
+}
+
+String fusionDataHelper = "299ea792cc17100390c7a4a1b6e6f909f0a1b7c725ad820bd54292ca111cfa30";
