@@ -44,6 +44,7 @@ class ProviderDelegate: NSObject, CXCallObserverDelegate {
     var appVersion: String? {
         return Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
     }
+    var isBluetoothOn: Bool = false
     
     @objc func handleInterruption(notification: Notification) {
         guard let userInfo = notification.userInfo,
@@ -477,6 +478,7 @@ print("audiointerruption")
         for audioDevice in mCore!.audioDevices {
              if (audioDevice.type == AudioDeviceType.Bluetooth) {
                  mCore!.currentCall?.outputAudioDevice = audioDevice
+                 isBluetoothOn = true
              }
         }
     }
@@ -728,8 +730,7 @@ print("audiointerruption")
                 let args = call.arguments as! [Any]
                 do {
                     let speakerOn = args[0] as! Bool
-                    let bluetoothOn = args[1] as! Bool
-                    toggleSpeaker(speakerOn: speakerOn,bluetoothOn: bluetoothOn)
+                    toggleSpeaker(speakerOn: speakerOn,bluetoothOn: isBluetoothOn)
                 } catch let error as NSError {
                     print("error holding/unholding call");
                     print(error);
