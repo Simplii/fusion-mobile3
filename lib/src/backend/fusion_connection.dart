@@ -108,6 +108,7 @@ class FusionConnection {
 
   _getCookies({Function callback}) async {
     getApplicationDocumentsDirectory().then((directory) {
+      print("MyDebugMessage ${directory.path}");
       _cookies = PersistCookieJar(
           persistSession: true,
           ignoreExpires: true,
