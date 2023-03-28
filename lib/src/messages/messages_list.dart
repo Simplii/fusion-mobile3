@@ -118,7 +118,7 @@ class _MessagesListState extends State<MessagesList> {
   Softphone get _softphone => widget._softphone;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
-  String _selectedGroupId;
+  String _selectedGroupId = "-2";
   int _page = 0;
 
 
@@ -127,7 +127,7 @@ class _MessagesListState extends State<MessagesList> {
     super.initState();
     SharedPreferences.getInstance().then((prefs) {
       setState(() {
-        _selectedGroupId = prefs.getString('selectedGroupId') ?? "-2";
+        _selectedGroupId = prefs.getString('selectedGroupId') ?? _selectedGroupId;
       });
     },);
     _setOnMessagePosted((){
@@ -187,7 +187,6 @@ class _MessagesListState extends State<MessagesList> {
   }
 
   _lookupMessages() {
-    if(_selectedGroupId == null)return;
     lookupState = 1;
     _fusionConnection.conversations
         .getConversations(_selectedGroupId, 100, _page * 100,
@@ -238,7 +237,6 @@ class _MessagesListState extends State<MessagesList> {
   }
 
   _selectedDepartmentName() {
-    if(_selectedGroupId == null) return;
     return _fusionConnection.smsDepartments
         .getDepartment(_selectedGroupId)
         .groupName;
