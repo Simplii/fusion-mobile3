@@ -71,7 +71,10 @@ registerNotifications() {
   return flutterLocalNotificationsPlugin;
 }
 @pragma('vm:entry-point')
-Future<dynamic> backgroundMessageHandler(RemoteMessage message) {
+Future<dynamic> backgroundMessageHandler(RemoteMessage message) async {
+  SharedPreferences pres = await SharedPreferences.getInstance();
+  var username = pres.getString('username');
+  if(username == null)return;
   print('backgroundMessage: message => ${message.toString()}');
   print('backgroundMessage: message => ${message.data.toString()}');
 
