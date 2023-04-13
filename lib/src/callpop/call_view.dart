@@ -521,6 +521,7 @@ class _CallViewState extends State<CallView> {
     }
     var companyName = _softphone.getCallerCompany(_activeCall);
     var callerName = _softphone.getCallerName(_activeCall);
+    String _linePrefix = _softphone.linePrefix;
     var callerNumber =
         _softphone.getCallerNumber(_activeCall); // 'mobile' | 'work' ...etc
 
@@ -614,6 +615,10 @@ class _CallViewState extends State<CallView> {
                                 callerNumber:
                                     callerNumber.toString().formatPhone(),
                                 isRinging: isRinging,
+                                prefix: _activeCall.direction == "INCOMING" || 
+                                _activeCall.direction == "inbound" 
+                                  ? _linePrefix
+                                  : "",
                                 callIsRecording:
                                     _softphone.getRecordState(_activeCall),
                                 callRunTime: callRunTime),
