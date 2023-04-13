@@ -47,6 +47,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
     lateinit var volumeReceiver : VolumeReceiver
     val versionName = BuildConfig.VERSION_NAME
+    lateinit var audioManager:AudioManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
@@ -189,6 +190,7 @@ class MainActivity : FlutterFragmentActivity() {
                     // doesn't seem to be available during .OutgoingInit
                 }
                 Call.State.OutgoingProgress -> {
+                    audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
                     uuidCalls[uuid] = call
                     channel.invokeMethod(
                         "lnOutgoingInit",
@@ -277,6 +279,7 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.IncomingEarlyMedia -> {
+                    audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
                     channel.invokeMethod(
                         "lnIncomingEarlyMedia",
                         mapOf(Pair("uuid", uuid))
@@ -289,6 +292,7 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Released -> {
+                    audioManager.mode = AudioManager.MODE_NORMAL
                     channel.invokeMethod(
                         "lnReleased",
                         mapOf(Pair("uuid", uuid))
@@ -312,6 +316,7 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun setupCore() {
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val factory = Factory.instance()
         factory.setDebugMode(true, "Hello fusion")
         core = factory.createCore(null, null, this)
@@ -573,8 +578,6 @@ class MainActivity : FlutterFragmentActivity() {
             print(call.arguments)
             if (call.method == "setSpeaker") {
                 Log.d("TAG", "setspeaker");
-                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     var devices = audioManager.availableCommunicationDevices
@@ -590,8 +593,6 @@ class MainActivity : FlutterFragmentActivity() {
                     audioManager.isSpeakerphoneOn = true
                 }
             } else if (call.method == "setEarpiece") {
-                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
                 audioManager.isSpeakerphoneOn = false
             } else if (call.method == "lpAnswer") {
                 var args = call.arguments as List<Any>
