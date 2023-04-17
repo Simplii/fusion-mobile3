@@ -47,6 +47,8 @@ class MainActivity : FlutterFragmentActivity() {
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
     lateinit var volumeReceiver : VolumeReceiver
     val versionName = BuildConfig.VERSION_NAME
+    private var appOpenedFromBackground : Boolean = false
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
@@ -62,6 +64,12 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onPause() {
         super.onPause()
         phoneStateListener()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val incomingCallId: String? = intent.getStringExtra("payload")
+        appOpenedFromBackground = true
     }
 
     override fun onDestroy() {
@@ -289,6 +297,10 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Released -> {
+                    if(appOpenedFromBackground){
+                        moveTaskToBack(true)
+                        appOpenedFromBackground= false
+                    }
                     channel.invokeMethod(
                         "lnReleased",
                         mapOf(Pair("uuid", uuid))
