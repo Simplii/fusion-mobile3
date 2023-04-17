@@ -298,8 +298,8 @@ class MainActivity : FlutterFragmentActivity() {
                 }
                 Call.State.Released -> {
                     if(appOpenedFromBackground){
-                        moveTaskToBack(true)
                         appOpenedFromBackground= false
+                        moveTaskToBack(true)
                     }
                     channel.invokeMethod(
                         "lnReleased",
