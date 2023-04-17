@@ -340,4 +340,13 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       .apiV2Call("post", "/messaging/group/${departmentId}/conversations/${convo.conversationId}/archive", {
     }, callback: null);
   }
+
+  void markUnread (String messageId, SMSConversation conversation, Function closeConvo){
+    conversation.unread = 1;
+    storeRecord(conversation);
+    fusionConnection.apiV2Call("get", "/messaging/message/$messageId/markUnread",
+      {},
+      callback: closeConvo()
+    );
+  }
 }
