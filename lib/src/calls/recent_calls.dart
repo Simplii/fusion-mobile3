@@ -428,7 +428,18 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           ' ' +
           _historyItem.coworker.lastName;
     } else if (_historyItem.contact != null) {
-      return _historyItem.contact.name;
+      String linePrefix;
+      var domainPrefixes = _fusionConnection.settings.domainPrefixes();
+      if (domainPrefixes != null) {
+        domainPrefixes.forEach((prefix) {
+          if (_historyItem.callerId.startsWith(prefix)) {
+            linePrefix = prefix;
+          }
+        });
+      }
+      return linePrefix != null
+          ? linePrefix + "_" + _historyItem.contact.name.toTitleCase()
+          : _historyItem.contact.name.toTitleCase();
     } else if (_historyItem.crmContact != null) {
       return _historyItem.crmContact.name;
     } else if (_historyItem.callerId != '') {
