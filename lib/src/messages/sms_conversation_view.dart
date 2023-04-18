@@ -10,11 +10,13 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
+import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
+import 'package:fusion_mobile_revamped/src/models/quick_response.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -97,6 +99,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   bool showSnackBar = false;
   String snackBarText = "";
   bool isSavedMessage = false;
+  List<QuickResponse> quickResponses = [];
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
@@ -128,6 +131,15 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     this.setState(() {
       _selectedGroupId = department?.id ?? "-1";
     });
+
+    _fusionConnection.quickResponses.getQuickResponses(
+      _selectedGroupId == "-2" ? "-1" : _selectedGroupId,
+      (List<QuickResponse> data){
+        setState(() {
+          quickResponses = data;
+        }); 
+      }
+    );
   }
 
   @override
@@ -547,6 +559,60 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     });
   }
 
+  _openQuickResponses(){
+    List<String> messages = quickResponses.map((qr) => qr.message,).toList();
+     showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7),
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => PopupMenu(
+        label: "Quick Responses",
+        bottomChild: messages.length > 0 
+        ? Container(
+            height: MediaQuery.of(context).size.height * 0.3,
+            child: ListView.separated(
+              itemBuilder: (BuildContext context, int index){
+                return GestureDetector(
+                  onTap: (){
+                    setState(() {
+                      _messageInputController.text = messages[index];
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    margin: EdgeInsets.only(top: index == 0 ? 8 : 0),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(messages[index], style:TextStyle(
+                        fontSize: 16,
+                        color: Colors.white
+                      ),textAlign: TextAlign.center,),
+                    ),
+                  ),
+                );
+              },
+              separatorBuilder: (context, index) => Divider(
+                color: lightDivider,
+                thickness: 1.0,
+              ),
+              itemCount: messages.length
+            ),
+          )
+        : Container(
+          height: 100,
+          child: Center(
+            child: Text("no quick responses found".toTitleCase(), 
+              style:TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                height: 1.5,
+              ),textAlign: TextAlign.center)),
+        )
+      ));
+  }
+
   _sendMessageInput() {
     return Container(
         decoration: BoxDecoration(color: particle),
@@ -607,6 +673,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                       bottomRight: Radius.circular(8),
                     )),
                 child: TextField(
+                  textAlignVertical: TextAlignVertical.center,
                   textCapitalization: TextCapitalization.sentences,
                   controller: _messageInputController,
                   maxLines: 10,
@@ -634,7 +701,10 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                     }
                     textLength = _messageInputController.text.length;
                   },
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.chat_bubble_outline_outlined),
+                     onPressed: _openQuickResponses),
                       contentPadding:
                           EdgeInsets.only(left: 0, right: 0, top: 2, bottom: 2),
                       border: InputBorder.none,
