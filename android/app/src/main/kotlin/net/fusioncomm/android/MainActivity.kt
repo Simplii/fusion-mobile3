@@ -684,8 +684,9 @@ class MainActivity : FlutterFragmentActivity() {
                 audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
 
                 Log.d("lpSetActiveCallOutput" , "set speaker")
-                for (audioDevice in core.audioDevices) {
-                    if (!enableSpeaker && audioDevice.type == AudioDevice.Type.Earpiece) {
+                for (audioDevice in core.extendedAudioDevices) {
+                    if (!enableSpeaker && audioDevice.type == AudioDevice.Type.Earpiece
+                            && audioDevice.id.contains("openSLES")) {
                         for  (call in core.calls) {
                             call.outputAudioDevice = audioDevice
                         }
