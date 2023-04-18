@@ -104,6 +104,7 @@ class Softphone implements SipUaHelperListener {
   String _savedLogin;
   String _savedAor;
   String _savedPassword;
+  String linePrefix = "";
   List<List<String>> devicesList = [];
 
   Softphone(this._fusionConnection) {
@@ -530,7 +531,15 @@ class Softphone implements SipUaHelperListener {
         var toAddress = args[2] as String;
         toAddress = _cleanToAddress(toAddress);
         var callerId = args[4] as String;
-
+        var domainPrefixes = _fusionConnection.settings.domainPrefixes();
+        if (domainPrefixes != null) {
+          domainPrefixes.forEach((prefix) {
+            if (callerId.startsWith(prefix)) {
+              callerId = callerId.replaceAll(prefix + "_", "");
+              linePrefix = prefix;
+            }
+          });
+        }
         LnCall call = _linkLnCallWithUuid(toAddress, args[0] as String,
             args[3] as String, callerId, "INCOMING");
         print("incoming");
@@ -895,6 +904,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   checkCallIds(Map<String, dynamic> message) {
+    print("MydebugMessage socket message ${message}");
     if (message.containsKey('term_id')) {
       for (Call call in calls) {
         if (!_callHasApiIds(call)) {
@@ -1458,7 +1468,7 @@ class Softphone implements SipUaHelperListener {
               displayName: data.getName(defaul: call.remote_display_name),
               handle: call.remote_identity);
         }
-        if (call.direction == "outbound" || call.direction == "OUTGOING")
+        if (call.direction == "outbound" || call.direction == "OUTGOING" || call.direction == "INCOMING")
           _setCallDataValue(call.id, "callPopInfo", data);
       });
 
@@ -1508,14 +1518,28 @@ class Softphone implements SipUaHelperListener {
         Coworker _coworker = coworker.first;
         return "${_coworker.firstName} ${_coworker.lastName}";
       } else if (data != null) {
-        if (data.getName().trim().length > 0)
+        if (data.getName().trim().length > 0 && data.contacts.length > 0)
           return data.getName();
         else
-          return "Unknown";
+          return call.remote_display_name != null && 
+            !call.remote_display_name.startsWith("sip:")
+              ? call.remote_display_name 
+              : "Unknown";
       } else {
-        if (call.remote_display_name != null &&
-            call.remote_display_name.trim().length > 0)
-          return call.remote_display_name;
+        if (call.remote_display_name != null && 
+            call.remote_display_name.trim().length > 0){
+            var domainPrefixes = _fusionConnection.settings.domainPrefixes();
+            String name = "";
+            if (domainPrefixes != null) {
+              domainPrefixes.forEach((prefix) {
+                if (call.remote_display_name.startsWith(prefix)) {
+                  name = call.remote_display_name.replaceAll(prefix + "_", "");
+                  linePrefix = prefix;
+                }
+              }); 
+            }
+            return name != "" ? name : call.remote_display_name; 
+          }
         else
           return "Unknown";
       }

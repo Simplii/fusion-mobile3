@@ -138,4 +138,8 @@ class UserSettings {
           setSubscriber(oldSubscriber);
         });
   }
+
+  domainPrefixes() {
+    return options["prefixes"];
+  }
 }

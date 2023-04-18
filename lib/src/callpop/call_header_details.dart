@@ -7,7 +7,14 @@ import '../styles.dart';
 
 class CallHeaderDetails extends StatefulWidget {
   CallHeaderDetails(
-      {Key key, this.isRinging, this.callIsRecording, this.callerName, this.callerNumber, this.callRunTime, this.companyName})
+      {Key key,
+      this.isRinging,
+      this.callIsRecording,
+      this.callerName,
+      this.callerNumber,
+      this.callRunTime,
+      this.companyName,
+      this.prefix})
       : super(key: key);
 
   final callerName;
@@ -16,7 +23,7 @@ class CallHeaderDetails extends StatefulWidget {
   final callRunTime;
   final callIsRecording;
   final isRinging;
-
+  final String prefix;
   @override
   State<StatefulWidget> createState() => _CallHeaderDetailsState();
 }
@@ -52,7 +59,14 @@ class _CallHeaderDetailsState extends State<CallHeaderDetails> {
                         fontSize: 14,
                         height: 1.4,
                         fontWeight: FontWeight.w700,
-                        color: translucentWhite(0.67)))
+                        color: translucentWhite(0.67))),
+                if (widget.prefix != "")
+                  Text(widget.prefix,
+                      style: TextStyle(
+                          fontSize: 14,
+                          height: 1.4,
+                          fontWeight: FontWeight.w700,
+                          color: translucentWhite(0.67))),
               ])),
           Row(
               mainAxisAlignment: MainAxisAlignment.center,
