@@ -69,7 +69,8 @@ class CallHistory extends FusionModel {
         contact = Contact.fromV2(list[0]);
       }
     }
-    missed = obj['to'] == "abandoned";
+    // missed = obj['to'] == "abandoned";
+    missed = obj['missed'];
   }
 
   isInbound() {
