@@ -336,6 +336,10 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                       })
                     ));
                 });
+              } else if (chosen == "markunread"){
+                _fusionConnection.conversations.markUnread(_conversation.message.id,_conversation, 
+                  () => Navigator.pop(this.context)
+                );
               } else {
                 Future.delayed(Duration(milliseconds: 10), () {
                   _openMedia(null);
@@ -348,11 +352,13 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                     ["Open Contact Profile", "contactprofile"],
                     ["Shared Media", "sharedmedia"],
                     ["Delete Conversation", "deleteconversation"],
+                    ["Mark Unread", "markunread"],
                     ...contactsToAdd
                   ]
                 : [
                     ["Shared Media", "sharedmedia"],
-                    ["Delete Conversation", "deleteconversation"]
+                    ["Delete Conversation", "deleteconversation"],
+                    ["Mark Unread", "markunread"],
                   ],
             label: _conversation.contactName(),
             button: IconButton(

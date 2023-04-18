@@ -30,6 +30,7 @@ class ParkLine extends FusionModel {
     this.contacts = obj['contacts'] == null
         ? []
         : (obj['contacts'] as List<dynamic>).cast<Map<String, dynamic>>()
+            .where((item) => item != null)
             .map((item) {
               return Contact(item);
             })
