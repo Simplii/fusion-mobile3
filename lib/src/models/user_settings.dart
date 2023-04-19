@@ -80,8 +80,10 @@ class UserSettings {
 
   String avatarForUser(String uid) {
     if (options['avatars'].containsKey(uid.toLowerCase())) {
-      return _fusionConnection.serverRoot + options['avatars'][uid
-          .toLowerCase()];
+      String serverRoot = this.isV2User() 
+        ? "https://fusion-media.sfo2.digitaloceanspaces.com"
+        : "http://fusioncomm.net";
+      return serverRoot + options['avatars'][uid.toLowerCase()];
     }
     else {
       return _fusionConnection.defaultAvatar;
@@ -141,5 +143,9 @@ class UserSettings {
 
   domainPrefixes() {
     return options["prefixes"];
+  }
+
+  bool isV2User(){
+    return options['uses_v2'] != null && options['uses_v2'] == true;
   }
 }
