@@ -16,6 +16,7 @@ class Coworker extends FusionModel {
   String group = "";
   String presence = "";
   String url = "";
+  List emails = [];
 
   Coworker(Map<String, dynamic> obj) {
     if (obj['email'].runtimeType == String) email = obj['email'];
@@ -26,6 +27,19 @@ class Coworker extends FusionModel {
     if (obj['presence'].runtimeType == String) presence = obj['presence'];
     extension = obj['user'];
     uid = obj['uid'].toLowerCase();
+  }
+  
+  Coworker.fromV2(Map<String, dynamic> obj){ 
+    List pictures =  obj.containsKey('pictures') ? obj['pictures'] : [];
+    this.emails = obj.containsKey('emails') ? obj['emails'] : [];
+    this.url = pictures.length > 0 ? pictures.last['url'] : "";
+    this.firstName = obj.containsKey('firstName') ? obj['firstName'] : "";
+    this.lastName = obj.containsKey('lastName') ? obj['lastName'] : "";
+    this.statusMessage = obj.containsKey('statusMessage') ? obj['statusMessage'] : "";
+    this.group = obj.containsKey('group') ? obj['group'] : "";
+    this.presence = obj.containsKey('presence') ? obj['presence'] : "";
+    this.extension = obj.containsKey('id') ? obj['id'].split('@')[0] : "";
+    this.uid = obj.containsKey('id') ? obj['id'].toLowerCase() : "";
   }
 
   getName() {
@@ -137,10 +151,19 @@ class CoworkerStore extends FusionStore<Coworker> {
       try {
         return Gravatar(c.email).imageUrl(defaultImage: avatarUrl(c.firstName, c.lastName)); }
       catch (e) {
-        return url;
+        return avatarUrl(c.firstName, c.lastName);
       }
-    } else {
+    } else if(url == fusionConnection.defaultAvatar && c.emails.length > 0){
+      String mostRecentWorkEmail = c.emails.where((email) => email['type'] == "Work").toList().last['email'];
+      try {
+        return Gravatar(mostRecentWorkEmail).imageUrl(defaultImage: avatarUrl(c.firstName, c.lastName)); }
+      catch (e) {
+        return avatarUrl(c.firstName, c.lastName);
+      }
+    } else if(url != "" && url != fusionConnection.defaultAvatar){
       return url;
+    } else {
+      return avatarUrl(c.firstName, c.lastName);
     }
   }
 
@@ -177,22 +200,34 @@ class CoworkerStore extends FusionStore<Coworker> {
       callback(getRecords());
     });
 
+    bool v2User = fusionConnection.settings.isV2User();
 
-    fusionConnection.apiV1Call(
-        "get",
-        "/clients/subscribers",
-        {},
+    if(v2User){
+      fusionConnection.apiV2Call("get","/client/coworkers",{},
+        callback: (Map<String,dynamic> datas) {
+          List<Coworker> response = [];
+          for (Map<String, dynamic> item in datas['items']) {
+            Coworker obj = Coworker.fromV2(item);
+            obj.url = avatarFor(obj);
+            storeRecord(obj);
+            response.add(obj);
+          }
+          callback(response);
+        }
+      );
+    } else {
+      fusionConnection.apiV1Call("get","/clients/subscribers",{},
         callback: (List<dynamic> datas) {
           List<Coworker> response = [];
-
           for (Map<String, dynamic> item in datas) {
             Coworker obj = Coworker(item);
             obj.url = avatarFor(obj);
             storeRecord(obj);
             response.add(obj);
           }
-
           callback(response);
-        });
+        }
+      );
+    }
   }
 }

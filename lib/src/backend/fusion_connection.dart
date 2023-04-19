@@ -74,7 +74,6 @@ class FusionConnection {
   Function _refreshUi = () {};
   Map<String, bool> received_smses = {};
 
-  String serverRoot = "http://fusioncomm.net";
   String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {

@@ -904,7 +904,6 @@ class Softphone implements SipUaHelperListener {
   }
 
   checkCallIds(Map<String, dynamic> message) {
-    print("MydebugMessage socket message ${message}");
     if (message.containsKey('term_id')) {
       for (Call call in calls) {
         if (!_callHasApiIds(call)) {
