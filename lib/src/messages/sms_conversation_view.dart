@@ -10,6 +10,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
+import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
@@ -18,6 +19,7 @@ import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:overlay_support/overlay_support.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
@@ -97,6 +99,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   bool showSnackBar = false;
   String snackBarText = "";
   bool isSavedMessage = false;
+  bool loading = false;
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
@@ -656,13 +659,25 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               margin: EdgeInsets.only(left: 8),
               child: IconButton(
                 padding: EdgeInsets.all(0),
-                icon: Image.asset(
+                icon: loading 
+                ? Container(
+                    height: 40,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: crimsonDark,
+                    ),
+                    child: Transform.scale(
+                      scale: 0.5,
+                      child: CircularProgressIndicator(color: Colors.white,))
+                  ) 
+                : Image.asset(
                     _hasEnteredMessage()
                         ? "assets/icons/send_active.png"
                         : "assets/icons/send.png",
                     height: 40,
                     width: 40),
-                onPressed: _sendMessage,
+                onPressed: loading ? null : _sendMessage,
               ))
         ]));
   }
@@ -682,10 +697,34 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     });
   }
 
-  _sendMessage() {
+  _sendMessage() async{
+    setState(() {
+      loading = true;
+    });
+    await _fusionConnection.checkInternetConnection();
+    setState(() {
+      loading = false;
+    });
+    print("MyDebugMessage after internet check ${_fusionConnection.internetAvailable}");
+    
     setState(() {
       if (_messageInputController.value.text.trim().length > 0) {
-        _fusionConnection.messages
+        if(!_fusionConnection.internetAvailable){
+          if(_conversation.message != null){
+            _fusionConnection.messages.offlineMessage(
+              _messageInputController.value.text, 
+              _conversation, 
+              _selectedGroupId, 
+              null, 
+              _setOnMessagePosted, 
+              ()=>null);
+          } else {
+            toast("unable to connect to the internet".toUpperCase());
+          }
+          _messageInputController.text = "";
+          
+        } else {
+          _fusionConnection.messages
             .sendMessage(
               _messageInputController.value.text, 
               _conversation, 
@@ -694,8 +733,9 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               _setOnMessagePosted, 
               ()=> null
             );
-        _messageInputController.text = "";
-      }
+          _messageInputController.text = "";
+        }
+    }
       if (_mediaToSend.length > 0) {
         for (XFile file in _mediaToSend) {
           _fusionConnection.messages.sendMessage(
@@ -749,7 +789,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                                           _fusionConnection, _conversation,
                                           (List<SMSMessage> messages) {
                                           _messages = messages;
-                                        }, _openMedia,_deleteConvo, _selectedGroupId)
+                                        }, _openMedia,_deleteConvo, _selectedGroupId,_setOnMessagePosted)
                                       : Container())
                             ]))),
                   ]))),
@@ -782,11 +822,11 @@ class ConvoMessagesList extends StatefulWidget {
   final Function(List<SMSMessage>) _onPulledMessages;
   final Function(SMSMessage) _openMedia;
   final Function(SMSConversation, SMSMessage) _deleteConvo;
+  final Function setOnMessagePosted;
   String _selectedGroupId;
   ConvoMessagesList(this._fusionConnection, this._conversation,
-      this._onPulledMessages, this._openMedia, this._deleteConvo, this._selectedGroupId,
-      {Key key})
-      : super(key: key);
+      this._onPulledMessages, this._openMedia, this._deleteConvo, this._selectedGroupId, 
+      this.setOnMessagePosted, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ConvoMessagesListState();
@@ -799,6 +839,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
 
   Function(SMSMessage) get _openMedia => widget._openMedia;
   Function(SMSConversation, SMSMessage) get _deleteMessage => widget._deleteConvo;
+  Function get _setOnMessagePosted => widget.setOnMessagePosted;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSMessage> _messages = [];
   String _subscriptionKey;
@@ -915,7 +956,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
       list.add(SMSMessageView(_fusionConnection, msg, _conversation,
           (SMSMessage message) {
         _openMedia(message);
-      },_deleteMessage,_messages,_selectedGroupId));
+      },_deleteMessage,_messages,_selectedGroupId,_setOnMessagePosted));
     }
 
     return list;
@@ -948,11 +989,12 @@ class SMSMessageView extends StatefulWidget {
   final SMSConversation _conversation;
   final Function(SMSMessage) _openMedia;
   final Function(SMSConversation, SMSMessage) _deleteMessage;
+  final Function setOnMessagePosted;
   List<SMSMessage> _messages;
   String _selectedGroupId;
   SMSMessageView(this._fusionConnection, this._message, this._conversation,
       this._openMedia, this._deleteMessage, this._messages, this._selectedGroupId,
-      {Key key})
+      this.setOnMessagePosted, {Key key})
       : super(key: key);
 
   @override
@@ -969,6 +1011,8 @@ class _SMSMessageViewState extends State<SMSMessageView> {
 
   final GlobalKey<TooltipState> tooltipkey = GlobalKey<TooltipState>();
   List<SMSMessage> get _messages => widget._messages;
+  String get _selectedGroupId => widget._selectedGroupId;
+  Function get _setOnMessagePosted => widget.setOnMessagePosted;
   _openMedia() {
     widget._openMedia(_message);
   }
@@ -981,6 +1025,8 @@ class _SMSMessageViewState extends State<SMSMessageView> {
       widget._deleteMessage(_conversation,_messages.reversed.elementAt(_messages.length - 2));
     
     _messages.removeWhere((msg) => msg.id == message.id);
+    _conversation.message = _messages.reversed.last;
+    _fusionConnection.conversations.storeRecord(_conversation);
   }
 
   _messageText(String message, TextStyle style) {
@@ -1083,6 +1129,60 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                         color: isFromMe ? coal : Colors.white))));
   }
 
+  Future<void> _tryResendFailedMessage(SMSMessage message) async {
+    Navigator.pop(context);
+    await _fusionConnection.checkInternetConnection();
+    if(!_fusionConnection.internetAvailable){
+      toast("unable to connect to the internet".toUpperCase());
+    } else {
+       await _fusionConnection.messages.resendFailedMessage(message);
+       setState(() { 
+        _messages.removeWhere((msg) => msg.id == message.id);
+       });
+     
+      _fusionConnection.messages.sendMessage(
+        message.message, 
+        _conversation, 
+        _selectedGroupId, 
+        null,
+        _setOnMessagePosted, 
+        ()=> null
+      );
+    }
+    print("MyDebugMessage ${message.serialize()}");
+
+  }
+
+  _openFailedMessageDialog(SMSMessage message){
+    return showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) => PopupMenu(
+        customLabel: Text('Your message was not sent, Tap "Try Again" to send this message',
+          style: TextStyle(
+            color: smoke,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            height: 1.5),
+          textAlign: TextAlign.center,),
+        bottomChild: Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: ()=>_tryResendFailedMessage(message),
+                child: Text("Try Again", style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                ),),
+              ),
+            ),
+          ],
+        ),
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     DateTime date =
@@ -1124,8 +1224,8 @@ class _SMSMessageViewState extends State<SMSMessageView> {
 
       Contact myContact = null;
       if(_message.user != null){
-        myContact = _fusionConnection.coworkers.lookupCoworker(_message.user + 
-          "@" + _fusionConnection.getDomain()).toContact();
+        myContact = _fusionConnection.coworkers.lookupCoworker(_message.user.split('@')[0] + 
+          "@" + _fusionConnection.getDomain())?.toContact();
       }
 
       
@@ -1139,7 +1239,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
             children: [
               _message.messageStatus == 'delivered' 
                 ? Icon (Icons.check,size: 10, color:smoke)
-                : _message.messageStatus == 'failed'
+                : (_message.messageStatus == 'failed' || _message.messageStatus == 'offline')
                   ? Icon(Icons.clear,size: 10, color: smoke,)
                   : Container(),
               Container(
@@ -1158,8 +1258,18 @@ class _SMSMessageViewState extends State<SMSMessageView> {
             ],
           ),
         ),
-        
-        _renderMessage()
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            _renderMessage(),
+            if(_message.messageStatus =="offline")
+              IconButton(
+                padding: EdgeInsets.only(left: 5),
+                constraints: BoxConstraints(),
+                onPressed: ()=>_openFailedMessageDialog(_message), 
+                icon: Icon(Icons.error_outline,color: Colors.red))
+          ],
+        )
       ])));
     }
 
@@ -1167,7 +1277,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
       key: UniqueKey(),
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {
-        _fusionConnection.messages.deleteMessage(this._message.id,widget._selectedGroupId);
+        _fusionConnection.messages.deleteMessage(this._message.id,_selectedGroupId);
         _deleteMessage(this._message);
         if(this._messages.length == 0){
           Navigator.pop(context);
