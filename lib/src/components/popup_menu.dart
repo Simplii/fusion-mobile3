@@ -7,8 +7,8 @@ class PopupMenu extends StatefulWidget {
   final String label;
   final Widget topChild;
   final Widget bottomChild;
-
-  PopupMenu({this.label, this.topChild, this.bottomChild, Key key})
+  Widget customLabel;
+  PopupMenu({this.label, this.topChild, this.bottomChild, this.customLabel = null, Key key})
       : super(key: key);
 
   @override
@@ -21,6 +21,8 @@ class _PopupMenuState extends State<PopupMenu> {
   Widget get _topChild => widget.topChild;
 
   Widget get _bottomChild => widget.bottomChild;
+
+  Widget get _customLabel => widget.customLabel;
 
   Widget build(BuildContext context) {
     List<Widget> children = [
@@ -50,7 +52,7 @@ class _PopupMenuState extends State<PopupMenu> {
               decoration: BoxDecoration(
                   border: Border(
                       bottom: BorderSide(color: lightDivider, width: 1.0))),
-              child: Text(this._label.toUpperCase(),
+              child: _customLabel ?? Text(this._label.toUpperCase(),
                   style: TextStyle(
                       color: smoke,
                       fontSize: 12,

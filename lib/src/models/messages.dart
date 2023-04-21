@@ -144,6 +144,34 @@ class SMSMessage extends FusionModel {
     this.user = obj['user'];
   }
 
+  SMSMessage.offline({ 
+    String from,
+    bool isGroup,
+    String text,
+    String to,
+    String user,
+    String messageId
+  }) {
+    String date = DateTime.now().toString();
+    this.convertedMms = false;
+    this.domain = null;
+    this.from = from;
+    this.fromMe = true;
+    this.id = messageId;
+    this.isGroup = isGroup;
+    this.message = text;
+    this.messageStatus = 'offline';
+    this.mime = null;
+    this.read = true;
+    this.scheduledAt = null;
+    this.smsWebhookId = 0;
+    this.time = CarbonDate.fromDate(date);
+    this.to = to;
+    this.type = "sms";
+    this.unixtime = DateTime.parse(date).millisecondsSinceEpoch ~/ 1000;
+    this.user = user;
+  }
+
   @override
   String getId() => this.id.toLowerCase();
 }
@@ -603,7 +631,11 @@ print(callpopInfo);
 
   getMessages(SMSConversation convo, int limit, int offset,
       Function(List<SMSMessage> messages, bool fromServer) callback, String departmentId) async {
-    await getPersisted(convo, limit, offset, callback);
+    List<SMSMessage> failedMesages = [];
+    await getPersisted(convo, limit, offset, (messages,fromServer){
+      callback(messages,fromServer);
+      failedMesages = messages.where((SMSMessage m) => m.messageStatus == "offline").toList();
+    });
     if(convo.conversationId != null && convo.isGroup){
       fusionConnection.apiV2Call(
         "get", 
@@ -622,7 +654,7 @@ print(callpopInfo);
             storeRecord(message);
             messages.add(message);
           }
-          callback(messages, true);
+          callback([...messages,...failedMesages], true);
         });
     }
     else if(convo.conversationId == null && convo.isGroup){
@@ -646,7 +678,7 @@ print(callpopInfo);
           storeRecord(message);
           messages.add(message);
         }
-        callback(messages, true);
+        callback([...messages,...failedMesages], true);
       });
     }
   }
@@ -655,5 +687,30 @@ print(callpopInfo);
     removeRecord(messageId);
     fusionConnection.apiV2Call("post", 
     "/messaging/message/${messageId}/${departmentId}/archive", {}, callback:null);
+  }
+
+  offlineMessage(String text, 
+    SMSConversation conversation, 
+    String departmentId,
+    XFile mediaFile,
+    Function callback,
+    Function largeMMSCallback){
+      print("MyDebugMessage is group ${conversation.isGroup}");
+      SMSMessage message = SMSMessage.offline(
+        from: conversation.myNumber,
+        to: conversation.number,
+        isGroup: conversation.isGroup,
+        text: text,
+        user: fusionConnection.getExtension(),
+        messageId: (int.parse(conversation.message.id) + 1).toString());
+      conversation.message = message;
+      storeRecord(message);
+      fusionConnection.conversations.storeRecord(conversation);
+  }
+
+  Future<void> resendFailedMessage(SMSMessage message) async {
+    this.removeRecord(message.id);
+    await fusionConnection.db
+        .delete('sms_message', where: 'id = ?', whereArgs: [message.id]);
   }
 }

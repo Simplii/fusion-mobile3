@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:core';
 import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:websocket_manager/websocket_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
-
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import '../utils.dart';
 import 'softphone.dart';
 import 'package:encrypt/encrypt.dart' as enc;
@@ -73,9 +74,11 @@ class FusionConnection {
   Function _onLogOut = () {};
   Function _refreshUi = () {};
   Map<String, bool> received_smses = {};
-
-  String serverRoot = "http://fusioncomm.net";
-  String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
+  Connectivity connectivity = Connectivity();
+  ConnectivityResult connectivityResult = ConnectivityResult.none;
+  bool internetAvailable = true;
+  String serverRoot = "http://zaid-fusion-dev.fusioncomm.net";
+  String defaultAvatar = "https://zaid-fusion-dev.fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {
     _getCookies();
@@ -129,7 +132,7 @@ class FusionConnection {
   }
 
   final channel = WebSocketChannel.connect(
-    Uri.parse('wss://fusioncomm.net:8443'),
+    Uri.parse('wss://zaid-fusion-dev.fusioncomm.net:8443'),
   );
 
   onLogOut(Function callback) {
@@ -292,7 +295,7 @@ class FusionConnection {
       data['username'] = await _getUsername();
 
       Uri url = Uri.parse(
-          'https://fusioncomm.net/api/v1/clients/api_request?username=' +
+          'https://zaid-fusion-dev.fusioncomm.net/api/v1/clients/api_request?username=' +
               data['username']);
       Map<String, String> headers = await _cookieHeaders(url);
       String body = convert.jsonEncode(data);
@@ -335,7 +338,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
+      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v1' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -366,7 +369,8 @@ class FusionConnection {
 
   apiV2Call(String method, String route, Map<String, dynamic> data,
       {Function callback}) async {
-    var client = http.Client();
+     var client = http.Client();
+    
     try {
       Function fn = {
         'post': client.post,
@@ -385,7 +389,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route + urlParams);
+      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v2' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -394,12 +398,20 @@ class FusionConnection {
       }
 
       args[#headers] = headers;
-      var uriResponse = await Function.apply(fn, [url], args);
-      _saveCookie(uriResponse);
+      Response uriResponse;
+      try {
+        uriResponse = await Function.apply(fn, [url], args);
+        _saveCookie(uriResponse);
+      } catch (e) {
+        toast("${e}");
+        print("MyDebugMessage error ${e}");
+      }
+      // _saveCookie(uriResponse);
       print("apirequest");
       print(url);
       print(urlParams);
       print(data);
+      print("MyDebugMessage uri response ${uriResponse}");
       print(uriResponse.body);
       if (uriResponse.body == '{"error":"invalid_login"}') {
         final prefs = await SharedPreferences.getInstance();
@@ -425,7 +437,7 @@ class FusionConnection {
     try {
       data['username'] = await _getUsername();
 
-      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route);
+      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v2' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
       (await _cookieHeaders(url))
           .forEach(
@@ -552,7 +564,7 @@ print(responseBody);
 
   setupSocket() {
     int messageNum = 0;
-    final wsUrl = Uri.parse('wss://fusioncomm.net:8443/');
+    final wsUrl = Uri.parse('wss://zaid-fusion-dev.fusioncomm.net:8443/');
     socketChannel = WebSocketChannel.connect(wsUrl);
     socketChannel.stream.listen((messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
@@ -660,5 +672,19 @@ print(responseBody);
 
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('fusion-data1', encrypted.base64);
+  }
+
+  Future<void> checkInternetConnection() async {
+    if(connectivityResult == ConnectivityResult.none){
+      internetAvailable = false;
+      return;
+    } else {
+      final bool isConnected = await InternetConnectionChecker().hasConnection;
+      if(isConnected){
+        internetAvailable = true;
+      } else {
+        internetAvailable = false;
+      }
+    }
   }
 }

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -44,6 +47,7 @@ class _MessagesTabState extends State<MessagesTab> {
   List<Contact> _contacts = [];
   String _myNumber = "";
   bool _loaded = false;
+  StreamSubscription<ConnectivityResult> connectivitySubscription;
 
   initState() {
     super.initState();
@@ -56,6 +60,19 @@ class _MessagesTabState extends State<MessagesTab> {
         _loaded = true;
       });
     });
+    connectivitySubscription =
+      _fusionConnection.connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+  
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    setState(() {
+      _fusionConnection.connectivityResult = result;
+    });
+  }
+
+  @override dispose(){
+    connectivitySubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -521,7 +538,9 @@ class _SMSConversationSummaryViewState
                                 decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: informationBlue),
-                              )
+                              ),
+                            if(_convo.message.messageStatus == "offline")
+                              Icon(Icons.error_outline, color: Colors.red,)
                           ],
                         )))
               ])),
