@@ -81,8 +81,9 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) async {
   var data = message.data;
 
   if (data.containsKey("remove_fusion_call")) {
-    final callUUID = uuidFromString(data['uuid']);
-    var id = intIdForString(data['uuid']);
+    final callUUID = data['uuid'];
+    var id = intIdForString(data['remove_fusion_call']);
+
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
         registerNotifications();
 
