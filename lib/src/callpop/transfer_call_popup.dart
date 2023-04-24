@@ -173,7 +173,7 @@ class _TransferCallpopState extends State<TransferCallPopup> {
           if (_query != "")
             Container(
                 child: ContactsSearchList(_fusionConnection, widget._softphone,
-                    this._query, "coworkers", embedded: true,
+                    this._query, "coworkers", _fusionConnection.settings.isV2User() ,embedded: true,
                     onSelect: (Contact contact, CrmContact crmContact) {
               if (contact != null) {
                 if (contact.firstNumber() != null) {
