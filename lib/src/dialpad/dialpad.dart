@@ -33,19 +33,11 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
   var dialedNumber = '';
   final _dialEntryController = ScrollController();
   bool _lastNumberCalledIsSet = false;
-  TextEditingController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
     _loadLastCalledNumber();
-  }
-
- @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   void _scrollToEnd() {
@@ -66,8 +58,6 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
   void handleDialPadKeyPress(String key) {
     setState(() {
       dialedNumber += key;
-      _controller.text = dialedNumber;
-      print("MyDebugMessage ${key}");
       if (widget.onQueryChange != null) widget.onQueryChange(dialedNumber);
       Future.delayed(const Duration(milliseconds: 50), () {
         _scrollToEnd();
@@ -133,10 +123,6 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
     )..layout(minWidth: 0, maxWidth: double.infinity);
 
     final textWidth = textPainter.size.width.ceil();
-    double textSize = 36;
-    if(dialedNumber.length > 10){
-      textSize = 31;
-    } 
     return Container(
         decoration: BoxDecoration(
             color: darkGrey,
@@ -202,7 +188,9 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                           child: Text(dialedNumber,
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
-                                                  fontSize: textSize,
+                                                  fontSize: dialedNumber.length > 10 
+                                                    ? 31 
+                                                    : 36,
                                                   color: Colors.white))
                                         )
                                     ])),
