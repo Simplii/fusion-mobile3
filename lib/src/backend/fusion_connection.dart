@@ -11,6 +11,7 @@ import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
+import 'package:fusion_mobile_revamped/src/models/quick_response.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:fusion_mobile_revamped/src/models/unreads.dart';
 import 'package:fusion_mobile_revamped/src/models/voicemails.dart';
@@ -65,6 +66,7 @@ class FusionConnection {
   VoicemailStore voicemails;
   DidStore dids;
   UnreadsStore unreadMessages;
+  QuickResponsesStore quickResponses;
   Database db;
   PushConnector _connector;
   String _pushkitToken;
@@ -96,6 +98,7 @@ class FusionConnection {
     dids = DidStore(this);
     unreadMessages = UnreadsStore(this);
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
+    quickResponses = QuickResponsesStore(this);
     refreshUnreads();
     getDatabase();
   }
@@ -156,6 +159,7 @@ class FusionConnection {
     voicemails.clearRecords();
     dids.clearRecords();
     unreadMessages.clearRecords();
+    quickResponses.clearRecords();
   }
 
   logOut() {
