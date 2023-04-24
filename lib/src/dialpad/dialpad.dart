@@ -190,7 +190,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                               style: TextStyle(
                                                   fontSize: dialedNumber.length > 10 
                                                     ? 31 
-                                                    : 36,
+                                                    : 35,
                                                   color: Colors.white))
                                         )
                                     ])),
