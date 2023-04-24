@@ -56,8 +56,7 @@ class SMSConversationView extends StatefulWidget {
       Softphone softphone,
       String phoneNumber,
       Function _deleteConvo,
-      Function setOnMessagePosted,
-      bool isGroup) {
+      Function setOnMessagePosted) {
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -68,7 +67,6 @@ class SMSConversationView extends StatefulWidget {
             SMSConversation.build(
                 contacts: contacts,
                 crmContacts: crmContacts,
-                isGroup: isGroup,
                 myNumber: fusionConnection.smsDepartments
                     .getDepartment("-2")
                     .numbers[0],

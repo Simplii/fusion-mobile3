@@ -78,12 +78,8 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         });
       } else if (query != _searchingFor) {
         _searchingFor = query;
-        bool usesV2 = false;
+        bool usesV2 = _fusionConnection.settings.isV2User();
     
-        _fusionConnection.settings.options.forEach((key, value) {
-          key == "uses_v2" ? usesV2 = value : null;
-        });
-        
         if(!usesV2){
           _fusionConnection.contacts.search(query, 50, 0, 
             (List<Contact> contacts, bool fromServer) {
