@@ -123,7 +123,6 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
     )..layout(minWidth: 0, maxWidth: double.infinity);
 
     final textWidth = textPainter.size.width.ceil();
-
     return Container(
         decoration: BoxDecoration(
             color: darkGrey,
@@ -189,8 +188,11 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                           child: Text(dialedNumber,
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
-                                                  fontSize: 36,
-                                                  color: Colors.white)))
+                                                  fontSize: dialedNumber.length > 10 
+                                                    ? 31 
+                                                    : 35,
+                                                  color: Colors.white))
+                                        )
                                     ])),
                             if (dialedNumber != '')
                               SizedBox(

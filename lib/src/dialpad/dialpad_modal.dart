@@ -40,6 +40,7 @@ class _DialPadModalState extends State<DialPadModal>
   int _tabIndex = 1;
   String _query = "";
   Timer _timer;
+  bool v2Domain = false;
 
   @override
   void initState() {
@@ -57,6 +58,7 @@ class _DialPadModalState extends State<DialPadModal>
     _tc =
         new TabController(length: 3, initialIndex: _initialIndex, vsync: this);
     _tc.addListener(_updateTabIndex);
+    v2Domain = _fusionConnection.settings.isV2User();
   }
 
   @override
@@ -88,6 +90,7 @@ class _DialPadModalState extends State<DialPadModal>
         Container(
           child: Column(children: [
              ContactsSearchList(_fusionConnection, _softphone, _query, "coworkers",
+                 v2Domain,
                  embedded: true,
                  onSelect: (Contact contact, CrmContact crmContact) {
                    if (contact != null && contact.firstNumber() != null) {

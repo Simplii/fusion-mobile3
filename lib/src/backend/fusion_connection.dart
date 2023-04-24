@@ -12,6 +12,7 @@ import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
+import 'package:fusion_mobile_revamped/src/models/quick_response.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:fusion_mobile_revamped/src/models/unreads.dart';
 import 'package:fusion_mobile_revamped/src/models/voicemails.dart';
@@ -66,6 +67,7 @@ class FusionConnection {
   VoicemailStore voicemails;
   DidStore dids;
   UnreadsStore unreadMessages;
+  QuickResponsesStore quickResponses;
   Database db;
   PushConnector _connector;
   String _pushkitToken;
@@ -77,8 +79,9 @@ class FusionConnection {
   Connectivity connectivity = Connectivity();
   ConnectivityResult connectivityResult = ConnectivityResult.none;
   bool internetAvailable = true;
-  String serverRoot = "http://zaid-fusion-dev.fusioncomm.net";
-  String defaultAvatar = "https://zaid-fusion-dev.fusioncomm.net/img/defaultuser.png";
+  String serverRoot = "http://fusioncomm.net";
+
+  String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {
     _getCookies();
@@ -99,6 +102,7 @@ class FusionConnection {
     dids = DidStore(this);
     unreadMessages = UnreadsStore(this);
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
+    quickResponses = QuickResponsesStore(this);
     refreshUnreads();
     getDatabase();
   }
@@ -132,7 +136,7 @@ class FusionConnection {
   }
 
   final channel = WebSocketChannel.connect(
-    Uri.parse('wss://zaid-fusion-dev.fusioncomm.net:8443'),
+    Uri.parse('wss://fusioncomm.net:8443'),
   );
 
   onLogOut(Function callback) {
@@ -159,6 +163,7 @@ class FusionConnection {
     voicemails.clearRecords();
     dids.clearRecords();
     unreadMessages.clearRecords();
+    quickResponses.clearRecords();
   }
 
   logOut() {
@@ -295,7 +300,7 @@ class FusionConnection {
       data['username'] = await _getUsername();
 
       Uri url = Uri.parse(
-          'https://zaid-fusion-dev.fusioncomm.net/api/v1/clients/api_request?username=' +
+          'https://fusioncomm.net/api/v1/clients/api_request?username=' +
               data['username']);
       Map<String, String> headers = await _cookieHeaders(url);
       String body = convert.jsonEncode(data);
@@ -338,7 +343,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v1' + route + urlParams);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -389,7 +394,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v2' + route + urlParams);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -437,7 +442,7 @@ class FusionConnection {
     try {
       data['username'] = await _getUsername();
 
-      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v2' + route);
+      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
       (await _cookieHeaders(url))
           .forEach(
@@ -564,7 +569,7 @@ print(responseBody);
 
   setupSocket() {
     int messageNum = 0;
-    final wsUrl = Uri.parse('wss://zaid-fusion-dev.fusioncomm.net:8443/');
+    final wsUrl = Uri.parse('wss://fusioncomm.net:8443/');
     socketChannel = WebSocketChannel.connect(wsUrl);
     socketChannel.stream.listen((messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
