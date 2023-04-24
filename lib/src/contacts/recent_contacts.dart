@@ -36,6 +36,12 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
   bool _showingResults = false;
   String _selectedTab = 'coworkers';
   String _query = '';
+  bool v2Domain = false;
+  
+  @override initState(){ 
+    super.initState(); 
+    v2Domain = _fusionConnection.settings.isV2User();
+  }
 
   _getTitle() {
     return {
@@ -72,12 +78,6 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
   }
 
   _tabBar() {
-    bool v2Domain = false;
-    
-    _fusionConnection.settings.options.forEach((key, value) {
-      key == "uses_v2" ? v2Domain = value : null;
-    });
-    
     return Container(
         padding: EdgeInsets.only(left: 12, right: 12),
         child: Row(children: [
@@ -99,7 +99,7 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
         });
       }, () {}),
       _tabBar(),
-      ContactsSearchList(_fusionConnection, _softphone, _query, _selectedTab)
+      ContactsSearchList(_fusionConnection, _softphone, _query, _selectedTab, v2Domain)
     ];
     return Container(child: Column(children: children));
   }
@@ -111,10 +111,11 @@ class ContactsSearchList extends StatefulWidget {
   final String _query;
   final String selectedTab;
   final Function(Contact contact, CrmContact crmContact) onSelect;
+  final bool isV2Domain;
   bool embedded = false;
 
   ContactsSearchList(
-      this._fusionConnection, this._softphone, this._query, this.selectedTab,
+      this._fusionConnection, this._softphone, this._query, this.selectedTab, this.isV2Domain,
       {Key key, this.embedded, this.onSelect})
       : super(key: key);
 
@@ -133,7 +134,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<Contact> _contacts = [];
   String _lookedUpQuery;
-
+  bool get _isV2Domain => widget.isV2Domain;
   String get _selectedTab => widget.selectedTab;
   String _typeFilter = "Fusion Contacts";
   String _subscriptionKey;
@@ -173,41 +174,79 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
     if (_typeFilter == 'Fusion Contacts') {
       if (_page == -1) return;
-      _fusionConnection.contacts.search(_query, 100, _page * 100,
+      if(_isV2Domain){
+        _fusionConnection.contacts.searchV2(_query, 100, _page * 100,
           (List<Contact> contacts, bool fromServer) {
-        if (thisLookup != _lookedUpQuery) return;
-        if (!mounted) return;
-        if (_typeFilter != 'Fusion Contacts') return;
-        if (fromServer && !_hasPulledFromServer) {
-          _hasPulledFromServer = true;
-          _contacts = [];
-          print("gotfirstcontactsfromserver");
-          print(contacts);
-        }
+          if (thisLookup != _lookedUpQuery) return;
+          if (!mounted) return;
+          if (_typeFilter != 'Fusion Contacts') return;
+          if (fromServer && !_hasPulledFromServer) {
+            _hasPulledFromServer = true;
+            _contacts = [];
+            print("gotfirstcontactsfromserver");
+            print("MyDebugMessage contacts = ${contacts.length}");
+          }
 
-        this.setState(() {
-          if (fromServer) {
-            lookupState = 2;
-          }
-          if (_page == 0) {
-            _contacts = contacts;
-          } else {
-            Map<String, Contact> list = {};
+          this.setState(() {
+            if (fromServer) {
+              lookupState = 2;
+            }
+            if (_page == 0) {
+              _contacts = contacts;
+            } else {
+              Map<String, Contact> list = {};
 
-            _contacts.forEach((Contact c) {
-              list[c.id] = c;
-            });
-            contacts.forEach((Contact c) {
-              list[c.id] = c;
-            });
-            _contacts = list.values.toList().cast<Contact>();
-          }
-          if (_contacts.length < 100 && fromServer) {
-            _page = -1;
-          }
-          _sortList(_contacts);
+              _contacts.forEach((Contact c) {
+                list[c.id] = c;
+              });
+              contacts.forEach((Contact c) {
+                list[c.id] = c;
+              });
+              _contacts = list.values.toList().cast<Contact>();
+            }
+            if (_contacts.length < 100 && fromServer) {
+              _page = -1;
+            }
+            _sortList(_contacts);
+          });
         });
-      });
+      } else {
+        _fusionConnection.contacts.search(_query, 100, _page * 100,
+          (List<Contact> contacts, bool fromServer) {
+          if (thisLookup != _lookedUpQuery) return;
+          if (!mounted) return;
+          if (_typeFilter != 'Fusion Contacts') return;
+          if (fromServer && !_hasPulledFromServer) {
+            _hasPulledFromServer = true;
+            _contacts = [];
+            print("gotfirstcontactsfromserver");
+            print(contacts);
+          }
+
+          this.setState(() {
+            if (fromServer) {
+              lookupState = 2;
+            }
+            if (_page == 0) {
+              _contacts = contacts;
+            } else {
+              Map<String, Contact> list = {};
+
+              _contacts.forEach((Contact c) {
+                list[c.id] = c;
+              });
+              contacts.forEach((Contact c) {
+                list[c.id] = c;
+              });
+              _contacts = list.values.toList().cast<Contact>();
+            }
+            if (_contacts.length < 100 && fromServer) {
+              _page = -1;
+            }
+            _sortList(_contacts);
+          });
+        });
+      }
     } else if (_typeFilter == 'Integrated Contacts') {
       if (_page == -1) return;
       _fusionConnection.integratedContacts.search(_query, 100, _page * 100,
