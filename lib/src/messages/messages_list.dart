@@ -264,8 +264,8 @@ class _MessagesListState extends State<MessagesList> {
         _fusionConnection.smsDepartments.allDepartments();
     List<List<String>> options = [];
 
-    departments.sort((a, b) => a.groupName.compareTo(b.groupName));
-
+    departments.sort(((a, b) => int.parse(a.id) < int.parse(b.id) ? -1 : 1));
+    departments.sort((a, b) => int.parse(a.id) > 0 ? a.groupName.compareTo(b.groupName) : -1);
     for (SMSDepartment d in departments) {
       options.add([d.groupName, d.id]);
     }

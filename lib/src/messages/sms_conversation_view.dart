@@ -68,6 +68,7 @@ class SMSConversationView extends StatefulWidget {
             SMSConversation.build(
                 contacts: contacts,
                 crmContacts: crmContacts,
+                isGroup: false,
                 myNumber: fusionConnection.smsDepartments
                     .getDepartment("-2")
                     .numbers[0],
@@ -1330,7 +1331,12 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            _renderMessage(),
+            Container(
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width - 90
+                ),
+              child: _renderMessage() ,
+            ),
             if(_message.messageStatus =="offline")
               IconButton(
                 padding: EdgeInsets.only(left: 5),

@@ -87,10 +87,10 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) async {
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
         registerNotifications();
 
-      MethodChannel callKit = MethodChannel('net.fusioncomm.ios/callkit');
-      callKit.invokeMethod("endCall", [callUUID]);
+      // MethodChannel callKit = MethodChannel('net.fusioncomm.ios/callkit');
+      // callKit.invokeMethod("endCall", [callUUID]);
 
-    flutterLocalNotificationsPlugin.cancel(id);
+    // flutterLocalNotificationsPlugin.cancel(id);
   }
 
   if (data.containsKey("fusion_call") && data['fusion_call'] == "true") {
