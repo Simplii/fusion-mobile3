@@ -492,7 +492,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             (SMSMessage message) {},
             null,
             [],
-            ''));
+            '-2',()=>null));
       } else {
         String duration = Duration(seconds: item.callLog.duration)
             .toString()
@@ -542,7 +542,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                 contacts: [_contact],
                 crmContacts: []),
             (SMSMessage message) {}, 
-            null,[],''));
+            null,[],'-2',()=>null));
       }
     }
 

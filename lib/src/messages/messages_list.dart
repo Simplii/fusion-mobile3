@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -44,6 +47,7 @@ class _MessagesTabState extends State<MessagesTab> {
   List<Contact> _contacts = [];
   String _myNumber = "";
   bool _loaded = false;
+  StreamSubscription<ConnectivityResult> connectivitySubscription;
 
   initState() {
     super.initState();
@@ -56,6 +60,19 @@ class _MessagesTabState extends State<MessagesTab> {
         _loaded = true;
       });
     });
+    connectivitySubscription =
+      _fusionConnection.connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+  
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    setState(() {
+      _fusionConnection.connectivityResult = result;
+    });
+  }
+
+  @override dispose(){
+    connectivitySubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -247,8 +264,8 @@ class _MessagesListState extends State<MessagesList> {
         _fusionConnection.smsDepartments.allDepartments();
     List<List<String>> options = [];
 
-    departments.sort((a, b) => a.groupName.compareTo(b.groupName));
-
+    departments.sort(((a, b) => int.parse(a.id) < int.parse(b.id) ? -1 : 1));
+    departments.sort((a, b) => int.parse(a.id) > 0 ? a.groupName.compareTo(b.groupName) : -1);
     for (SMSDepartment d in departments) {
       options.add([d.groupName, d.id]);
     }
@@ -521,7 +538,9 @@ class _SMSConversationSummaryViewState
                                 decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: informationBlue),
-                              )
+                              ),
+                            if(_convo.message.messageStatus == "offline")
+                              Icon(Icons.error_outline, color: Colors.red,)
                           ],
                         )))
               ])),
