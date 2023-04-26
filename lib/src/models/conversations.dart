@@ -248,11 +248,13 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
 
   getConversations(String groupId, int limit, int offset,
       Function(List<SMSConversation> conversations, bool fromServer) callback) {
-    // SMSDepartment department =
-    //     fusionConnection.smsDepartments.getDepartment(groupId);
-    // List<String> numbers = department.numbers;
-
-    getPersisted(groupId, limit, offset, callback);
+    SMSConversation lastMessageFailed = null;
+    getPersisted(groupId, limit, offset, (savedConvos,fromserver){
+      callback(savedConvos, fromserver);
+      lastMessageFailed = savedConvos.where((convo) => convo.message.messageStatus == "offline").isNotEmpty 
+        ? savedConvos.where((convo) => convo.message.messageStatus == "offline").toList().first
+        : null;
+    });
     fusionConnection.refreshUnreads();
 
     fusionConnection.apiV2Call("get", "/messaging/group/${groupId}/conversations", {
@@ -288,23 +290,14 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
           }
         }
 
-        // if (item.containsKey('contacts') && item['contacts'] != null) {
-        //   for (Map<String, dynamic> obj in item['contacts']) {
-        //     contacts.add(Contact(obj));
-        //   }
-        // }
-
-        // if (item.containsKey('leads') && item['leads'] != null) {
-        //   for (Map<String, dynamic> obj in item['leads']) {
-        //     leads.add(CrmContact(obj));
-        //   }
-        // }
-
         item['contacts'] = contacts;
         item['crm_contacts'] = leads;
         if(item['lastMessage'] != null ){
           item['message'] = SMSMessage.fromV2(item['lastMessage']);
-        } 
+        }
+        if(lastMessageFailed != null && item['groupId'] == lastMessageFailed.conversationId){
+          item['message'] = lastMessageFailed.message;
+        }  
         if(item['message']== null)break;
         SMSConversation convo =  SMSConversation(item);
         storeRecord(convo);

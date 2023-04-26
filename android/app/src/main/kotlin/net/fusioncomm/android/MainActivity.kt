@@ -70,7 +70,9 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val incomingCallId: String? = intent.getStringExtra("payload")
-        appOpenedFromBackground = true
+        if(incomingCallId != null){
+            appOpenedFromBackground = true
+        }
     }
 
     override fun onDestroy() {
