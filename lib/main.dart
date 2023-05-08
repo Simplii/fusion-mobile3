@@ -415,6 +415,10 @@ class _MyHomePageState extends State<MyHomePage> {
         if (event.data.containsKey("remove_fusion_call")) {
           softphone.stopRinging(event.data["uuid"]);
         }
+      } else {
+        if(event.data.containsKey("remove_fusion_call")){
+          SystemNavigator.pop();
+        }
       }
       setState(() {});
     });
