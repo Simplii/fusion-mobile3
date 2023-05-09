@@ -270,6 +270,7 @@ class _MyHomePageState extends State<MyHomePage> {
       Permission.phone,
       Permission.bluetoothConnect,
       Permission.bluetooth,
+      Permission.notification,
     ].request().then((Map<Permission, PermissionStatus> statuses) {
     });
   }
