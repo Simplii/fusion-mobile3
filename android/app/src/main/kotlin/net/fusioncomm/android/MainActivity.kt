@@ -58,6 +58,7 @@ class MainActivity : FlutterFragmentActivity() {
         val incomingCallId : String? = getIntent().getStringExtra("payload")
         if(incomingCallId != null){
             appOpenedFromBackground = true
+            getIntent().removeExtra("payload");
         }
     }
 
@@ -74,8 +75,10 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onResume() {
         super.onResume()
         val incomingCallId: String? = intent.getStringExtra("payload")
+        Log.d("MyDebugMessage", "incomgCallID = $incomingCallId")
         if(incomingCallId != null){
             appOpenedFromBackground = true
+            getIntent().removeExtra("payload");
         }
     }
 
