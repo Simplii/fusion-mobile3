@@ -55,6 +55,11 @@ class MainActivity : FlutterFragmentActivity() {
         super.onCreate(savedInstanceState);
         setupCore();
         setupBroadcastReciver()
+        val incomingCallId : String? = getIntent().getStringExtra("payload")
+        if(incomingCallId != null){
+            appOpenedFromBackground = true
+            getIntent().removeExtra("payload");
+        }
     }
 
     override fun onStart() {
@@ -67,11 +72,13 @@ class MainActivity : FlutterFragmentActivity() {
         phoneStateListener()
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
+    override fun onResume() {
+        super.onResume()
         val incomingCallId: String? = intent.getStringExtra("payload")
+        Log.d("MyDebugMessage", "incomgCallID = $incomingCallId")
         if(incomingCallId != null){
             appOpenedFromBackground = true
+            getIntent().removeExtra("payload");
         }
     }
 
