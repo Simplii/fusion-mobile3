@@ -184,7 +184,6 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             _hasPulledFromServer = true;
             _contacts = [];
             print("gotfirstcontactsfromserver");
-            print("MyDebugMessage contacts = ${contacts.length}");
           }
 
           this.setState(() {
@@ -325,7 +324,12 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            ContactProfileView(_fusionConnection, _softphone, contact));
+            ContactProfileView(_fusionConnection, _softphone, contact)
+    ).whenComplete((){
+      setState(() {
+        
+      });
+    });
   }
 
   _resultRow(String letter, Contact contact) {

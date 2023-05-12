@@ -58,6 +58,8 @@ PODS:
     - Flutter
   - flutter_dtmf (1.0.1):
     - Flutter
+  - flutter_exif_rotation (0.3.0):
+    - Flutter
   - flutter_incall_manager (0.0.1):
     - Flutter
   - flutter_keyboard_visibility (0.0.1):
@@ -139,6 +141,7 @@ DEPENDENCIES:
   - flutter_apns_only (from `.symlinks/plugins/flutter_apns_only/ios`)
   - flutter_audio_manager (from `.symlinks/plugins/flutter_audio_manager/ios`)
   - flutter_dtmf (from `.symlinks/plugins/flutter_dtmf/ios`)
+  - flutter_exif_rotation (from `.symlinks/plugins/flutter_exif_rotation/ios`)
   - flutter_incall_manager (from `.symlinks/plugins/flutter_incall_manager/ios`)
   - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
@@ -200,6 +203,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_audio_manager/ios"
   flutter_dtmf:
     :path: ".symlinks/plugins/flutter_dtmf/ios"
+  flutter_exif_rotation:
+    :path: ".symlinks/plugins/flutter_exif_rotation/ios"
   flutter_incall_manager:
     :path: ".symlinks/plugins/flutter_incall_manager/ios"
   flutter_keyboard_visibility:
@@ -248,6 +253,7 @@ SPEC CHECKSUMS:
   flutter_apns_only: 3d91c0ca9dbef4439874858590909a19f8ed06a4
   flutter_audio_manager: 5945fdba99ff5e6c54d7e9b78d35b3a3bd574a9b
   flutter_dtmf: d86aaec3002a172abba756dc179aaf786bb82215
+  flutter_exif_rotation: de6b54e8bd54a687f28d6397d1a890391de41111
   flutter_incall_manager: 1a6aea8d37fb46d63aaa30ac7ea225e121704eab
   flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743

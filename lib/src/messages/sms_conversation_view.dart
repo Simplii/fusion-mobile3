@@ -775,7 +775,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     setState(() {
       loading = false;
     });
-    print("MyDebugMessage after internet check ${_fusionConnection.internetAvailable}");
     
     setState(() {
       if (_messageInputController.value.text.trim().length > 0) {
@@ -1219,7 +1218,6 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         ()=> null
       );
     }
-    print("MyDebugMessage ${message.serialize()}");
 
   }
 
