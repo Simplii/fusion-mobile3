@@ -73,6 +73,7 @@ dependencies:
   flutter_audio_manager:
   connectivity_plus: ^3.0.4
   internet_connection_checker: ^1.0.0+1
+  flutter_exif_rotation: ^0.5.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
