@@ -28,6 +28,7 @@ class _MenuState extends State<Menu> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   Softphone get _softphone => widget._softphone;
   List<Did> get _dids => widget._dids;
+  bool loggingOut = false;
 
   _changeDefaultInputDevice() {
     List<List<String>> options = _softphone.devicesList
@@ -358,10 +359,12 @@ class _MenuState extends State<Menu> {
                   child: 
                   ico != null 
                     ? ico 
-                    : Opacity(
-                        opacity: icon.contains("call_view") ? 0.45 : 1.0,
-                        child: Image.asset("assets/icons/" + icon + ".png",
-                            width: 22, height: 22))),
+                    : label == "Log Out" && loggingOut 
+                      ? CircularProgressIndicator()
+                      : Opacity(
+                          opacity: icon.contains("call_view") ? 0.45 : 1.0,
+                          child: Image.asset("assets/icons/" + icon + ".png",
+                              width: 22, height: 22))),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(label,
                     textAlign: TextAlign.left,
@@ -456,7 +459,62 @@ class _MenuState extends State<Menu> {
                               ])));
                     }).toList()))));
   }
-
+  void _editProfilePic (){
+    showModalBottomSheet(
+      context: context, 
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) => PopupMenu(
+        label: "Source",
+        bottomChild: Container(
+          height: 100,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GestureDetector(
+                onTap: ()=>_selectImage("camera"),
+                child: Container(
+                  padding: EdgeInsets.only(
+                    bottom:10,
+                    top: 14,
+                    left: 12),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: lightDivider, width: 1.0))
+                  ),
+                  child: Text('Camera', 
+                    style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: ()=>_selectImage("photos"),
+                child: Container(
+                  padding: EdgeInsets.only(
+                    bottom:10,
+                    top: 14,
+                    left: 12),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: lightDivider, width: 1.0))
+                  ),
+                  child: Text('Photos', 
+                    style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
   void _uploadPic (XFile image, id){
     _fusionConnection.contacts.uploadProfilePic("profile", image, id, (Contact contact){
       setState(() {
@@ -494,66 +552,15 @@ class _MenuState extends State<Menu> {
         _onAudioBtnPress();
       }, null),
       
-      _row("", "Edit Profile Picture", "", () {
-        showModalBottomSheet(
-          context: context, 
-          backgroundColor: Colors.transparent,
-          isScrollControlled: true,
-          builder: (BuildContext context) => PopupMenu(
-            label: "Source",
-            bottomChild: Container(
-              height: 100,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  GestureDetector(
-                    onTap: ()=>_selectImage("camera"),
-                    child: Container(
-                      padding: EdgeInsets.only(
-                        bottom:10,
-                        top: 14,
-                        left: 12),
-                      decoration: BoxDecoration(
-                        border: Border(bottom: BorderSide(color: lightDivider, width: 1.0))
-                      ),
-                      child: Text('Camera', 
-                        style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: ()=>_selectImage("photos"),
-                    child: Container(
-                      padding: EdgeInsets.only(
-                        bottom:10,
-                        top: 14,
-                        left: 12),
-                      decoration: BoxDecoration(
-                        border: Border(bottom: BorderSide(color: lightDivider, width: 1.0))
-                      ),
-                      child: Text('Photos', 
-                        style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }, Icon(Icons.edit, size: 22, color: smoke.withOpacity(0.45),)),
+      _row("", "Edit Profile Picture", "", _editProfilePic, 
+        Icon(Icons.edit, size: 22, color: smoke.withOpacity(0.45),)),
 
       // _row("gear_light", "Settings", "Coming soon", () {}),
       _line(),
       _row("moon_light", "Log Out", "", () {
+        setState(() {
+          loggingOut = true;
+        });
         _fusionConnection.logOut();
       },null)
     ];
