@@ -449,7 +449,7 @@ class _MyHomePageState extends State<MyHomePage> {
                  fusionConnection.nsApiCall('device', 'read', {
         'domain': fusionConnection.getDomain(),
         'device':
-            'sip:${fusionConnection.getExtension()}fm@${fusionConnection.getDomain()}',
+            'sip:${fusionConnection.getExtension()}fz@${fusionConnection.getDomain()}',
         'user': fusionConnection.getExtension()
       }, callback: (Map<String, dynamic> response) {
                    print("deviceread");
@@ -501,7 +501,7 @@ class _MyHomePageState extends State<MyHomePage> {
       fusionConnection.nsApiCall('device', 'read', {
         'domain': fusionConnection.getDomain(),
         'device':
-        'sip:${fusionConnection.getExtension()}fm@${fusionConnection
+        'sip:${fusionConnection.getExtension()}fz@${fusionConnection
             .getDomain()}',
         'user': fusionConnection.getExtension()
       }, callback: (Map<String, dynamic> response) {
