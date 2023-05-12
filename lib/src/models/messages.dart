@@ -695,7 +695,6 @@ print(callpopInfo);
     XFile mediaFile,
     Function callback,
     Function largeMMSCallback){
-      print("MyDebugMessage is group ${conversation.isGroup}");
       SMSMessage message = SMSMessage.offline(
         from: conversation.myNumber,
         to: conversation.number,

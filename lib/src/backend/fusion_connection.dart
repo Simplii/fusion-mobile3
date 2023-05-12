@@ -80,7 +80,7 @@ class FusionConnection {
   ConnectivityResult connectivityResult = ConnectivityResult.none;
   bool internetAvailable = true;
   String serverRoot = "http://fusioncomm.net";
-
+  String mediaServer = "https://fusion-media.sfo2.digitaloceanspaces.com";
   String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {

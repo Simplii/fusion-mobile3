@@ -59,7 +59,6 @@ class QuickResponsesStore extends FusionStore<QuickResponse> {
       if(data.containsKey('items')){
         for (Map<String,dynamic> item in data['items']) {
           QuickResponse quickRes = QuickResponse(item);
-          print("MyDebugMessage ${quickRes.domain}");
           storeRecord(quickRes);
           quickResps.add(quickRes);
         }

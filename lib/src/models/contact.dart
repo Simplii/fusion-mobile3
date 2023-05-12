@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
@@ -6,6 +7,12 @@ import 'dart:convert' as convert;
 import 'carbon_date.dart';
 import 'fusion_model.dart';
 import 'fusion_store.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
+import 'package:path/path.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_exif_rotation/flutter_exif_rotation.dart';
 
 class ContactCrmReference {
   String crmName;
@@ -55,6 +62,7 @@ class Contact extends FusionModel {
   String crmName;
   String crmId;
   int unread = 0;
+  List<dynamic> fieldValues = [];
 
   @override
   String getId() => this.id;
@@ -101,12 +109,8 @@ class Contact extends FusionModel {
   }
 
   String pictureUrl() {
-    if (pictures != null) {
-      for (Map<String, dynamic> picture in pictures) {
-        if (picture['url'] != null && picture['url'].trim() != '') {
-          return picture['url'];
-        }
-      }
+    if (pictures != null && pictures.length > 0) {
+      return pictures.last['url'];
     }
     if (emails != null) {
       for (Map<String, dynamic> email in emails) {
@@ -240,6 +244,7 @@ class Contact extends FusionModel {
       this.crmName = externalReferences[0]['network'];
       this.crmId = externalReferences[0]['externalId'];
     }
+    this.fieldValues = contactObject['fieldValues'] != null ? contactObject['fieldValues'] : [];
   }
 
   Map<String, dynamic> serverPayload() {
@@ -269,7 +274,9 @@ class Contact extends FusionModel {
       "company": company,
       "emails": emails,
       "externalReferences": [],
-      "fieldValues": [
+      "fieldValues": fieldValues.isNotEmpty 
+      ? fieldValues
+      : [
           {
               "fieldName": "first_name",
               "value": firstName
@@ -539,14 +546,27 @@ class ContactsStore extends FusionStore<Contact> {
     });
   }
 
-  void save(Contact edited) {
-    storeRecord(edited);
-    fusionConnection.apiV1Call("post", "/clients/filtered_contacts",
+  void save(Contact edited, Function updateUi) {
+    bool usesV2 = fusionConnection.settings.isV2User();
+    print("MyDebugMessage start saving contact ${usesV2}");
+    if(usesV2){
+      fusionConnection.apiV2Call(
+        "put",
+        "/contacts/${edited.id}",
+        edited.serverPayloadV2(),
+        callback: (Map<String,dynamic> updatedContact){
+          updateUi();
+        }
+      );
+    } else {
+      fusionConnection.apiV1Call("post", "/clients/filtered_contacts",
         {'contact': edited.serverPayload()},
         callback: (List<dynamic> datas) {});
+    }
   }
 
   void createContact(Contact contact,Function(Contact) callback) {
+    print("MyDebugMessage create ${contact.serverPayloadV2()}");
     fusionConnection.apiV2Call("post", "/contacts/create",
       contact.serverPayloadV2(),
       callback: (Map<String,dynamic> datas) {
@@ -554,5 +574,45 @@ class ContactsStore extends FusionStore<Contact> {
         storeRecord(contact);
         callback(contact);
       });
+  }
+
+    void uploadProfilePic (
+    String type, 
+    XFile file, 
+    id,
+    Function(Contact) updateUi) async {
+    File rotatedImage =
+          await FlutterExifRotation.rotateImage(path: file.path);
+      fusionConnection.apiV2Multipart(
+        "post", 
+        "/client/upload_avatar/$type/$id", 
+        {},
+        [
+          http.MultipartFile.fromBytes(
+            "avatar",
+            await rotatedImage.readAsBytes(),
+            filename: basename(file.path),
+            contentType: MediaType.parse(lookupMimeType(file.path))
+          )
+        ], 
+        callback: (Map<String,dynamic> data){
+          Contact contactToUpdate = null;
+          if(type == "profile"){
+            Coworker coworker = fusionConnection.coworkers.lookupCoworker(fusionConnection.getUid());
+            coworker.url = fusionConnection.mediaServer + data['path'];
+            fusionConnection.coworkers.storeRecord(coworker);
+          } else {
+            List<Contact> contacts = getRecords();
+            contactToUpdate = contacts.where((Contact contact) => contact.id == id).isNotEmpty 
+              ? contacts.where((Contact contact) => contact.id == id).first
+              : null;
+            if(contactToUpdate != null){
+              contactToUpdate.pictures.add({"url": data['url'],'fromSourceName': data['from'] });
+              storeRecord(contactToUpdate);
+            }
+          }
+          updateUi( contactToUpdate != null ? contactToUpdate : null );
+        }
+      );
   }
 }

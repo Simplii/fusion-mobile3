@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
@@ -10,10 +11,12 @@ import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../backend/fusion_connection.dart';
+import '../components/popup_menu.dart';
 import '../styles.dart';
 import '../utils.dart';
 
@@ -39,6 +42,7 @@ class _EditContactViewState extends State<EditContactView> {
   Function get _onCreate => widget.onCreate;
   bool _saving = false; 
   Map<String, TextEditingController> textControllers = {};
+  XFile pickedImage = null;
 
   _textControllerFor(name, String value) {
     if (textControllers.containsKey(name))
@@ -447,20 +451,135 @@ class _EditContactViewState extends State<EditContactView> {
   }
 
   _saveContact() {
-    _fusionConnection.contacts.save(_edited);
-    _contact.copy(_edited);
-    widget._goBack();
-  }
-
-  _createContact() {
     setState(() {
       _saving = true;
     });
-    _fusionConnection.contacts.createContact(_edited,(Contact newContact){
-      _contact.copy(newContact);
-      _onCreate();
+
+    if(pickedImage != null){
+      _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, _edited.id, (Contact updatedContact){
+        print("MyDebugMessage image uploaded ${updatedContact}");
+        _fusionConnection.contacts.save(updatedContact, (){
+          setState(() {
+            _saving = false;
+          });
+        });
+      });
+    } else {
+      _fusionConnection.contacts.save(_edited, (){
+        setState(() {
+            _saving = false;
+          });
+      });
+      _contact.copy(_edited);
       widget._goBack();
+    }
+  }
+
+  _createContact() {  // create contact from messages
+    setState(() {
+      _saving = true;
     });
+    if(pickedImage != null){
+      _fusionConnection.contacts.createContact(_edited,(Contact newContact){
+        _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, newContact.id, (Contact updatedContact){
+          _fusionConnection.contacts.save(updatedContact, (){
+            setState(() {
+              _saving = false;
+              _contact.copy(newContact);
+              _onCreate();
+              widget._goBack();
+            });
+          });
+        });
+      });
+    } else {
+      _fusionConnection.contacts.createContact(_edited,(Contact newContact){
+        _contact.copy(newContact);
+        _onCreate();
+        widget._goBack();
+      });
+    }
+  }
+
+  void _selectImage(String source){
+    final ImagePicker _picker = ImagePicker();
+    Contact contact = _editingContact();
+    if (source == "camera") {
+      _picker.pickImage(source: ImageSource.camera).then((XFile image) {
+        setState(() {
+          if(image == null) return;
+          setState(() {
+            pickedImage = image;
+            _edited = contact;
+          });
+        });
+      });
+    } else {
+      _picker.pickImage(source: ImageSource.gallery).then((XFile image) {
+        if(image == null) return;
+        setState(() {
+          pickedImage = image;
+          _edited = contact;
+        });
+      });
+    }
+  }
+
+  _uploadPic(){
+    showModalBottomSheet(
+      context: context, 
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) => PopupMenu(
+        label: "Source",
+        bottomChild: Container(
+          height: 100,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GestureDetector(
+                onTap: ()=>_selectImage("camera"),
+                child: Container(
+                  padding: EdgeInsets.only(
+                    bottom:10,
+                    top: 14,
+                    left: 12),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: lightDivider, width: 1.0))
+                  ),
+                  child: Text('Camera', 
+                    style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: ()=>_selectImage("photos"),
+                child: Container(
+                  padding: EdgeInsets.only(
+                    bottom:10,
+                    top: 14,
+                    left: 12),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: lightDivider, width: 1.0))
+                  ),
+                  child: Text('Photos', 
+                    style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -470,23 +589,40 @@ class _EditContactViewState extends State<EditContactView> {
     return Column(children: [
       _header(),
       Expanded(
-          child: Stack(children: [
-        Column(children: [
-          Container(
+        child: Stack(
+          children: [
+          Column(
+            children: [
+            Container(
               height: 250,
               decoration: BoxDecoration(
+                  color: Colors.black,
                   image: DecorationImage(
                       fit: BoxFit.cover,
-                      image: pictureUrl != null
-                          ? NetworkImage(pictureUrl)
-                          : AssetImage("assets/blank_avatar.png")))),
-          Expanded(
+                      colorFilter: 
+                        ColorFilter.mode(Colors.black.withOpacity(0.6), 
+                        BlendMode.dstATop),
+                      image: pickedImage != null
+                          ? FileImage(File(pickedImage.path))
+                          : pictureUrl != null
+                            ? NetworkImage(pictureUrl)
+                            : AssetImage("assets/blank_avatar.png")))),
+            Expanded(
               child: Container(
                   decoration: BoxDecoration(color: Colors.white),
                   child: ListView(
                       padding: EdgeInsets.only(bottom: 72),
                       children: _fieldGroups())))
-        ]),
+          ]),
+          Positioned(
+            height: 250,
+            width: MediaQuery.of(context).size.width,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: _uploadPic,
+                child: Center(
+                  child: Icon(Icons.local_see_outlined, color: Colors.white, size: 35,)),
+              )),
         if (_edited != null)
           Container(
               alignment: Alignment.bottomCenter,
