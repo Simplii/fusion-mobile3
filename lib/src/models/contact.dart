@@ -548,7 +548,6 @@ class ContactsStore extends FusionStore<Contact> {
 
   void save(Contact edited, Function updateUi) {
     bool usesV2 = fusionConnection.settings.isV2User();
-    print("MyDebugMessage start saving contact ${usesV2}");
     if(usesV2){
       fusionConnection.apiV2Call(
         "put",
@@ -556,12 +555,15 @@ class ContactsStore extends FusionStore<Contact> {
         edited.serverPayloadV2(),
         callback: (Map<String,dynamic> updatedContact){
           updateUi();
+          storeRecord(Contact.fromV2(updatedContact));
         }
       );
     } else {
       fusionConnection.apiV1Call("post", "/clients/filtered_contacts",
         {'contact': edited.serverPayload()},
-        callback: (List<dynamic> datas) {});
+        callback: (List<dynamic> datas) {
+          storeRecord(edited);
+        });
     }
   }
 
