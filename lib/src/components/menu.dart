@@ -4,9 +4,11 @@ import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../backend/fusion_connection.dart';
 import '../backend/softphone.dart';
+import '../models/contact.dart';
 import '../styles.dart';
 import '../utils.dart';
 
@@ -26,6 +28,7 @@ class _MenuState extends State<Menu> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   Softphone get _softphone => widget._softphone;
   List<Did> get _dids => widget._dids;
+  bool loggingOut = false;
 
   _changeDefaultInputDevice() {
     List<List<String>> options = _softphone.devicesList
@@ -342,7 +345,7 @@ class _MenuState extends State<Menu> {
         ]));
   }
 
-  _row(String icon, String label, String smallText, Function onTap) {
+  _row(String icon, String label, String smallText, Function onTap, Icon ico) {
     return GestureDetector(
         onTap: onTap,
         child: Container(
@@ -353,10 +356,15 @@ class _MenuState extends State<Menu> {
                   margin: EdgeInsets.only(right: 24),
                   width: 22,
                   height: 22,
-                  child: Opacity(
-                      opacity: icon.contains("call_view") ? 0.45 : 1.0,
-                      child: Image.asset("assets/icons/" + icon + ".png",
-                          width: 22, height: 22))),
+                  child: 
+                  ico != null 
+                    ? ico 
+                    : label == "Log Out" && loggingOut 
+                      ? CircularProgressIndicator()
+                      : Opacity(
+                          opacity: icon.contains("call_view") ? 0.45 : 1.0,
+                          child: Image.asset("assets/icons/" + icon + ".png",
+                              width: 22, height: 22))),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(label,
                     textAlign: TextAlign.left,
@@ -451,22 +459,110 @@ class _MenuState extends State<Menu> {
                               ])));
                     }).toList()))));
   }
+  void _editProfilePic (){
+    showModalBottomSheet(
+      context: context, 
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) => PopupMenu(
+        label: "Source",
+        bottomChild: Container(
+          height: 100,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GestureDetector(
+                onTap: ()=>_selectImage("camera"),
+                child: Container(
+                  padding: EdgeInsets.only(
+                    bottom:10,
+                    top: 14,
+                    left: 12),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: lightDivider, width: 1.0))
+                  ),
+                  child: Text('Camera', 
+                    style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: ()=>_selectImage("photos"),
+                child: Container(
+                  padding: EdgeInsets.only(
+                    bottom:10,
+                    top: 14,
+                    left: 12),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: lightDivider, width: 1.0))
+                  ),
+                  child: Text('Photos', 
+                    style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  void _uploadPic (XFile image, id){
+    _fusionConnection.contacts.uploadProfilePic("profile", image, id, (Contact contact){
+      setState(() {
+        
+      });
+    });
+  }
+
+  void _selectImage(String source){
+    final ImagePicker _picker = ImagePicker();
+    final Contact user = _fusionConnection.settings.myContact();
+    if (source == "camera") {
+      _picker.pickImage(source: ImageSource.camera).then((XFile image) {
+
+        setState(() {
+          if(image == null) return;
+          _uploadPic(image, user.id);
+        });
+      });
+    } else {
+      _picker.pickImage(source: ImageSource.gallery).then((XFile image) {
+        if(image == null) return;
+        _uploadPic(image, user.id);
+      });
+    }
+  }
 
   _body() {
     List<Widget> response = [
       _row("phone_outgoing", "Manage Outbound DID", "", () {
         _openOutboundDIDMenu();
-      }),
+      }, null),
 
       _row("call_view/audio_phone", "Audio Settings", "", () {
         _onAudioBtnPress();
-      }),
+      }, null),
+      
+      _row("", "Edit Profile Picture", "", _editProfilePic, 
+        Icon(Icons.edit, size: 22, color: smoke.withOpacity(0.45),)),
 
       // _row("gear_light", "Settings", "Coming soon", () {}),
       _line(),
       _row("moon_light", "Log Out", "", () {
+        setState(() {
+          loggingOut = true;
+        });
         _fusionConnection.logOut();
-      })
+      },null)
     ];
     return response;
   }

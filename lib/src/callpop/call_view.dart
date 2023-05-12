@@ -94,7 +94,6 @@ class _CallViewState extends State<CallView> {
               if (xferType == "blind") {
                 _softphone.transfer(_activeCall, _makeXferUrl(xferTo));
               } else if (xferType == "assisted") {
-                print("MyDebugMessage assisted transfer init");
                 _softphone.assistedTransfer(_activeCall, _makeXferUrl(xferTo));
               }
               Navigator.pop(context);

@@ -75,7 +75,6 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onResume() {
         super.onResume()
         val incomingCallId: String? = intent.getStringExtra("payload")
-        Log.d("MyDebugMessage", "incomgCallID = $incomingCallId")
         if(incomingCallId != null){
             appOpenedFromBackground = true
             getIntent().removeExtra("payload");
