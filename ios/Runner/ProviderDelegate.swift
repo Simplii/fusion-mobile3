@@ -321,7 +321,7 @@ print("audiointerruption")
             print(passwd);
             try! accountParams!.setIdentityaddress(newValue: identity)
             
-            let address = try Factory.Instance.createAddress(addr: String("sip:zaid-fusion-dev.fusioncomm.net:5060"))
+            let address = try Factory.Instance.createAddress(addr: String("sip:mobile-proxy.fusioncomm.net:5060"))
             
             try address.setTransport(newValue: transport)
             try accountParams!.setServeraddress(newValue: address)
@@ -348,8 +348,8 @@ print("audiointerruption")
     func createProxyConfig(proxyConfig: ProxyConfig, aor: String, authInfo: AuthInfo) throws -> ProxyConfig {
         let address = try mCore?.createAddress(address: aor)
         try proxyConfig.setIdentityaddress(newValue: address!)
-        try proxyConfig.setServeraddr(newValue: "<sip:zaid-fusion-dev.fusioncomm.net:5060;transport=tcp>")
-        try proxyConfig.setRoute(newValue: "<sip:zaid-fusion-dev.fusioncomm.net:5060;transport=tcp>")
+        try proxyConfig.setServeraddr(newValue: "<sip:mobile-proxy.fusioncomm.net:5060;transport=tcp>")
+        try proxyConfig.setRoute(newValue: "<sip:mobile-proxy.fusioncomm.net:5060;transport=tcp>")
         proxyConfig.realm = authInfo.realm
         proxyConfig.registerEnabled = true
         proxyConfig.avpfMode = .Disabled
@@ -925,20 +925,24 @@ print("audiointerruption")
             else if (call.method == "setUnhold") {
                 print("set unhold call callkit")
                 let args = call.arguments as! [Any]
-                                let uuid = args[0] as! String
-                let unHoldAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
-                                                       onHold: false)
-                let transaction = CXTransaction(action: unHoldAction)
-                self.requestTransaction(transaction)
+                let uuid = args[0] as! String
+                if(self.answeredUuids.keys.contains(uuid)){
+                    let unHoldAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
+                                                            onHold: false)
+                    let transaction = CXTransaction(action: unHoldAction)
+                    self.requestTransaction(transaction)
+                }
             }
             else if (call.method == "setHold") {
                 print("sethold call callkit")
                 let args = call.arguments as! [Any]
                 let uuid = args[0] as! String
-                let holdAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
-                                                       onHold: true)
-                let transaction = CXTransaction(action: holdAction)
-                self.requestTransaction(transaction)
+                if(self.answeredUuids.keys.contains(uuid)){
+                    let holdAction = CXSetHeldCallAction(call: UUID(uuidString: uuid)!,
+                                                           onHold: true)
+                    let transaction = CXTransaction(action: holdAction)
+                    self.requestTransaction(transaction)
+                }
             }
             else if (call.method == "setSpeaker") {
                 print("settingspeakercallkit");
@@ -958,17 +962,21 @@ print("audiointerruption")
                 print("mute call callkit")
                 let args = call.arguments as! [Any]
                 let uuid = args[0] as! String
-                let action = CXSetMutedCallAction(call:  UUID(uuidString: uuid)!, muted: true)
-                let transaction = CXTransaction(action: action)
-                self.requestTransaction(transaction)
+                if(self.answeredUuids.keys.contains(uuid)){
+                    let action = CXSetMutedCallAction(call:  UUID(uuidString: uuid)!, muted: true)
+                    let transaction = CXTransaction(action: action)
+                    self.requestTransaction(transaction)
+                }
             }
             else if (call.method == "unMuteCall") {
                 print("unmute call callkit")
                 let args = call.arguments as! [Any]
                 let uuid = args[0] as! String
-                let action = CXSetMutedCallAction(call:  UUID(uuidString: uuid)!, muted: false)
-                let transaction = CXTransaction(action: action)
-                self.requestTransaction(transaction)
+                if(self.answeredUuids.keys.contains(uuid)){
+                    let action = CXSetMutedCallAction(call:  UUID(uuidString: uuid)!, muted: false)
+                    let transaction = CXTransaction(action: action)
+                    self.requestTransaction(transaction)
+                }
             }
         })
         print("providerpush set delegate callkit")
@@ -976,7 +984,7 @@ print("audiointerruption")
     }
   
     func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
-        print("call observer")
+        print("MyDebugMessage call uuid \(call.hasConnected)")
         print(call.isOnHold)
         if call.hasConnected == true {
             print("marking answered", call.uuid.uuidString)
