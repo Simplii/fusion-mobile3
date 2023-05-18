@@ -65,9 +65,6 @@ dependencies:
  #   git:
     #  url: https://github.com/davidkarn/callkeep.git
   flutter_background:
-  flutter_phone_state:
-    git:
-      url: https://github.com/vmeretin/flutter_phone_state.git
   overlay_support:
   path_provider:
   flutter_audio_manager:
