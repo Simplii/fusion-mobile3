@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_phone_state/flutter_phone_state.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/backend/ln_call.dart';
@@ -23,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:flutter_audio_manager/flutter_audio_manager.dart';
 import '../../main.dart';
+import '../models/contact.dart';
 import '../models/coworkers.dart';
 import '../utils.dart';
 import 'fusion_connection.dart';
@@ -1541,6 +1541,29 @@ class Softphone implements SipUaHelperListener {
           }
         else
           return "Unknown";
+      }
+    }
+  }
+
+  ImageProvider getCallerPic (Call call){
+    if(call == null){
+      return AssetImage("assets/background.png");
+    } else {
+      CallpopInfo data = getCallpopInfo(call.id);
+      List<Coworker> coworkers = _fusionConnection.coworkers.getRecords();
+      String ext = call.remote_identity.onlyNumbers();
+      Coworker coworker =
+          coworkers.where((coworker) => coworker.extension == ext).isNotEmpty 
+            ? coworkers.where((coworker) => coworker.extension == ext).first
+            : null;
+      if(coworker != null){
+        return NetworkImage(coworker.url);
+      } else if(data != null && data.contacts.length > 0){
+        Contact contact = data.contacts.last;
+        String url = contact.pictures.last['url'];
+        return NetworkImage(url);
+      } else {
+        return AssetImage("assets/background.png");
       }
     }
   }

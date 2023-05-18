@@ -363,15 +363,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "5.0.0"
-  flutter_phone_state:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "77830bd6c871a3f3e20b6d5a1688d882985285d4"
-      url: "https://github.com/vmeretin/flutter_phone_state.git"
-    source: git
-    version: "2.0.0"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -519,13 +510,6 @@ packages:
     dependency: transitive
     description:
       name: logger
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.1.0"
-  logging:
-    dependency: transitive
-    description:
-      name: logging
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.0"
@@ -860,13 +844,6 @@ packages:
     dependency: transitive
     description:
       name: stream_channel
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.1.0"
-  stream_transform:
-    dependency: transitive
-    description:
-      name: stream_transform
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.0"
