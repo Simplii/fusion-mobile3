@@ -5,6 +5,7 @@ import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/calls/recent_calls.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
+import 'package:fusion_mobile_revamped/src/contacts/edit_contact_view.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
@@ -331,6 +332,25 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       });
     });
   }
+  
+  _addContact() {
+    Contact contact = Contact.fake("");
+    showModalBottomSheet(
+        context: context,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height - 50
+        ),
+        isScrollControlled: true,
+        builder: (context) =>
+            EditContactView(_fusionConnection, contact, () => Navigator.pop(context, true),(){
+              //oncreate
+            })
+    ).whenComplete((){
+      setState(() {
+        
+      });
+    });
+  }
 
   _resultRow(String letter, Contact contact) {
     return GestureDetector(
@@ -529,8 +549,21 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: coal)))
-            ])));
+                          color: coal))),
+                if(_selectedTab == "fusion")
+                Positioned(
+                  bottom: 17,
+                  right: 17,
+                  child: FloatingActionButton(
+                    backgroundColor: crimsonLight,
+                    foregroundColor: Colors.white,
+                    child: Icon(Icons.add),
+                    onPressed: _addContact)
+                ),
+              ]
+            )
+        )
+      );
   }
 }
 
