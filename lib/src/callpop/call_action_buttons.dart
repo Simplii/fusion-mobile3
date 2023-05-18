@@ -42,7 +42,6 @@ class _CallActionButtonsState extends State<CallActionButtons> {
 
   Widget _getMainView(bool onHold) {
     return Container(
-        height: 132,
         key: ValueKey<int>(2),
         width: MediaQuery.of(context).size.width,
         child: Column(
@@ -171,7 +170,7 @@ class _CallActionButtonsState extends State<CallActionButtons> {
   Widget _restrictedView() {
     return Container(
         key: ValueKey<int>(1),
-        constraints: BoxConstraints(minHeight: 60, maxHeight: 60),
+        constraints: BoxConstraints(minHeight: 82, maxHeight: 82),
         width: MediaQuery.of(context).size.width,
         child: Column(children: [Spacer(), Container(
       child: Row(
@@ -189,7 +188,7 @@ class _CallActionButtonsState extends State<CallActionButtons> {
             if (!widget.dialPadOpen)
             CallActionButton(
                 onPressed: widget.actions['onAudioBtnPress'],
-                title: 'Audio',
+                title: '',
                 icon: Image.asset(
                     widget.callIsMuted
                         ? "assets/icons/call_view/audio_muted.png"
@@ -230,30 +229,35 @@ class _CallActionButtonsState extends State<CallActionButtons> {
 
   @override
   Widget build(BuildContext context) {
-    Widget contents = AnimatedContainer(
-      height: widget.isRinging || widget.dialPadOpen ? 82 : 154,
-      duration: Duration(milliseconds:200),
-      padding: EdgeInsets.only(top: 12, bottom: 10),
-      decoration: BoxDecoration(
-          color: widget.callOnHold || widget.dialPadOpen
-              ? Colors.transparent
-              : coal.withAlpha((255 * 0.7).round()),
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(8), topRight: Radius.circular(8))),
-      child: AnimatedSwitcher(
-        layoutBuilder: (Widget currentChild, List<Widget> previousChildren) {
-                    return Stack(
-                      children: <Widget>[
-                        ...previousChildren,
-                        if (currentChild != null) currentChild,
-                      ],
-                      alignment: Alignment.bottomCenter,
-                    );
-                  },
-          switchInCurve: Curves.easeIn,
-          switchOutCurve: Curves.easeOut,
-          duration: Duration(milliseconds:200),
-        child: _getView()),
+    Widget contents = Container(
+      constraints: BoxConstraints(
+        minHeight: widget.isRinging ? 104 : 160
+      ),
+      child: AnimatedContainer(
+        height: widget.isRinging || widget.dialPadOpen ? 82 : 154,
+        duration: Duration(milliseconds:200),
+        padding: EdgeInsets.only(top: 12, bottom: 10),
+        decoration: BoxDecoration(
+            color: widget.callOnHold || widget.dialPadOpen
+                ? Colors.transparent
+                : coal.withAlpha((255 * 0.7).round()),
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8), topRight: Radius.circular(8))),
+        child: AnimatedSwitcher(
+          layoutBuilder: (Widget currentChild, List<Widget> previousChildren) {
+                      return Stack(
+                        children: <Widget>[
+                          ...previousChildren,
+                          if (currentChild != null) currentChild,
+                        ],
+                        alignment: Alignment.bottomCenter,
+                      );
+                    },
+            switchInCurve: Curves.easeIn,
+            switchOutCurve: Curves.easeOut,
+            duration: Duration(milliseconds:200),
+          child: _getView()),
+      ),
     );
 
     double sigma = (widget.callOnHold || widget.dialPadOpen) ? 6.0 : 0.0;

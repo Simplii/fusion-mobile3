@@ -561,8 +561,11 @@ class _CallViewState extends State<CallView> {
         child: Container(
             decoration: BoxDecoration(
                 image: DecorationImage(
-                    image: AssetImage("assets/background.png"),
-                    fit: BoxFit.cover)),
+                  colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.8), BlendMode.dstATop),
+                    image: _softphone.getCallerPic(_activeCall),
+                    fit: BoxFit.cover
+                )
+              ),
             child: Scaffold(
               backgroundColor: Colors.transparent,
               body: Stack(
