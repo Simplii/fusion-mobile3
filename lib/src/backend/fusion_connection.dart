@@ -692,4 +692,23 @@ print(responseBody);
       }
     }
   }
+  Future<void> clearCache() async {
+    final cacheDir = await getTemporaryDirectory();
+    if (cacheDir.existsSync()) {
+      cacheDir.deleteSync(recursive: true);
+    }
+    final appDir = await getApplicationSupportDirectory();
+    if (appDir.existsSync()) {
+      appDir.deleteSync(recursive: true);
+    }
+
+    db.delete('contacts').then((value) => print("MyDebugMessage contacts rows effected ${value}"));
+    db.delete('sms_conversation').then((value) => print("MyDebugMessage sms_conversation rows effected ${value}"));
+    db.delete('sms_message').then((value) => print("MyDebugMessage sms_message rows effected ${value}"));
+    
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    await preferences.clear();
+    
+    this.logOut();
+  }
 }
