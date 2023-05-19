@@ -553,8 +553,12 @@ class _MenuState extends State<Menu> {
           actions: <Widget>[
             TextButton(
               child: Text('Continue', style: TextStyle(color: crimsonDark),),
-              onPressed: () {
-                _fusionConnection.clearCache();
+              onPressed: () async {
+                _fusionConnection.clearCache().then((value){
+                  if(Platform.isIOS){
+                    Navigator.of(context).pop();
+                  }
+                });
               },
             ),
             TextButton(
