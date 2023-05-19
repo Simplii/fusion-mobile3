@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'dart:convert' as convert;
@@ -568,13 +569,23 @@ class ContactsStore extends FusionStore<Contact> {
   }
 
   void createContact(Contact contact,Function(Contact) callback) {
-    print("MyDebugMessage create ${contact.serverPayloadV2()}");
     fusionConnection.apiV2Call("post", "/contacts/create",
       contact.serverPayloadV2(),
       callback: (Map<String,dynamic> datas) {
         contact = Contact.fromV2(datas);
         storeRecord(contact);
         callback(contact);
+        List<CallHistory> history = fusionConnection.callHistory.getRecords();
+        CallHistory historyItem = 
+          history.where((element) => element.fromDid == contact.phoneNumbers[0]['number'] 
+            || element.toDid == contact.phoneNumbers[0]['number']).isNotEmpty 
+          ? history.where((element) => element.fromDid == contact.phoneNumbers[0]['number']
+            || element.toDid == contact.phoneNumbers[0]['number']).first
+          : null;
+        if(historyItem != null){
+          historyItem.contact = contact;
+          fusionConnection.callHistory.storeRecord(historyItem);
+        }
       });
   }
 
