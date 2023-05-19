@@ -104,6 +104,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   bool isSavedMessage = false;
   bool loading = false;
   List<QuickResponse> quickResponses = [];
+  DateTime secheduleIsSet;
+
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
@@ -625,151 +627,195 @@ class _SMSConversationViewState extends State<SMSConversationView> {
 
   _openMessageScheuling(){
     showModalBottomSheet(
-      useRootNavigator: true,
+      useRootNavigator: true, //to replace previous route
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true, 
       builder: (BuildContext context) => PopupMenu(
         label: "Schedule Message",
         bottomChild: DateTimePicker(
-          height: 200,
+          height: 210,
+          onComplete: (DateTime selectedDateTime){
+            setState(() {
+              if(selectedDateTime != null) secheduleIsSet = selectedDateTime;
+            });
+          }
         ),
       )
     );
   }
 
   _sendMessageInput() {
+    DateFormat dateFormatter = DateFormat('MMM d,');
     return Container(
         decoration: BoxDecoration(color: particle),
         padding: EdgeInsets.only(
-            top: 12,
+            top: secheduleIsSet != null ? 0 : 12,
             left: 8,
             bottom: (iphoneIsLarge() &&
                     MediaQuery.of(context).viewInsets.bottom == 0)
                 ? 32
                 : 12,
             right: 8),
-        child: Row(children: [
-          FusionDropdown(
-              onChange: (String value) {
-                if(value == "schedule"){
-                  _openMessageScheuling();
-                } else {
-                  _attachImage(value);
-                }
-              },
-              value: "",
-              options: [
-                ["Camera", "camera"],
-                ["Record Videos", "recordvideo"],
-                ["Videos", "videos"],
-                ["Photos", "photos"],
-                ["Schedule Message", "schedule"]
-              ],
-              label: "Other Options",
-              button: Container(
-                  height: 28,
-                  width: 22,
-                  margin: EdgeInsets.only(right: 12, left: 4, top: 0),
-                  child: Icon(Icons.add, size: 28,color: smoke,))),
-          Expanded(
-              child: Stack(children: [
-            if (_mediaToSend != null && _mediaToSend.length > 0)
+        child: Column(
+          children: [
+            if(secheduleIsSet != null)
+            Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.black,
+                    width: 1.0,
+                  ),
+                ),
+              ),
+              margin: EdgeInsets.only(bottom: 10, left: 20, right: 20),        
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text("Will be sent: " + 
+                      dateFormatter.add_jm().format(secheduleIsSet).toString(),
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
+                    )
+                  ),
+                  IconButton(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    constraints: BoxConstraints(),
+                    onPressed: (){
+                      setState(() {
+                        secheduleIsSet = null;
+                      });
+                    }, 
+                    icon: Icon(Icons.remove_circle_outline_rounded, color: Colors.red,)
+                  )
+                ],
+              ),
+            ),
+            Row(
+            children: [
+              FusionDropdown(
+                onChange: (String value) {
+                  if(value == "schedule"){
+                    _openMessageScheuling();
+                  } else {
+                    _attachImage(value);
+                  }
+                },
+                value: "",
+                options: [
+                  ["Camera", "camera"],
+                  ["Record Videos", "recordvideo"],
+                  ["Videos", "videos"],
+                  ["Photos", "photos"],
+                  ["Schedule Message", "schedule"]
+                ],
+                label: "Other Options",
+                button: Container(
+                    height: 28,
+                    width: 22,
+                    margin: EdgeInsets.only(right: 12, left: 4, top: 0),
+                    child: Icon(Icons.add, size: 28,color: smoke,))),
+              Expanded(
+                child: Stack(children: [
+              if (_mediaToSend != null && _mediaToSend.length > 0)
+                Container(
+                    height: 120,
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(
+                            color: Color.fromARGB(255, 229, 227, 227), width: 1),
+                        borderRadius:
+                            BorderRadius.only(topLeft: Radius.circular(8))),
+                    child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: _mediaToSendViews())),
               Container(
-                  height: 120,
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.only(left: 14, right: 14, top: 0),
+                  margin: EdgeInsets.only(top: _mediaToSend.length > 0 ? 119 : 0),
                   decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border.all(
                           color: Color.fromARGB(255, 229, 227, 227), width: 1),
-                      borderRadius:
-                          BorderRadius.only(topLeft: Radius.circular(8))),
-                  child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: _mediaToSendViews())),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(_mediaToSend.length > 0 ? 0 : 8),
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
+                      )),
+                  child: TextField(
+                    textAlignVertical: TextAlignVertical.center,
+                    textCapitalization: TextCapitalization.sentences,
+                    controller: _messageInputController,
+                    maxLines: 10,
+                    minLines: 1,
+                    onChanged: (String changedTo) {
+                      if (_messageInputController.text.length - textLength > 1 
+                          && !isSavedMessage
+                          && _messageInputController.text.contains("https://fusioncomm.net/media")){
+                        SharedPreferences.getInstance().then((SharedPreferences prefs) {
+                          String imageUri = prefs.getString("copiedImagePath");
+                          if(imageUri.length == 0){
+                            this.setState(() {
+                              _saveLocalState(changedTo);
+                            });
+                          }else {
+                            setState(() {
+                              _mediaToSend.add(XFile('$imageUri'));
+                              _messageInputController.text = '';
+                              Clipboard.setData(ClipboardData(text: ''));
+                            });
+                          }
+                        },);
+                      }else {
+                        setState(() {
+                          _saveLocalState(changedTo);
+                        });
+                      }
+                      textLength = _messageInputController.text.length;
+                    },
+                    decoration: InputDecoration(
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.chat_bubble_outline_outlined),
+                       onPressed: _openQuickResponses),
+                        contentPadding:
+                            EdgeInsets.only(left: 0, right: 0, top: 2, bottom: 2),
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(
+                            fontSize: 14,
+                            color: Color.fromARGB(255, 153, 148, 149)),
+                        hintText: "Message"),
+                  ))
+            ])),
             Container(
-                padding: EdgeInsets.only(left: 14, right: 14, top: 0),
-                margin: EdgeInsets.only(top: _mediaToSend.length > 0 ? 119 : 0),
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(
-                        color: Color.fromARGB(255, 229, 227, 227), width: 1),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(_mediaToSend.length > 0 ? 0 : 8),
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    )),
-                child: TextField(
-                  textAlignVertical: TextAlignVertical.center,
-                  textCapitalization: TextCapitalization.sentences,
-                  controller: _messageInputController,
-                  maxLines: 10,
-                  minLines: 1,
-                  onChanged: (String changedTo) {
-                    if (_messageInputController.text.length - textLength > 1 
-                        && !isSavedMessage
-                        && _messageInputController.text.contains("https://fusioncomm.net/media")){
-                      SharedPreferences.getInstance().then((SharedPreferences prefs) {
-                        String imageUri = prefs.getString("copiedImagePath");
-                        if(imageUri.length == 0){
-                          this.setState(() {
-                            _saveLocalState(changedTo);
-                          });
-                        }else {
-                          setState(() {
-                            _mediaToSend.add(XFile('$imageUri'));
-                            _messageInputController.text = '';
-                            Clipboard.setData(ClipboardData(text: ''));
-                          });
-                        }
-                      },);
-                    }else {
-                      setState(() {
-                        _saveLocalState(changedTo);
-                      });
-                    }
-                    textLength = _messageInputController.text.length;
-                  },
-                  decoration: InputDecoration(
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.chat_bubble_outline_outlined),
-                     onPressed: _openQuickResponses),
-                      contentPadding:
-                          EdgeInsets.only(left: 0, right: 0, top: 2, bottom: 2),
-                      border: InputBorder.none,
-                      hintStyle: TextStyle(
-                          fontSize: 14,
-                          color: Color.fromARGB(255, 153, 148, 149)),
-                      hintText: "Message"),
+                height: 40,
+                width: 40,
+                margin: EdgeInsets.only(left: 8),
+                child: IconButton(
+                  padding: EdgeInsets.all(0),
+                  icon: loading 
+                  ? Container(
+                      height: 40,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: crimsonDark,
+                      ),
+                      child: Transform.scale(
+                        scale: 0.5,
+                        child: CircularProgressIndicator(color: Colors.white,))
+                    ) 
+                  : Image.asset(
+                      _hasEnteredMessage()
+                          ? "assets/icons/send_active.png"
+                          : "assets/icons/send.png",
+                      height: 40,
+                      width: 40),
+                  onPressed: loading ? null : _sendMessage,
                 ))
-          ])),
-          Container(
-              height: 40,
-              width: 40,
-              margin: EdgeInsets.only(left: 8),
-              child: IconButton(
-                padding: EdgeInsets.all(0),
-                icon: loading 
-                ? Container(
-                    height: 40,
-                    width: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: crimsonDark,
-                    ),
-                    child: Transform.scale(
-                      scale: 0.5,
-                      child: CircularProgressIndicator(color: Colors.white,))
-                  ) 
-                : Image.asset(
-                    _hasEnteredMessage()
-                        ? "assets/icons/send_active.png"
-                        : "assets/icons/send.png",
-                    height: 40,
-                    width: 40),
-                onPressed: loading ? null : _sendMessage,
-              ))
-        ]));
+          ])],
+        ));
   }
 
   _hasEnteredMessage() {
