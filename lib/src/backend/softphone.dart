@@ -88,7 +88,7 @@ class Softphone implements SipUaHelperListener {
     fixedPlayer: Aps.AudioPlayer()..setReleaseMode(Aps.ReleaseMode.LOOP),
   );
   final _outboundAudioPath = "audio/outgoing.wav";
-  final _callWaitingAudioPath = "audio/call_waiting .wav";
+  final _callWaitingAudioPath = "audio/call_waiting.mp3";
   final _inboundAudioPath = "audio/inbound.mp3";
   Aps.AudioPlayer _outboundPlayer;
   Aps.AudioPlayer _inboundPlayer;
@@ -205,6 +205,12 @@ class Softphone implements SipUaHelperListener {
             _inboundPlayer.earpieceOrSpeakersToggle();
           });
         }
+      } else if(path == _callWaitingAudioPath){
+        _inboundPlayer = Aps.AudioPlayer();
+        cache.loop(_callWaitingAudioPath).then((Aps.AudioPlayer playing) {
+          _inboundPlayer = playing;
+          _inboundPlayer.earpieceOrSpeakersToggle();
+        });
       }
     }
   }
@@ -237,6 +243,9 @@ class Softphone implements SipUaHelperListener {
     print("stopinbound");
     _ringingInbound = false;
     RingtonePlayer.stop();
+    if(_inboundPlayer != null ){
+      _inboundPlayer.stop();
+    }
   }
 
   setContext(BuildContext context) {
@@ -1432,7 +1441,9 @@ class Softphone implements SipUaHelperListener {
 
       if (activeCall == null || call.direction == 'OUTGOING') makeActiveCall(call);
 
-      if (call.direction == "INCOMING") {
+      if (call.direction == "INCOMING" && (isCellPhoneCallActive) && Platform.isAndroid) {
+        _playAudio(_callWaitingAudioPath, false);
+      } else if(call.direction == "INCOMING"){
         _playAudio(_inboundAudioPath, false);
       } else {
         _playAudio(_outboundAudioPath, false);
