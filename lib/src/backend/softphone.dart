@@ -1571,8 +1571,12 @@ class Softphone implements SipUaHelperListener {
         return NetworkImage(coworker.url);
       } else if(data != null && data.contacts.length > 0){
         Contact contact = data.contacts.last;
-        String url = contact.pictures.last['url'];
-        return NetworkImage(url);
+        if(contact.pictures.length > 0){
+           String url = contact.pictures.last['url'];
+           return NetworkImage(url);
+        } else {
+          return AssetImage("assets/background.png");
+        }
       } else {
         return AssetImage("assets/background.png");
       }
