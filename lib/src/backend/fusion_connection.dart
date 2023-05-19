@@ -708,7 +708,7 @@ print(responseBody);
     
     SharedPreferences preferences = await SharedPreferences.getInstance();
     await preferences.clear();
-    
+    _clearDataStores();
     this.logOut();
   }
 }
