@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
+import 'package:fusion_mobile_revamped/src/components/date_time_picker.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
@@ -622,6 +623,21 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       ));
   }
 
+  _openMessageScheuling(){
+    showModalBottomSheet(
+      useRootNavigator: true,
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true, 
+      builder: (BuildContext context) => PopupMenu(
+        label: "Schedule Message",
+        bottomChild: DateTimePicker(
+          height: 200,
+        ),
+      )
+    );
+  }
+
   _sendMessageInput() {
     return Container(
         decoration: BoxDecoration(color: particle),
@@ -636,24 +652,26 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         child: Row(children: [
           FusionDropdown(
               onChange: (String value) {
-                _attachImage(value);
+                if(value == "schedule"){
+                  _openMessageScheuling();
+                } else {
+                  _attachImage(value);
+                }
               },
               value: "",
               options: [
                 ["Camera", "camera"],
                 ["Record Videos", "recordvideo"],
                 ["Videos", "videos"],
-                ["Photos", "photos"]
+                ["Photos", "photos"],
+                ["Schedule Message", "schedule"]
               ],
-              label: "From which source?",
+              label: "Other Options",
               button: Container(
-                  height: 18,
+                  height: 28,
                   width: 22,
                   margin: EdgeInsets.only(right: 12, left: 4, top: 0),
-                  child: IconButton(
-                      padding: EdgeInsets.all(0),
-                      icon: Image.asset("assets/icons/camera.png",
-                          height: 18, width: 22)))),
+                  child: Icon(Icons.add, size: 28,color: smoke,))),
           Expanded(
               child: Stack(children: [
             if (_mediaToSend != null && _mediaToSend.length > 0)
