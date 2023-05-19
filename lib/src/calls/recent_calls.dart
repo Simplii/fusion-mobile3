@@ -6,6 +6,7 @@ import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
+import 'package:fusion_mobile_revamped/src/contacts/edit_contact_view.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
@@ -172,8 +173,10 @@ class _RecentCallsListState extends State<RecentCallsList> {
   }
 
   Future _refreshHistoryList() async {
-    _lookupHistory(() {
-      return;
+    setState(() {      
+      _lookupHistory(() {
+        return;
+      });
     });
   }
 
@@ -261,6 +264,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
       var ret = CallHistorySummaryView(_fusionConnection, _softphone, item,
           onExpand: () { expand(item); },
           expanded: item.id == expandedId,
+          refreshHistoryList: _refreshHistoryList,
           onSelect: widget.onSelect == null
               ? null
               : () {
@@ -368,10 +372,11 @@ class CallHistorySummaryView extends StatefulWidget {
   final bool expanded;
   Function() onSelect;
   Function() onExpand;
+  Function refreshHistoryList;
 
   CallHistorySummaryView(
       this._fusionConnection, this._softphone, this._historyItem,
-      {Key key, this.onSelect, this.onExpand, this.expanded})
+      {Key key, this.onSelect, this.onExpand, this.expanded,this.refreshHistoryList})
       : super(key: key);
 
   @override
@@ -385,6 +390,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
 
   CallHistory get _historyItem => widget._historyItem;
   bool get _expanded => widget.expanded;
+  Function get _refreshHistoryList => widget.refreshHistoryList;
 
   initState() {
     super.initState();
@@ -496,8 +502,18 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
 
   _openProfile() {
     Contact contact = _historyItem.contact;
-    if (contact == null && _historyItem.coworker != null)
+    Contact newContact = null;
+    if (contact == null && _historyItem.coworker != null){
       contact = _historyItem.coworker.toContact();
+    }
+    else if (contact == null && _historyItem.coworker == null && _historyItem.direction == "inbound"){
+      newContact = Contact.fake(_historyItem.fromDid);
+    } else if(contact == null && _historyItem.coworker == null && _historyItem.direction == "outbound"){
+      newContact = Contact.fake(_historyItem.toDid);
+    }
+
+    print("MyDebugMessage ${contact} ${_historyItem.from} ${_historyItem.to} ${_historyItem.fromDid}" + 
+            "${_historyItem.toDid} ${_historyItem.direction}");
 
     if (contact != null)
       showModalBottomSheet(
@@ -506,12 +522,22 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           isScrollControlled: true,
           builder: (context) => ContactProfileView(
               _fusionConnection, _softphone, contact));
+    if(newContact != null){
+      showModalBottomSheet(
+        context: context,
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height - 60),
+        isScrollControlled: true,
+        builder: (context) => EditContactView(
+            _fusionConnection, newContact, () => Navigator.pop(context, true),(){
+              _refreshHistoryList(); 
+            }));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     List<Widget> children = [_topPart()];
-
+    bool haveProfile = _historyItem.contact != null || _historyItem.coworker != null ? true : false;
     if (_expanded) {
       children.add(Container(
           child: Row(children: [horizontalLine(0)]),
@@ -520,7 +546,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           height: 28,
           margin: EdgeInsets.only(top: 12, bottom: 12),
           child: Row(children: [
-            actionButton("Profile", "user_dark", 18, 18, _openProfile),
+            actionButton(haveProfile ? "Profile" : "Add Contact", "user_dark", 18, 18, _openProfile),
             actionButton("Call", "phone_dark", 18, 18, _makeCall),
             actionButton("Message", "message_dark", 18, 18, _openMessage)
             // _actionButton("Video", "video_dark", 18, 18, () {}),
