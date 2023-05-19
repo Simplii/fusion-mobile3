@@ -386,7 +386,7 @@ class _EditContactViewState extends State<EditContactView> {
           padding: EdgeInsets.only(top: 4, bottom: 16),
           child: Stack(children: [
             Center(
-                child: Text("Edit Contact",
+                child: Text(_onCreate != null ? "Add Contact" : "Edit Contact",
                     style: TextStyle(
                         color: coal,
                         fontSize: 16,
@@ -457,10 +457,10 @@ class _EditContactViewState extends State<EditContactView> {
 
     if(pickedImage != null){
       _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, _edited.id, (Contact updatedContact){
-        print("MyDebugMessage image uploaded ${updatedContact}");
         _fusionConnection.contacts.save(updatedContact, (){
           setState(() {
             _saving = false;
+            _edited = null;
           });
         });
       });
@@ -511,6 +511,7 @@ class _EditContactViewState extends State<EditContactView> {
           setState(() {
             pickedImage = image;
             _edited = contact;
+            Navigator.of(this.context).pop();
           });
         });
       });
@@ -520,6 +521,7 @@ class _EditContactViewState extends State<EditContactView> {
         setState(() {
           pickedImage = image;
           _edited = contact;
+          Navigator.of(this.context).pop();
         });
       });
     }

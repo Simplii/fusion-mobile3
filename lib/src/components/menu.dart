@@ -542,6 +542,37 @@ class _MenuState extends State<Menu> {
     }
   }
 
+  Future<void> _clearCache() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Clear Cache'),
+          content: Text('This action will clear all app data in your phone and log you out.'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Continue', style: TextStyle(color: crimsonDark),),
+              onPressed: () async {
+                _fusionConnection.clearCache().then((value){
+                  if(Platform.isIOS){
+                    Navigator.of(context).pop();
+                  }
+                });
+              },
+            ),
+            TextButton(
+              child: const Text('Cancel', style: TextStyle(color: Colors.black),),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   _body() {
     List<Widget> response = [
       _row("phone_outgoing", "Manage Outbound DID", "", () {
@@ -554,6 +585,9 @@ class _MenuState extends State<Menu> {
       
       _row("", "Edit Profile Picture", "", _editProfilePic, 
         Icon(Icons.edit, size: 22, color: smoke.withOpacity(0.45),)),
+
+      _row("", "Clear Cache", "", _clearCache, 
+        Icon(Icons.cached, size: 22, color: smoke.withOpacity(0.45),)),
 
       // _row("gear_light", "Settings", "Coming soon", () {}),
       _line(),
