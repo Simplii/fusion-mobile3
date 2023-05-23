@@ -555,8 +555,8 @@ class ContactsStore extends FusionStore<Contact> {
         "/contacts/${edited.id}",
         edited.serverPayloadV2(),
         callback: (Map<String,dynamic> updatedContact){
-          updateUi();
           storeRecord(Contact.fromV2(updatedContact));
+          updateUi();
         }
       );
     } else {
@@ -564,6 +564,7 @@ class ContactsStore extends FusionStore<Contact> {
         {'contact': edited.serverPayload()},
         callback: (List<dynamic> datas) {
           storeRecord(edited);
+          updateUi();
         });
     }
   }
@@ -589,10 +590,20 @@ class ContactsStore extends FusionStore<Contact> {
       });
   }
 
-    void uploadProfilePic (
+  Future<Contact> getContact(String id) async {
+    Contact contact; 
+    await fusionConnection.apiV2Call("get", "/contacts/$id",{}, 
+      callback:(Map<String,dynamic> data){
+        contact = Contact.fromV2(data);
+      }
+    );
+    return contact;
+  }
+
+  void uploadProfilePic (
     String type, 
     XFile file, 
-    id,
+    String id,
     Function(Contact) updateUi) async {
     File rotatedImage =
           await FlutterExifRotation.rotateImage(path: file.path);
@@ -608,17 +619,14 @@ class ContactsStore extends FusionStore<Contact> {
             contentType: MediaType.parse(lookupMimeType(file.path))
           )
         ], 
-        callback: (Map<String,dynamic> data){
+        callback: (Map<String,dynamic> data) async {
           Contact contactToUpdate = null;
           if(type == "profile"){
             Coworker coworker = fusionConnection.coworkers.lookupCoworker(fusionConnection.getUid());
             coworker.url = fusionConnection.mediaServer + data['path'];
             fusionConnection.coworkers.storeRecord(coworker);
           } else {
-            List<Contact> contacts = getRecords();
-            contactToUpdate = contacts.where((Contact contact) => contact.id == id).isNotEmpty 
-              ? contacts.where((Contact contact) => contact.id == id).first
-              : null;
+            contactToUpdate = await getContact(id);
             if(contactToUpdate != null){
               contactToUpdate.pictures.add({"url": data['url'],'fromSourceName': data['from'] });
               storeRecord(contactToUpdate);

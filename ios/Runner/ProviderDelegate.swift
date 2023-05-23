@@ -492,6 +492,25 @@ print("audiointerruption")
 //        mCore?.audioRouteChanged()
     }
     
+    func clearCache(){
+        let cacheURL =  FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let fileManager = FileManager.default
+        do {
+            let directoryContents = try FileManager.default.contentsOfDirectory( at: cacheURL, includingPropertiesForKeys: nil, options: [])
+            for file in directoryContents {
+                do {
+                    try fileManager.removeItem(at: file)
+                }
+                catch let error as NSError {
+                    print("Ooops! Something went wrong: \(error)")
+                }
+
+            }
+        } catch let error as NSError {
+            print(error.localizedDescription)
+        }
+    }
+    
     public func sendDevices() {
         print("sending devices from swift")
         var devices: [[String]] = []
@@ -977,6 +996,8 @@ print("audiointerruption")
                     let transaction = CXTransaction(action: action)
                     self.requestTransaction(transaction)
                 }
+            } else if(call.method == "clearCache") {
+                clearCache()
             }
         })
         print("providerpush set delegate callkit")

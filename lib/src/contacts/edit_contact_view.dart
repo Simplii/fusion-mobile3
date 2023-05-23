@@ -74,6 +74,7 @@ class _EditContactViewState extends State<EditContactView> {
       {EdgeInsets margin}) {
     return _renderFieldWrapper(
         TextField(
+          textCapitalization: TextCapitalization.sentences,
           onChanged: (String newValue) {
             _startEditingIfNotStared();
             onEdit(newValue);
@@ -459,6 +460,7 @@ class _EditContactViewState extends State<EditContactView> {
       _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, _edited.id, (Contact updatedContact){
         _fusionConnection.contacts.save(updatedContact, (){
           setState(() {
+            _contact.copy(updatedContact);
             _saving = false;
             _edited = null;
           });
@@ -468,6 +470,7 @@ class _EditContactViewState extends State<EditContactView> {
       _fusionConnection.contacts.save(_edited, (){
         setState(() {
             _saving = false;
+            _edited.name = _edited.firstName + " " + _edited.lastName;
           });
       });
       _contact.copy(_edited);
