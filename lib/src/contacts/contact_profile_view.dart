@@ -219,7 +219,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             alignment: Alignment.centerRight,
             child: FusionDropdown(
                 onChange: _settingsAction,
-                label: _contact.firstName + " " + _contact.lastName,
+                label: _contact.name,
                 options: settingOptions,
                 button: Container(
                     decoration: BoxDecoration(color: Colors.transparent),
@@ -232,7 +232,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
           margin: EdgeInsets.only(top: 8, left: 24, right: 24),
           child: Align(
               alignment: Alignment.center,
-              child: Text(_contact.firstName + " " + _contact.lastName,
+              child: Text(_contact.name,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: coal,

@@ -455,9 +455,9 @@ class _EditContactViewState extends State<EditContactView> {
     setState(() {
       _saving = true;
     });
-
+    _edited.name = _edited.firstName + " " + _edited.lastName;
     if(pickedImage != null){
-      _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, _edited.id, (Contact updatedContact){
+      _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, _edited , (Contact updatedContact){
         _fusionConnection.contacts.save(updatedContact, (){
           setState(() {
             _contact.copy(updatedContact);
@@ -468,10 +468,7 @@ class _EditContactViewState extends State<EditContactView> {
       });
     } else {
       _fusionConnection.contacts.save(_edited, (){
-        setState(() {
-            _saving = false;
-            _edited.name = _edited.firstName + " " + _edited.lastName;
-          });
+
       });
       _contact.copy(_edited);
       widget._goBack();
@@ -484,7 +481,7 @@ class _EditContactViewState extends State<EditContactView> {
     });
     if(pickedImage != null){
       _fusionConnection.contacts.createContact(_edited,(Contact newContact){
-        _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, newContact.id, (Contact updatedContact){
+        _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, newContact, (Contact updatedContact){
           _fusionConnection.contacts.save(updatedContact, (){
             setState(() {
               _saving = false;
