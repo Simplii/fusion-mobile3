@@ -590,26 +590,16 @@ class ContactsStore extends FusionStore<Contact> {
       });
   }
 
-  Future<Contact> getContact(String id) async {
-    Contact contact; 
-    await fusionConnection.apiV2Call("get", "/contacts/$id",{}, 
-      callback:(Map<String,dynamic> data){
-        contact = Contact.fromV2(data);
-      }
-    );
-    return contact;
-  }
-
   void uploadProfilePic (
     String type, 
     XFile file, 
-    String id,
+    Contact contact,
     Function(Contact) updateUi) async {
     File rotatedImage =
           await FlutterExifRotation.rotateImage(path: file.path);
       fusionConnection.apiV2Multipart(
         "post", 
-        "/client/upload_avatar/$type/$id", 
+        "/client/upload_avatar/$type/${contact.id}", 
         {},
         [
           http.MultipartFile.fromBytes(
@@ -620,19 +610,15 @@ class ContactsStore extends FusionStore<Contact> {
           )
         ], 
         callback: (Map<String,dynamic> data) async {
-          Contact contactToUpdate = null;
           if(type == "profile"){
             Coworker coworker = fusionConnection.coworkers.lookupCoworker(fusionConnection.getUid());
             coworker.url = fusionConnection.mediaServer + data['path'];
             fusionConnection.coworkers.storeRecord(coworker);
           } else {
-            contactToUpdate = await getContact(id);
-            if(contactToUpdate != null){
-              contactToUpdate.pictures.add({"url": data['url'],'fromSourceName': data['from'] });
-              storeRecord(contactToUpdate);
-            }
+              contact.pictures.add({"url": data['url'],'fromSourceName': data['from'] });
+              storeRecord(contact);
           }
-          updateUi( contactToUpdate != null ? contactToUpdate : null );
+          updateUi(contact);
         }
       );
   }
