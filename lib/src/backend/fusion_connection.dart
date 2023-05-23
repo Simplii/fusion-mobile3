@@ -8,6 +8,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
@@ -416,7 +417,6 @@ class FusionConnection {
       print(url);
       print(urlParams);
       print(data);
-      print("MyDebugMessage uri response ${uriResponse}");
       print(uriResponse.body);
       if (uriResponse.body == '{"error":"invalid_login"}') {
         final prefs = await SharedPreferences.getInstance();
@@ -693,13 +693,18 @@ print(responseBody);
     }
   }
   Future<void> clearCache() async {
-    final cacheDir = await getTemporaryDirectory();
-    if (cacheDir.existsSync()) {
-      cacheDir.deleteSync(recursive: true);
-    }
-    final appDir = await getApplicationSupportDirectory();
-    if (appDir.existsSync()) {
-      appDir.deleteSync(recursive: true);
+    if(Platform.isIOS){
+      MethodChannel ios = MethodChannel('net.fusioncomm.ios/callkit');
+      ios.invokeMethod("clearCache");
+    } else {
+      final cacheDir = await getTemporaryDirectory();
+      if (cacheDir.existsSync()) {
+        cacheDir.deleteSync(recursive: true);
+      }
+      final appDir = await getApplicationSupportDirectory();
+      if (appDir.existsSync()) {
+        appDir.deleteSync(recursive: true);
+      }
     }
 
     db.delete('contacts').then((value) => print("MyDebugMessage contacts rows effected ${value}"));
