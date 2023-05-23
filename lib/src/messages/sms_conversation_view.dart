@@ -625,16 +625,18 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       ));
   }
 
-  _openMessageScheuling(){
+  _openMessageScheduling(){
     showModalBottomSheet(
       useRootNavigator: true, //to replace previous route
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true, 
       builder: (BuildContext context) => PopupMenu(
+        bottomChildSymmetricPadding: 0,
         label: "Schedule Message",
         bottomChild: DateTimePicker(
-          height: 210,
+          iosStyle: true,
+          height: 240,
           onComplete: (DateTime selectedDateTime){
             setState(() {
               if(selectedDateTime != null) secheduleIsSet = selectedDateTime;
@@ -698,7 +700,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               FusionDropdown(
                 onChange: (String value) {
                   if(value == "schedule"){
-                    _openMessageScheuling();
+                    _openMessageScheduling();
                   } else {
                     _attachImage(value);
                   }
@@ -865,8 +867,14 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               _conversation, 
               _selectedGroupId, 
               null,
-              _setOnMessagePosted, 
-              ()=> null
+              (){
+                setState(() {
+                  _setOnMessagePosted();
+                  secheduleIsSet = null;
+                });
+              }, 
+              ()=> null,
+              secheduleIsSet ?? secheduleIsSet 
             );
           _messageInputController.text = "";
         }
@@ -879,7 +887,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             _selectedGroupId,
             file,
             _setOnMessagePosted,
-            _largeMMS);
+            _largeMMS,
+            secheduleIsSet ?? secheduleIsSet );
         }
         _mediaToSend = [];
       }
@@ -1281,7 +1290,8 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         _selectedGroupId, 
         null,
         _setOnMessagePosted, 
-        ()=> null
+        ()=> null,
+        null
       );
     }
 
@@ -1321,10 +1331,11 @@ class _SMSMessageViewState extends State<SMSMessageView> {
   Widget build(BuildContext context) {
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(_message.unixtime * 1000);
-
-    List<Widget> children = [];
-
     
+    List<Widget> children = [];
+    bool scheduledMessage = _message.scheduledAt != null 
+      ? DateTime.parse(_message.scheduledAt).isAfter(DateTime.now()) 
+      : false;
 
     if (_message.from != _conversation.myNumber) {
       List<Contact> matchedContact;
@@ -1406,7 +1417,13 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                 padding: EdgeInsets.only(left: 5),
                 constraints: BoxConstraints(),
                 onPressed: ()=>_openFailedMessageDialog(_message), 
-                icon: Icon(Icons.error_outline,color: Colors.red))
+                icon: Icon(Icons.error_outline,color: Colors.red)),
+            if(scheduledMessage)
+              IconButton(
+                padding: EdgeInsets.only(left: 5),
+                constraints: BoxConstraints(),
+                onPressed: ()=>print("here"), 
+                icon: Icon(Icons.schedule,color: smoke)),
           ],
         )
       ])));

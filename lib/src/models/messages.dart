@@ -36,7 +36,7 @@ class SMSMessage extends FusionModel {
   String messageStatus;
   String mime;
   bool read;
-  CarbonDate scheduledAt;
+  String scheduledAt;
   int smsWebhookId;
   CarbonDate time;
   String to;
@@ -59,7 +59,7 @@ class SMSMessage extends FusionModel {
     this.read = map['read'] == "1";
     this.scheduledAt = ((map.containsKey('scheduled_at') &&
             map['scheduled_at'].runtimeType == Map)
-        ? CarbonDate(map['scheduled_at'])
+        ? CarbonDate(map['scheduled_at']).date
         : null);
     this.smsWebhookId =
         map['sms_webhook_id'].runtimeType == int ? map['sms_webhook_id'] : 0;
@@ -83,9 +83,8 @@ class SMSMessage extends FusionModel {
     this.messageStatus = map['message_status'] ?? map['status'];
     this.mime = map['mime'];
     this.read = map['read'] == 1;
-    this.scheduledAt = ((map.containsKey('scheduledAt') &&
-            map['scheduledAt'].runtimeType == Map)
-        ? CarbonDate(map['scheduledAt'])
+    this.scheduledAt = ((map.containsKey('scheduledAt'))
+        ? map['scheduledAt']
         : null);
     this.smsWebhookId =
         map['smsWebhookId'].runtimeType == int ? map['smsWebhookId'] : 0;
@@ -111,7 +110,7 @@ class SMSMessage extends FusionModel {
       'messageStatus': messageStatus,
       'mime': mime,
       'read': read,
-      'scheduledAt': scheduledAt != null ? scheduledAt.serialize() : null,
+      'scheduledAt': scheduledAt,
       'smsWebhookId': smsWebhookId,
       'time': time.serialize(),
       'to': to,
@@ -135,7 +134,7 @@ class SMSMessage extends FusionModel {
     this.mime = obj['mime'];
     this.read = obj['read'];
     if (obj['scheduledAt'] != null)
-      this.scheduledAt = CarbonDate.unserialize(obj['scheduledAt']);
+      this.scheduledAt = obj['scheduledAt'];
     this.smsWebhookId = obj['smsWebhookId'];
     if (obj['time'] != null) this.time = CarbonDate.unserialize(obj['time']);
     this.to = obj['to'];
@@ -378,7 +377,8 @@ print(callpopInfo);
     String departmentId,
     XFile mediaFile,
     Function callback,
-    Function largeMMSCallback) async {
+    Function largeMMSCallback,
+    DateTime schedule) async {
     if(conversation.conversationId != null){
       if(mediaFile != null){
         this.sendMediaMessage(
@@ -393,7 +393,7 @@ print(callpopInfo);
           "post", 
           "/messaging/group/${departmentId}/conversations/${conversation.conversationId}/messages", {
             'myIdentifier': conversation.myNumber,
-            'schedule': null,
+            'schedule': schedule != null ? schedule.toUtc().toString() : null,
             'isMms': false,
             'text': text,
             'isGroup': conversation.isGroup
@@ -431,7 +431,7 @@ print(callpopInfo);
                 "post", 
                 "/messaging/group/${departmentId}/conversations/${data['groupId']}/messages", {
                   'myIdentifier': data['myNumber'],
-                  'schedule': null,
+                  'schedule': schedule.toUtc().toString(),
                   'isMms': false,
                   'text': text,
                   'isGroup': data['isGroup']
