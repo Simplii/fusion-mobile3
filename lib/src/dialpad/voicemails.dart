@@ -117,7 +117,7 @@ class _VoicemailsState extends State<Voicemails> {
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
           builder: (context) => ContactProfileView(
-              _fusionConnection, _softphone, vm.contacts[0]));
+              _fusionConnection, _softphone, vm.contacts[0],null));
   }
 
   _makeCall(Voicemail vm) {

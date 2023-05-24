@@ -325,7 +325,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            ContactProfileView(_fusionConnection, _softphone, contact)
+            ContactProfileView(_fusionConnection, _softphone, contact,null)
     ).whenComplete((){
       setState(() {
         

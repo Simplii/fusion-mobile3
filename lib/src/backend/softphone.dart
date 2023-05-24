@@ -1567,7 +1567,7 @@ class Softphone implements SipUaHelperListener {
           coworkers.where((coworker) => coworker.extension == ext).isNotEmpty 
             ? coworkers.where((coworker) => coworker.extension == ext).first
             : null;
-      if(coworker != null){
+      if(coworker != null && !coworker.url.contains("nameAvatar")){
         return NetworkImage(coworker.url);
       } else if(data != null && data.contacts.length > 0){
         Contact contact = data.contacts.last;

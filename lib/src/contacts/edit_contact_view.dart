@@ -74,6 +74,7 @@ class _EditContactViewState extends State<EditContactView> {
       {EdgeInsets margin}) {
     return _renderFieldWrapper(
         TextField(
+          textCapitalization: TextCapitalization.sentences,
           onChanged: (String newValue) {
             _startEditingIfNotStared();
             onEdit(newValue);
@@ -454,34 +455,31 @@ class _EditContactViewState extends State<EditContactView> {
     setState(() {
       _saving = true;
     });
-
+    _edited.name = _edited.firstName + " " + _edited.lastName;
     if(pickedImage != null){
-      _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, _edited.id, (Contact updatedContact){
+      _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, _edited , (Contact updatedContact){
         _fusionConnection.contacts.save(updatedContact, (){
           setState(() {
+            _contact.copy(updatedContact);
             _saving = false;
             _edited = null;
           });
         });
       });
     } else {
-      _fusionConnection.contacts.save(_edited, (){
-        setState(() {
-            _saving = false;
-          });
-      });
+      _fusionConnection.contacts.save(_edited, ()=>{});
       _contact.copy(_edited);
       widget._goBack();
     }
   }
 
-  _createContact() {  // create contact from messages
+  _createContact() { 
     setState(() {
       _saving = true;
     });
     if(pickedImage != null){
       _fusionConnection.contacts.createContact(_edited,(Contact newContact){
-        _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, newContact.id, (Contact updatedContact){
+        _fusionConnection.contacts.uploadProfilePic("contact", pickedImage, newContact, (Contact updatedContact){
           _fusionConnection.contacts.save(updatedContact, (){
             setState(() {
               _saving = false;
