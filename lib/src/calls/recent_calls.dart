@@ -512,8 +512,6 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
       newContact = Contact.fake(_historyItem.toDid);
     }
 
-    print("MyDebugMessage ${contact} ${_historyItem.from} ${_historyItem.to} ${_historyItem.fromDid}" + 
-            "${_historyItem.toDid} ${_historyItem.direction}");
 
     if (contact != null)
       showModalBottomSheet(
@@ -521,7 +519,12 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
           builder: (context) => ContactProfileView(
-              _fusionConnection, _softphone, contact));
+                _fusionConnection, _softphone, contact, (){
+                  setState(() {
+                    _refreshHistoryList();
+                  });
+                }
+              ));
     if(newContact != null){
       showModalBottomSheet(
         context: context,
