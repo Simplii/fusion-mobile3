@@ -467,15 +467,13 @@ class _EditContactViewState extends State<EditContactView> {
         });
       });
     } else {
-      _fusionConnection.contacts.save(_edited, (){
-
-      });
+      _fusionConnection.contacts.save(_edited, ()=>{});
       _contact.copy(_edited);
       widget._goBack();
     }
   }
 
-  _createContact() {  // create contact from messages
+  _createContact() { 
     setState(() {
       _saving = true;
     });

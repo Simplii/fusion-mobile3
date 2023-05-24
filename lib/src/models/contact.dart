@@ -609,7 +609,7 @@ class ContactsStore extends FusionStore<Contact> {
             contentType: MediaType.parse(lookupMimeType(file.path))
           )
         ], 
-        callback: (Map<String,dynamic> data) async {
+        callback: (Map<String,dynamic> data) {
           if(type == "profile"){
             Coworker coworker = fusionConnection.coworkers.lookupCoworker(fusionConnection.getUid());
             coworker.url = fusionConnection.mediaServer + data['path'];
