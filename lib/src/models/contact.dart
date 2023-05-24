@@ -555,8 +555,8 @@ class ContactsStore extends FusionStore<Contact> {
         "/contacts/${edited.id}",
         edited.serverPayloadV2(),
         callback: (Map<String,dynamic> updatedContact){
-          updateUi();
           storeRecord(Contact.fromV2(updatedContact));
+          updateUi();
         }
       );
     } else {
@@ -564,6 +564,7 @@ class ContactsStore extends FusionStore<Contact> {
         {'contact': edited.serverPayload()},
         callback: (List<dynamic> datas) {
           storeRecord(edited);
+          updateUi();
         });
     }
   }
@@ -589,16 +590,16 @@ class ContactsStore extends FusionStore<Contact> {
       });
   }
 
-    void uploadProfilePic (
+  void uploadProfilePic (
     String type, 
     XFile file, 
-    id,
+    Contact contact,
     Function(Contact) updateUi) async {
     File rotatedImage =
           await FlutterExifRotation.rotateImage(path: file.path);
       fusionConnection.apiV2Multipart(
         "post", 
-        "/client/upload_avatar/$type/$id", 
+        "/client/upload_avatar/$type/${contact.id}", 
         {},
         [
           http.MultipartFile.fromBytes(
@@ -608,23 +609,16 @@ class ContactsStore extends FusionStore<Contact> {
             contentType: MediaType.parse(lookupMimeType(file.path))
           )
         ], 
-        callback: (Map<String,dynamic> data){
-          Contact contactToUpdate = null;
+        callback: (Map<String,dynamic> data) {
           if(type == "profile"){
             Coworker coworker = fusionConnection.coworkers.lookupCoworker(fusionConnection.getUid());
             coworker.url = fusionConnection.mediaServer + data['path'];
             fusionConnection.coworkers.storeRecord(coworker);
           } else {
-            List<Contact> contacts = getRecords();
-            contactToUpdate = contacts.where((Contact contact) => contact.id == id).isNotEmpty 
-              ? contacts.where((Contact contact) => contact.id == id).first
-              : null;
-            if(contactToUpdate != null){
-              contactToUpdate.pictures.add({"url": data['url'],'fromSourceName': data['from'] });
-              storeRecord(contactToUpdate);
-            }
+              contact.pictures.add({"url": data['url'],'fromSourceName': data['from'] });
+              storeRecord(contact);
           }
-          updateUi( contactToUpdate != null ? contactToUpdate : null );
+          updateUi(contact);
         }
       );
   }

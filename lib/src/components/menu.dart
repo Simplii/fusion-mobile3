@@ -515,10 +515,9 @@ class _MenuState extends State<Menu> {
       ),
     );
   }
-  void _uploadPic (XFile image, id){
-    _fusionConnection.contacts.uploadProfilePic("profile", image, id, (Contact contact){
+  void _uploadPic (XFile image, Contact user){
+    _fusionConnection.contacts.uploadProfilePic("profile", image, user, (Contact contact){
       setState(() {
-        
       });
     });
   }
@@ -531,13 +530,15 @@ class _MenuState extends State<Menu> {
 
         setState(() {
           if(image == null) return;
-          _uploadPic(image, user.id);
+          _uploadPic(image, user);
+          Navigator.of(context).pop();
         });
       });
     } else {
       _picker.pickImage(source: ImageSource.gallery).then((XFile image) {
         if(image == null) return;
-        _uploadPic(image, user.id);
+        _uploadPic(image, user);
+        Navigator.of(context).pop();
       });
     }
   }

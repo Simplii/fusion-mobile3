@@ -324,7 +324,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                       builder: (context) => ContactProfileView(
                           _fusionConnection,
                           _softphone,
-                          _conversation.contacts[0]));
+                          _conversation.contacts[0],null));
                 });
               } else if (chosen == "deleteconversation") {
                 if(_deleteConvo != null){

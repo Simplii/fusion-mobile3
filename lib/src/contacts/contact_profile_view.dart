@@ -24,12 +24,16 @@ import 'edit_contact_view.dart';
 
 class ContactProfileView extends StatefulWidget {
   final FusionConnection _fusionConnection;
-  final Contact _contact;
+  Contact _contact;
   final Softphone _softphone;
+  final Function refreshUi;
 
-  ContactProfileView(this._fusionConnection, this._softphone, this._contact,
-      {Key key})
-      : super(key: key);
+  ContactProfileView(
+    this._fusionConnection, 
+    this._softphone, 
+    this._contact, 
+    this.refreshUi, 
+    {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ContactProfileViewState();
@@ -48,6 +52,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
   List<TimelineItem> _timelineItems = [];
   bool _editing = false;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
+  Function get _refreshUi => widget.refreshUi;
 
   _lookupTimeline() {
     if (lookupState == 1) return;
@@ -560,6 +565,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
       bodyContainer = EditContactView(_fusionConnection, _contact, () {
         setState(() {
           this._editing = false;
+          if(_refreshUi != null) _refreshUi();
         });
       },null);
     } else {

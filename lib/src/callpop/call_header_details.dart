@@ -43,7 +43,8 @@ class _CallHeaderDetailsState extends State<CallHeaderDetails> {
                           height: 1.4,
                           color: translucentWhite(0.67),
                           fontWeight: FontWeight.w600)),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Wrap(
+                  alignment: WrapAlignment.center, children: [
                   Text(widget.callerName,
                       style: TextStyle(
                           fontSize: 32,
