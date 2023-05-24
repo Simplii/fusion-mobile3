@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -72,20 +73,32 @@ class _DateTimePickerState extends State<DateTimePicker> {
                   ),
                 ),
               ),
-              TextButton(
-                style: TextButton.styleFrom(padding: EdgeInsets.all(10)),
-                onPressed: (){
-                  if(iosDateTime != null){
-                    _onComplete(iosDateTime);
-                    Navigator.of(context).pop();
-                  }
-                }, 
-                child: Text("Schedule".toUpperCase(),style: TextStyle(
-                    fontSize: 20,
-                    color: iosDateTime != null
-                      ? Colors.white
-                      : null 
-                  ),)
+              Container(
+                margin: EdgeInsets.symmetric( horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: lightDivider, width: 1.0), 
+                    top: BorderSide(color: lightDivider, width: 1.0)
+                  )
+                ),
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.all(10),
+                  ),
+                  onPressed: (){
+                    if(iosDateTime != null){
+                      _onComplete(iosDateTime);
+                      Navigator.of(context).pop();
+                    }
+                  }, 
+                  child: Text("Schedule",style: TextStyle(
+                      fontSize: 20,
+                      color: iosDateTime != null
+                        ? Colors.white
+                        : null,
+                      fontWeight: FontWeight.w700 
+                    ),)
+                ),
               )
             ]
           : 
@@ -125,20 +138,30 @@ class _DateTimePickerState extends State<DateTimePicker> {
                   ),
                 )
               ),
-              TextButton(
-                style: TextButton.styleFrom(padding: EdgeInsets.all(20)),
-                onPressed: (){
-                  if(selectedDate !=null && selectedTime != null){
-                    _onComplete(DateTime(selectedDate.year,selectedDate.month,selectedDate.day, selectedTime.hour,selectedTime.minute));
-                    Navigator.of(context).pop();
-                  }
-                }, 
-                child: Text("Schedule".toUpperCase(),style: TextStyle(
-                    fontSize: 24,
-                    color: selectedTime != null && selectedDate != null
-                      ? Colors.white
-                      : null 
-                  ),)
+              Container(
+                margin: EdgeInsets.symmetric( horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: lightDivider, width: 1.0), 
+                    top: BorderSide(color: lightDivider, width: 1.0)
+                  )
+                ),
+                child: TextButton(
+                  style: TextButton.styleFrom(padding: EdgeInsets.all(10)),
+                  onPressed: (){
+                    if(selectedDate !=null && selectedTime != null){
+                      _onComplete(DateTime(selectedDate.year,selectedDate.month,selectedDate.day, selectedTime.hour,selectedTime.minute));
+                      Navigator.of(context).pop();
+                    }
+                  }, 
+                  child: Text("Schedule",style: TextStyle(
+                      fontSize: 20,
+                      color: selectedTime != null && selectedDate != null
+                        ? Colors.white
+                        : null,
+                      fontWeight: FontWeight.w700
+                    ),)
+                ),
               )
             ],
       ),
