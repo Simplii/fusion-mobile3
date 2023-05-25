@@ -92,11 +92,11 @@ class _DateTimePickerState extends State<DateTimePicker> {
                     }
                   }, 
                   child: Text("Schedule",style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       color: iosDateTime != null
                         ? Colors.white
                         : null,
-                      fontWeight: FontWeight.w700 
+                      fontWeight: FontWeight.w600 
                     ),)
                 ),
               )
@@ -155,11 +155,11 @@ class _DateTimePickerState extends State<DateTimePicker> {
                     }
                   }, 
                   child: Text("Schedule",style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 17,
                       color: selectedTime != null && selectedDate != null
                         ? Colors.white
                         : null,
-                      fontWeight: FontWeight.w700
+                      fontWeight: FontWeight.w600
                     ),)
                 ),
               )
