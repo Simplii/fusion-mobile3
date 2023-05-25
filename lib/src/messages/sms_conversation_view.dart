@@ -854,7 +854,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               _selectedGroupId, 
               null, 
               _setOnMessagePosted, 
-              ()=>null);
+              ()=>null,
+              secheduleIsSet ?? secheduleIsSet);
           } else {
             toast("unable to connect to the internet".toUpperCase());
           }
@@ -1076,9 +1077,10 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     for (SMSMessage msg in _messages) {
       DateTime thisTime =
           DateTime.fromMillisecondsSinceEpoch(msg.unixtime * 1000);
-
+      
       if (lastDate == null ||
           thisTime.difference(lastDate).inHours.abs() > 24) {
+            print("MyDebugMessage ${thisTime.difference(lastDate).inHours} ${msg.message}");
         lastDate = thisTime;
 
         if (toAdd != null) {
@@ -1327,14 +1329,70 @@ class _SMSMessageViewState extends State<SMSMessageView> {
     );
   }
 
+  _openScheduledMessage(SMSMessage message ){
+    DateFormat dateFormatter = DateFormat('MMM d,');
+    DateTime date = DateTime.parse(message.scheduledAt).toLocal();
+    return showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) => PopupMenu(
+        label: "Scheduled Message",
+        bottomChild: 
+        Container(
+          height: 150,
+          padding: EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text("Message will be sent on " + 
+                dateFormatter.add_jm().format(date).toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  height: 1.5,
+                  fontSize: 18,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: lightDivider, width: 1),
+                    top: BorderSide(color: lightDivider, width: 1),
+                  )
+                ),
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                  ),
+                  onPressed: (){
+                    setState(() {  
+                      _messages.removeWhere((msg) => msg.id == message.id);
+                      _fusionConnection.messages.deleteMessage(this._message.id,_selectedGroupId);
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Cancel Message", style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                  ),),
+                ),
+              ),
+            ],
+          ),
+        ),
+      )
+    ); 
+  }
   @override
   Widget build(BuildContext context) {
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(_message.unixtime * 1000);
-    
+    print("MyDebugMessage ${_message.message} ${date}");    
     List<Widget> children = [];
     bool scheduledMessage = _message.scheduledAt != null 
-      ? DateTime.parse(_message.scheduledAt).isAfter(DateTime.now()) 
+      ? DateTime.parse(_message.scheduledAt).toLocal().isAfter(DateTime.now()) 
       : false;
 
     if (_message.from != _conversation.myNumber) {
@@ -1422,7 +1480,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
               IconButton(
                 padding: EdgeInsets.only(left: 5),
                 constraints: BoxConstraints(),
-                onPressed: ()=>print("here"), 
+                onPressed: ()=>_openScheduledMessage(_message), 
                 icon: Icon(Icons.schedule,color: smoke)),
           ],
         )

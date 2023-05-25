@@ -71,6 +71,9 @@ class SMSMessage extends FusionModel {
   }
 
   SMSMessage.fromV2(Map<String, dynamic> map) {
+    String time = map.containsKey('scheduledAt') && map['scheduledAt'] != null 
+      ? map['scheduledAt'] 
+      : map['time'];
     this.convertedMms = map.containsKey('converted_mms') ? true : false;
     this.domain = map['user'].runtimeType == String ? map['user']
         .toString()
@@ -91,7 +94,7 @@ class SMSMessage extends FusionModel {
     this.time = CarbonDate.fromDate(map['time']);
     this.to = map['to'];
     this.type = "sms";
-    this.unixtime = DateTime.parse(map['time']).millisecondsSinceEpoch ~/ 1000;
+    this.unixtime = DateTime.parse(time).toLocal().millisecondsSinceEpoch ~/ 1000;
     this.user = map['user'].runtimeType == String ? map['user']
         .toString()
         .replaceFirst(RegExp("@.*"), "") : null;
@@ -149,7 +152,8 @@ class SMSMessage extends FusionModel {
     String text,
     String to,
     String user,
-    String messageId
+    String messageId,
+    String schedule
   }) {
     String date = DateTime.now().toString();
     this.convertedMms = false;
@@ -162,7 +166,7 @@ class SMSMessage extends FusionModel {
     this.messageStatus = 'offline';
     this.mime = null;
     this.read = true;
-    this.scheduledAt = null;
+    this.scheduledAt = schedule;
     this.smsWebhookId = 0;
     this.time = CarbonDate.fromDate(date);
     this.to = to;
@@ -694,14 +698,17 @@ print(callpopInfo);
     String departmentId,
     XFile mediaFile,
     Function callback,
-    Function largeMMSCallback){
+    Function largeMMSCallback,
+    DateTime schedule){
       SMSMessage message = SMSMessage.offline(
         from: conversation.myNumber,
         to: conversation.number,
         isGroup: conversation.isGroup,
         text: text,
         user: fusionConnection.getExtension(),
-        messageId: (int.parse(conversation.message.id) + 1).toString());
+        messageId: (int.parse(conversation.message.id) + 1).toString(),
+        schedule: schedule.toString()
+      );
       conversation.message = message;
       storeRecord(message);
       fusionConnection.conversations.storeRecord(conversation);
