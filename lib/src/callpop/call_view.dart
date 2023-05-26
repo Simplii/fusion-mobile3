@@ -16,8 +16,12 @@ import 'package:fusion_mobile_revamped/src/callpop/transfer_call_popup.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
+import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:sip_ua/sip_ua.dart';
+import '../models/conversations.dart';
+import '../models/coworkers.dart';
 import '../utils.dart';
 
 import 'answered_while_on_call.dart';
@@ -42,6 +46,7 @@ class _CallViewState extends State<CallView> {
 
   bool dialpadVisible = false;
   Timer _timer;
+  bool TextBtnPressed = false;
 
   initState() {
     super.initState();
@@ -144,18 +149,72 @@ class _CallViewState extends State<CallView> {
 
   _onVidBtnPress() {}
 
-  _onTextBtnPress() {
-    var callPopInfo = _softphone.getCallpopInfo(_activeCall.id);
-    SMSConversationView.openConversation(
-        context,
-        _fusionConnection,
-        callPopInfo != null ? callPopInfo.contacts : [],
-        callPopInfo != null ? callPopInfo.crmContacts : [],
-        _softphone,
-        callPopInfo != null
-            ? callPopInfo.phoneNumber
-            : _softphone.getCallerNumber(_softphone.activeCall),
-        null,null);
+  _onTextBtnPress() async {
+    if(TextBtnPressed)return;
+    
+    setState(() {
+      TextBtnPressed = true;
+    });
+
+    List<Coworker> coworkers = _fusionConnection.coworkers.getRecords();
+    String ext = _activeCall.remote_identity.onlyNumbers();
+    List<Coworker> coworker =
+        coworkers.where((coworker) => coworker.extension == ext).toList();
+    CallpopInfo callPopInfo = _softphone.getCallpopInfo(_activeCall.id);
+    SMSDepartment personal = _fusionConnection.smsDepartments.getDepartment("-1");
+    List<SMSDepartment> depts = _fusionConnection.smsDepartments.allDepartments();
+
+    if(personal.numbers.isEmpty && depts.isEmpty ||
+      (depts[1].numbers.isEmpty || coworker.isNotEmpty)){
+      setState(() {
+        TextBtnPressed = false;
+      });
+      return showDialog(
+        context: context, 
+        builder: (BuildContext context){
+          return AlertDialog(
+            title: const Text('Woops!'),
+            content: Text(coworker.isNotEmpty 
+              ? "Internal messaging not supported"
+              : "Looks like you don't have messaging numbers setup yet."),
+            actions: <Widget>[
+              TextButton(
+              onPressed: (){
+                Navigator.of(context).pop();
+              }, 
+              child: Text("Okay", style: TextStyle(color: crimsonDark),))
+            ]
+          );
+        }
+      ); 
+    }
+
+    SMSConversation convo = await _fusionConnection.messages.checkExistingConversation(
+      personal.numbers.isNotEmpty 
+        ? personal.id 
+        : depts[1].id,
+      personal.numbers.isNotEmpty 
+        ? personal.numbers[0] 
+        : depts[1].numbers[0],
+      callPopInfo != null
+        ? [callPopInfo.phoneNumber]
+        : [_softphone.getCallerNumber(_softphone.activeCall)],
+      callPopInfo != null 
+        ? callPopInfo.contacts 
+        : []
+    );
+
+    setState(() {
+      TextBtnPressed = false;
+    });
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) =>
+        SMSConversationView(_fusionConnection, _softphone, convo, null,null)
+    );
   }
 
   _changeDefaultInputDevice() {
@@ -644,6 +703,7 @@ class _CallViewState extends State<CallView> {
                                       dialpadVisible = isOpen;
                                     });
                                   },
+                                  loading: TextBtnPressed,
                                   callIsRecording:
                                       _softphone.getRecordState(_activeCall),
                                   callIsMuted: _softphone.getMuted(_activeCall),
