@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -86,7 +87,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Softphone get _softphone => widget._softphone;
-
+  StreamSubscription<ConnectivityResult> connectivitySubscription;
   SMSConversation get _conversation => widget._smsConversation;
   TextEditingController _messageInputController = TextEditingController();
   bool _loaded = false;
@@ -143,6 +144,14 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         }); 
       }
     );
+    connectivitySubscription =
+      _fusionConnection.connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    setState(() {
+      _fusionConnection.connectivityResult = result;
+    });
   }
 
   @override
