@@ -379,6 +379,7 @@ print(callpopInfo);
     XFile mediaFile,
     Function callback,
     Function largeMMSCallback) async {
+          print("MyDebugMessage data  ${departmentId} ${conversation.conversationId}");
     if(conversation.conversationId != null){
       if(mediaFile != null){
         this.sendMediaMessage(
@@ -636,6 +637,7 @@ print(callpopInfo);
       callback(messages,fromServer);
       failedMesages = messages.where((SMSMessage m) => m.messageStatus == "offline").toList();
     });
+    
     if(convo.conversationId != null && convo.isGroup){
       fusionConnection.apiV2Call(
         "get", 
@@ -671,6 +673,8 @@ print(callpopInfo);
         // 'group_id': -2
       }, callback: (Map<String, dynamic> data) {
         List<SMSMessage> messages = [];
+    print("MyDebugMessage dept id  ${departmentId} ${convo.conversationId}");
+    print("MyDebugMessage dept items  ${data['items']}");
 
         for (Map<String, dynamic> item in data['items']) {
           //test getting a message SMSV2
