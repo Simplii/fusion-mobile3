@@ -319,7 +319,8 @@ class _MessagesListState extends State<MessagesList> {
                                     _getDepartmentName(_convos[index - 1]),
                                     _selectedGroupId,
                                     deleteConvo,
-                                    refreshView);
+                                    refreshView,
+                                    _changeGroup);
                               } else {
                                 return Container(
                                   child: Text(
@@ -387,10 +388,18 @@ class SMSConversationSummaryView extends StatefulWidget {
   final String _selectedGroupId;
   Function(SMSConversation, SMSMessage) deleteConvo;
   Function refreshView;
-  SMSConversationSummaryView(this._fusionConnection, this._softphone,
-      this._convo, this._departmentName, this._selectedGroupId, this.deleteConvo, this.refreshView,
-      {Key key})
-      : super(key: key);
+  Function changeGroup;
+  SMSConversationSummaryView(
+    this._fusionConnection, 
+    this._softphone,
+    this._convo, 
+    this._departmentName, 
+    this._selectedGroupId, 
+    this.deleteConvo, 
+    this.refreshView,
+    this.changeGroup,
+    {Key key}
+  ): super(key: key);
 
   @override
   State<StatefulWidget> createState() => _SMSConversationSummaryViewState();
@@ -410,6 +419,7 @@ class _SMSConversationSummaryViewState
   String get _departmentId => widget._selectedGroupId;
   Function(SMSConversation, SMSMessage) get _deleteConvo => widget.deleteConvo;
   Function get _refreshView => widget.refreshView;
+  Function get _changeGroup => widget.changeGroup;
 
   _openConversation() {
     _fusionConnection.conversations.markRead(_convo);
@@ -418,7 +428,13 @@ class _SMSConversationSummaryViewState
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            SMSConversationView(_fusionConnection, _softphone, _convo, _deleteConvo,_refreshView));
+            SMSConversationView(
+              _fusionConnection, 
+              _softphone, 
+              _convo, 
+              _deleteConvo,
+              _refreshView
+            ));
   }
 
   @override

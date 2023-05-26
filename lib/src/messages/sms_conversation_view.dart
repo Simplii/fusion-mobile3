@@ -42,13 +42,13 @@ class SMSConversationView extends StatefulWidget {
   final Function(SMSConversation, SMSMessage) _deleteConvo;
   final Function setOnMessagePosted;
   SMSConversationView(
-      this._fusionConnection, 
-      this._softphone, 
-      this._smsConversation, 
-      this._deleteConvo,
-      this.setOnMessagePosted,
-      {Key key})
-      : super(key: key);
+    this._fusionConnection, 
+    this._softphone, 
+    this._smsConversation, 
+    this._deleteConvo,
+    this.setOnMessagePosted,
+    {Key key}
+  ) : super(key: key);
 
   static openConversation(
       BuildContext context,
@@ -443,6 +443,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _onDepartmentChange(String newDeptId) {
     SMSDepartment dept =
         _fusionConnection.smsDepartments.getDepartment(newDeptId);
+    print("MyDebugMessage _onDepartmentChange ${_conversation.conversationId}");
     setState(() {
       _conversation.myNumber = dept.numbers[0];
       _selectedGroupId = newDeptId;
@@ -452,9 +453,13 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _onNumberSelect(String newNumber) {
     SMSDepartment dept =
         _fusionConnection.smsDepartments.getDepartmentByPhoneNumber(newNumber);
+    print("MyDebugMessage _onNumberSelect ${_conversation.conversationId}");
+    
+    // need a callback function to update the whole selected conversation
     setState(() {
       _conversation.myNumber = newNumber;
       _selectedGroupId = dept.id;
+      // _conversation.conversationId = newConvo.conversationId;
     });
   }
 
