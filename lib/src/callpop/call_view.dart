@@ -213,7 +213,23 @@ class _CallViewState extends State<CallView> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) =>
-        SMSConversationView(_fusionConnection, _softphone, convo, null,null)
+        StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState){
+            SMSConversation displayingConvo = convo;
+            return SMSConversationView(
+              _fusionConnection, 
+              _softphone, 
+              displayingConvo, 
+              null, //delete convo func
+              null, //refresh view func
+              (SMSConversation updatedConvo){
+                setState(() {
+                  displayingConvo = updatedConvo;
+                },);
+              }
+            );
+          } 
+        )
     );
   }
 

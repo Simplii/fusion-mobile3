@@ -74,10 +74,27 @@ class _MessageSearchResults extends State<MessageSearchResults> {
     // );
 
     showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo, null,null));
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder:(BuildContext context, StateSetter setState){
+          SMSConversation displayingConvo = convo;
+          return SMSConversationView(
+            _fusionConnection, 
+            _softphone, 
+            displayingConvo, 
+            null,//deletemessage
+            null,//refreshview
+            (SMSConversation UpdatedConvo){
+              setState(() {
+                displayingConvo = UpdatedConvo;
+              },);
+            }
+          );
+        } 
+      )
+    );
   }
 
   _contactBubbles() {

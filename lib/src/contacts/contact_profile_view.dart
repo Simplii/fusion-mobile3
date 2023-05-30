@@ -334,16 +334,29 @@ class _ContactProfileViewState extends State<ContactProfileView> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => SMSConversationView(
-            _fusionConnection,
-            _softphone,
-            SMSConversation.build(
-                isGroup: false,
-                contacts: [_contact],
-                crmContacts: [],
-                myNumber: number,
-                number: theirNumber),
-            null,null));
+        builder: (context) => StatefulBuilder(
+          builder: (BuildContext context,StateSetter setState) {
+            SMSConversation displayingConvo = SMSConversation.build(
+              isGroup: false,
+              contacts: [_contact],
+              crmContacts: [],
+              myNumber: number,
+              number: theirNumber);
+          return SMSConversationView(
+            _fusionConnection, 
+            _softphone, 
+            displayingConvo, 
+            null,//deletemessage
+            null,//refreshview
+            (SMSConversation UpdatedConvo){
+              setState(() {
+                displayingConvo = UpdatedConvo;
+              },);
+            }
+          );
+          },
+        ),
+      );
   }
 
   _renderField(String type, String label, String value, bool selected) {

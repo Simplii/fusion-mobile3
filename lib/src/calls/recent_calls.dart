@@ -478,10 +478,9 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => SMSConversationView(
-            _fusionConnection,
-            _softphone,
-            SMSConversation.build(
+        builder: (context) => StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+              SMSConversation displayingConvo = SMSConversation.build(
                 isGroup: false,
                 contacts:
                     _historyItem.contact != null ? [_historyItem.contact] : [],
@@ -489,9 +488,24 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                     ? [_historyItem.crmContact]
                     : [],
                 myNumber: number,
-                number: _historyItem.getOtherNumber(
-                    _fusionConnection.getDomain())),
-            null,null));
+                number: _historyItem.getOtherNumber(_fusionConnection.getDomain())
+              );
+              return SMSConversationView(
+                  _fusionConnection, 
+                  _softphone, 
+                  displayingConvo, 
+                  null,//deleteConvo func
+                  null,//refresh view func
+                  (SMSConversation updateConvo){
+                    setState(() {
+                      displayingConvo = updateConvo;
+                    },);
+                  }
+                );
+              
+          }
+        ),
+        );
   }
 
   _makeCall() {
