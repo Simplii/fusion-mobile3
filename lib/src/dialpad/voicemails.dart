@@ -131,15 +131,28 @@ class _VoicemailsState extends State<Voicemails> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => SMSConversationView(
-            _fusionConnection,
-            _softphone,
-            SMSConversation.build(
-                contacts: vm.contacts,
-                crmContacts: [],
-                myNumber: number,
-                number: vm.phoneNumber),
-            null,null));
+        builder: (context) => StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+          SMSConversation displayingConvo = SMSConversation.build(
+            contacts: vm.contacts,
+            crmContacts: [],
+            myNumber: number,
+            number: vm.phoneNumber);
+          return SMSConversationView(
+            _fusionConnection, 
+            _softphone, 
+            displayingConvo, 
+            null,//deletemessage
+            null,//refreshview
+            (SMSConversation UpdatedConvo){
+              setState(() {
+                displayingConvo = UpdatedConvo;
+              },);
+            }
+          );
+          },
+        ),
+      );
   }
 
   Widget _vmRow(Voicemail vm) {

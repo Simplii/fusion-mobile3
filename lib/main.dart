@@ -361,20 +361,32 @@ class _MyHomePageState extends State<MyHomePage> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => 
-        SMSConversationView(
-            fusionConnection,
-            softphone,
-            SMSConversation.build(
-                contacts: convoContacts,
-                conversationId: int.parse(data['to_number']),
-                crmContacts: [],
-                selectedDepartmentId: depId,
-                hash: numbers.join(':'),
-                isGroup: isGroup,
-                myNumber: numberUsed,
-                number: data['to_number']),
-            null,null));
+        builder: (context) => StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            SMSConversation displayingConvo =  SMSConversation.build(
+              contacts: convoContacts,
+              conversationId: int.parse(data['to_number']),
+              crmContacts: [],
+              selectedDepartmentId: depId,
+              hash: numbers.join(':'),
+              isGroup: isGroup,
+              myNumber: numberUsed,
+              number: data['to_number']);
+            return SMSConversationView(
+              fusionConnection, 
+              softphone, 
+              displayingConvo, 
+              null,//deleteConvo
+              null,//onMessagePosted
+              (SMSConversation updateConvo){
+                setState(() {
+                  displayingConvo = updateConvo;
+                },);
+              }
+            );
+  },
+        ),
+        );
     }
 
     else if (data.containsKey('to_number') && !isGroup) {
@@ -389,18 +401,30 @@ class _MyHomePageState extends State<MyHomePage> {
                   context: context,
                   backgroundColor: Colors.transparent,
                   isScrollControlled: true,
-                  builder: (context) => 
-                  SMSConversationView(
-                      fusionConnection,
-                      softphone,
-                      SMSConversation.build(
+                  builder: (context) => StatefulBuilder(
+                    builder: (BuildContext context,StateSetter setState) {
+                      SMSConversation displayingConvo = SMSConversation.build(
                           contacts: contacts,
                           crmContacts: [],
                           isGroup: false,
                           selectedDepartmentId: depId,
                           myNumber: data['to_number'],
-                          number: data['from_number']),
-                      null,null));
+                          number: data['from_number']);
+                      return SMSConversationView(
+                          fusionConnection, 
+                          softphone, 
+                          displayingConvo, 
+                          null,//deleteConvo
+                          null,//onMessagePosted
+                          (SMSConversation updateConvo){
+                            setState(() {
+                              displayingConvo = updateConvo;
+                            },);
+                          }
+                      );
+                    },
+                  ),
+                );
             }
           });
         }

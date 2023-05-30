@@ -266,7 +266,24 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            SMSConversationView(_fusionConnection, _softphone, convo, null,_setOnMessagePosted));
+            StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState){
+                SMSConversation displayingConvo = convo;
+                return SMSConversationView(
+                    _fusionConnection, 
+                    _softphone, 
+                    displayingConvo, 
+                    null,
+                    _setOnMessagePosted,
+                    (SMSConversation updateConvo){
+                      setState(() {
+                        displayingConvo = updateConvo;
+                      },);
+                    }
+                );
+              }
+            )
+      );
   }
 
   @override

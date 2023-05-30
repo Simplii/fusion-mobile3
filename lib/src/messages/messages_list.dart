@@ -428,13 +428,24 @@ class _SMSConversationSummaryViewState
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            SMSConversationView(
-              _fusionConnection, 
-              _softphone, 
-              _convo, 
-              _deleteConvo,
-              _refreshView
-            ));
+          StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState){
+              SMSConversation displayingConvo = _convo;
+              return SMSConversationView(
+                _fusionConnection, 
+                _softphone, 
+                displayingConvo, 
+                _deleteConvo,
+                _refreshView,
+                (SMSConversation convo){
+                  setState(() {
+                    displayingConvo = convo;
+                  },);
+                }
+              );
+            }
+          )
+        );
   }
 
   @override

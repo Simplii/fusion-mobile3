@@ -399,6 +399,9 @@ print(callpopInfo);
             'text': text,
             'isGroup': conversation.isGroup
           }, callback: (Map<String, dynamic> data) {
+            if(data.containsKey("success") && !data['success']){
+              return  toast("${data['error']}");
+            }
             SMSMessage message = SMSMessage.fromV2(data);
             conversation.message = message;
             storeRecord(message);
@@ -649,7 +652,9 @@ print(callpopInfo);
           // 'group_id': -2
         }, callback: (Map<String, dynamic> data) {
           List<SMSMessage> messages = [];
-
+          if(data.containsKey("success") && !data['success']){
+            return  toast("${data['error']}");
+          }
           for (Map<String, dynamic> item in data['items']) {
             //test getting a message SMSV2
             SMSMessage message = SMSMessage.fromV2(item);
@@ -673,9 +678,9 @@ print(callpopInfo);
         // 'group_id': -2
       }, callback: (Map<String, dynamic> data) {
         List<SMSMessage> messages = [];
-    print("MyDebugMessage dept id  ${departmentId} ${convo.conversationId}");
-    print("MyDebugMessage dept items  ${data['items']}");
-
+        if(data.containsKey("success") && !data["success"]){
+          return  toast("${data['error']}");
+        }
         for (Map<String, dynamic> item in data['items']) {
           //test getting a message SMSV2
           SMSMessage message = SMSMessage.fromV2(item);

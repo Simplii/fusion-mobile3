@@ -41,43 +41,47 @@ class SMSConversationView extends StatefulWidget {
   final Softphone _softphone;
   final Function(SMSConversation, SMSMessage) _deleteConvo;
   final Function setOnMessagePosted;
+  final Function(SMSConversation) changeConvo;
   SMSConversationView(
     this._fusionConnection, 
     this._softphone, 
     this._smsConversation, 
     this._deleteConvo,
     this.setOnMessagePosted,
+    this.changeConvo,
     {Key key}
   ) : super(key: key);
 
-  static openConversation(
-      BuildContext context,
-      FusionConnection fusionConnection,
-      List<Contact> contacts,
-      List<CrmContact> crmContacts,
-      Softphone softphone,
-      String phoneNumber,
-      Function _deleteConvo,
-      Function setOnMessagePosted) {
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => SMSConversationView(
-            fusionConnection,
-            softphone,
-            SMSConversation.build(
-                contacts: contacts,
-                crmContacts: crmContacts,
-                isGroup: false,
-                myNumber: fusionConnection.smsDepartments
-                    .getDepartment("-2")
-                    .numbers[0],
-                number: phoneNumber),
-            _deleteConvo,
-            setOnMessagePosted
-            ));
-  }
+  // static openConversation(
+  //     BuildContext context,
+  //     FusionConnection fusionConnection,
+  //     List<Contact> contacts,
+  //     List<CrmContact> crmContacts,
+  //     Softphone softphone,
+  //     String phoneNumber,
+  //     Function _deleteConvo,
+  //     Function setOnMessagePosted) {
+  //   showModalBottomSheet(
+  //       context: context,
+  //       backgroundColor: Colors.transparent,
+  //       isScrollControlled: true,
+  //       builder: (context) => SMSConversationView(
+  //           fusionConnection,
+  //           softphone,
+  //           SMSConversation.build(
+  //               contacts: contacts,
+  //               crmContacts: crmContacts,
+  //               isGroup: false,
+  //               myNumber: fusionConnection.smsDepartments
+  //                   .getDepartment("-2")
+  //                   .numbers[0],
+  //               number: phoneNumber),
+  //           _deleteConvo,
+  //           setOnMessagePosted,
+  //           changeConvo;
+
+  //           ));
+  // }
 
   @override
   State<StatefulWidget> createState() => _SMSConversationViewState();
@@ -104,6 +108,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   bool isSavedMessage = false;
   bool loading = false;
   List<QuickResponse> quickResponses = [];
+  Function get _changeConvo => widget.changeConvo;
+
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
@@ -447,6 +453,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     setState(() {
       _conversation.myNumber = dept.numbers[0];
       _selectedGroupId = newDeptId;
+      _conversation.conversationId = null;
     });
   }
   
@@ -455,11 +462,10 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         _fusionConnection.smsDepartments.getDepartmentByPhoneNumber(newNumber);
     print("MyDebugMessage _onNumberSelect ${_conversation.conversationId}");
     
-    // need a callback function to update the whole selected conversation
     setState(() {
       _conversation.myNumber = newNumber;
       _selectedGroupId = dept.id;
-      // _conversation.conversationId = newConvo.conversationId;
+      _conversation.conversationId = null;
     });
   }
 
@@ -874,7 +880,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                                           _fusionConnection, _conversation,
                                           (List<SMSMessage> messages) {
                                           _messages = messages;
-                                        }, _openMedia,_deleteConvo, _selectedGroupId,_setOnMessagePosted)
+                                        }, _openMedia,_deleteConvo, _selectedGroupId,_setOnMessagePosted,_changeConvo)
                                       : Container())
                             ]))),
                   ]))),
@@ -908,10 +914,11 @@ class ConvoMessagesList extends StatefulWidget {
   final Function(SMSMessage) _openMedia;
   final Function(SMSConversation, SMSMessage) _deleteConvo;
   final Function setOnMessagePosted;
+  final Function(SMSConversation) changeConvo;
   String _selectedGroupId;
   ConvoMessagesList(this._fusionConnection, this._conversation,
       this._onPulledMessages, this._openMedia, this._deleteConvo, this._selectedGroupId, 
-      this.setOnMessagePosted, {Key key}) : super(key: key);
+      this.setOnMessagePosted, this.changeConvo, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ConvoMessagesListState();
@@ -925,6 +932,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   Function(SMSMessage) get _openMedia => widget._openMedia;
   Function(SMSConversation, SMSMessage) get _deleteMessage => widget._deleteConvo;
   Function get _setOnMessagePosted => widget.setOnMessagePosted;
+  Function(SMSConversation) get _changeConvo => widget.changeConvo;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSMessage> _messages = [];
   String _subscriptionKey;
@@ -982,6 +990,12 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
         widget._onPulledMessages(_messages);
       });
     },_selectedGroupId);
+  }
+
+  Future<SMSConversation> _departmentSwitch () async {
+    SMSConversation convo = await _fusionConnection.messages.checkExistingConversation(
+          _selectedGroupId, _conversation.myNumber, [_conversation.number], []);
+    return convo;
   }
 
   _newConvoMessage() {
@@ -1052,8 +1066,18 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     if (lookupState != 0 &&
         (_conversation.number != _lookedupNumber ||
             _conversation.myNumber != _lookedupMyNumber)) {
-      lookupState = 0;
-      _messages = [];
+            lookupState = 0;
+            _messages = [];
+        if(_lookedupNumber != "" && _lookedupMyNumber != ""){
+          _departmentSwitch().then((SMSConversation value){
+            if(value.conversationId != null){
+              _lookedupNumber = value.number;
+              _lookedupMyNumber = value.myNumber;
+              _changeConvo(value);
+              _lookupMessages();
+            } 
+          });
+        }
     }
 
     if (lookupState == 0) {
