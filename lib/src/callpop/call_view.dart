@@ -217,12 +217,12 @@ class _CallViewState extends State<CallView> {
           builder: (BuildContext context, StateSetter setState){
             SMSConversation displayingConvo = convo;
             return SMSConversationView(
-              _fusionConnection, 
-              _softphone, 
-              displayingConvo, 
-              null, //delete convo func
-              null, //refresh view func
-              (SMSConversation updatedConvo){
+              fusionConnection: _fusionConnection, 
+              softphone: _softphone, 
+              smsConversation: displayingConvo, 
+              deleteConvo: null,
+              setOnMessagePosted: null,
+              changeConvo:(SMSConversation updatedConvo){
                 setState(() {
                   displayingConvo = updatedConvo;
                 },);

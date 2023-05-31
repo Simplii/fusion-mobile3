@@ -373,12 +373,12 @@ class _MyHomePageState extends State<MyHomePage> {
               myNumber: numberUsed,
               number: data['to_number']);
             return SMSConversationView(
-              fusionConnection, 
-              softphone, 
-              displayingConvo, 
-              null,//deleteConvo
-              null,//onMessagePosted
-              (SMSConversation updateConvo){
+              fusionConnection: fusionConnection, 
+              softphone: softphone, 
+              smsConversation: displayingConvo, 
+              deleteConvo: null,
+              setOnMessagePosted: null,
+              changeConvo: (SMSConversation updateConvo){
                 setState(() {
                   displayingConvo = updateConvo;
                 },);
@@ -411,12 +411,12 @@ class _MyHomePageState extends State<MyHomePage> {
                           myNumber: data['to_number'],
                           number: data['from_number']);
                       return SMSConversationView(
-                          fusionConnection, 
-                          softphone, 
-                          displayingConvo, 
-                          null,//deleteConvo
-                          null,//onMessagePosted
-                          (SMSConversation updateConvo){
+                          fusionConnection: fusionConnection, 
+                          softphone: softphone, 
+                          smsConversation: displayingConvo, 
+                          deleteConvo: null,//deleteConvo
+                          setOnMessagePosted: null,//onMessagePosted
+                          changeConvo: (SMSConversation updateConvo){
                             setState(() {
                               displayingConvo = updateConvo;
                             },);
