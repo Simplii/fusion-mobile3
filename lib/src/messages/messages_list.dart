@@ -319,8 +319,7 @@ class _MessagesListState extends State<MessagesList> {
                                     _getDepartmentName(_convos[index - 1]),
                                     _selectedGroupId,
                                     deleteConvo,
-                                    refreshView,
-                                    _changeGroup);
+                                    refreshView);
                               } else {
                                 return Container(
                                   child: Text(
@@ -388,7 +387,6 @@ class SMSConversationSummaryView extends StatefulWidget {
   final String _selectedGroupId;
   Function(SMSConversation, SMSMessage) deleteConvo;
   Function refreshView;
-  Function changeGroup;
   SMSConversationSummaryView(
     this._fusionConnection, 
     this._softphone,
@@ -397,7 +395,6 @@ class SMSConversationSummaryView extends StatefulWidget {
     this._selectedGroupId, 
     this.deleteConvo, 
     this.refreshView,
-    this.changeGroup,
     {Key key}
   ): super(key: key);
 
@@ -419,7 +416,6 @@ class _SMSConversationSummaryViewState
   String get _departmentId => widget._selectedGroupId;
   Function(SMSConversation, SMSMessage) get _deleteConvo => widget.deleteConvo;
   Function get _refreshView => widget.refreshView;
-  Function get _changeGroup => widget.changeGroup;
 
   _openConversation() {
     _fusionConnection.conversations.markRead(_convo);

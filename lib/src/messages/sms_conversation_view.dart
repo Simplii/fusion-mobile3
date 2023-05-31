@@ -109,7 +109,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   bool loading = false;
   List<QuickResponse> quickResponses = [];
   Function get _changeConvo => widget.changeConvo;
-
+  bool disableDepartmentSelection = false;
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
@@ -436,6 +436,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
         height: 36,
         child: FusionDropdown(
+          disabled: disableDepartmentSelection,
             departments: departments,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             value: _selectedGroupId,
@@ -449,7 +450,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _onDepartmentChange(String newDeptId) {
     SMSDepartment dept =
         _fusionConnection.smsDepartments.getDepartment(newDeptId);
-    print("MyDebugMessage _onDepartmentChange ${_conversation.conversationId}");
+    print("MyDebugMessage _onDepartmentChange ${dept.numbers[0]}");
     setState(() {
       _conversation.myNumber = dept.numbers[0];
       _selectedGroupId = newDeptId;
@@ -460,7 +461,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _onNumberSelect(String newNumber) {
     SMSDepartment dept =
         _fusionConnection.smsDepartments.getDepartmentByPhoneNumber(newNumber);
-    print("MyDebugMessage _onNumberSelect ${_conversation.conversationId}");
+    print("MyDebugMessage _onNumberSelect ${newNumber}");
     
     setState(() {
       _conversation.myNumber = newNumber;
@@ -791,6 +792,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
 
   _sendMessage() async{
     setState(() {
+      disableDepartmentSelection = true;
       loading = true;
     });
     await _fusionConnection.checkInternetConnection();
@@ -821,12 +823,20 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               _conversation, 
               _selectedGroupId, 
               null,
-              _setOnMessagePosted, 
+              (){
+                print("MyDebugMessage convoId ${_conversation.myNumber}");
+                _setOnMessagePosted();
+                Future.delayed(Duration(seconds: 4), (){
+                  setState(() {
+                    disableDepartmentSelection = false;
+                  });
+                });
+              }, 
               ()=> null
             );
           _messageInputController.text = "";
         }
-    }
+      }
       if (_mediaToSend.length > 0) {
         for (XFile file in _mediaToSend) {
           _fusionConnection.messages.sendMessage(
