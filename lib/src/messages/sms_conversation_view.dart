@@ -1080,7 +1080,6 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
       
       if (lastDate == null ||
           thisTime.difference(lastDate).inHours.abs() > 24) {
-            print("MyDebugMessage ${thisTime.difference(lastDate).inHours} ${msg.message}");
         lastDate = thisTime;
 
         if (toAdd != null) {
@@ -1389,7 +1388,6 @@ class _SMSMessageViewState extends State<SMSMessageView> {
   Widget build(BuildContext context) {
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(_message.unixtime * 1000);
-    print("MyDebugMessage ${_message.message} ${date}");    
     List<Widget> children = [];
     bool scheduledMessage = _message.scheduledAt != null 
       ? DateTime.parse(_message.scheduledAt).toLocal().isAfter(DateTime.now()) 
