@@ -343,12 +343,12 @@ class _ContactProfileViewState extends State<ContactProfileView> {
               myNumber: number,
               number: theirNumber);
           return SMSConversationView(
-            _fusionConnection, 
-            _softphone, 
-            displayingConvo, 
-            null,//deletemessage
-            null,//refreshview
-            (SMSConversation UpdatedConvo){
+            fusionConnection: _fusionConnection, 
+            softphone: _softphone, 
+            smsConversation: displayingConvo, 
+            deleteConvo: null,//deletemessage
+            setOnMessagePosted: null,//refreshview
+            changeConvo: (SMSConversation UpdatedConvo){
               setState(() {
                 displayingConvo = UpdatedConvo;
               },);

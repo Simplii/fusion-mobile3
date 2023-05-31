@@ -81,12 +81,12 @@ class _MessageSearchResults extends State<MessageSearchResults> {
         builder:(BuildContext context, StateSetter setState){
           SMSConversation displayingConvo = convo;
           return SMSConversationView(
-            _fusionConnection, 
-            _softphone, 
-            displayingConvo, 
-            null,//deletemessage
-            null,//refreshview
-            (SMSConversation UpdatedConvo){
+            fusionConnection: _fusionConnection, 
+            softphone: _softphone, 
+            smsConversation: displayingConvo, 
+            deleteConvo: null,
+            setOnMessagePosted: null,
+            changeConvo: (SMSConversation UpdatedConvo){
               setState(() {
                 displayingConvo = UpdatedConvo;
               },);

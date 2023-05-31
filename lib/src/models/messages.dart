@@ -379,7 +379,6 @@ print(callpopInfo);
     XFile mediaFile,
     Function callback,
     Function largeMMSCallback) async {
-          print("MyDebugMessage data  ${departmentId} ${conversation.conversationId}");
     if(conversation.conversationId != null){
       if(mediaFile != null){
         this.sendMediaMessage(

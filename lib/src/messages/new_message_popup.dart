@@ -270,12 +270,12 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
               builder: (BuildContext context, StateSetter setState){
                 SMSConversation displayingConvo = convo;
                 return SMSConversationView(
-                    _fusionConnection, 
-                    _softphone, 
-                    displayingConvo, 
-                    null,
-                    _setOnMessagePosted,
-                    (SMSConversation updateConvo){
+                    fusionConnection: _fusionConnection, 
+                    softphone: _softphone, 
+                    smsConversation: displayingConvo, 
+                    deleteConvo: null,
+                    setOnMessagePosted: _setOnMessagePosted,
+                    changeConvo: (SMSConversation updateConvo){
                       setState(() {
                         displayingConvo = updateConvo;
                       },);

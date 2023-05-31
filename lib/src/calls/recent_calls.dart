@@ -491,12 +491,12 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                 number: _historyItem.getOtherNumber(_fusionConnection.getDomain())
               );
               return SMSConversationView(
-                  _fusionConnection, 
-                  _softphone, 
-                  displayingConvo, 
-                  null,//deleteConvo func
-                  null,//refresh view func
-                  (SMSConversation updateConvo){
+                  fusionConnection: _fusionConnection, 
+                  softphone: _softphone, 
+                  smsConversation: displayingConvo, 
+                  deleteConvo: null,
+                  setOnMessagePosted: null,
+                  changeConvo: (SMSConversation updateConvo){
                     setState(() {
                       displayingConvo = updateConvo;
                     },);

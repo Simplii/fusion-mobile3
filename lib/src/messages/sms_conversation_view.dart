@@ -36,20 +36,20 @@ import '../styles.dart';
 import '../utils.dart';
 
 class SMSConversationView extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final SMSConversation _smsConversation;
-  final Softphone _softphone;
-  final Function(SMSConversation, SMSMessage) _deleteConvo;
+  final FusionConnection fusionConnection;
+  final SMSConversation smsConversation;
+  final Softphone softphone;
+  final Function(SMSConversation, SMSMessage) deleteConvo;
   final Function setOnMessagePosted;
   final Function(SMSConversation) changeConvo;
   SMSConversationView(
-    this._fusionConnection, 
-    this._softphone, 
-    this._smsConversation, 
-    this._deleteConvo,
+    {this.fusionConnection, 
+    this.softphone, 
+    this.smsConversation, 
+    this.deleteConvo,
     this.setOnMessagePosted,
     this.changeConvo,
-    {Key key}
+     Key key}
   ) : super(key: key);
 
   // static openConversation(
@@ -88,11 +88,11 @@ class SMSConversationView extends StatefulWidget {
 }
 
 class _SMSConversationViewState extends State<SMSConversationView> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection get _fusionConnection => widget.fusionConnection;
 
-  Softphone get _softphone => widget._softphone;
+  Softphone get _softphone => widget.softphone;
   StreamSubscription<ConnectivityResult> connectivitySubscription;
-  SMSConversation get _conversation => widget._smsConversation;
+  SMSConversation get _conversation => widget.smsConversation;
   TextEditingController _messageInputController = TextEditingController();
   bool _loaded = false;
   List<XFile> _mediaToSend = [];
@@ -101,7 +101,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   String _selectedGroupId = "";
   Timer _debounceMessageInput;
   int textLength = 0;
-  Function(SMSConversation, SMSMessage) get _deleteConvo => widget._deleteConvo;
+  Function(SMSConversation, SMSMessage) get _deleteConvo => widget.deleteConvo;
   Function get _setOnMessagePosted => widget.setOnMessagePosted;
   bool showSnackBar = false;
   String snackBarText = "";
@@ -326,7 +326,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                 )),
             onPressed: () {
               Navigator.pop(context);
-              widget._softphone.makeCall(_conversation.number);
+              widget.softphone.makeCall(_conversation.number);
             }),
         FusionDropdown(
             onChange: (String chosen) {
@@ -450,7 +450,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _onDepartmentChange(String newDeptId) {
     SMSDepartment dept =
         _fusionConnection.smsDepartments.getDepartment(newDeptId);
-    print("MyDebugMessage _onDepartmentChange ${dept.numbers[0]}");
     setState(() {
       _conversation.myNumber = dept.numbers[0];
       _selectedGroupId = newDeptId;
@@ -461,8 +460,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _onNumberSelect(String newNumber) {
     SMSDepartment dept =
         _fusionConnection.smsDepartments.getDepartmentByPhoneNumber(newNumber);
-    print("MyDebugMessage _onNumberSelect ${newNumber}");
-    
     setState(() {
       _conversation.myNumber = newNumber;
       _selectedGroupId = dept.id;
@@ -824,7 +821,6 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               _selectedGroupId, 
               null,
               (){
-                print("MyDebugMessage convoId ${_conversation.myNumber}");
                 _setOnMessagePosted();
                 Future.delayed(Duration(seconds: 4), (){
                   setState(() {

@@ -139,12 +139,12 @@ class _VoicemailsState extends State<Voicemails> {
             myNumber: number,
             number: vm.phoneNumber);
           return SMSConversationView(
-            _fusionConnection, 
-            _softphone, 
-            displayingConvo, 
-            null,//deletemessage
-            null,//refreshview
-            (SMSConversation UpdatedConvo){
+            fusionConnection: _fusionConnection, 
+            softphone: _softphone, 
+            smsConversation: displayingConvo, 
+            deleteConvo: null,
+            setOnMessagePosted: null,
+            changeConvo: (SMSConversation UpdatedConvo){
               setState(() {
                 displayingConvo = UpdatedConvo;
               },);

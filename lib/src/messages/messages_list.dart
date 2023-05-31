@@ -428,12 +428,12 @@ class _SMSConversationSummaryViewState
             builder: (BuildContext context, StateSetter setState){
               SMSConversation displayingConvo = _convo;
               return SMSConversationView(
-                _fusionConnection, 
-                _softphone, 
-                displayingConvo, 
-                _deleteConvo,
-                _refreshView,
-                (SMSConversation convo){
+                fusionConnection: _fusionConnection, 
+                softphone: _softphone, 
+                smsConversation: displayingConvo, 
+                deleteConvo: _deleteConvo,
+                setOnMessagePosted: _refreshView,
+                changeConvo: (SMSConversation convo){
                   setState(() {
                     displayingConvo = convo;
                   },);
