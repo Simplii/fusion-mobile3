@@ -1079,7 +1079,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
           DateTime.fromMillisecondsSinceEpoch(msg.unixtime * 1000);
       
       if (lastDate == null ||
-          thisTime.difference(lastDate).inHours.abs() > 24) {
+          thisTime.difference(lastDate).inHours.abs() > TimeOfDay.now().hour) {
         lastDate = thisTime;
 
         if (toAdd != null) {
@@ -1329,13 +1329,14 @@ class _SMSMessageViewState extends State<SMSMessageView> {
   }
 
   _openScheduledMessage(SMSMessage message ){
-    DateFormat dateFormatter = DateFormat('MMM d,');
-    DateTime date = DateTime.parse(message.scheduledAt).toLocal();
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (BuildContext context) => PopupMenu(
+      builder: (BuildContext context) { 
+        DateTime date = DateTime.parse(message.scheduledAt).toLocal();
+        DateFormat dateFormatter = DateFormat('MMM d,');
+        return PopupMenu(
         label: "Scheduled Message",
         bottomChild: 
         Container(
@@ -1381,7 +1382,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
             ],
           ),
         ),
-      )
+      );}
     ); 
   }
   @override
