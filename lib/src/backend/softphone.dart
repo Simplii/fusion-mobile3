@@ -544,7 +544,9 @@ class Softphone implements SipUaHelperListener {
         if (domainPrefixes != null) {
           domainPrefixes.forEach((prefix) {
             if (callerId.startsWith(prefix)) {
-              callerId = callerId.replaceAll(prefix + "_", "");
+              callerId = callerId.replaceAll(prefix + "_", "") != "" 
+                ? callerId.replaceAll(prefix + "_", "")
+                : "Unknown";
               linePrefix = prefix;
             }
           });
