@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -394,6 +395,10 @@ class _MenuState extends State<Menu> {
   }
 
   _openOutboundDIDMenu() {
+    List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
+    List<dynamic> features = _fusionConnection.settings.enabledFeatures();
+    bool usingDynamicDialing = features.where((element) => element.contains("Dynamic Dialing")).isNotEmpty;
+    print("MyDebugMessage ${features.where((element) => element.contains("Dynamic Dialing"))} ${usingDynamicDialing}");
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
