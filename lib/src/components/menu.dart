@@ -30,6 +30,25 @@ class _MenuState extends State<Menu> {
   Softphone get _softphone => widget._softphone;
   List<Did> get _dids => widget._dids;
   bool loggingOut = false;
+  List<SMSDepartment> deps = [];
+  List<dynamic> features = [];
+  bool usingDynamicDialing = false;
+  String selectedOutboundDid = "";
+  Did dynamicDailingDid;
+  
+  @override
+  initState(){
+    super.initState();
+    deps = _fusionConnection.smsDepartments.allDepartments();
+    features = _fusionConnection.settings.enabledFeatures();
+    usingDynamicDialing = features.where((element) => element.contains("Dynamic Dialing")).isNotEmpty;
+    selectedOutboundDid = _fusionConnection.settings.myOutboundCallerId;
+    Iterable filter = deps.where((SMSDepartment dep) => dep.usesDynamicOutbound);
+    SMSDepartment dynamicDailingDept = usingDynamicDialing && deps.isNotEmpty && filter.isNotEmpty 
+      ? filter.first
+      : null;
+    dynamicDailingDid = dynamicDailingDept?.toDid();
+  }
 
   _changeDefaultInputDevice() {
     List<List<String>> options = _softphone.devicesList
@@ -395,10 +414,12 @@ class _MenuState extends State<Menu> {
   }
 
   _openOutboundDIDMenu() {
-    List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
-    List<dynamic> features = _fusionConnection.settings.enabledFeatures();
-    bool usingDynamicDialing = features.where((element) => element.contains("Dynamic Dialing")).isNotEmpty;
-    print("MyDebugMessage ${features.where((element) => element.contains("Dynamic Dialing"))} ${usingDynamicDialing}");
+    if(dynamicDailingDid != null){
+      _dids.add(dynamicDailingDid);
+    }
+    
+    _dids.sort((Did a, Did b) => a.did == selectedOutboundDid ? -1 : 1);
+  print("MyDebugMessage " + _fusionConnection.settings.myOutboundCallerId);
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -417,7 +438,10 @@ class _MenuState extends State<Menu> {
                       return GestureDetector(
                           onTap: () {
                             _fusionConnection.settings
-                                .setOutboundDid(option.did);
+                                .setOutboundDid(option.did, option.groupName != null);
+                            setState(() {
+                              selectedOutboundDid = option.did;
+                            });
                             Navigator.pop(context);
                           },
                           child: Container(
@@ -425,8 +449,7 @@ class _MenuState extends State<Menu> {
                                   top: 12, bottom: 12, left: 18, right: 18),
                               decoration: BoxDecoration(
                                   color: (option.did ==
-                                          _fusionConnection.settings
-                                              .subscriber["callid_nmbr"]
+                                          selectedOutboundDid
                                       ? lightHighlight
                                       : Color.fromARGB(0, 0, 0, 0)),
                                   border: Border(
@@ -437,7 +460,7 @@ class _MenuState extends State<Menu> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      (option.did + "").formatPhone(),
+                                      option.groupName ?? (option.did + "").formatPhone(),
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 18,
@@ -457,12 +480,16 @@ class _MenuState extends State<Menu> {
                                 ),
                                 Spacer(),
                                 if (option.did ==
-                                    _fusionConnection
-                                        .settings.subscriber["callid_nmbr"])
+                                    selectedOutboundDid)
                                   Image.asset("assets/icons/check_white.png",
                                       width: 16, height: 11)
                               ])));
-                    }).toList()))));
+                    }).toList())))).whenComplete((){
+                      // cleaning up added department to _dids since we don't get it from backend
+                      if(dynamicDailingDid != null){
+                        _dids.removeWhere((element) => element.did == dynamicDailingDid.did);
+                      }
+                    });
   }
   void _editProfilePic (){
     showModalBottomSheet(
