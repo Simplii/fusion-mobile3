@@ -361,7 +361,9 @@ class FusionConnection {
       print(urlParams);
       if (uriResponse.body == '{"error":"invalid_login"}') {
         if (onError != null)
-          onError();
+        print(onError());
+        logOut();
+          // onError();
       }
       else {
         var jsonResponse = convert.jsonDecode(uriResponse.body);
@@ -487,21 +489,27 @@ print(responseBody);
 
   _postLoginSetup(Function(bool) callback) {
     settings.lookupSubscriber();
-        coworkers.getCoworkers((data) {});
-        setupSocket();
+    coworkers.getCoworkers((data) {});
+    setupSocket();
+    if (callback != null) {
+      callback(true);
+    }
 
-        if (callback != null) {
-          callback(true);
-        }
-
-        smsDepartments.getDepartments((List<SMSDepartment> lis) {});
-        FirebaseMessaging.instance.getToken().then((token) {
-          print("got token");
-          print(token);
-          print(_pushkitToken);
-          apiV1Call("post", "/clients/device_token",
-              {"token": token, "pn_tok": _pushkitToken});
-        });
+    smsDepartments.getDepartments((List<SMSDepartment> lis) {});
+    FirebaseMessaging.instance.getToken().then((token) {
+      print("got token");
+      print(token);
+      print(_pushkitToken);
+      apiV1Call("post", "/clients/device_token",
+          {"token": token, "pn_tok": _pushkitToken});
+    });
+    apiV2Call("get", "/user", {},callback: (Map<String,dynamic> data){
+      if(data == null) return;
+      settings.setMyUserInfo(
+        outboundCallerId: data["dynamicDailingDepartment"] != '' 
+          ? data["dynamicDailingDepartment"]
+          : data["outboundCallerId"]);
+    });
   }
 
   login(String username, String password, Function(bool) callback) {
@@ -635,7 +643,7 @@ print(responseBody);
       final String hash = generateMd5(username.toLowerCase() + deviceToken + fusionDataHelper);
       final enc.Key key = enc.Key.fromUtf8(hash);
       final enc.IV iv = enc.IV.fromLength(16);
-      final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key));
+      final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key,padding: null));
       _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
     }
 
@@ -645,8 +653,9 @@ print(responseBody);
         _pass != null
             ? {"username": username, "password": _pass}
             : {"username": username},
-        onError: () {
-          logOut();
+        onError: (e) {
+          print("MyDebugMessage error fc${e}");
+          // logOut();
         },
         callback: (Map<String, dynamic> response) {
           if (response.containsKey("access_key")) {

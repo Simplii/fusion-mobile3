@@ -5,7 +5,7 @@ class UserSettings {
   Map<String, dynamic> options = {"avatars": {}};
   Map<String, dynamic> subscriber = {'callid_nmbr': '', 'user': ''};
   final FusionConnection _fusionConnection;
-
+  String myOutboundCallerId = "";
   UserSettings(this._fusionConnection);
 
   myContact() {
@@ -132,8 +132,12 @@ class UserSettings {
     return numbers;
   }
 
-  setOutboundDid(String newDid) {
-    _fusionConnection.apiV2Call("post", "/clients/new_outbound_did/" + newDid, {},
+  setOutboundDid(String newDid, bool isDepartment) {
+    print("MyDebugMessage" + newDid);
+    myOutboundCallerId = newDid;
+    _fusionConnection.apiV2Call("post", "/clients/setOutboundDid/" + newDid, {
+      "dynamicDialingDepartment" : isDepartment
+    },
         callback: (Map<String, dynamic> datas) {
           Map<String, dynamic> oldSubscriber = subscriber;
           oldSubscriber['callid_nmbr'] = newDid;
@@ -147,5 +151,9 @@ class UserSettings {
 
   bool isV2User(){
     return options['uses_v2'] != null && options['uses_v2'] == true;
+  }
+
+  void setMyUserInfo({String outboundCallerId}) {
+    myOutboundCallerId = outboundCallerId;
   }
 }

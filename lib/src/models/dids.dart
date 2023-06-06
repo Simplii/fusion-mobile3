@@ -8,7 +8,7 @@ class Did extends FusionModel {
   String did;
   bool mmsCapable;
   String notes;
-
+  String groupName;
   // smsRouting: null OR {groupId, type} OR {uid, type}
 
   Did(Map<String, dynamic> obj) {
@@ -16,6 +16,7 @@ class Did extends FusionModel {
     this.did = obj['did'];
     this.mmsCapable = obj['mmsCapable'];
     this.notes = obj['notes'];
+    this.groupName = obj.containsKey("groupName") ? obj["groupName"] : null;
   }
 }
 
