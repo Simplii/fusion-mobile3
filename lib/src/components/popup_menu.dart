@@ -8,8 +8,9 @@ class PopupMenu extends StatefulWidget {
   final Widget topChild;
   final Widget bottomChild;
   Widget customLabel;
-  PopupMenu({this.label, this.topChild, this.bottomChild, this.customLabel = null, Key key})
-      : super(key: key);
+  double bottomChildSymmetricPadding;
+  PopupMenu({this.label, this.topChild, this.bottomChild, this.customLabel = null, 
+    this.bottomChildSymmetricPadding = 47.5 , Key key}): super(key: key);
 
   @override
   State<StatefulWidget> createState() => _PopupMenuState();
@@ -23,6 +24,8 @@ class _PopupMenuState extends State<PopupMenu> {
   Widget get _bottomChild => widget.bottomChild;
 
   Widget get _customLabel => widget.customLabel;
+
+  double get _bottomChildSymmetricPadding => widget.bottomChildSymmetricPadding;
 
   Widget build(BuildContext context) {
     List<Widget> children = [
@@ -59,7 +62,7 @@ class _PopupMenuState extends State<PopupMenu> {
                       fontWeight: FontWeight.w700))))]),
           Stack(alignment: Alignment.bottomCenter, children: [
             Container(
-                padding: EdgeInsets.only(left: 47.5, right: 47.5, bottom: 97.5),
+                padding: EdgeInsets.only(left: _bottomChildSymmetricPadding, right: _bottomChildSymmetricPadding, bottom: 97.5),
                 child: _bottomChild),
             Container(
                 margin: EdgeInsets.only(bottom: 30),

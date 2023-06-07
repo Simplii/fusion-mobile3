@@ -17,7 +17,7 @@ class FusionDropdown extends StatefulWidget {
   List<SMSDepartment> departments;
   final String selectedNumber;
   final Function(String value) onNumberTap;
-
+  final bool disabled;
   FusionDropdown(
       {Key key,
       this.onChange,
@@ -29,7 +29,8 @@ class FusionDropdown extends StatefulWidget {
       this.options,
       this.departments,
       this.selectedNumber,
-      this.onNumberTap})
+      this.onNumberTap,
+      this.disabled = false})
       : super(key: key);
 
   @override
@@ -57,6 +58,7 @@ class _FusionDropdownState extends State<FusionDropdown> {
 
   Function(String value) get _onNumberTap => widget.onNumberTap;
 
+  bool get _disabled => widget.disabled;
   _dismissKeyboard() {
     FocusScopeNode currentFocus = FocusScope.of(context);
     if (!currentFocus.hasPrimaryFocus) {
@@ -108,23 +110,23 @@ class _FusionDropdownState extends State<FusionDropdown> {
               ),
               Column(
                   children: deptNUmbers.map((String option) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        // color: _selectedNumber == option
-                        //     ? lightHighlight
-                        //     : Colors.transparent,
-                      ),
-                      padding: EdgeInsets.only(
-                          top: 12,
-                          bottom: 12,
-                          left: 12,
-                          right: _selectedNumber == option ? 12 : 0),
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
+                    return GestureDetector(
+                       behavior: HitTestBehavior.translucent,
                         onTap: () {
                           _onNumberTap(option);
                           Navigator.pop(context);
                         },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          // color: _selectedNumber == option
+                          //     ? lightHighlight
+                          //     : Colors.transparent,
+                        ),
+                        padding: EdgeInsets.only(
+                            top: 12,
+                            bottom: 12,
+                            left: 12,
+                            right: _selectedNumber == option ? 12 : 0),
                         child: Row(
                           children: [
                             Text(
@@ -211,7 +213,7 @@ class _FusionDropdownState extends State<FusionDropdown> {
 
     return GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onTap: _openPopup,
+        onTap: _disabled ? null : _openPopup,
         child: this._button != null
             ? this._button
             : Row(children: [

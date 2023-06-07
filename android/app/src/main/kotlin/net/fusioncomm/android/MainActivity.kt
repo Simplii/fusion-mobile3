@@ -363,7 +363,7 @@ class MainActivity : FlutterFragmentActivity() {
 
         core.natPolicy?.stunServer = "mobile-proxy.fusioncomm.net"
         core.remoteRingbackTone = "android.resource://net.fusioncomm.android/" + R.raw.outgoing
-        core.ring = "android.resource://net.fusioncomm.android/" + R.raw.inbound;
+//        core.ring = "android.resource://net.fusioncomm.android/" + R.raw.inbound;
         core.config.setBool("audio", "android_pause_calls_when_audio_focus_lost", false)
     }
 
@@ -701,7 +701,8 @@ class MainActivity : FlutterFragmentActivity() {
                 var args = call.arguments as List<Any>
                 var enableSpeaker = args[0] as Boolean
                 val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+//                audioManager.mode = AudioManager.MODE_IN_COMMUNICATION this line causing older
+//                android version to get audio stuck in ear
 
                 Log.d("lpSetActiveCallOutput" , "set speaker")
                 for (audioDevice in core.extendedAudioDevices) {

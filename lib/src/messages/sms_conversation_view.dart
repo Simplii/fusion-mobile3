@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
+import 'package:fusion_mobile_revamped/src/components/date_time_picker.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
@@ -35,59 +37,63 @@ import '../styles.dart';
 import '../utils.dart';
 
 class SMSConversationView extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final SMSConversation _smsConversation;
-  final Softphone _softphone;
-  final Function(SMSConversation, SMSMessage) _deleteConvo;
+  final FusionConnection fusionConnection;
+  final SMSConversation smsConversation;
+  final Softphone softphone;
+  final Function(SMSConversation, SMSMessage) deleteConvo;
   final Function setOnMessagePosted;
+  final Function(SMSConversation) changeConvo;
   SMSConversationView(
-      this._fusionConnection, 
-      this._softphone, 
-      this._smsConversation, 
-      this._deleteConvo,
-      this.setOnMessagePosted,
-      {Key key})
-      : super(key: key);
+    {this.fusionConnection, 
+    this.softphone, 
+    this.smsConversation, 
+    this.deleteConvo,
+    this.setOnMessagePosted,
+    this.changeConvo,
+     Key key}
+  ) : super(key: key);
 
-  static openConversation(
-      BuildContext context,
-      FusionConnection fusionConnection,
-      List<Contact> contacts,
-      List<CrmContact> crmContacts,
-      Softphone softphone,
-      String phoneNumber,
-      Function _deleteConvo,
-      Function setOnMessagePosted) {
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => SMSConversationView(
-            fusionConnection,
-            softphone,
-            SMSConversation.build(
-                contacts: contacts,
-                crmContacts: crmContacts,
-                isGroup: false,
-                myNumber: fusionConnection.smsDepartments
-                    .getDepartment("-2")
-                    .numbers[0],
-                number: phoneNumber),
-            _deleteConvo,
-            setOnMessagePosted
-            ));
-  }
+  // static openConversation(
+  //     BuildContext context,
+  //     FusionConnection fusionConnection,
+  //     List<Contact> contacts,
+  //     List<CrmContact> crmContacts,
+  //     Softphone softphone,
+  //     String phoneNumber,
+  //     Function _deleteConvo,
+  //     Function setOnMessagePosted) {
+  //   showModalBottomSheet(
+  //       context: context,
+  //       backgroundColor: Colors.transparent,
+  //       isScrollControlled: true,
+  //       builder: (context) => SMSConversationView(
+  //           fusionConnection,
+  //           softphone,
+  //           SMSConversation.build(
+  //               contacts: contacts,
+  //               crmContacts: crmContacts,
+  //               isGroup: false,
+  //               myNumber: fusionConnection.smsDepartments
+  //                   .getDepartment("-2")
+  //                   .numbers[0],
+  //               number: phoneNumber),
+  //           _deleteConvo,
+  //           setOnMessagePosted,
+  //           changeConvo;
+
+  //           ));
+  // }
 
   @override
   State<StatefulWidget> createState() => _SMSConversationViewState();
 }
 
 class _SMSConversationViewState extends State<SMSConversationView> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection get _fusionConnection => widget.fusionConnection;
 
-  Softphone get _softphone => widget._softphone;
-
-  SMSConversation get _conversation => widget._smsConversation;
+  Softphone get _softphone => widget.softphone;
+  StreamSubscription<ConnectivityResult> connectivitySubscription;
+  SMSConversation get _conversation => widget.smsConversation;
   TextEditingController _messageInputController = TextEditingController();
   bool _loaded = false;
   List<XFile> _mediaToSend = [];
@@ -96,13 +102,17 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   String _selectedGroupId = "";
   Timer _debounceMessageInput;
   int textLength = 0;
-  Function(SMSConversation, SMSMessage) get _deleteConvo => widget._deleteConvo;
+  Function(SMSConversation, SMSMessage) get _deleteConvo => widget.deleteConvo;
   Function get _setOnMessagePosted => widget.setOnMessagePosted;
   bool showSnackBar = false;
   String snackBarText = "";
   bool isSavedMessage = false;
   bool loading = false;
   List<QuickResponse> quickResponses = [];
+  DateTime secheduleIsSet;
+
+  Function get _changeConvo => widget.changeConvo;
+  bool disableDepartmentSelection = false;
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
@@ -143,6 +153,14 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         }); 
       }
     );
+    connectivitySubscription =
+      _fusionConnection.connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    setState(() {
+      _fusionConnection.connectivityResult = result;
+    });
   }
 
   @override
@@ -311,7 +329,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                 )),
             onPressed: () {
               Navigator.pop(context);
-              widget._softphone.makeCall(_conversation.number);
+              widget.softphone.makeCall(_conversation.number);
             }),
         FusionDropdown(
             onChange: (String chosen) {
@@ -421,6 +439,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
         height: 36,
         child: FusionDropdown(
+          disabled: disableDepartmentSelection,
             departments: departments,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             value: _selectedGroupId,
@@ -437,6 +456,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     setState(() {
       _conversation.myNumber = dept.numbers[0];
       _selectedGroupId = newDeptId;
+      _conversation.conversationId = null;
     });
   }
   
@@ -446,6 +466,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     setState(() {
       _conversation.myNumber = newNumber;
       _selectedGroupId = dept.id;
+      _conversation.conversationId = null;
     });
   }
 
@@ -622,136 +643,199 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       ));
   }
 
+  _openMessageScheduling(){
+    showModalBottomSheet(
+      useRootNavigator: true, //to replace previous route
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true, 
+      builder: (BuildContext context) => PopupMenu(
+        bottomChildSymmetricPadding: 0,
+        label: "Schedule Message",
+        bottomChild: DateTimePicker(
+          iosStyle: true,
+          height: 240,
+          onComplete: (DateTime selectedDateTime){
+            setState(() {
+              if(selectedDateTime != null) secheduleIsSet = selectedDateTime;
+            });
+          }
+        ),
+      )
+    );
+  }
+
   _sendMessageInput() {
+    DateFormat dateFormatter = DateFormat('MMM d,');
     return Container(
         decoration: BoxDecoration(color: particle),
         padding: EdgeInsets.only(
-            top: 12,
+            top: secheduleIsSet != null ? 0 : 12,
             left: 8,
             bottom: (iphoneIsLarge() &&
                     MediaQuery.of(context).viewInsets.bottom == 0)
                 ? 32
                 : 12,
             right: 8),
-        child: Row(children: [
-          FusionDropdown(
-              onChange: (String value) {
-                _attachImage(value);
-              },
-              value: "",
-              options: [
-                ["Camera", "camera"],
-                ["Record Videos", "recordvideo"],
-                ["Videos", "videos"],
-                ["Photos", "photos"]
-              ],
-              label: "From which source?",
-              button: Container(
-                  height: 18,
-                  width: 22,
-                  margin: EdgeInsets.only(right: 12, left: 4, top: 0),
-                  child: IconButton(
-                      padding: EdgeInsets.all(0),
-                      icon: Image.asset("assets/icons/camera.png",
-                          height: 18, width: 22)))),
-          Expanded(
-              child: Stack(children: [
-            if (_mediaToSend != null && _mediaToSend.length > 0)
+        child: Column(
+          children: [
+            if(secheduleIsSet != null)
+            Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.black,
+                    width: 1.0,
+                  ),
+                ),
+              ),
+              margin: EdgeInsets.only(bottom: 10, left: 20, right: 20),        
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text("Will be sent: " + 
+                      dateFormatter.add_jm().format(secheduleIsSet).toString(),
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
+                    )
+                  ),
+                  IconButton(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    constraints: BoxConstraints(),
+                    onPressed: (){
+                      setState(() {
+                        secheduleIsSet = null;
+                      });
+                    }, 
+                    icon: Icon(Icons.remove_circle_outline_rounded, color: Colors.red,)
+                  )
+                ],
+              ),
+            ),
+            Row(
+            children: [
+              FusionDropdown(
+                onChange: (String value) {
+                  if(value == "schedule"){
+                    _openMessageScheduling();
+                  } else {
+                    _attachImage(value);
+                  }
+                },
+                value: "",
+                options: [
+                  ["Camera", "camera"],
+                  ["Record Videos", "recordvideo"],
+                  ["Videos", "videos"],
+                  ["Photos", "photos"],
+                  ["Schedule Message", "schedule"]
+                ],
+                label: "Other Options",
+                button: Container(
+                    height: 28,
+                    width: 22,
+                    margin: EdgeInsets.only(right: 12, left: 4, top: 0),
+                    child: Icon(Icons.add, size: 28,color: smoke,))),
+              Expanded(
+                child: Stack(children: [
+              if (_mediaToSend != null && _mediaToSend.length > 0)
+                Container(
+                    height: 120,
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(
+                            color: Color.fromARGB(255, 229, 227, 227), width: 1),
+                        borderRadius:
+                            BorderRadius.only(topLeft: Radius.circular(8))),
+                    child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: _mediaToSendViews())),
               Container(
-                  height: 120,
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.only(left: 14, right: 14, top: 0),
+                  margin: EdgeInsets.only(top: _mediaToSend.length > 0 ? 119 : 0),
                   decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border.all(
                           color: Color.fromARGB(255, 229, 227, 227), width: 1),
-                      borderRadius:
-                          BorderRadius.only(topLeft: Radius.circular(8))),
-                  child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: _mediaToSendViews())),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(_mediaToSend.length > 0 ? 0 : 8),
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
+                      )),
+                  child: TextField(
+                    textAlignVertical: TextAlignVertical.center,
+                    textCapitalization: TextCapitalization.sentences,
+                    controller: _messageInputController,
+                    maxLines: 10,
+                    minLines: 1,
+                    onChanged: (String changedTo) {
+                      if (_messageInputController.text.length - textLength > 1 
+                          && !isSavedMessage
+                          && _messageInputController.text.contains("https://fusioncomm.net/media")){
+                        SharedPreferences.getInstance().then((SharedPreferences prefs) {
+                          String imageUri = prefs.getString("copiedImagePath");
+                          if(imageUri.length == 0){
+                            this.setState(() {
+                              _saveLocalState(changedTo);
+                            });
+                          }else {
+                            setState(() {
+                              _mediaToSend.add(XFile('$imageUri'));
+                              _messageInputController.text = '';
+                              Clipboard.setData(ClipboardData(text: ''));
+                            });
+                          }
+                        },);
+                      }else {
+                        setState(() {
+                          _saveLocalState(changedTo);
+                        });
+                      }
+                      textLength = _messageInputController.text.length;
+                    },
+                    decoration: InputDecoration(
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.chat_bubble_outline_outlined),
+                       onPressed: _openQuickResponses),
+                        contentPadding:
+                            EdgeInsets.only(left: 0, right: 0, top: 2, bottom: 2),
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(
+                            fontSize: 14,
+                            color: Color.fromARGB(255, 153, 148, 149)),
+                        hintText: "Message"),
+                  ))
+            ])),
             Container(
-                padding: EdgeInsets.only(left: 14, right: 14, top: 0),
-                margin: EdgeInsets.only(top: _mediaToSend.length > 0 ? 119 : 0),
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(
-                        color: Color.fromARGB(255, 229, 227, 227), width: 1),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(_mediaToSend.length > 0 ? 0 : 8),
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    )),
-                child: TextField(
-                  textAlignVertical: TextAlignVertical.center,
-                  textCapitalization: TextCapitalization.sentences,
-                  controller: _messageInputController,
-                  maxLines: 10,
-                  minLines: 1,
-                  onChanged: (String changedTo) {
-                    if (_messageInputController.text.length - textLength > 1 
-                        && !isSavedMessage
-                        && _messageInputController.text.contains("https://fusioncomm.net/media")){
-                      SharedPreferences.getInstance().then((SharedPreferences prefs) {
-                        String imageUri = prefs.getString("copiedImagePath");
-                        if(imageUri.length == 0){
-                          this.setState(() {
-                            _saveLocalState(changedTo);
-                          });
-                        }else {
-                          setState(() {
-                            _mediaToSend.add(XFile('$imageUri'));
-                            _messageInputController.text = '';
-                            Clipboard.setData(ClipboardData(text: ''));
-                          });
-                        }
-                      },);
-                    }else {
-                      setState(() {
-                        _saveLocalState(changedTo);
-                      });
-                    }
-                    textLength = _messageInputController.text.length;
-                  },
-                  decoration: InputDecoration(
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.chat_bubble_outline_outlined),
-                     onPressed: _openQuickResponses),
-                      contentPadding:
-                          EdgeInsets.only(left: 0, right: 0, top: 2, bottom: 2),
-                      border: InputBorder.none,
-                      hintStyle: TextStyle(
-                          fontSize: 14,
-                          color: Color.fromARGB(255, 153, 148, 149)),
-                      hintText: "Message"),
+                height: 40,
+                width: 40,
+                margin: EdgeInsets.only(left: 8),
+                child: IconButton(
+                  padding: EdgeInsets.all(0),
+                  icon: loading 
+                  ? Container(
+                      height: 40,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: crimsonDark,
+                      ),
+                      child: Transform.scale(
+                        scale: 0.5,
+                        child: CircularProgressIndicator(color: Colors.white,))
+                    ) 
+                  : Image.asset(
+                      _hasEnteredMessage()
+                          ? "assets/icons/send_active.png"
+                          : "assets/icons/send.png",
+                      height: 40,
+                      width: 40),
+                  onPressed: loading ? null : _sendMessage,
                 ))
-          ])),
-          Container(
-              height: 40,
-              width: 40,
-              margin: EdgeInsets.only(left: 8),
-              child: IconButton(
-                padding: EdgeInsets.all(0),
-                icon: loading 
-                ? Container(
-                    height: 40,
-                    width: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: crimsonDark,
-                    ),
-                    child: Transform.scale(
-                      scale: 0.5,
-                      child: CircularProgressIndicator(color: Colors.white,))
-                  ) 
-                : Image.asset(
-                    _hasEnteredMessage()
-                        ? "assets/icons/send_active.png"
-                        : "assets/icons/send.png",
-                    height: 40,
-                    width: 40),
-                onPressed: loading ? null : _sendMessage,
-              ))
-        ]));
+          ])],
+        ));
   }
 
   _hasEnteredMessage() {
@@ -771,6 +855,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
 
   _sendMessage() async{
     setState(() {
+      disableDepartmentSelection = true;
       loading = true;
     });
     await _fusionConnection.checkInternetConnection();
@@ -788,7 +873,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               _selectedGroupId, 
               null, 
               _setOnMessagePosted, 
-              ()=>null);
+              ()=>null,
+              secheduleIsSet ?? secheduleIsSet);
           } else {
             toast("unable to connect to the internet".toUpperCase());
           }
@@ -801,12 +887,23 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               _conversation, 
               _selectedGroupId, 
               null,
-              _setOnMessagePosted, 
-              ()=> null
+              (){
+                setState(() {
+                  _setOnMessagePosted();
+                  secheduleIsSet = null;
+                });
+                Future.delayed(Duration(seconds: 4), (){
+                  setState(() {
+                    disableDepartmentSelection = false;
+                  });
+                });
+              }, 
+              ()=> null,
+              secheduleIsSet ?? secheduleIsSet 
             );
           _messageInputController.text = "";
         }
-    }
+      }
       if (_mediaToSend.length > 0) {
         for (XFile file in _mediaToSend) {
           _fusionConnection.messages.sendMessage(
@@ -815,7 +912,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             _selectedGroupId,
             file,
             _setOnMessagePosted,
-            _largeMMS);
+            _largeMMS,
+            secheduleIsSet ?? secheduleIsSet );
         }
         _mediaToSend = [];
       }
@@ -860,7 +958,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                                           _fusionConnection, _conversation,
                                           (List<SMSMessage> messages) {
                                           _messages = messages;
-                                        }, _openMedia,_deleteConvo, _selectedGroupId,_setOnMessagePosted)
+                                        }, _openMedia,_deleteConvo, _selectedGroupId,_setOnMessagePosted,_changeConvo)
                                       : Container())
                             ]))),
                   ]))),
@@ -894,10 +992,11 @@ class ConvoMessagesList extends StatefulWidget {
   final Function(SMSMessage) _openMedia;
   final Function(SMSConversation, SMSMessage) _deleteConvo;
   final Function setOnMessagePosted;
+  final Function(SMSConversation) changeConvo;
   String _selectedGroupId;
   ConvoMessagesList(this._fusionConnection, this._conversation,
       this._onPulledMessages, this._openMedia, this._deleteConvo, this._selectedGroupId, 
-      this.setOnMessagePosted, {Key key}) : super(key: key);
+      this.setOnMessagePosted, this.changeConvo, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ConvoMessagesListState();
@@ -911,6 +1010,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   Function(SMSMessage) get _openMedia => widget._openMedia;
   Function(SMSConversation, SMSMessage) get _deleteMessage => widget._deleteConvo;
   Function get _setOnMessagePosted => widget.setOnMessagePosted;
+  Function(SMSConversation) get _changeConvo => widget.changeConvo;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSMessage> _messages = [];
   String _subscriptionKey;
@@ -970,6 +1070,12 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     },_selectedGroupId);
   }
 
+  Future<SMSConversation> _departmentSwitch () async {
+    SMSConversation convo = await _fusionConnection.messages.checkExistingConversation(
+          _selectedGroupId, _conversation.myNumber, [_conversation.number], []);
+    return convo;
+  }
+
   _newConvoMessage() {
     return [
       Container(
@@ -1003,9 +1109,9 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     for (SMSMessage msg in _messages) {
       DateTime thisTime =
           DateTime.fromMillisecondsSinceEpoch(msg.unixtime * 1000);
-
+      
       if (lastDate == null ||
-          thisTime.difference(lastDate).inHours.abs() > 24) {
+          thisTime.difference(lastDate).inHours.abs() > TimeOfDay.now().hour) {
         lastDate = thisTime;
 
         if (toAdd != null) {
@@ -1038,8 +1144,18 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     if (lookupState != 0 &&
         (_conversation.number != _lookedupNumber ||
             _conversation.myNumber != _lookedupMyNumber)) {
-      lookupState = 0;
-      _messages = [];
+            lookupState = 0;
+            _messages = [];
+        if(_lookedupNumber != "" && _lookedupMyNumber != ""){
+          _departmentSwitch().then((SMSConversation value){
+            if(value.conversationId != null){
+              _lookedupNumber = value.number;
+              _lookedupMyNumber = value.myNumber;
+              _changeConvo(value);
+              _lookupMessages();
+            } 
+          });
+        }
     }
 
     if (lookupState == 0) {
@@ -1217,7 +1333,8 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         _selectedGroupId, 
         null,
         _setOnMessagePosted, 
-        ()=> null
+        ()=> null,
+        null
       );
     }
 
@@ -1253,14 +1370,71 @@ class _SMSMessageViewState extends State<SMSMessageView> {
     );
   }
 
+  _openScheduledMessage(SMSMessage message ){
+    return showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) { 
+        DateTime date = DateTime.parse(message.scheduledAt).toLocal();
+        DateFormat dateFormatter = DateFormat('MMM d,');
+        return PopupMenu(
+        label: "Scheduled Message",
+        bottomChild: 
+        Container(
+          height: 150,
+          padding: EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text("Message will be sent on " + 
+                dateFormatter.add_jm().format(date).toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  height: 1.5,
+                  fontSize: 18,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: lightDivider, width: 1),
+                    top: BorderSide(color: lightDivider, width: 1),
+                  )
+                ),
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                  ),
+                  onPressed: (){
+                    setState(() {  
+                      _messages.removeWhere((msg) => msg.id == message.id);
+                      _fusionConnection.messages.deleteMessage(this._message.id,_selectedGroupId);
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Cancel Message", style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                  ),),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );}
+    ); 
+  }
   @override
   Widget build(BuildContext context) {
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(_message.unixtime * 1000);
-
     List<Widget> children = [];
-
-    
+    bool scheduledMessage = _message.scheduledAt != null 
+      ? DateTime.parse(_message.scheduledAt).toLocal().isAfter(DateTime.now()) 
+      : false;
 
     if (_message.from != _conversation.myNumber) {
       List<Contact> matchedContact;
@@ -1342,7 +1516,13 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                 padding: EdgeInsets.only(left: 5),
                 constraints: BoxConstraints(),
                 onPressed: ()=>_openFailedMessageDialog(_message), 
-                icon: Icon(Icons.error_outline,color: Colors.red))
+                icon: Icon(Icons.error_outline,color: Colors.red)),
+            if(scheduledMessage)
+              IconButton(
+                padding: EdgeInsets.only(left: 5),
+                constraints: BoxConstraints(),
+                onPressed: ()=>_openScheduledMessage(_message), 
+                icon: Icon(Icons.schedule,color: smoke)),
           ],
         )
       ])));

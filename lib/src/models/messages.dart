@@ -36,7 +36,7 @@ class SMSMessage extends FusionModel {
   String messageStatus;
   String mime;
   bool read;
-  CarbonDate scheduledAt;
+  String scheduledAt;
   int smsWebhookId;
   CarbonDate time;
   String to;
@@ -59,7 +59,7 @@ class SMSMessage extends FusionModel {
     this.read = map['read'] == "1";
     this.scheduledAt = ((map.containsKey('scheduled_at') &&
             map['scheduled_at'].runtimeType == Map)
-        ? CarbonDate(map['scheduled_at'])
+        ? CarbonDate(map['scheduled_at']).date
         : null);
     this.smsWebhookId =
         map['sms_webhook_id'].runtimeType == int ? map['sms_webhook_id'] : 0;
@@ -71,6 +71,9 @@ class SMSMessage extends FusionModel {
   }
 
   SMSMessage.fromV2(Map<String, dynamic> map) {
+    String time = map.containsKey('scheduledAt') && map['scheduledAt'] != null 
+      ? map['scheduledAt'] 
+      : map['time'];
     this.convertedMms = map.containsKey('converted_mms') ? true : false;
     this.domain = map['user'].runtimeType == String ? map['user']
         .toString()
@@ -83,16 +86,15 @@ class SMSMessage extends FusionModel {
     this.messageStatus = map['message_status'] ?? map['status'];
     this.mime = map['mime'];
     this.read = map['read'] == 1;
-    this.scheduledAt = ((map.containsKey('scheduledAt') &&
-            map['scheduledAt'].runtimeType == Map)
-        ? CarbonDate(map['scheduledAt'])
+    this.scheduledAt = ((map.containsKey('scheduledAt'))
+        ? map['scheduledAt']
         : null);
     this.smsWebhookId =
         map['smsWebhookId'].runtimeType == int ? map['smsWebhookId'] : 0;
     this.time = CarbonDate.fromDate(map['time']);
     this.to = map['to'];
     this.type = "sms";
-    this.unixtime = DateTime.parse(map['time']).millisecondsSinceEpoch ~/ 1000;
+    this.unixtime = DateTime.parse(time).toLocal().millisecondsSinceEpoch ~/ 1000;
     this.user = map['user'].runtimeType == String ? map['user']
         .toString()
         .replaceFirst(RegExp("@.*"), "") : null;
@@ -111,7 +113,7 @@ class SMSMessage extends FusionModel {
       'messageStatus': messageStatus,
       'mime': mime,
       'read': read,
-      'scheduledAt': scheduledAt != null ? scheduledAt.serialize() : null,
+      'scheduledAt': scheduledAt,
       'smsWebhookId': smsWebhookId,
       'time': time.serialize(),
       'to': to,
@@ -135,7 +137,7 @@ class SMSMessage extends FusionModel {
     this.mime = obj['mime'];
     this.read = obj['read'];
     if (obj['scheduledAt'] != null)
-      this.scheduledAt = CarbonDate.unserialize(obj['scheduledAt']);
+      this.scheduledAt = obj['scheduledAt'];
     this.smsWebhookId = obj['smsWebhookId'];
     if (obj['time'] != null) this.time = CarbonDate.unserialize(obj['time']);
     this.to = obj['to'];
@@ -150,7 +152,8 @@ class SMSMessage extends FusionModel {
     String text,
     String to,
     String user,
-    String messageId
+    String messageId,
+    String schedule
   }) {
     String date = DateTime.now().toString();
     this.convertedMms = false;
@@ -163,7 +166,7 @@ class SMSMessage extends FusionModel {
     this.messageStatus = 'offline';
     this.mime = null;
     this.read = true;
-    this.scheduledAt = null;
+    this.scheduledAt = schedule;
     this.smsWebhookId = 0;
     this.time = CarbonDate.fromDate(date);
     this.to = to;
@@ -378,7 +381,8 @@ print(callpopInfo);
     String departmentId,
     XFile mediaFile,
     Function callback,
-    Function largeMMSCallback) async {
+    Function largeMMSCallback,
+    DateTime schedule) async {
     if(conversation.conversationId != null){
       if(mediaFile != null){
         this.sendMediaMessage(
@@ -393,11 +397,14 @@ print(callpopInfo);
           "post", 
           "/messaging/group/${departmentId}/conversations/${conversation.conversationId}/messages", {
             'myIdentifier': conversation.myNumber,
-            'schedule': null,
+            'schedule': schedule != null ? schedule.toUtc().toString() : null,
             'isMms': false,
             'text': text,
             'isGroup': conversation.isGroup
           }, callback: (Map<String, dynamic> data) {
+            if(data.containsKey("success") && !data['success']){
+              return  toast("${data['error']}");
+            }
             SMSMessage message = SMSMessage.fromV2(data);
             conversation.message = message;
             storeRecord(message);
@@ -431,7 +438,7 @@ print(callpopInfo);
                 "post", 
                 "/messaging/group/${departmentId}/conversations/${data['groupId']}/messages", {
                   'myIdentifier': data['myNumber'],
-                  'schedule': null,
+                  'schedule': schedule.toUtc().toString(),
                   'isMms': false,
                   'text': text,
                   'isGroup': data['isGroup']
@@ -636,6 +643,7 @@ print(callpopInfo);
       callback(messages,fromServer);
       failedMesages = messages.where((SMSMessage m) => m.messageStatus == "offline").toList();
     });
+    
     if(convo.conversationId != null && convo.isGroup){
       fusionConnection.apiV2Call(
         "get", 
@@ -647,7 +655,9 @@ print(callpopInfo);
           // 'group_id': -2
         }, callback: (Map<String, dynamic> data) {
           List<SMSMessage> messages = [];
-
+          if(data.containsKey("success") && !data['success']){
+            return  toast("${data['error']}");
+          }
           for (Map<String, dynamic> item in data['items']) {
             //test getting a message SMSV2
             SMSMessage message = SMSMessage.fromV2(item);
@@ -671,7 +681,9 @@ print(callpopInfo);
         // 'group_id': -2
       }, callback: (Map<String, dynamic> data) {
         List<SMSMessage> messages = [];
-
+        if(data.containsKey("success") && !data["success"]){
+          return  toast("${data['error']}");
+        }
         for (Map<String, dynamic> item in data['items']) {
           //test getting a message SMSV2
           SMSMessage message = SMSMessage.fromV2(item);
@@ -694,14 +706,17 @@ print(callpopInfo);
     String departmentId,
     XFile mediaFile,
     Function callback,
-    Function largeMMSCallback){
+    Function largeMMSCallback,
+    DateTime schedule){
       SMSMessage message = SMSMessage.offline(
         from: conversation.myNumber,
         to: conversation.number,
         isGroup: conversation.isGroup,
         text: text,
         user: fusionConnection.getExtension(),
-        messageId: (int.parse(conversation.message.id) + 1).toString());
+        messageId: (int.parse(conversation.message.id) + 1).toString(),
+        schedule: schedule.toString()
+      );
       conversation.message = message;
       storeRecord(message);
       fusionConnection.conversations.storeRecord(conversation);

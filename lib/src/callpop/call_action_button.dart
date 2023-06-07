@@ -8,7 +8,7 @@ class CallActionButton extends StatefulWidget {
 
   final VoidCallback onPressed;
   final String title;
-  final Image icon;
+  final Widget icon;
   final bool disabled;
 
   @override
