@@ -19,7 +19,8 @@ class CallActionButtons extends StatefulWidget {
         this.callIsRecording,
         this.isOnConference,
         this.callOnHold,
-        this.resumeDisabled})
+        this.resumeDisabled,
+        this.loading})
       : super(key: key);
 
   final Map<String, Function()> actions;
@@ -31,6 +32,7 @@ class CallActionButtons extends StatefulWidget {
   final bool dialPadOpen;
   final bool callIsMuted;
   final bool resumeDisabled;
+  final bool loading;
   Function(bool) setDialpad;
 
   @override
@@ -39,7 +41,8 @@ class CallActionButtons extends StatefulWidget {
 
 class _CallActionButtonsState extends State<CallActionButtons> {
   bool get dialPadOpen => widget.dialPadOpen;
-
+  bool get _loading => widget.loading;
+  
   Widget _getMainView(bool onHold) {
     return Container(
         key: ValueKey<int>(2),
@@ -111,7 +114,12 @@ class _CallActionButtonsState extends State<CallActionButtons> {
             CallActionButton(
                 onPressed: widget.actions['onTextBtnPress'],
                 title: 'Text',
-                icon: Image.asset("assets/icons/call_view/chattext.png",
+                icon:  _loading 
+                  ? SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(color: Colors.white,))
+                  : Image.asset("assets/icons/call_view/chattext.png",
                     width: 24, height: 24)),
             CallActionButton(
                 onPressed: widget.actions['onAudioBtnPress'],
