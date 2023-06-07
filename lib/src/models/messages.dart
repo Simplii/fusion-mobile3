@@ -296,7 +296,7 @@ print(callpopInfo);
   }
 
   sendMediaMessage(XFile file, SMSConversation conversation, String departmentId, 
-    dynamic generatedConvoId, Function callback, Function largeMMSCallback ) async {
+    dynamic generatedConvoId, Function callback, Function largeMMSCallback, schedule) async {
       int fileSize = await file.length();
       bool _canSendLargeMMS = true;
       
@@ -313,7 +313,7 @@ print(callpopInfo);
         fusionConnection.apiV2Multipart("POST", 
           "/messaging/group/${departmentId}/conversations/${generatedConvoId ?? conversation.conversationId}/messages", {
             'myIdentifier': conversation.myNumber,
-            'schedule': null,
+            'schedule':  schedule != null ? schedule.toUtc().toString() : null,
             'isMms': true,
             'text': '',
             'isGroup': conversation.isGroup
@@ -391,7 +391,8 @@ print(callpopInfo);
           departmentId, 
           null,
           callback, 
-          largeMMSCallback);
+          largeMMSCallback,
+          schedule);
       } else {
         fusionConnection.apiV2Call(
           "post", 
@@ -432,13 +433,14 @@ print(callpopInfo);
                 departmentId, 
                 generatedConvoId,
                 callback,
-                largeMMSCallback);
+                largeMMSCallback,
+                schedule);
             } else {
               fusionConnection.apiV2Call(
                 "post", 
                 "/messaging/group/${departmentId}/conversations/${data['groupId']}/messages", {
                   'myIdentifier': data['myNumber'],
-                  'schedule': schedule.toUtc().toString(),
+                  'schedule': schedule != null ? schedule.toUtc().toString() : null,
                   'isMms': false,
                   'text': text,
                   'isGroup': data['isGroup']
@@ -715,7 +717,7 @@ print(callpopInfo);
         text: text,
         user: fusionConnection.getExtension(),
         messageId: (int.parse(conversation.message.id) + 1).toString(),
-        schedule: schedule.toString()
+        schedule: schedule != null ? schedule.toUtc().toString() : null,
       );
       conversation.message = message;
       storeRecord(message);
