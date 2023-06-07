@@ -30,24 +30,28 @@ class _MenuState extends State<Menu> {
   Softphone get _softphone => widget._softphone;
   List<Did> get _dids => widget._dids;
   bool loggingOut = false;
+  
   List<SMSDepartment> deps = [];
   List<dynamic> features = [];
   bool usingDynamicDialing = false;
   String selectedOutboundDid = "";
   Did dynamicDailingDid;
-  
+  bool dynamicDialing;
+
   @override
   initState(){
     super.initState();
+    UserSettings userSettings = _fusionConnection.settings;
     deps = _fusionConnection.smsDepartments.allDepartments();
-    features = _fusionConnection.settings.enabledFeatures();
+    features = userSettings.enabledFeatures();
     usingDynamicDialing = features.where((element) => element.contains("Dynamic Dialing")).isNotEmpty;
-    selectedOutboundDid = _fusionConnection.settings.myOutboundCallerId;
+    selectedOutboundDid = userSettings.myOutboundCallerId;
     Iterable filter = deps.where((SMSDepartment dep) => dep.usesDynamicOutbound);
     SMSDepartment dynamicDailingDept = usingDynamicDialing && deps.isNotEmpty && filter.isNotEmpty 
       ? filter.first
       : null;
     dynamicDailingDid = dynamicDailingDept?.toDid();
+    dynamicDialing = userSettings.dynamicDialing;
   }
 
   _changeDefaultInputDevice() {
@@ -419,7 +423,8 @@ class _MenuState extends State<Menu> {
     }
     
     _dids.sort((Did a, Did b) => a.did == selectedOutboundDid ? -1 : 1);
-  print("MyDebugMessage " + _fusionConnection.settings.myOutboundCallerId);
+  print("MyDebugMessage " + _fusionConnection.settings.myOutboundCallerId );
+  print("MyDebugMessage ${dynamicDialing}");
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -440,6 +445,7 @@ class _MenuState extends State<Menu> {
                             _fusionConnection.settings
                                 .setOutboundDid(option.did, option.groupName != null);
                             setState(() {
+                              dynamicDialing = option.groupName != null;
                               selectedOutboundDid = option.did;
                             });
                             Navigator.pop(context);
