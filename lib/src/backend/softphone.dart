@@ -434,6 +434,7 @@ class Softphone implements SipUaHelperListener {
           ];
           break;
         case "stopRinger":
+          //not needed any more we can stop ringer from linphone
           RingtonePlayer.stop();
           break;
         case "lnAudioDeviceChanged":
