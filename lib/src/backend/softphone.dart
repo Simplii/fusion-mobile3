@@ -193,12 +193,19 @@ class Softphone implements SipUaHelperListener {
             activeCall.state != CallStateEnum.CONNECTING &&
             activeCall.state != CallStateEnum.PROGRESS)) {
           _ringingInbound = true;
+          //flutter_audio_manager pkg is outdated need to see if we can trigger change to speaker
+          //form linphone instead, so we can get rid of it, to not mess too much with audio routing
+          //and let linphone handle it.
           FlutterAudioManager.changeToSpeaker();
-          RingtonePlayer.ringtone(
-              alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
-                  "ic_alarm_notification",
-                  contentTitle: "Phone Call", contentText: "IncomingPhoneCall"),
-              volume: 1.0);
+          if(Platform.isIOS){
+            // I don't think we need this pkg, linphone triggers device default ringtone on android
+            // and callkit should trigger it on ios too. need to test that
+            RingtonePlayer.ringtone(
+                alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
+                    "ic_alarm_notification",
+                    contentTitle: "Phone Call", contentText: "IncomingPhoneCall"),
+                volume: 1.0);
+          }
         } else {
           _inboundPlayer = Aps.AudioPlayer();
           cache.loop(_callWaitingAudioPath).then((Aps.AudioPlayer playing) {
@@ -427,6 +434,7 @@ class Softphone implements SipUaHelperListener {
           ];
           break;
         case "stopRinger":
+          //not needed any more we can stop ringer from linphone
           RingtonePlayer.stop();
           break;
         case "lnAudioDeviceChanged":
@@ -539,12 +547,14 @@ class Softphone implements SipUaHelperListener {
         print(args[4]);
         var toAddress = args[2] as String;
         toAddress = _cleanToAddress(toAddress);
-        var callerId = args[4] as String;
+        var callerId = args[4] as String ?? "Unknown";
         var domainPrefixes = _fusionConnection.settings.domainPrefixes();
         if (domainPrefixes != null) {
           domainPrefixes.forEach((prefix) {
             if (callerId.startsWith(prefix)) {
-              callerId = callerId.replaceAll(prefix + "_", "");
+              callerId = callerId.replaceAll(prefix + "_", "") != "" 
+                ? callerId.replaceAll(prefix + "_", "")
+                : "Unknown";
               linePrefix = prefix;
             }
           });
