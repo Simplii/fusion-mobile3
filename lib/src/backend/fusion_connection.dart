@@ -508,7 +508,8 @@ print(responseBody);
       settings.setMyUserInfo(
         outboundCallerId: data["dynamicDailingDepartment"] != '' 
           ? data["dynamicDailingDepartment"]
-          : data["outboundCallerId"]);
+          : data["outboundCallerId"],
+        isDynamicDailing: data["dynamicDailingDepartment"] != '' ?? false );
     });
   }
 
