@@ -428,28 +428,37 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     }
   }
 
+  String _getLinePrefix (String callerId){
+    String linePrefix;
+    List<dynamic> domainPrefixes = _fusionConnection.settings.domainPrefixes();
+    if (domainPrefixes != null) {
+      domainPrefixes.forEach((prefix) {
+        if (callerId.startsWith(prefix)) {
+          linePrefix = prefix;
+        }
+      });
+    }
+    return linePrefix ?? "";
+  }
+
   _name() {
     if (_historyItem.coworker != null) {
       return _historyItem.coworker.firstName +
           ' ' +
           _historyItem.coworker.lastName;
     } else if (_historyItem.contact != null) {
-      String linePrefix;
-      var domainPrefixes = _fusionConnection.settings.domainPrefixes();
-      if (domainPrefixes != null) {
-        domainPrefixes.forEach((prefix) {
-          if (_historyItem.callerId.startsWith(prefix)) {
-            linePrefix = prefix;
-          }
-        });
-      }
-      return linePrefix != null
+      String linePrefix = _getLinePrefix(_historyItem.callerId);
+      return linePrefix != ""
           ? linePrefix + "_" + _historyItem.contact.name.toTitleCase()
           : _historyItem.contact.name.toTitleCase();
     } else if (_historyItem.crmContact != null) {
       return _historyItem.crmContact.name;
     } else if (_historyItem.callerId != '') {
-       return _historyItem.callerId;
+      String linePrefix =  _getLinePrefix(_historyItem.callerId);
+      return _historyItem.callerId.startsWith(linePrefix) && 
+             _historyItem.callerId.replaceAll(linePrefix + "_", "") != "" 
+                ? _historyItem.callerId
+                : _historyItem.callerId + "Unknown";
     } else {
       return _historyItem.direction == 'inbound'
           ? _historyItem.fromDid.formatPhone()
