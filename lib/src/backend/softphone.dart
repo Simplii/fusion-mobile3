@@ -193,12 +193,19 @@ class Softphone implements SipUaHelperListener {
             activeCall.state != CallStateEnum.CONNECTING &&
             activeCall.state != CallStateEnum.PROGRESS)) {
           _ringingInbound = true;
+          //flutter_audio_manager pkg is outdated need to see if we can trigger change to speaker
+          //form linphone instead, so we can get rid of it, to not mess too much with audio routing
+          //and let linphone handle it.
           FlutterAudioManager.changeToSpeaker();
-          RingtonePlayer.ringtone(
-              alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
-                  "ic_alarm_notification",
-                  contentTitle: "Phone Call", contentText: "IncomingPhoneCall"),
-              volume: 1.0);
+          if(Platform.isIOS){
+            // I don't think we need this pkg, linphone triggers device default ringtone on android
+            // and callkit should trigger it on ios too. need to test that
+            RingtonePlayer.ringtone(
+                alarmMeta: AlarmMeta("net.fusioncomm.android.MainActivity",
+                    "ic_alarm_notification",
+                    contentTitle: "Phone Call", contentText: "IncomingPhoneCall"),
+                volume: 1.0);
+          }
         } else {
           _inboundPlayer = Aps.AudioPlayer();
           cache.loop(_callWaitingAudioPath).then((Aps.AudioPlayer playing) {
