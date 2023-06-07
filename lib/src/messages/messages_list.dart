@@ -387,10 +387,16 @@ class SMSConversationSummaryView extends StatefulWidget {
   final String _selectedGroupId;
   Function(SMSConversation, SMSMessage) deleteConvo;
   Function refreshView;
-  SMSConversationSummaryView(this._fusionConnection, this._softphone,
-      this._convo, this._departmentName, this._selectedGroupId, this.deleteConvo, this.refreshView,
-      {Key key})
-      : super(key: key);
+  SMSConversationSummaryView(
+    this._fusionConnection, 
+    this._softphone,
+    this._convo, 
+    this._departmentName, 
+    this._selectedGroupId, 
+    this.deleteConvo, 
+    this.refreshView,
+    {Key key}
+  ): super(key: key);
 
   @override
   State<StatefulWidget> createState() => _SMSConversationSummaryViewState();
@@ -418,7 +424,24 @@ class _SMSConversationSummaryViewState
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (context) =>
-            SMSConversationView(_fusionConnection, _softphone, _convo, _deleteConvo,_refreshView));
+          StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState){
+              SMSConversation displayingConvo = _convo;
+              return SMSConversationView(
+                fusionConnection: _fusionConnection, 
+                softphone: _softphone, 
+                smsConversation: displayingConvo, 
+                deleteConvo: _deleteConvo,
+                setOnMessagePosted: _refreshView,
+                changeConvo: (SMSConversation convo){
+                  setState(() {
+                    displayingConvo = convo;
+                  },);
+                }
+              );
+            }
+          )
+        );
   }
 
   @override

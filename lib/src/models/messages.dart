@@ -402,6 +402,9 @@ print(callpopInfo);
             'text': text,
             'isGroup': conversation.isGroup
           }, callback: (Map<String, dynamic> data) {
+            if(data.containsKey("success") && !data['success']){
+              return  toast("${data['error']}");
+            }
             SMSMessage message = SMSMessage.fromV2(data);
             conversation.message = message;
             storeRecord(message);
@@ -640,6 +643,7 @@ print(callpopInfo);
       callback(messages,fromServer);
       failedMesages = messages.where((SMSMessage m) => m.messageStatus == "offline").toList();
     });
+    
     if(convo.conversationId != null && convo.isGroup){
       fusionConnection.apiV2Call(
         "get", 
@@ -651,7 +655,9 @@ print(callpopInfo);
           // 'group_id': -2
         }, callback: (Map<String, dynamic> data) {
           List<SMSMessage> messages = [];
-
+          if(data.containsKey("success") && !data['success']){
+            return  toast("${data['error']}");
+          }
           for (Map<String, dynamic> item in data['items']) {
             //test getting a message SMSV2
             SMSMessage message = SMSMessage.fromV2(item);
@@ -675,7 +681,9 @@ print(callpopInfo);
         // 'group_id': -2
       }, callback: (Map<String, dynamic> data) {
         List<SMSMessage> messages = [];
-
+        if(data.containsKey("success") && !data["success"]){
+          return  toast("${data['error']}");
+        }
         for (Map<String, dynamic> item in data['items']) {
           //test getting a message SMSV2
           SMSMessage message = SMSMessage.fromV2(item);

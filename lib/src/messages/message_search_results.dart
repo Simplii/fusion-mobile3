@@ -74,10 +74,27 @@ class _MessageSearchResults extends State<MessageSearchResults> {
     // );
 
     showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => SMSConversationView(_fusionConnection, _softphone, convo, null,null));
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder:(BuildContext context, StateSetter setState){
+          SMSConversation displayingConvo = convo;
+          return SMSConversationView(
+            fusionConnection: _fusionConnection, 
+            softphone: _softphone, 
+            smsConversation: displayingConvo, 
+            deleteConvo: null,
+            setOnMessagePosted: null,
+            changeConvo: (SMSConversation UpdatedConvo){
+              setState(() {
+                displayingConvo = UpdatedConvo;
+              },);
+            }
+          );
+        } 
+      )
+    );
   }
 
   _contactBubbles() {
@@ -137,7 +154,15 @@ class _MessageSearchResults extends State<MessageSearchResults> {
 
   _messagesList() {
     return _conversations.map((SMSConversation convo) {
-      return SMSConversationSummaryView(_fusionConnection, _softphone, convo, "","",null,null);
+      return SMSConversationSummaryView(
+        _fusionConnection, 
+        _softphone, 
+        convo, 
+        "",
+        "",
+        null,
+        null,
+      );
     }).toList();
   }
 
