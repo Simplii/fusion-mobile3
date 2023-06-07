@@ -539,7 +539,7 @@ class Softphone implements SipUaHelperListener {
         print(args[4]);
         var toAddress = args[2] as String;
         toAddress = _cleanToAddress(toAddress);
-        var callerId = args[4] as String;
+        var callerId = args[4] as String ?? "Unknown";
         var domainPrefixes = _fusionConnection.settings.domainPrefixes();
         if (domainPrefixes != null) {
           domainPrefixes.forEach((prefix) {
