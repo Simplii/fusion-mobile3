@@ -31,27 +31,22 @@ class _MenuState extends State<Menu> {
   List<Did> get _dids => widget._dids;
   bool loggingOut = false;
   
-  List<SMSDepartment> deps = [];
-  List<dynamic> features = [];
-  bool usingDynamicDialing = false;
   String selectedOutboundDid = "";
   Did dynamicDailingDid;
-  bool dynamicDialing;
 
   @override
   initState(){
     super.initState();
     UserSettings userSettings = _fusionConnection.settings;
-    deps = _fusionConnection.smsDepartments.allDepartments();
-    features = userSettings.enabledFeatures();
-    usingDynamicDialing = features.where((element) => element.contains("Dynamic Dialing")).isNotEmpty;
+    List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
     selectedOutboundDid = userSettings.myOutboundCallerId;
     Iterable filter = deps.where((SMSDepartment dep) => dep.usesDynamicOutbound);
-    SMSDepartment dynamicDailingDept = usingDynamicDialing && deps.isNotEmpty && filter.isNotEmpty 
-      ? filter.first
-      : null;
+    SMSDepartment dynamicDailingDept = userSettings.dynamicDialingIsActive &&
+      deps.isNotEmpty && 
+      filter.isNotEmpty 
+        ? filter.first
+        : null;
     dynamicDailingDid = dynamicDailingDept?.toDid();
-    dynamicDialing = userSettings.dynamicDialing;
   }
 
   _changeDefaultInputDevice() {
@@ -333,9 +328,9 @@ class _MenuState extends State<Menu> {
 
   _header() {
     UserSettings settings = _fusionConnection.settings;
-    var callid = settings.subscriber.containsKey('callid_nmbr')
-        ? settings.subscriber['callid_nmbr']
-        : '';
+    var callid = settings.dynamicDialingIsActive && settings.dynamicDialingIsSelected 
+        ? dynamicDailingDid.groupName
+        : settings.myOutboundCallerId;
     var user = settings.subscriber.containsKey('user')
         ? settings.subscriber['user']
         : '';
@@ -421,10 +416,10 @@ class _MenuState extends State<Menu> {
     if(dynamicDailingDid != null){
       _dids.add(dynamicDailingDid);
     }
-    
-    _dids.sort((Did a, Did b) => a.did == selectedOutboundDid ? -1 : 1);
-  print("MyDebugMessage " + _fusionConnection.settings.myOutboundCallerId );
-  print("MyDebugMessage ${dynamicDialing}");
+    _dids.sort((Did a, Did b) => a.did == selectedOutboundDid
+      ? a.favorite ? -1 : -1 
+      : a.favorite ? -1 : 1);
+
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -445,7 +440,6 @@ class _MenuState extends State<Menu> {
                             _fusionConnection.settings
                                 .setOutboundDid(option.did, option.groupName != null);
                             setState(() {
-                              dynamicDialing = option.groupName != null;
                               selectedOutboundDid = option.did;
                             });
                             Navigator.pop(context);
@@ -485,11 +479,12 @@ class _MenuState extends State<Menu> {
                                   ],
                                 ),
                                 Spacer(),
-                                if (option.did ==
-                                    selectedOutboundDid)
-                                  Image.asset("assets/icons/check_white.png",
-                                      width: 16, height: 11)
-                              ])));
+                                if (option.did == selectedOutboundDid)
+                                  Icon(Icons.check,color: Colors.white,),
+                                if(option.favorite && option.did != selectedOutboundDid)
+                                  Icon(Icons.star, color: Colors.white,)
+                              ]))
+                          );
                     }).toList())))).whenComplete((){
                       // cleaning up added department to _dids since we don't get it from backend
                       if(dynamicDailingDid != null){

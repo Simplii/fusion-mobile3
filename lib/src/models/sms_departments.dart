@@ -53,11 +53,12 @@ class SMSDepartment extends FusionModel {
 
   Did toDid(){
       return Did({
-        "callRoutingUser" : "",
+        "to_user" : "",
         "did":  this.id,
-        "mmsCapable": false,
-        "notes": "Dynamic Dialing",
-        "groupName" : this.groupName
+        // "mmsCapable": false,
+        "plan_description": "Dynamic Dialing",
+        "groupName" : this.groupName,
+        "favorite" : false
       });
   }
   String getId() => this.id;
