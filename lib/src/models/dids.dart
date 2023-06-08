@@ -6,17 +6,24 @@ import 'fusion_store.dart';
 class Did extends FusionModel {
   String callRoutingUser;
   String did;
-  bool mmsCapable;
+  // bool mmsCapable;
   String notes;
   String groupName;
+  bool favorite;
   // smsRouting: null OR {groupId, type} OR {uid, type}
 
   Did(Map<String, dynamic> obj) {
-    this.callRoutingUser = obj['callRoutingUser'];
+    // this.callRoutingUser = obj['callRoutingUser'];
+    this.callRoutingUser = obj['to_user'];
     this.did = obj['did'];
-    this.mmsCapable = obj['mmsCapable'];
-    this.notes = obj['notes'];
+    // this.mmsCapable = obj['mmsCapable'];
+    // this.mmsCapable = false;
+    // this.notes = obj['notes'];
+    this.notes = obj['plan_description'].runtimeType == String 
+      ? obj['plan_description']
+      : "";
     this.groupName = obj.containsKey("groupName") ? obj["groupName"] : null;
+    this.favorite = obj['favorite'];
   }
 }
 
@@ -26,7 +33,7 @@ class DidStore extends FusionStore<Did> {
   DidStore(FusionConnection fusionConnection) : super(fusionConnection);
 
   getDids(Function(List<Did>, bool) callback) {
-    fusionConnection.apiV2Call("get", "/clients/numbers", {},
+    fusionConnection.apiV2Call("get", "/client/dids", {},
         callback: (Map<String, dynamic> datas) {
       List<Did> response = [];
 

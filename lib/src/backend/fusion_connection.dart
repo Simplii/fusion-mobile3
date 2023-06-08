@@ -361,9 +361,7 @@ class FusionConnection {
       print(urlParams);
       if (uriResponse.body == '{"error":"invalid_login"}') {
         if (onError != null)
-        print(onError());
-        logOut();
-          // onError();
+          onError();
       }
       else {
         var jsonResponse = convert.jsonDecode(uriResponse.body);
@@ -506,10 +504,11 @@ print(responseBody);
     apiV2Call("get", "/user", {},callback: (Map<String,dynamic> data){
       if(data == null) return;
       settings.setMyUserInfo(
-        outboundCallerId: data["dynamicDailingDepartment"] != '' 
-          ? data["dynamicDailingDepartment"]
-          : data["outboundCallerId"],
-        isDynamicDailing: data["dynamicDailingDepartment"] != '' ?? false );
+        outboundCallerId: data["dynamicDialingDepartment"] != '' && 
+          settings.isFeatureEnabled("Dynamic Dialing")
+            ? data["dynamicDialingDepartment"]
+            : data["outboundCallerId"],
+        isDepartment: data["dynamicDialingDepartment"] != '' ?? false);
     });
   }
 
@@ -644,7 +643,7 @@ print(responseBody);
       final String hash = generateMd5(username.toLowerCase() + deviceToken + fusionDataHelper);
       final enc.Key key = enc.Key.fromUtf8(hash);
       final enc.IV iv = enc.IV.fromLength(16);
-      final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key,padding: null));
+      final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key));
       _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
     }
 
@@ -655,8 +654,7 @@ print(responseBody);
             ? {"username": username, "password": _pass}
             : {"username": username},
         onError: (e) {
-          print("MyDebugMessage error fc${e}");
-          // logOut();
+          logOut();
         },
         callback: (Map<String, dynamic> response) {
           if (response.containsKey("access_key")) {
