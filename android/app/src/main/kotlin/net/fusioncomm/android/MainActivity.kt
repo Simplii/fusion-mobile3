@@ -1,34 +1,29 @@
 package net.fusioncomm.android
 
 import android.Manifest
-import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.media.Ringtone
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.JsonWriter
-import android.util.Log
-import com.tekartik.sqflite.SqflitePlugin;
-
-import com.google.gson.Gson
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat
+import android.util.Log
+import androidx.annotation.NonNull
 import androidx.core.content.ContextCompat
+import com.google.gson.Gson
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
-import io.flutter.util.ViewUtils.getActivity
 import org.linphone.core.*
-import org.linphone.core.CoreListenerStub
 import java.math.BigInteger
 import java.security.MessageDigest
 
@@ -39,6 +34,7 @@ class MainActivity : FlutterFragmentActivity() {
     // native boradcastRecivers and services
     companion object {
         lateinit var channel: MethodChannel
+        lateinit var ringtone: Ringtone
     }
     private var username: String = ""
     private var password: String = ""
@@ -50,6 +46,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var appOpenedFromBackground : Boolean = false
 
     lateinit var audioManager:AudioManager
+    val defaultRingtoneUri: Uri? = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
@@ -184,6 +181,7 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.IncomingReceived -> {
+                    ringtone.play()
                     channel.invokeMethod(
                         "lnIncomingReceived",
                         mapOf(
@@ -234,6 +232,10 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Connected -> {
+                    if(ringtone.isPlaying){
+                        ringtone.stop()
+                        core.stopRinging()
+                    }
                     startFusionService()
                     channel.invokeMethod(
                         "lnConnected",
@@ -271,12 +273,18 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Error -> {
+                    if(ringtone.isPlaying){
+                        ringtone.stop()
+                    }
                     channel.invokeMethod(
                         "lnError",
                         mapOf(Pair("uuid", uuid))
                     )
                 }
                 Call.State.End -> {
+                    if(ringtone.isPlaying){
+                        ringtone.stop()
+                    }
                     channel.invokeMethod(
                         "lnEnd",
                         mapOf(Pair("uuid", uuid))
@@ -308,6 +316,10 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Released -> {
+                    if(ringtone.isPlaying){
+                        ringtone.stop()
+                        core.stopRinging()
+                    }
                     if(appOpenedFromBackground){
                         appOpenedFromBackground= false
                         moveTaskToBack(true)
@@ -364,6 +376,10 @@ class MainActivity : FlutterFragmentActivity() {
         core.natPolicy?.stunServer = "mobile-proxy.fusioncomm.net"
         core.remoteRingbackTone = "android.resource://net.fusioncomm.android/" + R.raw.outgoing
 //        core.ring = "android.resource://net.fusioncomm.android/" + R.raw.inbound;
+        if(defaultRingtoneUri != null){
+            core.isNativeRingingEnabled = false
+            ringtone = RingtoneManager.getRingtone(applicationContext, defaultRingtoneUri)
+        }
         core.config.setBool("audio", "android_pause_calls_when_audio_focus_lost", false)
     }
 
