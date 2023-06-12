@@ -6,7 +6,7 @@ class UserSettings {
   Map<String, dynamic> subscriber = {'callid_nmbr': '', 'user': ''};
   final FusionConnection _fusionConnection;
   String myOutboundCallerId = "";
-  bool dynamicDialingIsSelected = false;
+  bool isDynamicDialingDept = false;
   bool dynamicDialingIsActive = false;
   UserSettings(this._fusionConnection);
 
@@ -136,7 +136,7 @@ class UserSettings {
 
   setOutboundDid(String newDid, bool isDepartment) {
     myOutboundCallerId = newDid;
-    dynamicDialingIsSelected = isDepartment;
+    isDynamicDialingDept = isDepartment;
     _fusionConnection.apiV2Call("post", "/clients/setOutboundDid/" + newDid, {
       "dynamicDialingDepartment" : isDepartment
     },
@@ -160,7 +160,7 @@ class UserSettings {
     bool isDepartment, 
     bool dynamicDialingEnabledForDomain}) {
       myOutboundCallerId = outboundCallerId;
-      dynamicDialingIsSelected = isDepartment;
+      isDynamicDialingDept = isDepartment;
       dynamicDialingIsActive = isFeatureEnabled("Dynamic Dialing");
   }
 }

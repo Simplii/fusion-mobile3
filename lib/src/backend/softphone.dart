@@ -865,7 +865,7 @@ class Softphone implements SipUaHelperListener {
     if (!destination.contains("sip:")) destination = "sip:" + destination;
     if (!destination.contains("@"))
       destination += "@" + _fusionConnection.getDomain();
-    if(_fusionConnection.settings.dynamicDialingIsSelected && 
+    if(_fusionConnection.settings.isDynamicDialingDept && 
       _fusionConnection.settings.dynamicDialingIsActive){
       _fusionConnection.apiV2Call(
         "post",
