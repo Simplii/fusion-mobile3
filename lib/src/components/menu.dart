@@ -32,7 +32,7 @@ class _MenuState extends State<Menu> {
   bool loggingOut = false;
   
   String selectedOutboundDid = "";
-  Did dynamicDailingDid;
+  List<Did> dynamicDailingDids = [];
 
   @override
   initState(){
@@ -41,12 +41,14 @@ class _MenuState extends State<Menu> {
     List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
     selectedOutboundDid = userSettings.myOutboundCallerId;
     Iterable filter = deps.where((SMSDepartment dep) => dep.usesDynamicOutbound);
-    SMSDepartment dynamicDailingDept = userSettings.dynamicDialingIsActive &&
+    List<SMSDepartment> dynamicDailingDepts = userSettings.dynamicDialingIsActive &&
       deps.isNotEmpty && 
       filter.isNotEmpty 
-        ? filter.first
-        : null;
-    dynamicDailingDid = dynamicDailingDept?.toDid();
+        ? filter.toList()
+        : [];
+    dynamicDailingDepts.forEach((SMSDepartment dep) { 
+      dynamicDailingDids.add(dep.toDid());
+    });
   }
 
   _changeDefaultInputDevice() {
@@ -328,8 +330,9 @@ class _MenuState extends State<Menu> {
 
   _header() {
     UserSettings settings = _fusionConnection.settings;
-    var callid = settings.dynamicDialingIsActive && settings.dynamicDialingIsSelected 
-        ? dynamicDailingDid.groupName
+    Iterable<Did> didFilter = dynamicDailingDids.where((Did did) => did.did == selectedOutboundDid);
+    var callid = settings.dynamicDialingIsActive && settings.isDynamicDialingDept && didFilter.isNotEmpty
+        ? didFilter.first.groupName
         : settings.myOutboundCallerId;
     var user = settings.subscriber.containsKey('user')
         ? settings.subscriber['user']
@@ -413,12 +416,21 @@ class _MenuState extends State<Menu> {
   }
 
   _openOutboundDIDMenu() {
-    if(dynamicDailingDid != null){
-      _dids.add(dynamicDailingDid);
+    List<Did> sortedDids = [..._dids];
+    if(dynamicDailingDids.length > 0){
+      dynamicDailingDids.forEach((element) {
+        sortedDids.add(element);
+      });
     }
-    _dids.sort((Did a, Did b) => a.did == selectedOutboundDid
-      ? a.favorite ? -1 : -1 
-      : a.favorite ? -1 : 1);
+
+    sortedDids.sort((Did a, Did b) => a.did == selectedOutboundDid || 
+      (a.did == selectedOutboundDid && a.favorite) ||  
+      (a.did == selectedOutboundDid && a.groupName != null )
+      ? -1 
+      : (a.favorite || (a.groupName != null && !b.favorite)) && 
+        b.did != selectedOutboundDid 
+          ? -1 
+          : 1 );
 
     showModalBottomSheet(
         context: context,
@@ -434,7 +446,7 @@ class _MenuState extends State<Menu> {
                     maxWidth: MediaQuery.of(context).size.width),
                 child: ListView(
                     padding: EdgeInsets.all(8),
-                    children: _dids.map((Did option) {
+                    children: sortedDids.map((Did option) {
                       return GestureDetector(
                           onTap: () {
                             _fusionConnection.settings
@@ -482,15 +494,12 @@ class _MenuState extends State<Menu> {
                                 if (option.did == selectedOutboundDid)
                                   Icon(Icons.check,color: Colors.white,),
                                 if(option.favorite && option.did != selectedOutboundDid)
-                                  Icon(Icons.star, color: Colors.white,)
+                                  Icon(Icons.star, color: Colors.white,),
+                                if(option.groupName != null && option.did != selectedOutboundDid)
+                                  Icon(Icons.bolt, color: Colors.white, size: 28,)
                               ]))
                           );
-                    }).toList())))).whenComplete((){
-                      // cleaning up added department to _dids since we don't get it from backend
-                      if(dynamicDailingDid != null){
-                        _dids.removeWhere((element) => element.did == dynamicDailingDid.did);
-                      }
-                    });
+                    }).toList()))));
   }
   void _editProfilePic (){
     showModalBottomSheet(
