@@ -138,18 +138,6 @@ class _DialPadModalState extends State<DialPadModal>
                   ).toList()
                 ),
               ),
-            //  ContactsSearchList(_fusionConnection, _softphone, _query, "all",
-            //      v2Domain,
-            //      embedded: true,
-            //      onSelect: (Contact contact, CrmContact crmContact) {
-            //        if (contact != null && contact.firstNumber() != null) {
-            //          _softphone.makeCall(contact.firstNumber());
-            //          Navigator.pop(context);
-            //        } else if (crmContact != null && crmContact.firstNumber() != null) {
-            //          _softphone.makeCall(crmContact.firstNumber());
-            //          Navigator.pop(context);
-            //        }
-            //      }),
             DialPad(_fusionConnection, _softphone, onQueryChange: (String s) {
               setState(() {
                 _query = s;

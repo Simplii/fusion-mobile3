@@ -96,7 +96,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
             }
           );
         } else {
-          _fusionConnection.contacts.searchV2(query, 50, 0, 
+          _fusionConnection.contacts.searchV2(query, 50, 0, false, 
             (List<Contact> contacts, bool fromServer){
               if (mounted && query == _searchingFor) {
                 setState(() {
