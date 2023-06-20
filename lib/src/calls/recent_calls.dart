@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
+import 'package:fusion_mobile_revamped/src/components/dialpad_recent_calls.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
 import 'package:fusion_mobile_revamped/src/contacts/edit_contact_view.dart';
@@ -65,10 +66,11 @@ class RecentCallsList extends StatefulWidget {
   final String _selectedTab;
   final String query;
   final Function(Contact contact, CrmContact crmContact) onSelect;
+  final bool fromDialpad;
 
   RecentCallsList(
       this._fusionConnection, this._softphone, this._label, this._selectedTab,
-      {Key key, this.onSelect, this.query})
+      {Key key, this.onSelect, this.query, this.fromDialpad = false})
       : super(key: key);
 
   @override
@@ -83,6 +85,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
   String get _label => widget._label;
 
   String get _selectedTab => widget._selectedTab;
+  bool get _fromDialpad => widget.fromDialpad;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<CallHistory> _history = [];
   String _lookedUpTab;
@@ -180,7 +183,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
     });
   }
 
-  _filteredHistoryItems() {
+  List<CallHistory> _filteredHistoryItems() {
     return _history.where((item) {
       String searchQuery = item.to + ":" + item.from + ":";
 
@@ -261,7 +264,13 @@ class _RecentCallsListState extends State<RecentCallsList> {
       if (item.coworker != null && _coworkers[item.coworker.uid] != null) {
         item.coworker = _coworkers[item.coworker.uid];
       }
-      var ret = CallHistorySummaryView(_fusionConnection, _softphone, item,
+      Widget ret = _fromDialpad 
+        ? DialpadRecentCalls(
+          contact: item.coworker == null 
+            ? item.contact != null ? item.contact : Contact.fake(item.toDid)
+            : item.coworker.toContact(),
+          softphone: _softphone,)
+        : CallHistorySummaryView(_fusionConnection, _softphone, item,
           onExpand: () { expand(item); },
           expanded: item.id == expandedId,
           refreshHistoryList: _refreshHistoryList,
@@ -274,7 +283,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
                           : item.contact,
                       item.crmContact);
                 });
-      if (index == 0) {
+      if (index == 0 && !_fromDialpad) {
         return Container(padding:EdgeInsets.only(top:40), child: ret);
       }
       else {
@@ -308,7 +317,9 @@ class _RecentCallsListState extends State<RecentCallsList> {
         child: Container(
             decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(16))),
+                borderRadius: _fromDialpad 
+                  ? null 
+                  : BorderRadius.all(Radius.circular(16))),
             padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
             child: Stack(children: [
               Column(
@@ -344,7 +355,8 @@ class _RecentCallsListState extends State<RecentCallsList> {
                               )))*/
                   )],
               ),
-              Container(
+              if(!_fromDialpad)
+                Container(
                   alignment: Alignment.topLeft,
                   decoration: BoxDecoration(
                       boxShadow: [],
