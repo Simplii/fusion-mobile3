@@ -12,6 +12,7 @@ import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
@@ -113,11 +114,12 @@ class ContactsSearchList extends StatefulWidget {
   final String selectedTab;
   final Function(Contact contact, CrmContact crmContact) onSelect;
   final bool isV2Domain;
+  final bool fromDialpad;
   bool embedded = false;
 
   ContactsSearchList(
       this._fusionConnection, this._softphone, this._query, this.selectedTab, this.isV2Domain,
-      {Key key, this.embedded, this.onSelect})
+      {Key key, this.embedded, this.onSelect, this.fromDialpad = false})
       : super(key: key);
 
   @override
@@ -130,6 +132,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   Softphone get _softphone => widget._softphone;
 
   bool get _embedded => widget.embedded == null ? false : widget.embedded;
+  bool get _fromDialpad => widget.fromDialpad;
 
   String get _query => widget._query;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
@@ -362,9 +365,11 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         },
         child: Container(
             decoration: BoxDecoration(color: Colors.transparent),
+            padding: EdgeInsets.symmetric(vertical:4 ,horizontal: 8),
             child: Row(
               children: [
-                Container(
+                if(!_fromDialpad)
+                  Container(
                     width: 32,
                     height: 50,
                     child: Align(
@@ -394,7 +399,9 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                               ? (contact.coworker.statusMessage != null
                                   ? contact.coworker.statusMessage
                                   : '')
-                              : '',
+                              : contact.firstNumber() != null 
+                                ? contact.firstNumber().toString().formatPhone() 
+                                : "",
                           style: TextStyle(
                               color: smoke,
                               fontSize: 12,
@@ -492,6 +499,42 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     if (lookupState == 0) {
       _lookupQuery();
     }
+
+    if(_fromDialpad){
+      return Container(
+        decoration: BoxDecoration(
+          color:Colors.white,
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 210,
+              child: _isSpinning()
+                ? _spinner()
+                : ListView.builder(
+                    itemCount: _page == -1
+                        ? _contacts.length
+                        : _contacts.length + 1,
+                    itemBuilder: (BuildContext context, int index) {
+                      if (index >= _contacts.length) {
+                        _loadMore();
+                        return Container(height: 20);
+                      } else {
+                        String letter = _letterFor(_contacts[index]);
+                        if (index != 0 &&
+                            _letterFor(_contacts[index - 1]) == letter) {
+                          letter = "";
+                        }
+                        return _resultRow(letter, _contacts[index]);
+                      }
+                    },
+                    padding: _fromDialpad ? null : EdgeInsets.only(left: 12, right: 12, top: _embedded ? 28 : 40)
+                  )
+              ),
+          ],
+        ),
+      );
+    } 
 
     return Expanded(
         child: Container(

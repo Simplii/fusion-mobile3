@@ -43,9 +43,9 @@ class _DialPadModalState extends State<DialPadModal>
   bool v2Domain = false;
   
   final List<Tab> tabs = [
-    Tab(text: "Recent"),
-    Tab(text: "Contacts"),
-    Tab(text: "Coworkers"),
+    Tab(text: "Recent",height: 24),
+    Tab(text: "Contacts",height: 24),
+    Tab(text: "Coworkers", height: 24),
   ];
   TabController _tabController;
 
@@ -116,7 +116,8 @@ class _DialPadModalState extends State<DialPadModal>
                         _softphone, 
                         tab.text, 
                         "all",
-                        query: _query
+                        query: _query,
+                        fromDialpad: true,
                       );
                     } else {
                       return ContactsSearchList(_fusionConnection, _softphone, _query, tab.text.toLowerCase(),
@@ -130,7 +131,8 @@ class _DialPadModalState extends State<DialPadModal>
                             _softphone.makeCall(crmContact.firstNumber());
                             Navigator.pop(context);
                           }
-                        });
+                        },
+                        fromDialpad: true,);
                       }
                     }
                   ).toList()
