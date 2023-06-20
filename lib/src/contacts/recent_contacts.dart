@@ -179,7 +179,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     if (_typeFilter == 'Fusion Contacts') {
       if (_page == -1) return;
       if(_isV2Domain){
-        _fusionConnection.contacts.searchV2(_query, 100, _page * 100,
+        _fusionConnection.contacts.searchV2(_query, 100, _page * 100, _fromDialpad,
           (List<Contact> contacts, bool fromServer) {
           if (thisLookup != _lookedUpQuery) return;
           if (!mounted) return;
