@@ -471,12 +471,15 @@ class _MenuState extends State<Menu> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      option.groupName ?? (option.did + "").formatPhone(),
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w700),
+                                    SizedBox(
+                                      width: 195,
+                                      child: Text(
+                                        option.groupName ?? (option.did + "").formatPhone(),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w700),
+                                      ),
                                     ),
                                     Container(height: 6),
                                     Text(
