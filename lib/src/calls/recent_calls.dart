@@ -266,6 +266,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
       }
       Widget ret = _fromDialpad 
         ? DialpadRecentCalls(
+          date: item.startTime,
           contact: item.coworker == null 
             ? item.contact != null ? item.contact : Contact.fake(item.toDid)
             : item.coworker.toContact(),
@@ -329,7 +330,9 @@ class _RecentCallsListState extends State<RecentCallsList> {
                           ? _spinner()
                 : RefreshIndicator(
               onRefresh: () => _refreshHistoryList(),
-              child: ListView.builder(
+              child: historyPage.length == 0 
+                ? Center(child: Text("No Match Was Found"),)
+                : ListView.builder(
                         itemCount: _page == -1
                             ? historyPage.length
                             : historyPage.length + 1,
