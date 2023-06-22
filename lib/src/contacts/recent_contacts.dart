@@ -394,18 +394,34 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                               fontWeight: FontWeight.w700))),
                   Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                          contact.coworker != null
-                              ? (contact.coworker.statusMessage != null
-                                  ? contact.coworker.statusMessage
-                                  : '')
-                              : contact.firstNumber() != null 
-                                ? contact.firstNumber().toString().formatPhone() 
-                                : "",
-                          style: TextStyle(
-                              color: smoke,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400)))
+                      child: Container(
+                        color: contact.coworker == null && contact.firstNumber() != null 
+                          ?  Color.fromARGB(255, 243, 242, 242)
+                          : null,
+                        padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                        child: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 5,
+                          children: [
+                            if(contact.coworker == null && contact.firstNumber() != null)
+                              Image.asset("assets/icons/phone_filled_dark.png", width: 10, height: 10),
+                            Text(
+                              contact.coworker != null
+                                  ? (contact.coworker.statusMessage != null
+                                      ? contact.coworker.statusMessage
+                                      : '')
+                                  : contact.firstNumber() != null 
+                                    ? contact.firstNumber().toString().formatPhone() 
+                                    : "",
+                              style: TextStyle(
+                                  color: coal,
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w400)
+                            ),
+                          ]
+                        ),
+                      ))
                 ]))
               ],
             )));
@@ -505,10 +521,15 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         decoration: BoxDecoration(
           color:Colors.white,
         ),
-        child: Column(
+        child: _contacts.length == 0 
+        ? Center(
+          child: _isSpinning() 
+            ?  _spinner() 
+            : Text("No Match Was Found"),
+          )
+        : Column(
           children: [
-            Container(
-              height: 210,
+            Expanded(
               child: _isSpinning()
                 ? _spinner()
                 : ListView.builder(
@@ -518,17 +539,28 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                     itemBuilder: (BuildContext context, int index) {
                       if (index >= _contacts.length) {
                         _loadMore();
-                        return Container(height: 20);
+
+                        return Container(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20, 
+                              height: 20, 
+                              child:  _typeFilter != "Coworkers" 
+                                ? CircularProgressIndicator(
+                                    color: crimsonDark, 
+                                  )
+                                : null
+                            ),
+                          ),
+                        );
                       } else {
-                        String letter = _letterFor(_contacts[index]);
-                        if (index != 0 &&
-                            _letterFor(_contacts[index - 1]) == letter) {
-                          letter = "";
-                        }
-                        return _resultRow(letter, _contacts[index]);
+                        return _resultRow("", _contacts[index]);
                       }
                     },
-                    padding: _fromDialpad ? null : EdgeInsets.only(left: 12, right: 12, top: _embedded ? 28 : 40)
+                    padding: _fromDialpad 
+                      ? null 
+                      : EdgeInsets.only(left: 12, right: 12, top: _embedded ? 28 : 40)
                   )
               ),
           ],

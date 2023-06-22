@@ -43,9 +43,9 @@ class _DialPadModalState extends State<DialPadModal>
   bool v2Domain = false;
   
   final List<Tab> tabs = [
-    Tab(text: "Recent",height: 24),
-    Tab(text: "Contacts",height: 24),
-    Tab(text: "Coworkers", height: 24),
+    Tab(text: "Recent",height: 30),
+    Tab(text: "Contacts",height: 30),
+    Tab(text: "Coworkers", height: 30),
   ];
   TabController _tabController;
 
@@ -99,12 +99,26 @@ class _DialPadModalState extends State<DialPadModal>
         Container(
           child: Column(
             children: [
-              TabBar(
-                unselectedLabelColor: Colors.black,
-                labelColor: Colors.red,
-                tabs: tabs,
-                controller: _tabController,
-                indicatorSize: TabBarIndicatorSize.tab,
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(width: 1.5, color: ash)
+                  )
+                ),
+                child: TabBar(
+                  unselectedLabelColor: Colors.black,
+                  unselectedLabelStyle: TextStyle(
+                    fontWeight: FontWeight.normal
+                  ),
+                  indicatorColor: crimsonDark,
+                  tabs: tabs,
+                  controller: _tabController,
+                  labelStyle: TextStyle(
+                    fontWeight: FontWeight.bold
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelPadding: EdgeInsets.only(bottom: 5),
+                ),
               ),
               Expanded(
                 child: TabBarView(
