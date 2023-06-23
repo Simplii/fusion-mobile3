@@ -1,31 +1,39 @@
 package net.fusioncomm.android
 
 import android.Manifest
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
-import android.media.Ringtone
-import android.media.RingtoneManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.JsonWriter
+import android.util.Log
+import com.tekartik.sqflite.SqflitePlugin;
+
+import com.google.gson.Gson
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
-import android.util.Log
+
 import androidx.annotation.NonNull
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.gson.Gson
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
+import io.flutter.util.ViewUtils.getActivity
 import org.linphone.core.*
+import org.linphone.core.CoreListenerStub
 import java.math.BigInteger
 import java.security.MessageDigest
+import android.media.Ringtone
+import android.media.RingtoneManager
+import android.net.Uri
 
 class MainActivity : FlutterFragmentActivity() {
     private lateinit var core: Core
