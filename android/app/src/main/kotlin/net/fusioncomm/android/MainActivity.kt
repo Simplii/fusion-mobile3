@@ -181,7 +181,9 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.IncomingReceived -> {
-                    ringtone.play()
+                    if(core.calls.size <= 1){
+                        ringtone.play()
+                    }
                     channel.invokeMethod(
                         "lnIncomingReceived",
                         mapOf(
