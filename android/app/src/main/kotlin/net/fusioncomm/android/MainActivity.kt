@@ -19,7 +19,7 @@ import android.telephony.PhoneStateListener
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 
-import androidx.annotation.NonNull
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -34,6 +34,7 @@ import java.security.MessageDigest
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.net.Uri
+import android.view.KeyEvent
 
 class MainActivity : FlutterFragmentActivity() {
     private lateinit var core: Core
@@ -42,7 +43,6 @@ class MainActivity : FlutterFragmentActivity() {
     // native boradcastRecivers and services
     companion object {
         lateinit var channel: MethodChannel
-        lateinit var ringtone: Ringtone
     }
     private var username: String = ""
     private var password: String = ""
@@ -54,12 +54,12 @@ class MainActivity : FlutterFragmentActivity() {
     private var appOpenedFromBackground : Boolean = false
 
     lateinit var audioManager:AudioManager
-    val defaultRingtoneUri: Uri? = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
         setupCore();
-        setupBroadcastReciver()
+//        setupBroadcastReciver()
         val incomingCallId : String? = getIntent().getStringExtra("payload")
         if(incomingCallId != null){
             appOpenedFromBackground = true
@@ -100,6 +100,13 @@ class MainActivity : FlutterFragmentActivity() {
         filter.addAction("android.media.VOLUME_CHANGED_ACTION")
         registerReceiver(volumeReceiver, filter)
     }
+
+   override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+       if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)){
+           core.stopRinging()
+       }
+       return super.onKeyDown(keyCode, event);
+   }
 
     private fun startFusionService(){
         if(!FusionService.serviceStarted){
@@ -189,9 +196,6 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.IncomingReceived -> {
-                    if(core.calls.size <= 1){
-                        ringtone.play()
-                    }
                     channel.invokeMethod(
                         "lnIncomingReceived",
                         mapOf(
@@ -242,10 +246,6 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Connected -> {
-                    if(ringtone.isPlaying){
-                        ringtone.stop()
-                        core.stopRinging()
-                    }
                     startFusionService()
                     channel.invokeMethod(
                         "lnConnected",
@@ -283,18 +283,12 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Error -> {
-                    if(ringtone.isPlaying){
-                        ringtone.stop()
-                    }
                     channel.invokeMethod(
                         "lnError",
                         mapOf(Pair("uuid", uuid))
                     )
                 }
                 Call.State.End -> {
-                    if(ringtone.isPlaying){
-                        ringtone.stop()
-                    }
                     channel.invokeMethod(
                         "lnEnd",
                         mapOf(Pair("uuid", uuid))
@@ -326,10 +320,6 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.Released -> {
-                    if(ringtone.isPlaying){
-                        ringtone.stop()
-                        core.stopRinging()
-                    }
                     if(appOpenedFromBackground){
                         appOpenedFromBackground= false
                         moveTaskToBack(true)
@@ -385,11 +375,7 @@ class MainActivity : FlutterFragmentActivity() {
 
         core.natPolicy?.stunServer = "mobile-proxy.fusioncomm.net"
         core.remoteRingbackTone = "android.resource://net.fusioncomm.android/" + R.raw.outgoing
-//        core.ring = "android.resource://net.fusioncomm.android/" + R.raw.inbound;
-        if(defaultRingtoneUri != null){
-            core.isNativeRingingEnabled = false
-            ringtone = RingtoneManager.getRingtone(applicationContext, defaultRingtoneUri)
-        }
+        core.ring = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE).toString();
         core.config.setBool("audio", "android_pause_calls_when_audio_focus_lost", false)
     }
 
@@ -566,6 +552,7 @@ class MainActivity : FlutterFragmentActivity() {
         clonedParams.registerEnabled = false
 
         account.params = clonedParams
+        finishAndRemoveTask();
     }
 
     private fun findUuidByCall(call: Call): String {
@@ -799,7 +786,6 @@ class MainActivity : FlutterFragmentActivity() {
                 register()
             } else if (call.method == "lpUnregister") {
                 unregister()
-                finishAndRemoveTask();
             }
         }
     }
