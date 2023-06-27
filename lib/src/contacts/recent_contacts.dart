@@ -12,6 +12,7 @@ import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
@@ -113,11 +114,12 @@ class ContactsSearchList extends StatefulWidget {
   final String selectedTab;
   final Function(Contact contact, CrmContact crmContact) onSelect;
   final bool isV2Domain;
+  final bool fromDialpad;
   bool embedded = false;
 
   ContactsSearchList(
       this._fusionConnection, this._softphone, this._query, this.selectedTab, this.isV2Domain,
-      {Key key, this.embedded, this.onSelect})
+      {Key key, this.embedded, this.onSelect, this.fromDialpad = false})
       : super(key: key);
 
   @override
@@ -130,6 +132,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   Softphone get _softphone => widget._softphone;
 
   bool get _embedded => widget.embedded == null ? false : widget.embedded;
+  bool get _fromDialpad => widget.fromDialpad;
 
   String get _query => widget._query;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
@@ -176,7 +179,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     if (_typeFilter == 'Fusion Contacts') {
       if (_page == -1) return;
       if(_isV2Domain){
-        _fusionConnection.contacts.searchV2(_query, 100, _page * 100,
+        _fusionConnection.contacts.searchV2(_query, 100, _page * 100, _fromDialpad,
           (List<Contact> contacts, bool fromServer) {
           if (thisLookup != _lookedUpQuery) return;
           if (!mounted) return;
@@ -362,9 +365,11 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         },
         child: Container(
             decoration: BoxDecoration(color: Colors.transparent),
+            padding: EdgeInsets.symmetric(vertical:4 ,horizontal: 8),
             child: Row(
               children: [
-                Container(
+                if(!_fromDialpad)
+                  Container(
                     width: 32,
                     height: 50,
                     child: Align(
@@ -389,16 +394,34 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                               fontWeight: FontWeight.w700))),
                   Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                          contact.coworker != null
-                              ? (contact.coworker.statusMessage != null
-                                  ? contact.coworker.statusMessage
-                                  : '')
-                              : '',
-                          style: TextStyle(
-                              color: smoke,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400)))
+                      child: Container(
+                        color: contact.coworker == null && contact.firstNumber() != null 
+                          ?  Color.fromARGB(255, 243, 242, 242)
+                          : null,
+                        padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                        child: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 5,
+                          children: [
+                            if(contact.coworker == null && contact.firstNumber() != null)
+                              Image.asset("assets/icons/phone_filled_dark.png", width: 10, height: 10),
+                            Text(
+                              contact.coworker != null
+                                  ? (contact.coworker.statusMessage != null
+                                      ? contact.coworker.statusMessage
+                                      : '')
+                                  : contact.firstNumber() != null 
+                                    ? contact.firstNumber().toString().formatPhone() 
+                                    : "",
+                              style: TextStyle(
+                                  color: coal,
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w400)
+                            ),
+                          ]
+                        ),
+                      ))
                 ]))
               ],
             )));
@@ -492,6 +515,58 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     if (lookupState == 0) {
       _lookupQuery();
     }
+
+    if(_fromDialpad){
+      return Container(
+        decoration: BoxDecoration(
+          color:Colors.white,
+        ),
+        child: _contacts.length == 0 
+        ? Center(
+          child: _isSpinning() 
+            ?  _spinner() 
+            : Text("No Match Was Found"),
+          )
+        : Column(
+          children: [
+            Expanded(
+              child: _isSpinning()
+                ? _spinner()
+                : ListView.builder(
+                    itemCount: _page == -1
+                        ? _contacts.length
+                        : _contacts.length + 1,
+                    itemBuilder: (BuildContext context, int index) {
+                      if (index >= _contacts.length) {
+                        _loadMore();
+
+                        return Container(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20, 
+                              height: 20, 
+                              child:  _typeFilter != "Coworkers" 
+                                ? CircularProgressIndicator(
+                                    color: crimsonDark, 
+                                  )
+                                : null
+                            ),
+                          ),
+                        );
+                      } else {
+                        return _resultRow("", _contacts[index]);
+                      }
+                    },
+                    padding: _fromDialpad 
+                      ? null 
+                      : EdgeInsets.only(left: 12, right: 12, top: _embedded ? 28 : 40)
+                  )
+              ),
+          ],
+        ),
+      );
+    } 
 
     return Expanded(
         child: Container(

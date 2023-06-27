@@ -17,7 +17,7 @@ import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/styles.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:sip_ua/sip_ua.dart';
-
+import 'package:fusion_mobile_revamped/src/calls/recent_calls.dart';
 class DialPadModal extends StatefulWidget {
   DialPadModal(this._fusionConnection, this._softphone, {Key key, this.initialTab})
       : super(key: key);
@@ -41,10 +41,18 @@ class _DialPadModalState extends State<DialPadModal>
   String _query = "";
   Timer _timer;
   bool v2Domain = false;
+  
+  final List<Tab> tabs = [
+    Tab(text: "Recent",height: 30),
+    Tab(text: "Contacts",height: 30),
+    Tab(text: "Coworkers", height: 30),
+  ];
+  TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+     _tabController = TabController(length: tabs.length, vsync: this);
     _timer = new Timer.periodic(
       Duration(seconds: 1),
       (Timer timer) {
@@ -65,6 +73,7 @@ class _DialPadModalState extends State<DialPadModal>
   void dispose() {
     _tc.dispose();
     _timer.cancel();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -88,19 +97,61 @@ class _DialPadModalState extends State<DialPadModal>
           child: ParkedCalls(_fusionConnection, _softphone),
         ),
         Container(
-          child: Column(children: [
-             ContactsSearchList(_fusionConnection, _softphone, _query, "coworkers",
-                 v2Domain,
-                 embedded: true,
-                 onSelect: (Contact contact, CrmContact crmContact) {
-                   if (contact != null && contact.firstNumber() != null) {
-                     _softphone.makeCall(contact.firstNumber());
-                     Navigator.pop(context);
-                   } else if (crmContact != null && crmContact.firstNumber() != null) {
-                     _softphone.makeCall(crmContact.firstNumber());
-                     Navigator.pop(context);
-                   }
-                 }),
+          child: Column(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(width: 1.5, color: ash)
+                  )
+                ),
+                child: TabBar(
+                  unselectedLabelColor: Colors.black,
+                  unselectedLabelStyle: TextStyle(
+                    fontWeight: FontWeight.normal
+                  ),
+                  indicatorColor: crimsonDark,
+                  tabs: tabs,
+                  controller: _tabController,
+                  labelStyle: TextStyle(
+                    fontWeight: FontWeight.bold
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelPadding: EdgeInsets.only(bottom: 5),
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: tabs.map((Tab tab){
+                    if(tab.text == "Recent"){
+                      return RecentCallsList(
+                        _fusionConnection, 
+                        _softphone, 
+                        tab.text, 
+                        "all",
+                        query: _query,
+                        fromDialpad: true,
+                      );
+                    } else {
+                      return ContactsSearchList(_fusionConnection, _softphone, _query, tab.text.toLowerCase(),
+                        v2Domain,
+                        embedded: true,
+                        onSelect: (Contact contact, CrmContact crmContact) {
+                          if (contact != null && contact.firstNumber() != null) {
+                            _softphone.makeCall(contact.firstNumber());
+                            Navigator.pop(context);
+                          } else if (crmContact != null && crmContact.firstNumber() != null) {
+                            _softphone.makeCall(crmContact.firstNumber());
+                            Navigator.pop(context);
+                          }
+                        },
+                        fromDialpad: true,);
+                      }
+                    }
+                  ).toList()
+                ),
+              ),
             DialPad(_fusionConnection, _softphone, onQueryChange: (String s) {
               setState(() {
                 _query = s;

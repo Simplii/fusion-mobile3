@@ -517,7 +517,7 @@ class ContactsStore extends FusionStore<Contact> {
     });
   }
 
-  searchV2(String query, int limit, int offset,
+  searchV2(String query, int limit, int offset, fromDialpad,
       Function(List<Contact>, bool) callback) {
     query = query.toLowerCase();
 
@@ -535,12 +535,16 @@ class ContactsStore extends FusionStore<Contact> {
         "tagFilters": []
     },
   }, callback: (Map<String,dynamic> datas) {
+      List<Contact> contacts = getRecords();
       List<Contact> response = [];
 
       datas['items'].forEach((dynamic c) {
         Contact contact = Contact.fromV2(c as Map<String, dynamic>);
         response.add(contact);
-        storeRecord(contact);
+        if(contacts.isEmpty || !fromDialpad){ 
+          // prevent recurring searching from overwriting current db
+          storeRecord(contact);
+        }
       });
 
       callback(response, true);
