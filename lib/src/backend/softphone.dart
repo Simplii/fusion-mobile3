@@ -865,8 +865,26 @@ class Softphone implements SipUaHelperListener {
     if (!destination.contains("sip:")) destination = "sip:" + destination;
     if (!destination.contains("@"))
       destination += "@" + _fusionConnection.getDomain();
-
-    _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+    if(_fusionConnection.settings.isDynamicDialingDept && 
+      _fusionConnection.settings.dynamicDialingIsActive){
+      _fusionConnection.apiV2Call(
+        "post",
+        "/dynamicDialing/outbound/setOutboundId",
+        { 
+          "destination": _cleanToAddress(destination),
+          "groupId": _fusionConnection.settings.myOutboundCallerId
+        },
+        callback: (Map<String,dynamic> response){
+          if(response.containsKey("success") && response["success"] == true){
+            _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+          } else {
+            toast("Sorry somthing went wrong with dynamic dailing");
+          }
+        }
+      );
+    } else {
+      _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+    }
   }
 
   makeActiveCall(Call call) {

@@ -487,21 +487,33 @@ print(responseBody);
 
   _postLoginSetup(Function(bool) callback) {
     settings.lookupSubscriber();
-        coworkers.getCoworkers((data) {});
-        setupSocket();
+    coworkers.getCoworkers((data) {});
+    setupSocket();
+    if (callback != null) {
+      callback(true);
+    }
 
-        if (callback != null) {
-          callback(true);
-        }
-
-        smsDepartments.getDepartments((List<SMSDepartment> lis) {});
-        FirebaseMessaging.instance.getToken().then((token) {
-          print("got token");
-          print(token);
-          print(_pushkitToken);
-          apiV1Call("post", "/clients/device_token",
-              {"token": token, "pn_tok": _pushkitToken});
-        });
+    smsDepartments.getDepartments((List<SMSDepartment> lis) {});
+    FirebaseMessaging.instance.getToken().then((token) {
+      print("got token");
+      print(token);
+      print(_pushkitToken);
+      apiV1Call("post", "/clients/device_token",
+          {"token": token, "pn_tok": _pushkitToken});
+    });
+    
+    if(settings.options.containsKey("enabled_features")){
+      apiV2Call("get", "/user", {},callback: (Map<String,dynamic> data){
+        if(data == null) return;
+        settings.setMyUserInfo(
+            outboundCallerId: data.containsKey("dynamicDialingDepartment") && 
+            data["dynamicDialingDepartment"] != '' && 
+            settings.isFeatureEnabled("Dynamic Dialing")
+              ? data["dynamicDialingDepartment"]
+              : data["outboundCallerId"],
+          isDepartment: data["dynamicDialingDepartment"] != '' ?? false);
+      });
+    }
   }
 
   login(String username, String password, Function(bool) callback) {
@@ -645,7 +657,7 @@ print(responseBody);
         _pass != null
             ? {"username": username, "password": _pass}
             : {"username": username},
-        onError: () {
+        onError: (e) {
           logOut();
         },
         callback: (Map<String, dynamic> response) {

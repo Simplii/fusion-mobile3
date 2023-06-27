@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -29,6 +30,26 @@ class _MenuState extends State<Menu> {
   Softphone get _softphone => widget._softphone;
   List<Did> get _dids => widget._dids;
   bool loggingOut = false;
+  
+  String selectedOutboundDid = "";
+  List<Did> dynamicDailingDids = [];
+
+  @override
+  initState(){
+    super.initState();
+    UserSettings userSettings = _fusionConnection.settings;
+    List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
+    selectedOutboundDid = userSettings.myOutboundCallerId;
+    Iterable filter = deps.where((SMSDepartment dep) => dep.usesDynamicOutbound);
+    List<SMSDepartment> dynamicDailingDepts = userSettings.dynamicDialingIsActive &&
+      deps.isNotEmpty && 
+      filter.isNotEmpty 
+        ? filter.toList()
+        : [];
+    dynamicDailingDepts.forEach((SMSDepartment dep) { 
+      dynamicDailingDids.add(dep.toDid());
+    });
+  }
 
   _changeDefaultInputDevice() {
     List<List<String>> options = _softphone.devicesList
@@ -309,9 +330,10 @@ class _MenuState extends State<Menu> {
 
   _header() {
     UserSettings settings = _fusionConnection.settings;
-    var callid = settings.subscriber.containsKey('callid_nmbr')
-        ? settings.subscriber['callid_nmbr']
-        : '';
+    Iterable<Did> didFilter = dynamicDailingDids.where((Did did) => did.did == selectedOutboundDid);
+    var callid = settings.dynamicDialingIsActive && settings.isDynamicDialingDept && didFilter.isNotEmpty
+        ? didFilter.first.groupName
+        : settings.myOutboundCallerId;
     var user = settings.subscriber.containsKey('user')
         ? settings.subscriber['user']
         : '';
@@ -394,6 +416,22 @@ class _MenuState extends State<Menu> {
   }
 
   _openOutboundDIDMenu() {
+    List<Did> sortedDids = [..._dids];
+    if(dynamicDailingDids.length > 0){
+      dynamicDailingDids.forEach((element) {
+        sortedDids.add(element);
+      });
+    }
+
+    sortedDids.sort((Did a, Did b) => a.did == selectedOutboundDid || 
+      (a.did == selectedOutboundDid && a.favorite) ||  
+      (a.did == selectedOutboundDid && a.groupName != null )
+      ? -1 
+      : (a.favorite || (a.groupName != null && !b.favorite)) && 
+        b.did != selectedOutboundDid 
+          ? -1 
+          : 1 );
+
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -408,11 +446,14 @@ class _MenuState extends State<Menu> {
                     maxWidth: MediaQuery.of(context).size.width),
                 child: ListView(
                     padding: EdgeInsets.all(8),
-                    children: _dids.map((Did option) {
+                    children: sortedDids.map((Did option) {
                       return GestureDetector(
                           onTap: () {
                             _fusionConnection.settings
-                                .setOutboundDid(option.did);
+                                .setOutboundDid(option.did, option.groupName != null);
+                            setState(() {
+                              selectedOutboundDid = option.did;
+                            });
                             Navigator.pop(context);
                           },
                           child: Container(
@@ -420,8 +461,7 @@ class _MenuState extends State<Menu> {
                                   top: 12, bottom: 12, left: 18, right: 18),
                               decoration: BoxDecoration(
                                   color: (option.did ==
-                                          _fusionConnection.settings
-                                              .subscriber["callid_nmbr"]
+                                          selectedOutboundDid
                                       ? lightHighlight
                                       : Color.fromARGB(0, 0, 0, 0)),
                                   border: Border(
@@ -431,12 +471,15 @@ class _MenuState extends State<Menu> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      (option.did + "").formatPhone(),
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w700),
+                                    SizedBox(
+                                      width: 195,
+                                      child: Text(
+                                        option.groupName ?? (option.did + "").formatPhone(),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w700),
+                                      ),
                                     ),
                                     Container(height: 6),
                                     Text(
@@ -451,12 +494,14 @@ class _MenuState extends State<Menu> {
                                   ],
                                 ),
                                 Spacer(),
-                                if (option.did ==
-                                    _fusionConnection
-                                        .settings.subscriber["callid_nmbr"])
-                                  Image.asset("assets/icons/check_white.png",
-                                      width: 16, height: 11)
-                              ])));
+                                if (option.did == selectedOutboundDid)
+                                  Icon(Icons.check,color: Colors.white,),
+                                if(option.favorite && option.did != selectedOutboundDid)
+                                  Icon(Icons.star, color: Colors.white,),
+                                if(option.groupName != null && option.did != selectedOutboundDid)
+                                  Icon(Icons.bolt, color: Colors.white, size: 28,)
+                              ]))
+                          );
                     }).toList()))));
   }
   void _editProfilePic (){
