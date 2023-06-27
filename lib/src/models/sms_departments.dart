@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 
 import 'carbon_date.dart';
+import 'dids.dart';
 import 'fusion_model.dart';
 import 'fusion_store.dart';
 
@@ -36,6 +39,28 @@ class SMSDepartment extends FusionModel {
     }
   }
 
+  serserialize() {
+    return jsonEncode({
+      'groupName': this.groupName,
+      'id': this.id,
+      'numbers': this.numbers,
+      'mmsNumbers': mmsNumbers,
+      'primaryUser': this.primaryUser,
+      'unreadCount': this.unreadCount,
+      'usesDynamicOutbound': this.usesDynamicOutbound,
+    });
+  }
+
+  Did toDid(){
+      return Did({
+        "to_user" : "",
+        "did":  this.id,
+        // "mmsCapable": false,
+        "plan_description": "Dynamic Dialing",
+        "groupName" : this.groupName,
+        "favorite" : false
+      });
+  }
   String getId() => this.id;
 }
 
