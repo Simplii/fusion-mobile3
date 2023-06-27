@@ -31,6 +31,10 @@ import org.linphone.core.*
 import org.linphone.core.CoreListenerStub
 import java.math.BigInteger
 import java.security.MessageDigest
+import android.media.Ringtone
+import android.media.RingtoneManager
+import android.net.Uri
+import android.view.KeyEvent
 
 class MainActivity : FlutterFragmentActivity() {
     private lateinit var core: Core
@@ -51,10 +55,11 @@ class MainActivity : FlutterFragmentActivity() {
 
     lateinit var audioManager:AudioManager
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
         setupCore();
-        setupBroadcastReciver()
+//        setupBroadcastReciver()
         val incomingCallId : String? = getIntent().getStringExtra("payload")
         if(incomingCallId != null){
             appOpenedFromBackground = true
@@ -95,6 +100,13 @@ class MainActivity : FlutterFragmentActivity() {
         filter.addAction("android.media.VOLUME_CHANGED_ACTION")
         registerReceiver(volumeReceiver, filter)
     }
+
+   override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+       if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)){
+           core.stopRinging()
+       }
+       return super.onKeyDown(keyCode, event);
+   }
 
     private fun startFusionService(){
         if(!FusionService.serviceStarted){
@@ -363,7 +375,7 @@ class MainActivity : FlutterFragmentActivity() {
 
         core.natPolicy?.stunServer = "mobile-proxy.fusioncomm.net"
         core.remoteRingbackTone = "android.resource://net.fusioncomm.android/" + R.raw.outgoing
-//        core.ring = "android.resource://net.fusioncomm.android/" + R.raw.inbound;
+        core.ring = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE).toString();
         core.config.setBool("audio", "android_pause_calls_when_audio_focus_lost", false)
     }
 
@@ -540,6 +552,7 @@ class MainActivity : FlutterFragmentActivity() {
         clonedParams.registerEnabled = false
 
         account.params = clonedParams
+        finishAndRemoveTask();
     }
 
     private fun findUuidByCall(call: Call): String {
@@ -773,7 +786,6 @@ class MainActivity : FlutterFragmentActivity() {
                 register()
             } else if (call.method == "lpUnregister") {
                 unregister()
-                finishAndRemoveTask();
             }
         }
     }

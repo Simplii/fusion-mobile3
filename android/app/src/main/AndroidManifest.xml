@@ -41,7 +41,7 @@
 
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="fusion"
+        android:label="Fusion"
         android:usesCleartextTraffic="true">
 
         <service android:name="dev.cruv.ringtone_player.PlayerService" />
