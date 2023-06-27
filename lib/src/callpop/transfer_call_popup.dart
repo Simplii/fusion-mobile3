@@ -16,6 +16,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../backend/fusion_connection.dart';
+import '../calls/recent_calls.dart';
 import '../components/popup_menu.dart';
 import '../styles.dart';
 import '../utils.dart';
@@ -35,9 +36,25 @@ class TransferCallPopup extends StatefulWidget {
   State<StatefulWidget> createState() => _TransferCallpopState();
 }
 
-class _TransferCallpopState extends State<TransferCallPopup> {
+class _TransferCallpopState extends State<TransferCallPopup> with TickerProviderStateMixin {
   FusionConnection get _fusionConnection => widget._fusionConnection;
+  Softphone get _softphone => widget._softphone;
   String _query = "";
+  TabController _tabController;
+  bool v2Domain = false;
+
+  final List<Tab> tabs = [
+    Tab(text: "Recent",height: 30),
+    Tab(text: "Contacts",height: 30),
+    Tab(text: "Coworkers", height: 30),
+  ];
+
+  @override
+  initState(){
+    super.initState();
+    _tabController = TabController(length: tabs.length, vsync: this);
+    v2Domain = _fusionConnection.settings.isV2User();
+  }
 
   _directTransfer(String to) {
     widget._onTransfer(to, "blind");
@@ -64,6 +81,7 @@ class _TransferCallpopState extends State<TransferCallPopup> {
       }
     }
 
+    print("MyDebugMessage transsfer modal ${contact.firstNumber()}");
     return showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -152,41 +170,56 @@ class _TransferCallpopState extends State<TransferCallPopup> {
           Container(
               margin: EdgeInsets.only(top: 8),
               child: Center(child: popupHandle())),
-          if (_query == "")
-            Expanded(
-                child: Container(
-                    child: ContactsList(_fusionConnection, widget._softphone,
-                        "Recent Coworkers", "coworkers",
+          TabBar(
+            unselectedLabelColor: Colors.black,
+            unselectedLabelStyle: TextStyle(
+              fontWeight: FontWeight.normal
+            ),
+            indicatorColor: crimsonDark,
+            tabs: tabs,
+            controller: _tabController,
+            labelStyle: TextStyle(
+              fontWeight: FontWeight.bold
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            labelPadding: EdgeInsets.only(bottom: 5),),
+          Expanded(
+            child: TabBarView(
+                  controller: _tabController,
+                  children: tabs.map((Tab tab){
+                    if(tab.text == "Recent"){
+                      return RecentCallsList(
+                        _fusionConnection, 
+                        _softphone, 
+                        tab.text, 
+                        "all",
+                        query: _query,
+                        fromDialpad: true,
+                        onSelect: (Contact contact, CrmContact crmContact){
+                          if (contact != null && contact.firstNumber() != null) {
+                            _selectTransferType(contact, null, '');
+                          } else if (crmContact != null && crmContact.firstNumber() != null) {
+                            _selectTransferType(null, crmContact, '');
+                          }
+                        },
+                      );
+                    } else {
+                      return ContactsSearchList(_fusionConnection, _softphone, _query, tab.text.toLowerCase(),
+                        v2Domain,
+                        embedded: true,
                         onSelect: (Contact contact, CrmContact crmContact) {
-              if (contact != null) {
-                if (contact.firstNumber() != null) {
-                  _selectTransferType(contact, null, '');
-                  // _doTransfer(contact.firstNumber());
-                }
-              } else if (crmContact != null) {
-                if (crmContact.firstNumber() != null) {
-                  _selectTransferType(null, crmContact, '');
-                  // _doTransfer(crmContact.firstNumber());
-                }
-              }
-            }))),
-          if (_query != "")
-            Container(
-                child: ContactsSearchList(_fusionConnection, widget._softphone,
-                    this._query, "coworkers", _fusionConnection.settings.isV2User() ,embedded: true,
-                    onSelect: (Contact contact, CrmContact crmContact) {
-              if (contact != null) {
-                if (contact.firstNumber() != null) {
-                  _selectTransferType(contact, null, '');
-                  // _doTransfer(contact.firstNumber());
-                }
-              } else if (crmContact != null) {
-                if (crmContact.firstNumber() != null) {
-                  _selectTransferType(null, crmContact, '');
-                  // _doTransfer(crmContact.firstNumber());
-                }
-              }
-            })),
+                          if (contact != null && contact.firstNumber() != null) {
+                            _selectTransferType(contact, null, '');
+                          } else if (crmContact != null && crmContact.firstNumber() != null) {
+                            _selectTransferType(null, crmContact, '');
+                          }
+                        },
+                        fromDialpad: true,);
+                      }
+                    }
+                  ).toList()
+                ),
+          ),
           DialPad(_fusionConnection, widget._softphone,
               onPlaceCall: (String number) {
             _selectTransferType(null, null, number);
