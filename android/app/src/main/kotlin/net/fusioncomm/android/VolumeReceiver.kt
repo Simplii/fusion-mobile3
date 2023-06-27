@@ -11,9 +11,11 @@ class VolumeReceiver : BroadcastReceiver() {
         if (intent.action.equals("android.media.VOLUME_CHANGED_ACTION")) {
             val core: CoreManager = CoreManager.instance()
             if(core != null){
-                core.stopRinging()
+//                core.stopRinging()
+//                if(MainActivity.ringtone != null && MainActivity.ringtone.isPlaying){
+//                    MainActivity.ringtone.stop()
+//                }
             }
-            MainActivity.channel.invokeMethod("stopRinger",true);
         }
     }
 }
