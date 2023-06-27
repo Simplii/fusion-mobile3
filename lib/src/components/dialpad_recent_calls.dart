@@ -2,19 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
+import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
 import '../styles.dart';
 
 class DialpadRecentCalls extends StatefulWidget {
   final Contact contact;
+  final CrmContact crmContact;
   final Softphone softphone;
   final DateTime date;
+  final Function(Contact contact,CrmContact crmContact) onSelect;
   const DialpadRecentCalls({
     Key key,
-    @required this.contact, 
+    @required this.contact,
+    @required this.crmContact, 
     @required this.softphone,
-    @required this.date
+    @required this.date,
+    this.onSelect
   }) : super(key: key);
 
   @override
@@ -23,10 +28,12 @@ class DialpadRecentCalls extends StatefulWidget {
 
 class _DialpadRecentCallsState extends State<DialpadRecentCalls> {
   Contact get _contact => widget.contact;
+  CrmContact get _crmContact => widget.crmContact;
   Softphone get _softphone => widget.softphone;
   DateTime get _date => widget.date;
+  Function(Contact contact,CrmContact crmContact) get _onSelect => widget.onSelect;
 
-   _relativeDateFormatted(DateTime calcDate) {
+  _relativeDateFormatted(DateTime calcDate) {
     final todayAndYesterdayFmt = new DateFormat("h:mm a");
     final olderThanYesterdayFmt = new DateFormat("M/d h:mm a");
     final today = DateTime.now();
@@ -44,9 +51,21 @@ class _DialpadRecentCallsState extends State<DialpadRecentCalls> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (){ 
-        _softphone.makeCall(_contact.firstNumber());
-        Navigator.of(context).pop();
+      onTap: (){
+        if(_onSelect != null){
+          if(_contact != null){
+            _onSelect(_contact,null);
+          }else if(_crmContact != null){
+            _onSelect(null,_crmContact);
+          }
+        } else {
+          if(_contact != null){
+            _softphone.makeCall(_contact.firstNumber());
+          } else if(_crmContact != null){
+            _softphone.makeCall(_crmContact.firstNumber());
+          }
+          Navigator.of(context).pop();
+        }
       },
       child: Padding(
         padding: EdgeInsets.symmetric(vertical:4 ,horizontal: 8),

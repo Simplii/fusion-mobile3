@@ -270,7 +270,9 @@ class _RecentCallsListState extends State<RecentCallsList> {
           contact: item.coworker == null 
             ? item.contact != null ? item.contact : Contact.fake(item.toDid)
             : item.coworker.toContact(),
-          softphone: _softphone,)
+          crmContact: item.crmContact,
+          softphone: _softphone,
+          onSelect: widget.onSelect)
         : CallHistorySummaryView(_fusionConnection, _softphone, item,
           onExpand: () { expand(item); },
           expanded: item.id == expandedId,
