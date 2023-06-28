@@ -460,9 +460,6 @@ class Softphone implements SipUaHelperListener {
         case "setPhoneState":
           args = [args];
           break;
-        case "assistedTransferCompleted":
-          args = args;
-          break;
         default:
           args = [args['uuid']];
       }
@@ -757,15 +754,6 @@ class Softphone implements SipUaHelperListener {
         var cellPhoneCallState = args[0];
         isCellPhoneCallActive = cellPhoneCallState['onCellPhoneCall'];
         break;
-      // case "assistedTransferCompleted":
-      //   print("MyDebugMessage args ${args}");
-      //   if(args){
-      //     calls.forEach((Call call) {
-      //       _removeCall(call);
-      //     });
-      //     assistedTransferInit = false;
-      //   }
-      //   break;
       default:
         throw MissingPluginException('notImplemented');
     }
