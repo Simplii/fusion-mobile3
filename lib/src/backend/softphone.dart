@@ -1078,10 +1078,9 @@ class Softphone implements SipUaHelperListener {
     if (originalCall != null && toCall != null) {
       _getMethodChannel().invokeMethod(
           "lpAssistedTransfer", [_uuidFor(originalCall), _uuidFor(toCall)]);
-      calls.forEach((Call call) {
-        _removeCall(call);
-      });
       assistedTransferInit = false;
+      _removeCall(originalCall);
+      _removeCall(toCall);
     }
   }
 
