@@ -471,8 +471,8 @@ class _MenuState extends State<Menu> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    SizedBox(
-                                      width: 195,
+                                    LimitedBox(
+                                      maxWidth: 175,
                                       child: Text(
                                         option.groupName ?? (option.did + "").formatPhone(),
                                         style: TextStyle(
