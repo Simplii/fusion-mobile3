@@ -81,7 +81,6 @@ class _TransferCallpopState extends State<TransferCallPopup> with TickerProvider
       }
     }
 
-    print("MyDebugMessage transsfer modal ${contact.firstNumber()}");
     return showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,

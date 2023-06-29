@@ -49,7 +49,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var domain: String = ""
     private var server: String = "mobile-proxy.fusioncomm.net"
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
-    lateinit var volumeReceiver : VolumeReceiver
+//    lateinit var volumeReceiver : VolumeReceiver
     val versionName = BuildConfig.VERSION_NAME
     private var appOpenedFromBackground : Boolean = false
 
@@ -86,20 +86,20 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        // terminating call here not reliable, this function sometimes won't fire if
-        // app is closed from recent apps list or killed by android system.
-        // core?.currentCall?.terminate()
-        unregisterReceiver(volumeReceiver)
-    }
+    // override fun onDestroy() {
+    //     super.onDestroy()
+    //     // terminating call here not reliable, this function sometimes won't fire if
+    //     // app is closed from recent apps list or killed by android system.
+    //     // core?.currentCall?.terminate()
+    //    unregisterReceiver(volumeReceiver)
+    // }
 
-    private fun setupBroadcastReciver(){
-        volumeReceiver = VolumeReceiver()
-        val filter = IntentFilter()
-        filter.addAction("android.media.VOLUME_CHANGED_ACTION")
-        registerReceiver(volumeReceiver, filter)
-    }
+//    private fun setupBroadcastReciver(){
+//        volumeReceiver = VolumeReceiver()
+//        val filter = IntentFilter()
+//        filter.addAction("android.media.VOLUME_CHANGED_ACTION")
+//        registerReceiver(volumeReceiver, filter)
+//    }
 
    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
        if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)){
