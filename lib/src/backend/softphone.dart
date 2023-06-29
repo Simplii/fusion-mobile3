@@ -895,7 +895,7 @@ class Softphone implements SipUaHelperListener {
       incallManager.start(auto: true, media: MediaType.AUDIO);
     }
     activeCall = call;
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid && !assistedTransferInit) {
       _callKeep.setCurrentCallActive(_uuidFor(call));
     }
 
@@ -1078,9 +1078,9 @@ class Softphone implements SipUaHelperListener {
     if (originalCall != null && toCall != null) {
       _getMethodChannel().invokeMethod(
           "lpAssistedTransfer", [_uuidFor(originalCall), _uuidFor(toCall)]);
+      assistedTransferInit = false;
       _removeCall(originalCall);
       _removeCall(toCall);
-      assistedTransferInit = false;
     }
   }
 
