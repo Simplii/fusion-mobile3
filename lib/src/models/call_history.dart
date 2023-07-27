@@ -103,15 +103,14 @@ class CallHistoryStore extends FusionStore<CallHistory> {
 
     callback(filtered, false);
     fusionConnection.apiV2Call(
-        "get",
-        "/calls/recent",
-        {'limit': limit, 'offset': offset},
-        callback: (Map<String, dynamic> datas) {
-          List<CallHistory> response = [];
+      "get", "/calls/recent", {'limit': limit, 'offset': offset},
+      callback: (Map<String, dynamic> datas) {
+        List<CallHistory> response = [];
+        if(datas.containsKey('items')){
           for (Map<String, dynamic> item in datas['items']) {
             CallHistory obj = CallHistory(item);
-            obj.coworker = fusionConnection.coworkers.lookupCoworker(
-                obj.direction == 'inbound' ? obj.from : obj.to);
+            obj.coworker = fusionConnection.coworkers
+                .lookupCoworker(obj.direction == 'inbound' ? obj.from : obj.to);
 
             storeRecord(obj);
             response.add(obj);
@@ -120,8 +119,11 @@ class CallHistoryStore extends FusionStore<CallHistory> {
           response.sort((a, b) {
             return a.startTime.isBefore(b.startTime) ? 1 : -1;
           });
+        }
 
-          callback(response, true);
-        });
+        callback(response, true);
+      },
+      onError: () => print("MyDebugMessage failed 5 retries recent_calls")
+    );
   }
 }
