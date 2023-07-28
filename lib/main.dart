@@ -168,8 +168,6 @@ class MyApp extends StatelessWidget {
       _setupListener();
       _listenerHasBeenSetup = true;
     }
-    // for testing
-    // _fusionConnection.apiV2Call("get","/invailidate_session",{});
     
     return MaterialApp(
       title: 'Fusion Revamped',

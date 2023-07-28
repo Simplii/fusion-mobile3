@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_apns/src/connector.dart';
@@ -328,7 +329,6 @@ class FusionConnection {
   apiV1Call(String method, String route, Map<String, dynamic> data,  
       {Function callback, Function onError, int retryCount=0}) async {
     var client = http.Client();
-    print("MyDebugMessage V1 $route");
 
     try {
       data['username'] = await _getUsername();
@@ -360,7 +360,6 @@ class FusionConnection {
       try {
         uriResponse = await Function.apply(fn, [url], args);
         if(uriResponse.body != '{"error":"invalid_login"}'){
-          print("MyDebugMessage cookie saved");
           _saveCookie(uriResponse);
         }
       } catch (e) {
@@ -404,7 +403,7 @@ class FusionConnection {
   apiV2Call(String method, String route, Map<String, dynamic> data,
       {Function callback,Function onError, int retryCount = 0}) async {
      var client = http.Client();
-    print("MyDebugMessage V2 $route");
+
     try {
       Function fn = {
         'post': client.post,
@@ -442,17 +441,13 @@ class FusionConnection {
         toast("${e}");
         print("MyDebugMessage apiCallV2 error ${e}");
       }
-      // _saveCookie(uriResponse);
+
       print("apirequest");
       print(url);
       print(urlParams);
       print(data);
       print(uriResponse.body);
-
-      // print("MyDebugMessage apiv2 ${url}");
-
       if (uriResponse.body == '{"error":"invalid_login"}') {
-
        if (onError != null){
           if(retryCount >= 5){
             onError();
@@ -689,20 +684,21 @@ print(responseBody);
       final String hash = generateMd5(username.toLowerCase() + deviceToken + fusionDataHelper);
       final enc.Key key = enc.Key.fromUtf8(hash);
       final enc.IV iv = enc.IV.fromLength(16);
-      final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key ,padding: null));
+      if(kDebugMode){
+        print("MyDebugMessage ${deviceToken},${hash},${key.base64},${iv.base64},${username.toLowerCase()}");
+      }
+      final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key,padding: null));
       _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
     }
 
-    if(_username != "")return;
     apiV1Call(
         "get",
         "/clients/lookup_options",
         {"username": username, "password": _pass},
         onError: () {
-          print("MyDebugMessage 5 retries failed for lookup_options");
+          toast("Sorry we weren't able to get your login credentials, try logging in again");
         },
         callback: (Map<String, dynamic> response) {
-          print("MyDebugMessage auto login lookup_options resp ${response.containsKey("access_key")}");
           if (response.containsKey("access_key")) {
             _username = username.split('@')[0] + '@' + response['domain'];
             _username = _username;
@@ -713,6 +709,9 @@ print(responseBody);
             _postLoginSetup((bool success) {});
           }
           else {
+            if(kDebugMode){
+              print("MyDebugMessage lookup_options resp ${response}");
+            }
             logOut();
           }
         });
@@ -731,9 +730,11 @@ print(responseBody);
     final enc.Key key = enc.Key.fromUtf8(hash);
     final enc.IV iv = enc.IV.fromLength(16);
 
-    final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key ,padding: null));
+    final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key, padding: null));
     final enc.Encrypted encrypted = encrypter.encrypt(password, iv: iv);
-    print("MyDebugMessage login ${encrypted.base64} ${key.base64} ${iv.base64}");
+    if(kDebugMode){
+      print("MyDebugMessage login ${encrypted.base64} ${key.base64} ${iv.base64}");
+    }
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('fusion-data1', encrypted.base64);
   }
