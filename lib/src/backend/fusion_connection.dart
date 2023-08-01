@@ -345,7 +345,8 @@ class FusionConnection {
       String urlParams = '?';
       if (method.toLowerCase() == 'get') {
         for (String key in data.keys) {
-          urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
+          RegExp reg = RegExp((r'[^\x20-\x7E]'));
+          urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString().trim().replaceAll(reg, '')) + '&';
         }
       }
       Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
@@ -366,7 +367,7 @@ class FusionConnection {
         toast("${e}");
         print("MyDebugMessage apiCallV1 error ${e}");
       }
-      print(url);
+      print('url $url');
       print(uriResponse.body);
       print(data);
       print(urlParams);
@@ -674,6 +675,7 @@ print(responseBody);
   }
 
   void autoLogin(String username, String domain) async {
+    print("MyDebugMessage autoLogin");
     String _pass;
 
     final prefs = await SharedPreferences.getInstance();
@@ -684,9 +686,7 @@ print(responseBody);
       final String hash = generateMd5(username.toLowerCase() + deviceToken + fusionDataHelper);
       final enc.Key key = enc.Key.fromUtf8(hash);
       final enc.IV iv = enc.IV.fromLength(16);
-      if(kDebugMode){
-        print("MyDebugMessage ${deviceToken},${hash},${key.base64},${iv.base64},${username.toLowerCase()}");
-      }
+      print("MyDebugMessage ${deviceToken},${hash},${key.base64},${iv.base64},${username.toLowerCase()}");
       final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key,padding: null));
       _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
     }

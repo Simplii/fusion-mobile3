@@ -217,6 +217,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _callInProgress = false;
   bool _isProximityListening = false;
   StreamSubscription<ProximityEvent> _proximitySub;
+  bool flutterBackgroundInitialized = false;
   List<Did> _dids = [];
   Function onMessagePosted;
   _logOut() {
@@ -504,19 +505,26 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void initBackgroundExec () async {
+    final androidConfig = FlutterBackgroundAndroidConfig(
+      enableWifiLock: true,
+      notificationTitle: "Fusion Mobile",
+      notificationText: "Active call with Fusion Mobile.",
+      notificationImportance: AndroidNotificationImportance.Default,
+      notificationIcon: AndroidResource(name: 'app_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
+    );
+    if(!flutterBackgroundInitialized){
+      bool success = await FlutterBackground.initialize(androidConfig: androidConfig);
+      setState(() {
+        flutterBackgroundInitialized = success;
+      });
+    }
+  }
+
   Future<void> _register() async {
     if (Platform.isAndroid) {
-      final androidConfig = FlutterBackgroundAndroidConfig(
-        enableWifiLock: true,
-        notificationTitle: "Fusion Mobile",
-        notificationText: "Active call with Fusion Mobile.",
-        notificationImportance: AndroidNotificationImportance.Default,
-        //notificationIcon: AndroidResource(name: 'app_icon', defType: 'drawable'), // Default is ic_launcher from folder mipmap
-      );
-      FlutterBackground.initialize(androidConfig: androidConfig)
-          .then((value) => print("initalizefbvalue" + value.toString()));
+      initBackgroundExec();
     }
-
     if (_isRegistering) {
       return;
     } else if (_sub_login != "") {
@@ -645,6 +653,9 @@ class _MyHomePageState extends State<MyHomePage> {
         softphone.isConnected(softphone.activeCall) != null
         && !FlutterBackground.isBackgroundExecutionEnabled
         && Platform.isAndroid) {
+      if(!flutterBackgroundInitialized){
+        initBackgroundExec();
+      }
       FlutterBackground.enableBackgroundExecution().then(
               (value) => print("enablebgexecutionvalue" + value.toString()));
     }
