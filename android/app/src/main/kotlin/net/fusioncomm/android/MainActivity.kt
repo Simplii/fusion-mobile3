@@ -50,7 +50,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var server: String = "mobile-proxy.fusioncomm.net"
     private var uuidCalls: MutableMap<String, Call> = mutableMapOf();
 //    lateinit var volumeReceiver : VolumeReceiver
-    val versionName = BuildConfig.VERSION_NAME
+    val versionName = BuildConfig.VERSION_NAME + "." + BuildConfig.VERSION_CODE
     private var appOpenedFromBackground : Boolean = false
 
     lateinit var audioManager:AudioManager
