@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -157,3 +159,35 @@ String generateMd5(String input) {
 }
 
 String fusionDataHelper = "299ea792cc17100390c7a4a1b6e6f909f0a1b7c725ad820bd54292ca111cfa30";
+
+class InternationalPhoneFormatter extends TextInputFormatter {
+
+  String internationalPhoneFormat(value) {
+    String nums = value.replaceAll(RegExp(r'[\D]'), '');
+    print("");
+    String internationalPhoneFormatted = nums.length >= 1
+    ? '+' + nums.substring(0, nums.length >= 1 ? 1 : null) + (nums.length  > 1 ? ' (' : '') + nums.substring(1, nums.length >= 4 ? 4 : null) 
+      + (nums.length  > 4 ? ') ' : '') + (nums.length > 4
+        ? nums.substring(4, nums.length >= 7 ? 7 : null) + (nums.length > 7
+          ? '-' + nums.substring(7, nums.length >= 11 ? 11 : null)
+          : '')
+        : '')
+    : nums;
+    return internationalPhoneFormatted;
+  }
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue, TextEditingValue newValue) {
+      String text = newValue.text;
+
+      if (newValue.selection.baseOffset == 0) {
+        return newValue;
+      }
+
+      return newValue.copyWith(
+        text: internationalPhoneFormat(text),
+        selection: new TextSelection.collapsed(offset: internationalPhoneFormat(text).length)
+      );
+  }
+}

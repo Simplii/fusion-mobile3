@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
@@ -18,8 +19,12 @@ class Menu extends StatefulWidget {
   final Softphone _softphone;
   final List<Did> _dids;
 
-  Menu(this._fusionConnection, this._dids, this._softphone, {Key key})
-      : super(key: key);
+  Menu(
+    this._fusionConnection, 
+    this._dids, 
+    this._softphone, 
+    {Key key}
+  ) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _MenuState();
@@ -30,13 +35,16 @@ class _MenuState extends State<Menu> {
   Softphone get _softphone => widget._softphone;
   List<Did> get _dids => widget._dids;
   bool loggingOut = false;
-  
+
   String selectedOutboundDid = "";
   List<Did> dynamicDailingDids = [];
-
+  bool usingCarrierCalls = false;
+  String myPhoneNumber = "";
+  
   @override
   initState(){
     super.initState();
+    myPhoneNumber =  _softphone.devicePhoneNumber;
     UserSettings userSettings = _fusionConnection.settings;
     List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
     selectedOutboundDid = userSettings.myOutboundCallerId;
@@ -367,7 +375,13 @@ class _MenuState extends State<Menu> {
         ]));
   }
 
-  _row(String icon, String label, String smallText, Function onTap, Icon ico) {
+  _row(
+    String icon, 
+    String label, 
+    String smallText, 
+    Function onTap, 
+    Icon ico, 
+    { Widget trailingWidget }) {
     return GestureDetector(
         onTap: onTap,
         child: Container(
@@ -402,13 +416,26 @@ class _MenuState extends State<Menu> {
                           color: smoke,
                           fontSize: 12,
                           fontWeight: FontWeight.w400))
-              ])
+              ]), 
+              if(trailingWidget != null)
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border( left: BorderSide(width: 1, color: smoke))
+                      ),
+                      height: 24,
+                      child: trailingWidget
+                    ),
+                  ),
+                )
             ])));
   }
 
   _line() {
     return Container(
-        margin: EdgeInsets.only(left: 18, right: 18, top: 8, bottom: 8),
+        margin: EdgeInsets.only(left: 18, right: 18, top: 0, bottom: 8),
         child: Row(children: [
           Container(margin: EdgeInsets.only(right: 24), width: 20, height: 20),
           horizontalLine(12)
@@ -619,6 +646,106 @@ class _MenuState extends State<Menu> {
     );
   }
 
+  Future<void> _savePhoneMyPhoneNumber() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setstate) {
+            return AlertDialog(
+              title: const Text('Add Phone Number'),
+              content: Wrap(
+                runSpacing: 16,
+                children: [
+                  Text("Please enter a phone number to forward outbound and inbound calls to"),
+                  TextFormField(
+                    initialValue: myPhoneNumber,
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.digitsOnly,
+                      // InternationalPhoneFormatter(),
+                    ],
+                    maxLength: 17,
+                    onChanged: (value){
+                      setstate(() {
+                        setState(() {
+                          myPhoneNumber = value;
+                        });
+                      });
+                    },
+                    style: TextStyle(color: coal),
+                    decoration: InputDecoration(
+                      counterText: "",
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: smoke)),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white)
+                      ),
+                      labelText: "Phone Number",
+                      labelStyle: TextStyle(color: smoke),
+                    ),
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  style: TextButton.styleFrom(
+                  ),
+                  child: Text('Save', 
+                    style: TextStyle(
+                      color: myPhoneNumber.length < 10
+                        ? null 
+                        :crimsonDark
+                      ),
+                    ),
+                  onPressed: myPhoneNumber.length < 10
+                    ? null 
+                    : ()  {
+                      print('clear');
+                      Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: const Text('Cancel', style: TextStyle(color: Colors.black),),
+                  onPressed: () {
+                    setState(() {
+                      myPhoneNumber = "";
+                      usingCarrierCalls = false;
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          }
+        );
+      },
+    );
+  }
+
+  Widget _toggle() {
+    return Switch(
+      value: usingCarrierCalls, 
+      activeColor: crimsonLight,
+      inactiveTrackColor: smoke,
+      onChanged: ((value) {
+        if(usingCarrierCalls){
+          print("delete sub");
+          setState(() {
+            usingCarrierCalls = value;
+            myPhoneNumber = "";
+          });
+        } else {
+          _savePhoneMyPhoneNumber();
+          setState(() {
+            usingCarrierCalls = value;
+          });
+        }
+      })
+    );
+  }
+
   _body() {
     List<Widget> response = [
       _row("phone_outgoing", "Manage Outbound DID", "", () {
@@ -630,12 +757,14 @@ class _MenuState extends State<Menu> {
       }, null),
       
       _row("", "Edit Profile Picture", "", _editProfilePic, 
-        Icon(Icons.edit, size: 22, color: smoke.withOpacity(0.45),)),
+        Icon(Icons.edit, color: smoke.withOpacity(0.45),)),
 
       _row("", "Clear Cache", "", _clearCache, 
-        Icon(Icons.cached, size: 22, color: smoke.withOpacity(0.45),)),
+        Icon(Icons.cached, color: smoke.withOpacity(0.45),)),
 
-      // _row("gear_light", "Settings", "Coming soon", () {}),
+      _row("", "Use Carrier", usingCarrierCalls ? myPhoneNumber.formatPhone() : "",null,
+        Icon(Icons.phone_forwarded, color: smoke.withOpacity(0.45)), 
+        trailingWidget: _toggle()),
       _line(),
       _row("moon_light", "Log Out", "", () {
         setState(() {
@@ -695,7 +824,8 @@ class _MenuState extends State<Menu> {
                             )
                           ],
                         ))
-                  ]))
+                  ])),
+              // SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
             ])));
   }
 }
