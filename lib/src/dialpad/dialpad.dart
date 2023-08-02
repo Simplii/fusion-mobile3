@@ -168,32 +168,34 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                                 "assets/icons/paste_white.png",
                                                 width: 22,
                                                 height: 16))))),
-                            Container(
-                                height:
-                                    40 * MediaQuery.of(context).textScaleFactor,
-                                alignment: Alignment.topCenter,
-                                width: MediaQuery.of(context).size.width - 122,
-                                child: ListView(
-                                    scrollDirection: Axis.horizontal,
-                                    controller: _dialEntryController,
-                                    children: [
-                                      Container(
-                                          alignment: Alignment.topCenter,
-                                          width: max(
-                                              MediaQuery.of(context)
-                                                      .size
-                                                      .width -
-                                                  122,
-                                              textWidth.toDouble()),
-                                          child: Text(dialedNumber,
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  fontSize: dialedNumber.length > 10 
-                                                    ? 31 
-                                                    : 35,
-                                                  color: Colors.white))
-                                        )
-                                    ])),
+                            Expanded(
+                              child: Container(
+                                  height:
+                                      40 * MediaQuery.of(context).textScaleFactor,
+                                  alignment: Alignment.topCenter,
+                                  // width: MediaQuery.of(context).size.width - 122,
+                                  child: ListView(
+                                      scrollDirection: Axis.horizontal,
+                                      controller: _dialEntryController,
+                                      children: [
+                                        Container(
+                                            alignment: Alignment.topCenter,
+                                            width: max(
+                                                MediaQuery.of(context)
+                                                        .size
+                                                        .width -
+                                                    122,
+                                                textWidth.toDouble()),
+                                            child: Text(dialedNumber,
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                    fontSize: dialedNumber.length > 10 
+                                                      ? 31 
+                                                      : 35,
+                                                    color: Colors.white))
+                                          )
+                                      ])),
+                            ),
                             if (dialedNumber != '')
                               SizedBox(
                                 width: 40,
@@ -209,7 +211,27 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                             "assets/icons/call_view/backspace.png",
                                             width: 26,
                                             height: 22))),
-                              )
+                              ),
+                            if(dialedNumber == '')
+                            SizedBox(
+                              height: 40,
+                              child: ElevatedButton(
+                                onPressed: ()=>print('print'), 
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.fromLTRB(12,4,6,4),
+                                  backgroundColor: char,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))
+                                ),
+                                child: Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 4,
+                                  children: [
+                                    Text("XFER TO CARRIER",style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),),
+                                    Icon(Icons.arrow_forward, size: 20,color: Colors.white,), 
+                                  ],
+                                ),
+                              ),
+                            )
                           ],
                         ),
                       ),

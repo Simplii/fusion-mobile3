@@ -82,6 +82,8 @@ class Softphone implements SipUaHelperListener {
   String activeCallOutputDevice = "";
   bool bluetoothAvailable = false;
   String bluetoothDeviceId = "";
+
+  String devicePhoneNumber = "";
   //IncallManager incallManager = new IncallManager();
 
   bool assistedTransferInit = false;
@@ -448,6 +450,9 @@ class Softphone implements SipUaHelperListener {
         case "setAppVersion":
           args = [json.decode(args)];
           break;
+        case "setMyPhoneNumber":
+          args = [json.decode(args)];
+          break;
         case "lnAudioDeviceListUpdated":
           args = [
             args['devicesList'] as String,
@@ -669,6 +674,9 @@ class Softphone implements SipUaHelperListener {
       case "setAppVersion":
         this.appVersion = args[0];
         break;
+      case "setMyPhoneNumber":
+        this.devicePhoneNumber = args[0];
+        break;
       case "lnRegistrationOk":
         registrationStateChanged(
             RegistrationState(state: RegistrationStateEnum.REGISTERED));
@@ -875,6 +883,10 @@ class Softphone implements SipUaHelperListener {
           "groupId": _fusionConnection.settings.myOutboundCallerId
         },
         callback: (Map<String,dynamic> response){
+          // add dial method
+
+
+
           if(response.containsKey("success") && response["success"] == true){
             _getMethodChannel().invokeMethod("lpStartCall", [destination]);
           } else {

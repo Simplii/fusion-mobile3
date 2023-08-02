@@ -641,33 +641,37 @@ print(responseBody);
 
     final prefs = await SharedPreferences.getInstance();
     _pass = await prefs.getString('fusion-data1');
-    
-    if(_pass != null){
-      final String deviceToken = await FirebaseMessaging.instance.getToken();
-      final String hash = generateMd5(username.toLowerCase() + deviceToken + fusionDataHelper);
-      final enc.Key key = enc.Key.fromUtf8(hash);
-      final enc.IV iv = enc.IV.fromLength(16);
-      final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key));
-      _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
+
+    if(_pass == null || _pass == ""){
+      return toast("Sorry we weren't able to get your login credentials, try logging in again");
     }
 
-    apiV1Call(
-        "get",
-        "/clients/lookup_options",
-        _pass != null
-            ? {"username": username, "password": _pass}
-            : {"username": username},
-        onError: (e) {
+    final String deviceToken = await FirebaseMessaging.instance.getToken();
+    final String hash = generateMd5(username.trim().toLowerCase() + deviceToken + fusionDataHelper);
+    final enc.Key key = enc.Key.fromUtf8(hash);
+    final enc.IV iv = enc.IV.fromLength(16);
+    final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key,padding: null));
+    _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
+
+
+    apiV1Call("get", "/clients/lookup_options",{"username": username, "password": _pass}, 
+      onError: () {
+          toast("Sorry we weren't able to get your login credentials, try logging in again");
+        }, 
+      callback: (Map<String, dynamic> response) {
+        if (response.containsKey("access_key")) {
+          _username = username.split('@')[0] + '@' + response['domain'];
+          _username = _username;
+          _password = _pass;
+          _domain = _username.split('@')[1];
+          _extension = _username.split('@')[0];
+          settings.setOptions(response);
+          _postLoginSetup((bool success) {});
+        } else {
           logOut();
-        },
-        callback: (Map<String, dynamic> response) {
-          if (response.containsKey("access_key")) {
-            settings.setOptions(response);
-          }
-          else {
-            logOut();
-          }
-        });
+        }
+      }
+    );
 
     _postLoginSetup((bool success) {});
   }
@@ -679,14 +683,13 @@ print(responseBody);
   void encryptFusionData(String username, String password) async {
     if(password ==null)return;
     final String deviceToken = await FirebaseMessaging.instance.getToken();
-    final String hash = generateMd5(username.toLowerCase() + deviceToken +  fusionDataHelper);
+    final String hash = generateMd5(username.trim().toLowerCase() + deviceToken +  fusionDataHelper);
 
     final enc.Key key = enc.Key.fromUtf8(hash);
     final enc.IV iv = enc.IV.fromLength(16);
 
     final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key));
     final enc.Encrypted encrypted = encrypter.encrypt(password, iv: iv);
-
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('fusion-data1', encrypted.base64);
   }
