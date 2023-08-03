@@ -310,7 +310,8 @@ class _RecentCallsListState extends State<RecentCallsList> {
     if (_lookedUpTab != _selectedTab) {
       lookupState = 0;
     }
-    if (lookupState == 0) {
+    if (lookupState == 0 && _fusionConnection.isLoginFinished()) {
+      print("MyDebugMessage $lookupState ");
       _lookupHistory();
     }
 
