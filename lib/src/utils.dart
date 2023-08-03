@@ -160,20 +160,17 @@ String generateMd5(String input) {
 
 String fusionDataHelper = "299ea792cc17100390c7a4a1b6e6f909f0a1b7c725ad820bd54292ca111cfa30";
 
-class InternationalPhoneFormatter extends TextInputFormatter {
-
-  String internationalPhoneFormat(value) {
-    String nums = value.replaceAll(RegExp(r'[\D]'), '');
-    print("");
-    String internationalPhoneFormatted = nums.length >= 1
-    ? '+' + nums.substring(0, nums.length >= 1 ? 1 : null) + (nums.length  > 1 ? ' (' : '') + nums.substring(1, nums.length >= 4 ? 4 : null) 
-      + (nums.length  > 4 ? ') ' : '') + (nums.length > 4
-        ? nums.substring(4, nums.length >= 7 ? 7 : null) + (nums.length > 7
-          ? '-' + nums.substring(7, nums.length >= 11 ? 11 : null)
+class InputPhoneFormatter extends TextInputFormatter {
+  String inputPhoneFormat(String value) {
+    String phoneFormatted = value.length >= 1
+    ? (value.length >= 1 ? ' (' : '') + value.substring(0, value.length >= 3 ? 3 : null) 
+      + (value.length  > 3 ? ') ' : '') + (value.length > 3
+        ? value.substring(3, value.length >= 6 ? 6 : null) + (value.length > 6
+          ? '-' + value.substring(6, value.length >= 10 ? 10 : null)
           : '')
         : '')
-    : nums;
-    return internationalPhoneFormatted;
+    : value;
+    return phoneFormatted;
   }
 
   @override
@@ -186,8 +183,8 @@ class InternationalPhoneFormatter extends TextInputFormatter {
       }
 
       return newValue.copyWith(
-        text: internationalPhoneFormat(text),
-        selection: new TextSelection.collapsed(offset: internationalPhoneFormat(text).length)
+        text: inputPhoneFormat(text),
+        selection: new TextSelection.collapsed(offset: inputPhoneFormat(text).length)
       );
   }
 }

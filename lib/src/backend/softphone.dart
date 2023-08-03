@@ -895,8 +895,28 @@ class Softphone implements SipUaHelperListener {
         }
       );
     } else {
-      _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+      if(_fusionConnection.settings.usesCarrier && 
+        _fusionConnection.settings.myCellPhoneNumber.isNotEmpty){
+        toast("Call has been sent to your cellphone");
+        doClickToCall(destination);
+      }else {
+        _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+      }
     }
+  }
+
+  void doClickToCall(String destination){
+    _fusionConnection.apiV2Call("get", "/calls/dial", 
+      {
+        "destination" : destination, 
+        "origin" : 
+          "sip:${_fusionConnection.settings.myCellPhoneNumber}@${_fusionConnection.getDomain()}" 
+      },
+      callback: (data){
+        print("MDBM $data");
+        String callId = data['callId'] ?? "";
+        print("MDBM $callId");
+      });
   }
 
   makeActiveCall(Call call) {

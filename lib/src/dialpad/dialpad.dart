@@ -12,13 +12,16 @@ import '../styles.dart';
 import 'dialpad_key.dart';
 
 class DialPad extends StatefulWidget {
-  DialPad(this._fusionConnection, this._softphone,
-      {Key key, this.onQueryChange, this.onPlaceCall})
+  DialPad(
+    this._fusionConnection, 
+    this._softphone,
+      {Key key, this.onQueryChange, this.onPlaceCall, this.fromTransferScreen = false})
       : super(key: key);
 
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
   final Function onQueryChange;
+  final bool fromTransferScreen;
   final Function(String number) onPlaceCall;
 
   @override
@@ -33,7 +36,7 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
   var dialedNumber = '';
   final _dialEntryController = ScrollController();
   bool _lastNumberCalledIsSet = false;
-
+  bool get _fromTransferScreen => widget.fromTransferScreen;
   @override
   void initState() {
     super.initState();
@@ -110,6 +113,44 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
     '+',
     ''
   ];
+
+  Future<void> _dialog() async {
+    return showDialog<void>(
+      context: context, 
+      barrierDismissible: false,
+      builder: (BuildContext context){
+        return AlertDialog(
+          title: Text("Transfer to Mobile"),
+          content: Wrap(
+            children: [
+              Text("This active call is about to be transfered to"),
+              TextFormField(
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                ),
+                initialValue: _fusionConnection.settings.myCellPhoneNumber,
+              )
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: (){
+                print("MDBM transfer");
+                Navigator.of(context).pop();
+              },
+              child: Text("confirm"),
+            ),
+            TextButton(
+              onPressed: (){
+                print("MDBM");
+                 Navigator.of(context).pop();
+              }, 
+              child: Text("cancel"),),
+          ],
+        );
+      }
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,11 +253,13 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                             width: 26,
                                             height: 22))),
                               ),
-                            if(dialedNumber == '')
+                            if(dialedNumber == '' && 
+                              _fromTransferScreen && 
+                              _fusionConnection.settings.myCellPhoneNumber.isNotEmpty)
                             SizedBox(
                               height: 40,
                               child: ElevatedButton(
-                                onPressed: ()=>print('print'), 
+                                onPressed: _dialog, 
                                 style: ElevatedButton.styleFrom(
                                   padding: EdgeInsets.fromLTRB(12,4,6,4),
                                   backgroundColor: char,
