@@ -135,19 +135,22 @@ class _MessagesListState extends State<MessagesList> {
   Softphone get _softphone => widget._softphone;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
-  String _selectedGroupId = "-2";
+  String _selectedGroupId;
   int _page = 0;
 
 
   @override
   void initState(){
     super.initState();
+    String _allDepartments = "-2";
     SharedPreferences.getInstance().then((prefs) {
       setState(() {
-        _selectedGroupId = prefs.getString('selectedGroupId') ?? _selectedGroupId;
+        _selectedGroupId = prefs.getString('selectedGroupId') ?? _allDepartments ;
+        _page = 0;
+        _lookupMessages();
       });
     },);
-    _setOnMessagePosted((){
+    _setOnMessagePosted((dynamic convId){
       if(mounted){
         _page = 0;
         _lookupMessages();
@@ -160,12 +163,22 @@ class _MessagesListState extends State<MessagesList> {
     super.dispose();
     _clearOnMessagePosted();
   }
+  
+  refreshView(updatedConvoId){
 
-  refreshView(){
-    setState(() {
-      _page = 0;
-      _lookupMessages();
-    });
+    print("MyDebugMessage ${mounted} ${updatedConvoId}");
+    if(mounted && updatedConvoId != null){
+      setState(() {
+        SMSConversation c = _convos.where(
+          (SMSConversation con) => con.getId() == updatedConvoId).isNotEmpty 
+            ? _convos.where((SMSConversation con) => con.getId() == updatedConvoId).first 
+            : null;
+        if(c != null){
+          _convos.remove(c);
+          _convos.insert(0, c);
+        }
+      });
+    }
   }
 
   _loadMore() {
@@ -204,6 +217,7 @@ class _MessagesListState extends State<MessagesList> {
   }
 
   _lookupMessages() {
+    if(_selectedGroupId == null) return;
     lookupState = 1;
     _fusionConnection.conversations
         .getConversations(_selectedGroupId, 100, _page * 100,
@@ -256,7 +270,7 @@ class _MessagesListState extends State<MessagesList> {
   _selectedDepartmentName() {
     return _fusionConnection.smsDepartments
         .getDepartment(_selectedGroupId)
-        .groupName;
+        ?.groupName;
   }
 
   _groupOptions() {

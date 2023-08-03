@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_apns/src/connector.dart';
@@ -102,9 +103,7 @@ class FusionConnection {
     parkLines = ParkLineStore(this);
     dids = DidStore(this);
     unreadMessages = UnreadsStore(this);
-    contactFields.getFields((List<ContactField> list, bool fromServer) {});
     quickResponses = QuickResponsesStore(this);
-    refreshUnreads();
     getDatabase();
   }
 
@@ -112,6 +111,10 @@ class FusionConnection {
     unreadMessages.getUnreads((List<DepartmentUnreadRecord> messages, bool fromServer) {
       _refreshUi();
     });
+  }
+  
+  bool isLoginFinished(){
+    return _username != "" && _password != "";
   }
 
   _getCookies({Function callback}) async {
@@ -323,9 +326,10 @@ class FusionConnection {
     }
   }
 
-  apiV1Call(String method, String route, Map<String, dynamic> data,
-      {Function callback, Function onError}) async {
+  apiV1Call(String method, String route, Map<String, dynamic> data,  
+      {Function callback, Function onError, int retryCount=0}) async {
     var client = http.Client();
+
     try {
       data['username'] = await _getUsername();
 
@@ -341,7 +345,8 @@ class FusionConnection {
       String urlParams = '?';
       if (method.toLowerCase() == 'get') {
         for (String key in data.keys) {
-          urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
+          RegExp reg = RegExp((r'[^\x20-\x7E]'));
+          urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString().trim().replaceAll(reg, '')) + '&';
         }
       }
       Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
@@ -352,16 +357,39 @@ class FusionConnection {
         headers["Content-Type"] = "application/json";
       }
       args[#headers] = headers;
-
-      var uriResponse = await Function.apply(fn, [url], args);
-      _saveCookie(uriResponse);
-      print(url);
+      Response uriResponse;
+      try {
+        uriResponse = await Function.apply(fn, [url], args);
+        if(uriResponse.body != '{"error":"invalid_login"}'){
+          _saveCookie(uriResponse);
+        }
+      } catch (e) {
+        toast("${e}");
+        print("MyDebugMessage apiCallV1 error ${e}");
+      }
+      print('url $url');
       print(uriResponse.body);
       print(data);
       print(urlParams);
+
       if (uriResponse.body == '{"error":"invalid_login"}') {
-        if (onError != null)
-          onError();
+      print("MyDebugMessage apiv1 ${uriResponse.body} ${url} ${data}");
+        if (onError != null){
+          if(retryCount >= 5){
+            onError();
+          } else {
+            Future.delayed(Duration(seconds: 1), (){
+              print("MyDebugMessage retry future");
+              apiV1Call(
+                method,
+                route,
+                data,
+                onError: onError,
+                callback: callback,retryCount: retryCount+1
+              );
+            });
+          }
+        }
       }
       else {
         var jsonResponse = convert.jsonDecode(uriResponse.body);
@@ -374,9 +402,9 @@ class FusionConnection {
   }
 
   apiV2Call(String method, String route, Map<String, dynamic> data,
-      {Function callback}) async {
+      {Function callback,Function onError, int retryCount = 0}) async {
      var client = http.Client();
-    
+
     try {
       Function fn = {
         'post': client.post,
@@ -407,25 +435,35 @@ class FusionConnection {
       Response uriResponse;
       try {
         uriResponse = await Function.apply(fn, [url], args);
-        _saveCookie(uriResponse);
+        if(uriResponse.body != '{"error":"invalid_login"}'){
+          _saveCookie(uriResponse);
+        }
       } catch (e) {
         toast("${e}");
-        print("MyDebugMessage error ${e}");
+        print("MyDebugMessage apiCallV2 error ${e}");
       }
-      // _saveCookie(uriResponse);
+
       print("apirequest");
       print(url);
       print(urlParams);
       print(data);
       print(uriResponse.body);
       if (uriResponse.body == '{"error":"invalid_login"}') {
-        final prefs = await SharedPreferences.getInstance();
-        String username = prefs.getString("username");
-        if (username != null) {
-          String domain = username.split('@')[1];
-          this.autoLogin(username, domain);
-        } else {
-          this.logOut();
+       if (onError != null){
+          if(retryCount >= 5){
+            onError();
+          } else {
+            Future.delayed(Duration(seconds: 1), (){
+              print("MyDebugMessage retry v2 future");
+              apiV2Call(
+                method,
+                route,
+                data,
+                onError: onError,
+                callback: callback,retryCount: retryCount+1
+              );
+            });
+          }
         }
       }
       var jsonResponse = convert.jsonDecode(uriResponse.body);
@@ -486,8 +524,11 @@ print(responseBody);
   }
 
   _postLoginSetup(Function(bool) callback) {
+    _getCookies();
     settings.lookupSubscriber();
     coworkers.getCoworkers((data) {});
+    refreshUnreads();
+    contactFields.getFields((List<ContactField> list, bool fromServer) {});
     setupSocket();
     if (callback != null) {
       callback(true);
@@ -517,6 +558,7 @@ print(responseBody);
   }
 
   login(String username, String password, Function(bool) callback) {
+    if(password == null )return;
     apiV1Call(
         "get",
         "/clients/lookup_options",
@@ -633,47 +675,48 @@ print(responseBody);
   }
 
   void autoLogin(String username, String domain) async {
-    _domain = domain;
-    _username = username.split('@')[0] + '@' + domain;
-    _domain = _username.split('@')[1];
-    _extension = _username.split('@')[0];
     String _pass;
 
     final prefs = await SharedPreferences.getInstance();
     _pass = await prefs.getString('fusion-data1');
+    
+    if(_pass != null && _pass.isNotEmpty){
+      final String deviceToken = await FirebaseMessaging.instance.getToken();
+      final String hash = generateMd5(username.trim().toLowerCase() + deviceToken + fusionDataHelper);
+      final enc.Key key = enc.Key.fromUtf8(hash);
+      final enc.IV iv = enc.IV.fromLength(16);
+      final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key,padding: null));
+      _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
+    
 
-    if(_pass == null || _pass == ""){
-      return toast("Sorry we weren't able to get your login credentials, try logging in again");
+      apiV1Call(
+        "get",
+        "/clients/lookup_options",
+        {"username": username, "password": _pass},
+        onError: () {
+          toast("Sorry we weren't able to get your login credentials, try logging in again");
+        },
+        callback: (Map<String, dynamic> response) {
+          if (response.containsKey("access_key")) {
+            _username = username.split('@')[0] + '@' + response['domain'];
+            _username = _username;
+            _password = _pass;
+            _domain = _username.split('@')[1];
+            _extension = _username.split('@')[0];
+            settings.setOptions(response);
+            _postLoginSetup((bool success) {});
+          }
+          else {
+            if(kDebugMode){
+              print("MyDebugMessage lookup_options resp ${response}");
+            }
+            logOut();
+          }
+        });
+    } else {
+      toast("Sorry we weren't able to get your login credentials, try logging in again");
     }
 
-    final String deviceToken = await FirebaseMessaging.instance.getToken();
-    final String hash = generateMd5(username.trim().toLowerCase() + deviceToken + fusionDataHelper);
-    final enc.Key key = enc.Key.fromUtf8(hash);
-    final enc.IV iv = enc.IV.fromLength(16);
-    final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key,padding: null));
-    _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
-
-
-    apiV1Call("get", "/clients/lookup_options",{"username": username, "password": _pass}, 
-      onError: () {
-          toast("Sorry we weren't able to get your login credentials, try logging in again");
-        }, 
-      callback: (Map<String, dynamic> response) {
-        if (response.containsKey("access_key")) {
-          _username = username.split('@')[0] + '@' + response['domain'];
-          _username = _username;
-          _password = _pass;
-          _domain = _username.split('@')[1];
-          _extension = _username.split('@')[0];
-          settings.setOptions(response);
-          _postLoginSetup((bool success) {});
-        } else {
-          logOut();
-        }
-      }
-    );
-
-    _postLoginSetup((bool success) {});
   }
 
   void setRefreshUi( Function() callback) {
@@ -688,7 +731,7 @@ print(responseBody);
     final enc.Key key = enc.Key.fromUtf8(hash);
     final enc.IV iv = enc.IV.fromLength(16);
 
-    final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key));
+    final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key, padding: null));
     final enc.Encrypted encrypted = encrypter.encrypt(password, iv: iv);
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('fusion-data1', encrypted.base64);
