@@ -40,12 +40,16 @@ class _MenuState extends State<Menu> {
   List<Did> dynamicDailingDids = [];
   bool usingCarrierCalls = false;
   String myPhoneNumber = "";
-  
+  UserSettings userSettings;
+
   @override
   initState(){
-    super.initState();
-    myPhoneNumber =  _softphone.devicePhoneNumber;
-    UserSettings userSettings = _fusionConnection.settings;
+    super.initState(); 
+    userSettings = _fusionConnection.settings;
+    myPhoneNumber =  userSettings.myCellPhoneNumber.isNotEmpty 
+      ? userSettings.myCellPhoneNumber.formatPhone() 
+      : _softphone.devicePhoneNumber;
+    usingCarrierCalls = userSettings.usesCarrier;
     List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
     selectedOutboundDid = userSettings.myOutboundCallerId;
     Iterable filter = deps.where((SMSDepartment dep) => dep.usesDynamicOutbound);
@@ -652,7 +656,7 @@ class _MenuState extends State<Menu> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setstate) {
+          builder: (BuildContext context, StateSetter setDialogState) {
             return AlertDialog(
               title: const Text('Add Phone Number'),
               content: Wrap(
@@ -664,13 +668,13 @@ class _MenuState extends State<Menu> {
                     keyboardType: TextInputType.phone,
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.digitsOnly,
-                      // InternationalPhoneFormatter(),
+                      InputPhoneFormatter(),
                     ],
                     maxLength: 17,
                     onChanged: (value){
-                      setstate(() {
+                      setDialogState(() {
                         setState(() {
-                          myPhoneNumber = value;
+                          myPhoneNumber = value.onlyNumbers();
                         });
                       });
                     },
@@ -702,7 +706,22 @@ class _MenuState extends State<Menu> {
                   onPressed: myPhoneNumber.length < 10
                     ? null 
                     : ()  {
-                      print('clear');
+                      String uid = _fusionConnection.getUid();
+                      List<SettingsPayload> payload = [
+                        SettingsPayload(
+                          uid, 
+                          "uses_carrier", 
+                          usingCarrierCalls.toString()
+                        ),
+                        SettingsPayload(
+                          uid, 
+                          "cell_phone_number", 
+                          myPhoneNumber.onlyNumbers()
+                        )
+                      ];
+                      setState(() {
+                        userSettings.updateUserSettings(payload);
+                      });
                       Navigator.of(context).pop();
                   },
                 ),
@@ -710,7 +729,6 @@ class _MenuState extends State<Menu> {
                   child: const Text('Cancel', style: TextStyle(color: Colors.black),),
                   onPressed: () {
                     setState(() {
-                      myPhoneNumber = "";
                       usingCarrierCalls = false;
                     });
                     Navigator.of(context).pop();
@@ -731,10 +749,14 @@ class _MenuState extends State<Menu> {
       inactiveTrackColor: smoke,
       onChanged: ((value) {
         if(usingCarrierCalls){
-          print("delete sub");
+          SettingsPayload payload = SettingsPayload(
+            _fusionConnection.getUid(), 
+            "uses_carrier", 
+            value ? value.toString() : ""
+          );
           setState(() {
+            userSettings.updateUserSettings([payload]);
             usingCarrierCalls = value;
-            myPhoneNumber = "";
           });
         } else {
           _savePhoneMyPhoneNumber();

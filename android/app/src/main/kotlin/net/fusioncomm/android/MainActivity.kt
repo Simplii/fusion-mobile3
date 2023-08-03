@@ -58,6 +58,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var appOpenedFromBackground : Boolean = false
 
     lateinit var audioManager:AudioManager
+    lateinit var telephonyManager: TelephonyManager;
     var myPhoneNumber:String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -467,7 +468,7 @@ class MainActivity : FlutterFragmentActivity() {
                     Manifest.permission.READ_PHONE_STATE)
 
             if (permission == PackageManager.PERMISSION_GRANTED){
-                val telephonyManager: TelephonyManager =
+                telephonyManager =
                         getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
                 if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                         packageManager.hasSystemFeature(FEATURE_TELEPHONY_SUBSCRIPTION)){
@@ -489,9 +490,8 @@ class MainActivity : FlutterFragmentActivity() {
 
         } else {
             Log.d("phoneStateListener","android < 12")
-            val telephonyManager: TelephonyManager =
+            telephonyManager =
                     getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-            myPhoneNumber = telephonyManager.line1Number ?: "";
             Log.d("MDBM", "$myPhoneNumber")
             val callStateListener: PhoneStateListener = object : PhoneStateListener() {
                 override fun onCallStateChanged(state: Int, incomingNumber: String?) {
@@ -539,6 +539,7 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun getMyPhoneNumber(){
+        myPhoneNumber = telephonyManager.line1Number ?: "";
         var gson = Gson();
         channel.invokeMethod("setMyPhoneNumber",  gson.toJson(myPhoneNumber) )
     }
