@@ -675,23 +675,21 @@ print(responseBody);
   }
 
   void autoLogin(String username, String domain) async {
-    print("MyDebugMessage autoLogin");
     String _pass;
 
     final prefs = await SharedPreferences.getInstance();
     _pass = await prefs.getString('fusion-data1');
     
-    if(_pass != null){
+    if(_pass != null && _pass.isNotEmpty){
       final String deviceToken = await FirebaseMessaging.instance.getToken();
-      final String hash = generateMd5(username.toLowerCase() + deviceToken + fusionDataHelper);
+      final String hash = generateMd5(username.trim().toLowerCase() + deviceToken + fusionDataHelper);
       final enc.Key key = enc.Key.fromUtf8(hash);
       final enc.IV iv = enc.IV.fromLength(16);
-      print("MyDebugMessage ${deviceToken},${hash},${key.base64},${iv.base64},${username.toLowerCase()}");
       final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key,padding: null));
       _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
-    }
+    
 
-    apiV1Call(
+      apiV1Call(
         "get",
         "/clients/lookup_options",
         {"username": username, "password": _pass},
@@ -715,6 +713,9 @@ print(responseBody);
             logOut();
           }
         });
+    } else {
+      toast("Sorry we weren't able to get your login credentials, try logging in again");
+    }
 
   }
 
@@ -725,16 +726,13 @@ print(responseBody);
   void encryptFusionData(String username, String password) async {
     if(password ==null)return;
     final String deviceToken = await FirebaseMessaging.instance.getToken();
-    final String hash = generateMd5(username.toLowerCase() + deviceToken +  fusionDataHelper);
+    final String hash = generateMd5(username.trim().toLowerCase() + deviceToken +  fusionDataHelper);
 
     final enc.Key key = enc.Key.fromUtf8(hash);
     final enc.IV iv = enc.IV.fromLength(16);
 
     final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key, padding: null));
     final enc.Encrypted encrypted = encrypter.encrypt(password, iv: iv);
-    if(kDebugMode){
-      print("MyDebugMessage login ${encrypted.base64} ${key.base64} ${iv.base64}");
-    }
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('fusion-data1', encrypted.base64);
   }
