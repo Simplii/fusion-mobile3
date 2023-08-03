@@ -889,7 +889,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               null,
               (){
                 setState(() {
-                  if(_setOnMessagePosted != null)_setOnMessagePosted();
+                  if(_setOnMessagePosted != null)_setOnMessagePosted(_conversation.getId());
                   secheduleIsSet = null;
                 });
                 Future.delayed(Duration(seconds: 4), (){
