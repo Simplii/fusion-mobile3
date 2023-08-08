@@ -163,7 +163,7 @@ String fusionDataHelper = "299ea792cc17100390c7a4a1b6e6f909f0a1b7c725ad820bd5429
 class InputPhoneFormatter extends TextInputFormatter {
   String inputPhoneFormat(String value) {
     String phoneFormatted = value.length >= 1
-    ? (value.length >= 1 ? ' (' : '') + value.substring(0, value.length >= 3 ? 3 : null) 
+    ? (value.length >= 1 ? '(' : '') + value.substring(0, value.length >= 3 ? 3 : null) 
       + (value.length  > 3 ? ') ' : '') + (value.length > 3
         ? value.substring(3, value.length >= 6 ? 6 : null) + (value.length > 6
           ? '-' + value.substring(6, value.length >= 10 ? 10 : null)

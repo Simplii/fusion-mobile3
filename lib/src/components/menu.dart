@@ -50,6 +50,19 @@ class _MenuState extends State<Menu> {
       ? userSettings.myCellPhoneNumber.formatPhone() 
       : _softphone.devicePhoneNumber;
     usingCarrierCalls = userSettings.usesCarrier;
+    _fusionConnection.checkAnsweringRules().then((value){
+      setState(() {
+        usingCarrierCalls = value;
+      });
+      if(userSettings.usesCarrier != value){
+        SettingsPayload payload = SettingsPayload(
+            _fusionConnection.getUid(), 
+            "uses_carrier", 
+            value ? value.toString() : ""
+          );
+        userSettings.updateUserSettings([payload]);
+      }
+    });
     List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
     selectedOutboundDid = userSettings.myOutboundCallerId;
     Iterable filter = deps.where((SMSDepartment dep) => dep.usesDynamicOutbound);
@@ -391,7 +404,11 @@ class _MenuState extends State<Menu> {
         child: Container(
             decoration: BoxDecoration(color: Colors.transparent),
             margin: EdgeInsets.only(left: 18, right: 18, top: 12, bottom: 12),
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child: Row(
+              crossAxisAlignment: trailingWidget != null 
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.start, 
+              children: [
               Container(
                   margin: EdgeInsets.only(right: 24),
                   width: 22,
@@ -429,7 +446,7 @@ class _MenuState extends State<Menu> {
                       decoration: BoxDecoration(
                         border: Border( left: BorderSide(width: 1, color: smoke))
                       ),
-                      height: 24,
+                      // height: 24,
                       child: trailingWidget
                     ),
                   ),
@@ -670,7 +687,7 @@ class _MenuState extends State<Menu> {
                       FilteringTextInputFormatter.digitsOnly,
                       InputPhoneFormatter(),
                     ],
-                    maxLength: 17,
+                    maxLength: 14,
                     onChanged: (value){
                       setDialogState(() {
                         setState(() {
@@ -722,6 +739,34 @@ class _MenuState extends State<Menu> {
                       setState(() {
                         userSettings.updateUserSettings(payload);
                       });
+                      if(usingCarrierCalls){
+                        _fusionConnection.nsApiCall("device", "read", {
+                          "object": "device",
+                          "action": "read",
+                          "domain": _fusionConnection.getDomain(),
+                          "user": _fusionConnection.getExtension(),
+                          "uid" : _fusionConnection.getUid()
+                        }, callback: (Map<String,dynamic> data){
+                          String simPrams = "";
+                          if(data['device'] != null){
+                            List devices = data['device'];
+                            if(devices.isNotEmpty){
+                              devices.forEach((device) {
+                                if(!device['user_agent'].contains("Fusion.PushEnabled")){
+                                  String aor =  device['aor'];
+                                  String name = aor.split("@")[0].replaceAll("sip:", "");
+                                  simPrams = "$simPrams $name";
+                                }
+                              });
+                            }
+                          }
+                          _updateAnsweringRule(
+                            forControl: "d", 
+                            simControl: "e", 
+                            simPrams: "${simPrams.trim()} confirm_${myPhoneNumber.onlyNumbers()}"
+                          );
+                        });
+                      }
                       Navigator.of(context).pop();
                   },
                 ),
@@ -742,6 +787,40 @@ class _MenuState extends State<Menu> {
     );
   }
 
+  void _updateAnsweringRule({ 
+    @required String forControl, 
+    @required String simControl, 
+    @required String simPrams}){
+    String domain = _fusionConnection.getDomain();
+    String ext = _fusionConnection.getExtension();
+    String uid = _fusionConnection.getUid();
+    _fusionConnection.nsApiCall("answerrule", "read", {
+      'domain': domain,
+      'user': ext
+    }, callback: (Map<String,dynamic> data){
+      if(data['answering_rule'] !=  null){
+        String ruleName = "";
+        for (var rule in data['answering_rule']) {
+            if(rule['active'] == "1"){
+              ruleName = rule['time_frame'];
+              break;
+            }
+        }
+
+        _fusionConnection.nsApiCall("answerrule", "update", {
+          "domain": domain,
+          "user": ext,
+          "uid": uid,
+          "time_frame": ruleName,
+          "for_control": forControl,
+          "sim_control": simControl,
+          "sim_parameters": simPrams
+        });
+      }
+    });
+  }
+
+
   Widget _toggle() {
     return Switch(
       value: usingCarrierCalls, 
@@ -755,9 +834,16 @@ class _MenuState extends State<Menu> {
             value ? value.toString() : ""
           );
           setState(() {
-            userSettings.updateUserSettings([payload]);
             usingCarrierCalls = value;
+            userSettings.updateUserSettings([payload]);
           });
+          if(!value){
+            _updateAnsweringRule(
+              forControl: "d",
+              simControl: "e", 
+              simPrams: "<OwnDevices>"
+            );
+          }
         } else {
           _savePhoneMyPhoneNumber();
           setState(() {
@@ -779,13 +865,13 @@ class _MenuState extends State<Menu> {
       }, null),
       
       _row("", "Edit Profile Picture", "", _editProfilePic, 
-        Icon(Icons.edit, color: smoke.withOpacity(0.45),)),
+        Icon(Icons.edit, color: smoke.withOpacity(0.45), size: 26,)),
 
       _row("", "Clear Cache", "", _clearCache, 
-        Icon(Icons.cached, color: smoke.withOpacity(0.45),)),
+        Icon(Icons.cached, color: smoke.withOpacity(0.45), size: 26,)),
 
       _row("", "Use Carrier", usingCarrierCalls ? myPhoneNumber.formatPhone() : "",null,
-        Icon(Icons.phone_forwarded, color: smoke.withOpacity(0.45)), 
+        Icon(Icons.phone_forwarded, color: smoke.withOpacity(0.45), size: 26,), 
         trailingWidget: _toggle()),
       _line(),
       _row("moon_light", "Log Out", "", () {
