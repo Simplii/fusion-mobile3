@@ -560,6 +560,27 @@ print(responseBody);
     }
   }
 
+  Future<bool> checkAnsweringRules () async {
+    bool ret = false;
+    await nsApiCall("answerrule", "read", {
+      "domain" : getDomain(),
+      "user": getExtension(),
+      "uid": getUid()
+    }, callback: (Map<String,dynamic>data){
+      List asweringRules = data['answering_rule'] ?? [];
+      if(asweringRules.isNotEmpty){
+        Map<String,dynamic> activeRule = asweringRules.firstWhere((rule) => rule['active'] == "1");
+        if(activeRule != null){
+          if(activeRule['sim_parameters'].contains('confirm_') && activeRule['sim_control'] == "e"){
+            ret = true;
+          }
+          print("MDM $activeRule");
+        }
+      }
+    });
+    return ret;
+  }
+
   login(String username, String password, Function(bool) callback) {
     if(password == null )return;
     apiV1Call(
