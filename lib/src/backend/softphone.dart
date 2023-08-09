@@ -887,12 +887,15 @@ class Softphone implements SipUaHelperListener {
           "groupId": _fusionConnection.settings.myOutboundCallerId
         },
         callback: (Map<String,dynamic> response){
-          // add dial method
-
-
-
           if(response.containsKey("success") && response["success"] == true){
-            _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+            if(_fusionConnection.settings.usesCarrier && 
+              _fusionConnection.settings.myCellPhoneNumber.isNotEmpty){
+              callInitiated = true;
+              toast("Call has been sent to your cellphone", duration: Duration(seconds: 8));
+              doClickToCall(destination);
+            }else {
+              _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+            }
           } else {
             toast("Sorry somthing went wrong with dynamic dailing");
           }
