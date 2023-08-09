@@ -108,6 +108,7 @@ class Softphone implements SipUaHelperListener {
   String _savedPassword;
   String linePrefix = "";
   List<List<String>> devicesList = [];
+  bool callInitiated = false;
 
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
@@ -862,6 +863,9 @@ class Softphone implements SipUaHelperListener {
   }
 
   makeCall(String destination) async {
+    if(callInitiated){
+      return toast("Call in progress...",duration: Duration(seconds: 3));
+    }
     doMakeCall(destination);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('lastCalledNumber', destination);
@@ -897,7 +901,8 @@ class Softphone implements SipUaHelperListener {
     } else {
       if(_fusionConnection.settings.usesCarrier && 
         _fusionConnection.settings.myCellPhoneNumber.isNotEmpty){
-        toast("Call has been sent to your cellphone");
+        callInitiated = true;
+        toast("Call has been sent to your cellphone", duration: Duration(seconds: 8));
         doClickToCall(destination);
       }else {
         _getMethodChannel().invokeMethod("lpStartCall", [destination]);
@@ -913,10 +918,11 @@ class Softphone implements SipUaHelperListener {
           "sip:${_fusionConnection.settings.myCellPhoneNumber}@${_fusionConnection.getDomain()}" 
       },
       callback: (data){
-        print("MDBM $data");
         String callId = data['callId'] ?? "";
-        print("MDBM $callId");
       });
+    Future.delayed(Duration(seconds: 9), (){
+      callInitiated = false;
+    });
   }
 
   makeActiveCall(Call call) {

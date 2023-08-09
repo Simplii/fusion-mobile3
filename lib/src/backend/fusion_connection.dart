@@ -81,9 +81,9 @@ class FusionConnection {
   Connectivity connectivity = Connectivity();
   ConnectivityResult connectivityResult = ConnectivityResult.none;
   bool internetAvailable = true;
-  String serverRoot = "http://zaid-fusion-dev.fusioncomm.net";
+  String serverRoot = "http://fusion-test.fusioncomm.net";
   String mediaServer = "https://fusion-media.sfo2.digitaloceanspaces.com";
-  String defaultAvatar = "https://zaid-fusion-dev.fusioncomm.net/img/defaultuser.png";
+  String defaultAvatar = "https://fusion-test.fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {
     _getCookies();
@@ -140,7 +140,7 @@ class FusionConnection {
   }
 
   final channel = WebSocketChannel.connect(
-    Uri.parse('wss://zaid-fusion-dev.fusioncomm.net:8443'),
+    Uri.parse('wss://fusion-test.fusioncomm.net:8443'),
   );
 
   onLogOut(Function callback) {
@@ -304,7 +304,7 @@ class FusionConnection {
       data['username'] = await _getUsername();
 
       Uri url = Uri.parse(
-          'https://zaid-fusion-dev.fusioncomm.net/api/v1/clients/api_request?username=' +
+          'https://fusion-test.fusioncomm.net/api/v1/clients/api_request?username=' +
               data['username']);
       Map<String, String> headers = await _cookieHeaders(url);
       String body = convert.jsonEncode(data);
@@ -349,7 +349,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString().trim().replaceAll(reg, '')) + '&';
         }
       }
-      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v1' + route + urlParams);
+      Uri url = Uri.parse('https://fusion-test.fusioncomm.net/api/v1' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
       print(convert.jsonEncode(data));
       if (method.toLowerCase() != 'get') {
@@ -424,7 +424,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v2' + route + urlParams);
+      Uri url = Uri.parse('https://fusion-test.fusioncomm.net/api/v2' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -481,7 +481,7 @@ class FusionConnection {
     try {
       data['username'] = await _getUsername();
 
-      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v2' + route);
+      Uri url = Uri.parse('https://fusion-test.fusioncomm.net/api/v2' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
       (await _cookieHeaders(url))
           .forEach(
@@ -560,21 +560,34 @@ print(responseBody);
     }
   }
 
-  Future<bool> checkAnsweringRules () async {
-    bool ret = false;
+  Future<Map<String,dynamic>> nsAnsweringRules () async {
+    Map<String,dynamic> ret = {
+      "usesCarrier": false,
+      "phoneNumber": ""
+    };
     await nsApiCall("answerrule", "read", {
       "domain" : getDomain(),
       "user": getExtension(),
       "uid": getUid()
     }, callback: (Map<String,dynamic>data){
-      List asweringRules = data['answering_rule'] ?? [];
+      List asweringRules = data['answering_rule'] != null &&  data['answering_rule'][0] == null
+        ? [data['answering_rule']]
+        : data['answering_rule'] ?? [];
+        print("MDBM $data");
       if(asweringRules.isNotEmpty){
         Map<String,dynamic> activeRule = asweringRules.firstWhere((rule) => rule['active'] == "1");
         if(activeRule != null){
-          if(activeRule['sim_parameters'].contains('confirm_') && activeRule['sim_control'] == "e"){
-            ret = true;
-          }
-          print("MDM $activeRule");
+          String simParams = activeRule['sim_parameters'];
+          if(simParams.contains('confirm_') && 
+            activeRule['sim_control'] == "e" && 
+            !simParams.contains("<OwnDevices>")){
+              ret['usesCarrier'] = true;
+              List<String> simParamsArray = simParams.split(" ");
+              String t = simParamsArray.firstWhere((String e) => e.contains('confirm_')) ?? "";
+              if(t.isNotEmpty){
+                ret['phoneNumber'] = t.replaceAll("confirm_", "");
+              }
+            }
         }
       }
     });
@@ -647,7 +660,7 @@ print(responseBody);
 
   setupSocket() {
     int messageNum = 0;
-    final wsUrl = Uri.parse('wss://zaid-fusion-dev.fusioncomm.net:8443/');
+    final wsUrl = Uri.parse('wss://fusion-test.fusioncomm.net:8443/');
     socketChannel = WebSocketChannel.connect(wsUrl);
     socketChannel.stream.listen((messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);

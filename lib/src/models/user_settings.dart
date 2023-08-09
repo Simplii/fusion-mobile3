@@ -166,7 +166,6 @@ class UserSettings {
     String cellPhoneNumber,
     bool useCarrier,
     }) {
-      print("MDBM $cellPhoneNumber $useCarrier");
       usesCarrier = useCarrier;
       myCellPhoneNumber = cellPhoneNumber;
       myOutboundCallerId = outboundCallerId;
@@ -181,7 +180,6 @@ class UserSettings {
       "settings" : [...settings],
       },
       callback: (Map<String,dynamic> data){
-        print("MDBM $data");
         if(data["success"] != null){
           settings.forEach((SettingsPayload setting){
             if(setting.setting == "uses_carrier"){

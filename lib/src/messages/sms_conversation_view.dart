@@ -1538,6 +1538,34 @@ class _SMSMessageViewState extends State<SMSMessageView> {
           Navigator.pop(context);
         }
       },
+      confirmDismiss: (DismissDirection direction) async {
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("Confirm"),
+              content: const Text(
+                  "Are you sure you wish to delete this message?"),
+              actions: <Widget>[
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: crimsonDark,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text("DELETE")
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text("CANCEL"),
+                ),
+              ],
+            );
+          },
+        );
+      },
       background: Container(
         color: crimsonDark,
         child: Align(

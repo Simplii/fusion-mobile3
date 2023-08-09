@@ -492,7 +492,6 @@ class MainActivity : FlutterFragmentActivity() {
             Log.d("phoneStateListener","android < 12")
             telephonyManager =
                     getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-            Log.d("MDBM", "$myPhoneNumber")
             val callStateListener: PhoneStateListener = object : PhoneStateListener() {
                 override fun onCallStateChanged(state: Int, incomingNumber: String?) {
                     handleCallStateChange(state)

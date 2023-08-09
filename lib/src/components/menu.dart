@@ -50,17 +50,32 @@ class _MenuState extends State<Menu> {
       ? userSettings.myCellPhoneNumber.formatPhone() 
       : _softphone.devicePhoneNumber;
     usingCarrierCalls = userSettings.usesCarrier;
-    _fusionConnection.checkAnsweringRules().then((value){
-      setState(() {
-        usingCarrierCalls = value;
-      });
-      if(userSettings.usesCarrier != value){
-        SettingsPayload payload = SettingsPayload(
+    _fusionConnection.nsAnsweringRules()
+    .then((Map<String,dynamic> value){
+      if(userSettings.usesCarrier != value["usesCarrier"]){
+        setState(() {
+          usingCarrierCalls = value["usesCarrier"];
+          if(value["usesCarrier"]){
+            myPhoneNumber = value["phoneNumber"];
+          }
+        });
+        List<SettingsPayload> payload = [ 
+          SettingsPayload(
             _fusionConnection.getUid(), 
             "uses_carrier", 
-            value ? value.toString() : ""
+            value["usesCarrier"] ? value["usesCarrier"].toString() : ""
+          )
+        ];
+        if(value["usesCarrier"]){
+          payload.add(
+            SettingsPayload(
+              _fusionConnection.getUid(), 
+              "cell_phone_number", 
+              value['phoneNumber']
+            )
           );
-        userSettings.updateUserSettings([payload]);
+        }
+        userSettings.updateUserSettings(payload);
       }
     });
     List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
@@ -681,7 +696,7 @@ class _MenuState extends State<Menu> {
                 children: [
                   Text("Please enter a phone number to forward outbound and inbound calls to"),
                   TextFormField(
-                    initialValue: myPhoneNumber,
+                    initialValue: myPhoneNumber.formatPhone(),
                     keyboardType: TextInputType.phone,
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.digitsOnly,
@@ -800,11 +815,16 @@ class _MenuState extends State<Menu> {
     }, callback: (Map<String,dynamic> data){
       if(data['answering_rule'] !=  null){
         String ruleName = "";
-        for (var rule in data['answering_rule']) {
-            if(rule['active'] == "1"){
-              ruleName = rule['time_frame'];
-              break;
-            }
+        
+        if(data['answering_rule'][0] == null && data['answering_rule']['time_frame'] != null){
+          ruleName = data['answering_rule']['time_frame'];
+        } else {
+          for (var rule in data['answering_rule']) {
+              if(rule['active'] == "1"){
+                ruleName = rule['time_frame'];
+                break;
+              }
+          }
         }
 
         _fusionConnection.nsApiCall("answerrule", "update", {
