@@ -13,6 +13,7 @@ class UserSettings {
   UserSettings(this._fusionConnection);
   String myCellPhoneNumber = "";
   bool usesCarrier = false;
+  String devices = "";
 
   myContact() {
     if (subscriber['first_name'] == null) subscriber['first_name'] = "";
@@ -165,11 +166,13 @@ class UserSettings {
     bool dynamicDialingEnabledForDomain,
     String cellPhoneNumber,
     bool useCarrier,
+    String simParams
     }) {
       usesCarrier = useCarrier;
       myCellPhoneNumber = cellPhoneNumber;
       myOutboundCallerId = outboundCallerId;
       isDynamicDialingDept = isDepartment;
+      devices = simParams;
       dynamicDialingIsActive = isFeatureEnabled("Dynamic Dialing");
   }
 

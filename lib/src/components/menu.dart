@@ -52,6 +52,7 @@ class _MenuState extends State<Menu> {
     usingCarrierCalls = userSettings.usesCarrier;
     _fusionConnection.nsAnsweringRules()
     .then((Map<String,dynamic> value){
+      userSettings.devices = value['devices'];
       if(userSettings.usesCarrier != value["usesCarrier"]){
         setState(() {
           usingCarrierCalls = value["usesCarrier"];
@@ -755,32 +756,19 @@ class _MenuState extends State<Menu> {
                         userSettings.updateUserSettings(payload);
                       });
                       if(usingCarrierCalls){
-                        _fusionConnection.nsApiCall("device", "read", {
-                          "object": "device",
-                          "action": "read",
-                          "domain": _fusionConnection.getDomain(),
-                          "user": _fusionConnection.getExtension(),
-                          "uid" : _fusionConnection.getUid()
-                        }, callback: (Map<String,dynamic> data){
-                          String simPrams = "";
-                          if(data['device'] != null){
-                            List devices = data['device'];
-                            if(devices.isNotEmpty){
-                              devices.forEach((device) {
-                                if(!device['user_agent'].contains("Fusion.PushEnabled")){
-                                  String aor =  device['aor'];
-                                  String name = aor.split("@")[0].replaceAll("sip:", "");
-                                  simPrams = "$simPrams $name";
-                                }
-                              });
-                            }
-                          }
-                          _updateAnsweringRule(
-                            forControl: "d", 
-                            simControl: "e", 
-                            simPrams: "${simPrams.trim()} confirm_${myPhoneNumber.onlyNumbers()}"
-                          );
-                        });
+                        RegExp fmDevice = RegExp(r'\d{4}(fm)');
+                        RegExp allDevices = RegExp(r'(<OwnDevices>)');
+                        String devices = "";
+                        devices = userSettings.devices.replaceAll(allDevices,"");
+                        devices = devices.replaceAll(fmDevice, "");
+                        devices = devices.replaceAll(myPhoneNumber.onlyNumbers(),"");
+                        _updateAnsweringRule(
+                          forControl: "d", 
+                          simControl: "e", 
+                          simParams: devices.isNotEmpty 
+                            ? "$devices confirm_${myPhoneNumber.onlyNumbers()}"
+                            : "confirm_${myPhoneNumber.onlyNumbers()}"
+                        );
                       }
                       Navigator.of(context).pop();
                   },
@@ -805,7 +793,7 @@ class _MenuState extends State<Menu> {
   void _updateAnsweringRule({ 
     @required String forControl, 
     @required String simControl, 
-    @required String simPrams}){
+    @required String simParams}){
     String domain = _fusionConnection.getDomain();
     String ext = _fusionConnection.getExtension();
     String uid = _fusionConnection.getUid();
@@ -834,7 +822,7 @@ class _MenuState extends State<Menu> {
           "time_frame": ruleName,
           "for_control": forControl,
           "sim_control": simControl,
-          "sim_parameters": simPrams
+          "sim_parameters": simParams
         });
       }
     });
@@ -858,10 +846,11 @@ class _MenuState extends State<Menu> {
             userSettings.updateUserSettings([payload]);
           });
           if(!value){
+            RegExp answerConfDevice = RegExp(r'(confirm_)\d{10}');
             _updateAnsweringRule(
               forControl: "d",
               simControl: "e", 
-              simPrams: "<OwnDevices>"
+              simParams: userSettings.devices.replaceAll(answerConfDevice, "")
             );
           }
         } else {

@@ -523,7 +523,7 @@ print(responseBody);
     return _domain;
   }
 
-  _postLoginSetup(Function(bool) callback) {
+  _postLoginSetup(Function(bool) callback) async {
     _getCookies();
     settings.lookupSubscriber();
     coworkers.getCoworkers((data) {});
@@ -544,6 +544,7 @@ print(responseBody);
     });
     
     if(settings.options.containsKey("enabled_features")){
+      Map<String,dynamic> nsAnsweringRules = await this.nsAnsweringRules();
       apiV2Call("get", "/user", {},callback: (Map<String,dynamic> data){
         if(data == null) return;
         settings.setMyUserInfo(
@@ -554,7 +555,8 @@ print(responseBody);
               : data["outboundCallerId"],
           isDepartment: data["dynamicDialingDepartment"] != '' ?? false,
           cellPhoneNumber: data["cellPhoneNumber"] ?? "",
-          useCarrier: data["usesCarrier"] ?? false);
+          useCarrier: data["usesCarrier"] ?? false,
+          simParams: nsAnsweringRules['devices']);
       });
     }
   }
@@ -562,7 +564,8 @@ print(responseBody);
   Future<Map<String,dynamic>> nsAnsweringRules () async {
     Map<String,dynamic> ret = {
       "usesCarrier": false,
-      "phoneNumber": ""
+      "phoneNumber": "",
+      "devices": ""
     };
     await nsApiCall("answerrule", "read", {
       "domain" : getDomain(),
@@ -572,11 +575,14 @@ print(responseBody);
       List asweringRules = data['answering_rule'] != null &&  data['answering_rule'][0] == null
         ? [data['answering_rule']]
         : data['answering_rule'] ?? [];
-        print("MDBM $data");
+
       if(asweringRules.isNotEmpty){
         Map<String,dynamic> activeRule = asweringRules.firstWhere((rule) => rule['active'] == "1");
         if(activeRule != null){
-          String simParams = activeRule['sim_parameters'];
+          ret['devices'] = activeRule['sim_parameters'].runtimeType == String 
+            ? activeRule['sim_parameters']
+            : "";
+          String simParams = ret['devices'];
           if(simParams.contains('confirm_') && 
             activeRule['sim_control'] == "e" && 
             !simParams.contains("<OwnDevices>")){
