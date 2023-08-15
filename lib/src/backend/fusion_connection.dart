@@ -588,9 +588,13 @@ print(responseBody);
             !simParams.contains("<OwnDevices>")){
               ret['usesCarrier'] = true;
               List<String> simParamsArray = simParams.split(" ");
-              String t = simParamsArray.firstWhere((String e) => e.contains('confirm_')) ?? "";
-              if(t.isNotEmpty){
-                ret['phoneNumber'] = t.replaceAll("confirm_", "");
+              String device = simParamsArray.firstWhere((String e) => e.contains('confirm_')) ?? "";
+              if(device.isNotEmpty){
+                if(device.contains(";delay")){
+                  ret['phoneNumber'] = device.substring(0,device.indexOf(';')).replaceAll("confirm_", "");
+                } else {
+                  ret['phoneNumber'] = device.replaceAll("confirm_", "");
+                } 
               }
             }
         }

@@ -761,13 +761,21 @@ class _MenuState extends State<Menu> {
                         String devices = "";
                         devices = userSettings.devices.replaceAll(allDevices,"");
                         devices = devices.replaceAll(fmDevice, "");
-                        devices = devices.replaceAll(myPhoneNumber.onlyNumbers(),"");
+                        List<String> devicesArray = devices.split(' ');
+                        String devicesName = "";
+                        for (String device in devicesArray) {
+                          if(device.contains("${myPhoneNumber.onlyNumbers()}") && !device.startsWith("confirm_")){
+                            devicesName += " confirm_$device";
+                          } else {
+                            devicesName += " $device";
+                          }
+                        }
                         _updateAnsweringRule(
                           forControl: "d", 
                           simControl: "e", 
                           simParams: devices.isNotEmpty 
-                            ? "$devices confirm_${myPhoneNumber.onlyNumbers()}"
-                            : "confirm_${myPhoneNumber.onlyNumbers()}"
+                            ? devicesName.trim()
+                            : "${_fusionConnection.getExtension()} confirm_${myPhoneNumber.onlyNumbers()}"
                         );
                       }
                       Navigator.of(context).pop();
@@ -846,7 +854,7 @@ class _MenuState extends State<Menu> {
             userSettings.updateUserSettings([payload]);
           });
           if(!value){
-            RegExp answerConfDevice = RegExp(r'(confirm_)\d{10}');
+            RegExp answerConfDevice = RegExp(r'(confirm_)');
             _updateAnsweringRule(
               forControl: "d",
               simControl: "e", 
