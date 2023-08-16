@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../backend/fusion_connection.dart';
 import 'contact.dart';
 
@@ -9,6 +11,9 @@ class UserSettings {
   bool isDynamicDialingDept = false;
   bool dynamicDialingIsActive = false;
   UserSettings(this._fusionConnection);
+  String myCellPhoneNumber = "";
+  bool usesCarrier = false;
+  String devices = "";
 
   myContact() {
     if (subscriber['first_name'] == null) subscriber['first_name'] = "";
@@ -158,9 +163,53 @@ class UserSettings {
   void setMyUserInfo({
     String outboundCallerId, 
     bool isDepartment, 
-    bool dynamicDialingEnabledForDomain}) {
+    bool dynamicDialingEnabledForDomain,
+    String cellPhoneNumber,
+    bool useCarrier,
+    String simParams
+    }) {
+      usesCarrier = useCarrier;
+      myCellPhoneNumber = cellPhoneNumber;
       myOutboundCallerId = outboundCallerId;
       isDynamicDialingDept = isDepartment;
+      devices = simParams;
       dynamicDialingIsActive = isFeatureEnabled("Dynamic Dialing");
+  }
+
+  bool updateUserSettings (List<SettingsPayload> settings) {
+    bool ret = false;
+    _fusionConnection.apiV1Call("post", "/clients/user_settings", {
+      "uid" : _fusionConnection.getUid(),
+      "settings" : [...settings],
+      },
+      callback: (Map<String,dynamic> data){
+        if(data["success"] != null){
+          settings.forEach((SettingsPayload setting){
+            if(setting.setting == "uses_carrier"){
+              usesCarrier = setting.value.isNotEmpty;
+            }
+            if(setting.setting == "cell_phone_number"){
+              myCellPhoneNumber = setting.value;
+            }
+          },);
+          ret = true;
+        } 
+      }
+    );
+    return ret;
+  }
+}
+
+class SettingsPayload {
+  String uid;
+  String setting;
+  String value;
+  SettingsPayload(this.uid,this.setting,this.value);
+  Map<String,dynamic> toJson(){
+    return {
+      "uid" : uid,
+      "setting": setting,
+      "value": value
+    };
   }
 }

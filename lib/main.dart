@@ -500,6 +500,11 @@ class _MyHomePageState extends State<MyHomePage> {
                  });
           });
           checkForInitialMessage();
+          fusionConnection.dids.getDids((p0, p1) {
+            setState(() {
+              _dids = p0;
+            });
+          });
         } else {}
       }
     });

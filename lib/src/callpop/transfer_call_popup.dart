@@ -219,14 +219,20 @@ class _TransferCallpopState extends State<TransferCallPopup> with TickerProvider
                   ).toList()
                 ),
           ),
-          DialPad(_fusionConnection, widget._softphone,
-              onPlaceCall: (String number) {
-            _selectTransferType(null, null, number);
-          }, onQueryChange: (String query) {
-            setState(() {
-              _query = query;
-            });
-          })
+          DialPad(
+            _fusionConnection, 
+            widget._softphone, 
+            fromTransferScreen: true, 
+            directTransfer: _directTransfer,
+            onPlaceCall: (String number) {
+              _selectTransferType(null, null, number);
+            }, 
+            onQueryChange: (String query) {
+              setState(() {
+                _query = query;
+              });
+            }
+          )
         ]));
   }
 }

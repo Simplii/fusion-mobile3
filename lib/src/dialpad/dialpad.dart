@@ -12,14 +12,22 @@ import '../styles.dart';
 import 'dialpad_key.dart';
 
 class DialPad extends StatefulWidget {
-  DialPad(this._fusionConnection, this._softphone,
-      {Key key, this.onQueryChange, this.onPlaceCall})
-      : super(key: key);
+  DialPad(
+    this._fusionConnection, 
+    this._softphone,
+    {Key key, 
+      this.onQueryChange, 
+      this.onPlaceCall, 
+      this.fromTransferScreen = false,
+      this.directTransfer
+    }) : super(key: key);
 
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
   final Function onQueryChange;
+  final bool fromTransferScreen;
   final Function(String number) onPlaceCall;
+  final Function(String to) directTransfer;
 
   @override
   State<StatefulWidget> createState() => _DialPadState();
@@ -33,11 +41,14 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
   var dialedNumber = '';
   final _dialEntryController = ScrollController();
   bool _lastNumberCalledIsSet = false;
-
+  bool get _fromTransferScreen => widget.fromTransferScreen;
+  String _myPhoneNumber = "";
+  Function(String to) get _directTransfer => widget.directTransfer;
   @override
   void initState() {
     super.initState();
     _loadLastCalledNumber();
+    _myPhoneNumber = _fusionConnection.settings.myCellPhoneNumber;
   }
 
   void _scrollToEnd() {
@@ -111,6 +122,76 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
     ''
   ];
 
+  Future<void> _dialog() async {
+    return showDialog<void>(
+      context: context, 
+      builder: (BuildContext context){
+        return StatefulBuilder(
+          builder: (BuildContext context,StateSetter setDialogState) {
+            return AlertDialog(
+              contentPadding: EdgeInsets.symmetric(vertical: 8,horizontal: 24),
+              title: Text("Transfer to Carrier"),
+              content: Container(
+                child: Wrap(
+                  runSpacing: 16,
+                  children: [
+                    Text("This active call is about to be transfered to"),
+                    TextFormField(
+                      keyboardType: TextInputType.phone,
+                      maxLength: 14,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        InputPhoneFormatter()
+                      ],
+                      decoration: InputDecoration(
+                        labelText: "Phone number",
+                        counterText: "",
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      initialValue: _myPhoneNumber.formatPhone(),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          setState(() {
+                            _myPhoneNumber = value.onlyNumbers();
+                          });
+                        },);
+                      },
+                    )
+                  ],
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: crimsonLight
+                  ),
+                  onPressed:_myPhoneNumber.length < 10 ? null : (){
+                    if(_directTransfer != null){
+                      _directTransfer(_myPhoneNumber.onlyNumbers());
+                    }
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Transfer"),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.all(0),
+                    foregroundColor: coal
+                  ),
+                  onPressed: (){
+                     Navigator.of(context).pop();
+                  }, 
+                  child: Text("Cancel"),),
+              ],
+            );
+          }
+        );
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scaleFactor = MediaQuery.of(context).textScaleFactor;
@@ -168,32 +249,34 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                                 "assets/icons/paste_white.png",
                                                 width: 22,
                                                 height: 16))))),
-                            Container(
-                                height:
-                                    40 * MediaQuery.of(context).textScaleFactor,
-                                alignment: Alignment.topCenter,
-                                width: MediaQuery.of(context).size.width - 122,
-                                child: ListView(
-                                    scrollDirection: Axis.horizontal,
-                                    controller: _dialEntryController,
-                                    children: [
-                                      Container(
-                                          alignment: Alignment.topCenter,
-                                          width: max(
-                                              MediaQuery.of(context)
-                                                      .size
-                                                      .width -
-                                                  122,
-                                              textWidth.toDouble()),
-                                          child: Text(dialedNumber,
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  fontSize: dialedNumber.length > 10 
-                                                    ? 31 
-                                                    : 35,
-                                                  color: Colors.white))
-                                        )
-                                    ])),
+                            Expanded(
+                              child: Container(
+                                  height:
+                                      40 * MediaQuery.of(context).textScaleFactor,
+                                  alignment: Alignment.topCenter,
+                                  // width: MediaQuery.of(context).size.width - 122,
+                                  child: ListView(
+                                      scrollDirection: Axis.horizontal,
+                                      controller: _dialEntryController,
+                                      children: [
+                                        Container(
+                                            alignment: Alignment.topCenter,
+                                            width: max(
+                                                MediaQuery.of(context)
+                                                        .size
+                                                        .width -
+                                                    122,
+                                                textWidth.toDouble()),
+                                            child: Text(dialedNumber,
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                    fontSize: dialedNumber.length > 10 
+                                                      ? 31 
+                                                      : 35,
+                                                    color: Colors.white))
+                                          )
+                                      ])),
+                            ),
                             if (dialedNumber != '')
                               SizedBox(
                                 width: 40,
@@ -209,7 +292,38 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                             "assets/icons/call_view/backspace.png",
                                             width: 26,
                                             height: 22))),
-                              )
+                              ),
+                            if(dialedNumber == '' && 
+                              _fromTransferScreen && 
+                              _fusionConnection.settings.myCellPhoneNumber.isNotEmpty)
+                            SizedBox(
+                              height: 40,
+                              child: ElevatedButton(
+                                onPressed: _dialog, 
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.fromLTRB(12,4,6,4),
+                                  backgroundColor: char,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6)
+                                  )
+                                ),
+                                child: Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 4,
+                                  children: [
+                                    Text(
+                                      "XFER TO CARRIER",
+                                      style: TextStyle(
+                                        color: Colors.white, 
+                                        fontWeight: 
+                                        FontWeight.w700
+                                      ),
+                                    ),
+                                    Icon(Icons.arrow_forward, size: 20,color: Colors.white,), 
+                                  ],
+                                ),
+                              ),
+                            )
                           ],
                         ),
                       ),

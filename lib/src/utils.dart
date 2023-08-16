@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -157,3 +159,32 @@ String generateMd5(String input) {
 }
 
 String fusionDataHelper = "299ea792cc17100390c7a4a1b6e6f909f0a1b7c725ad820bd54292ca111cfa30";
+
+class InputPhoneFormatter extends TextInputFormatter {
+  String inputPhoneFormat(String value) {
+    String phoneFormatted = value.length >= 1
+    ? (value.length >= 1 ? '(' : '') + value.substring(0, value.length >= 3 ? 3 : null) 
+      + (value.length  > 3 ? ') ' : '') + (value.length > 3
+        ? value.substring(3, value.length >= 6 ? 6 : null) + (value.length > 6
+          ? '-' + value.substring(6, value.length >= 10 ? 10 : null)
+          : '')
+        : '')
+    : value;
+    return phoneFormatted;
+  }
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue, TextEditingValue newValue) {
+      String text = newValue.text;
+
+      if (newValue.selection.baseOffset == 0) {
+        return newValue;
+      }
+
+      return newValue.copyWith(
+        text: inputPhoneFormat(text),
+        selection: new TextSelection.collapsed(offset: inputPhoneFormat(text).length)
+      );
+  }
+}
