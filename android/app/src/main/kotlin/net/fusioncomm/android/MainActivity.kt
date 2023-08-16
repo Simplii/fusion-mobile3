@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.FEATURE_TELEPHONY_SUBSCRIPTION
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
@@ -34,7 +35,10 @@ import java.security.MessageDigest
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.net.Uri
+import android.telephony.SubscriptionManager
+import android.telephony.SubscriptionManager.DEFAULT_SUBSCRIPTION_ID
 import android.view.KeyEvent
+import androidx.core.content.getSystemService
 
 class MainActivity : FlutterFragmentActivity() {
     private lateinit var core: Core
@@ -54,7 +58,8 @@ class MainActivity : FlutterFragmentActivity() {
     private var appOpenedFromBackground : Boolean = false
 
     lateinit var audioManager:AudioManager
-
+    lateinit var telephonyManager: TelephonyManager;
+    var myPhoneNumber:String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
@@ -427,6 +432,7 @@ class MainActivity : FlutterFragmentActivity() {
         core.start()
         sendDevices()
         getAppVersion()
+        getMyPhoneNumber()
     }
 
     private fun handleCallStateChange(state: Int){
@@ -458,13 +464,21 @@ class MainActivity : FlutterFragmentActivity() {
         Log.d("phoneStateListener","starting phone state listener")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Log.d("phoneStateListener","android >= 12")
-            
             val permission = ContextCompat.checkSelfPermission(this,
                     Manifest.permission.READ_PHONE_STATE)
 
             if (permission == PackageManager.PERMISSION_GRANTED){
-                val telephonyManager: TelephonyManager =
+                telephonyManager =
                         getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        packageManager.hasSystemFeature(FEATURE_TELEPHONY_SUBSCRIPTION)){
+                    val subscriptionManager: SubscriptionManager =
+                            getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
+                    myPhoneNumber = subscriptionManager.getPhoneNumber(DEFAULT_SUBSCRIPTION_ID)
+                } else {
+                    myPhoneNumber = telephonyManager.line1Number ?: "";
+                }
+
                 telephonyManager.registerTelephonyCallback(
                         mainExecutor,
                         object : TelephonyCallback(), TelephonyCallback.CallStateListener {
@@ -476,7 +490,7 @@ class MainActivity : FlutterFragmentActivity() {
 
         } else {
             Log.d("phoneStateListener","android < 12")
-            val telephonyManager: TelephonyManager =
+            telephonyManager =
                     getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
             val callStateListener: PhoneStateListener = object : PhoneStateListener() {
                 override fun onCallStateChanged(state: Int, incomingNumber: String?) {
@@ -522,7 +536,13 @@ class MainActivity : FlutterFragmentActivity() {
         var gson = Gson();
         channel.invokeMethod("setAppVersion",  gson.toJson(versionName) )
     }
-    
+
+    private fun getMyPhoneNumber(){
+        myPhoneNumber = telephonyManager.line1Number ?: "";
+        var gson = Gson();
+        channel.invokeMethod("setMyPhoneNumber",  gson.toJson(myPhoneNumber) )
+    }
+
     private fun createProxyConfig(
         proxyConfig: ProxyConfig,
         aor: String,

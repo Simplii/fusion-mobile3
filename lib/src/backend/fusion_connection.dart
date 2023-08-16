@@ -351,11 +351,11 @@ class FusionConnection {
       }
       Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
-
       if (method.toLowerCase() != 'get') {
         args[#body] = convert.jsonEncode(data);
         headers["Content-Type"] = "application/json";
       }
+
       args[#headers] = headers;
       Response uriResponse;
       try {
@@ -523,7 +523,7 @@ print(responseBody);
     return _domain;
   }
 
-  _postLoginSetup(Function(bool) callback) {
+  _postLoginSetup(Function(bool) callback) async {
     _getCookies();
     settings.lookupSubscriber();
     coworkers.getCoworkers((data) {});
@@ -544,6 +544,7 @@ print(responseBody);
     });
     
     if(settings.options.containsKey("enabled_features")){
+      Map<String,dynamic> nsAnsweringRules = await this.nsAnsweringRules();
       apiV2Call("get", "/user", {},callback: (Map<String,dynamic> data){
         if(data == null) return;
         settings.setMyUserInfo(
@@ -552,9 +553,54 @@ print(responseBody);
             settings.isFeatureEnabled("Dynamic Dialing")
               ? data["dynamicDialingDepartment"]
               : data["outboundCallerId"],
-          isDepartment: data["dynamicDialingDepartment"] != '' ?? false);
+          isDepartment: data["dynamicDialingDepartment"] != '' ?? false,
+          cellPhoneNumber: data["cellPhoneNumber"] ?? "",
+          useCarrier: data["usesCarrier"] ?? false,
+          simParams: nsAnsweringRules['devices']);
       });
     }
+  }
+
+  Future<Map<String,dynamic>> nsAnsweringRules () async {
+    Map<String,dynamic> ret = {
+      "usesCarrier": false,
+      "phoneNumber": "",
+      "devices": ""
+    };
+    await nsApiCall("answerrule", "read", {
+      "domain" : getDomain(),
+      "user": getExtension(),
+      "uid": getUid()
+    }, callback: (Map<String,dynamic>data){
+      List asweringRules = data['answering_rule'] != null &&  data['answering_rule'][0] == null
+        ? [data['answering_rule']]
+        : data['answering_rule'] ?? [];
+
+      if(asweringRules.isNotEmpty){
+        Map<String,dynamic> activeRule = asweringRules.firstWhere((rule) => rule['active'] == "1");
+        if(activeRule != null){
+          ret['devices'] = activeRule['sim_parameters'].runtimeType == String 
+            ? activeRule['sim_parameters']
+            : "";
+          String simParams = ret['devices'];
+          if(simParams.contains('confirm_') && 
+            activeRule['sim_control'] == "e" && 
+            !simParams.contains("<OwnDevices>")){
+              ret['usesCarrier'] = true;
+              List<String> simParamsArray = simParams.split(" ");
+              String device = simParamsArray.firstWhere((String e) => e.contains('confirm_')) ?? "";
+              if(device.isNotEmpty){
+                if(device.contains(";delay")){
+                  ret['phoneNumber'] = device.substring(0,device.indexOf(';')).replaceAll("confirm_", "");
+                } else {
+                  ret['phoneNumber'] = device.replaceAll("confirm_", "");
+                } 
+              }
+            }
+        }
+      }
+    });
+    return ret;
   }
 
   login(String username, String password, Function(bool) callback) {

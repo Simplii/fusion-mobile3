@@ -82,6 +82,8 @@ class Softphone implements SipUaHelperListener {
   String activeCallOutputDevice = "";
   bool bluetoothAvailable = false;
   String bluetoothDeviceId = "";
+
+  String devicePhoneNumber = "";
   //IncallManager incallManager = new IncallManager();
 
   bool assistedTransferInit = false;
@@ -106,6 +108,7 @@ class Softphone implements SipUaHelperListener {
   String _savedPassword;
   String linePrefix = "";
   List<List<String>> devicesList = [];
+  bool callInitiated = false;
 
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
@@ -448,6 +451,9 @@ class Softphone implements SipUaHelperListener {
         case "setAppVersion":
           args = [json.decode(args)];
           break;
+        case "setMyPhoneNumber":
+          args = [json.decode(args)];
+          break;
         case "lnAudioDeviceListUpdated":
           args = [
             args['devicesList'] as String,
@@ -669,6 +675,9 @@ class Softphone implements SipUaHelperListener {
       case "setAppVersion":
         this.appVersion = args[0];
         break;
+      case "setMyPhoneNumber":
+        this.devicePhoneNumber = args[0];
+        break;
       case "lnRegistrationOk":
         registrationStateChanged(
             RegistrationState(state: RegistrationStateEnum.REGISTERED));
@@ -854,6 +863,9 @@ class Softphone implements SipUaHelperListener {
   }
 
   makeCall(String destination) async {
+    if(callInitiated){
+      return toast("Call in progress...",duration: Duration(seconds: 3));
+    }
     doMakeCall(destination);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('lastCalledNumber', destination);
@@ -876,15 +888,44 @@ class Softphone implements SipUaHelperListener {
         },
         callback: (Map<String,dynamic> response){
           if(response.containsKey("success") && response["success"] == true){
-            _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+            if(_fusionConnection.settings.usesCarrier && 
+              _fusionConnection.settings.myCellPhoneNumber.isNotEmpty){
+              callInitiated = true;
+              toast("Call has been sent to your cellphone", duration: Duration(seconds: 8));
+              doClickToCall(destination);
+            }else {
+              _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+            }
           } else {
             toast("Sorry somthing went wrong with dynamic dailing");
           }
         }
       );
     } else {
-      _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+      if(_fusionConnection.settings.usesCarrier && 
+        _fusionConnection.settings.myCellPhoneNumber.isNotEmpty){
+        callInitiated = true;
+        toast("Call has been sent to your cellphone", duration: Duration(seconds: 8));
+        doClickToCall(destination);
+      }else {
+        _getMethodChannel().invokeMethod("lpStartCall", [destination]);
+      }
     }
+  }
+
+  void doClickToCall(String destination){
+    _fusionConnection.apiV2Call("get", "/calls/dial", 
+      {
+        "destination" : destination, 
+        "origin" : 
+          "sip:${_fusionConnection.settings.myCellPhoneNumber}@${_fusionConnection.getDomain()}" 
+      },
+      callback: (data){
+        String callId = data['callId'] ?? "";
+      });
+    Future.delayed(Duration(seconds: 9), (){
+      callInitiated = false;
+    });
   }
 
   makeActiveCall(Call call) {

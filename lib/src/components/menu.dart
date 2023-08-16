@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
@@ -18,8 +19,12 @@ class Menu extends StatefulWidget {
   final Softphone _softphone;
   final List<Did> _dids;
 
-  Menu(this._fusionConnection, this._dids, this._softphone, {Key key})
-      : super(key: key);
+  Menu(
+    this._fusionConnection, 
+    this._dids, 
+    this._softphone, 
+    {Key key}
+  ) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _MenuState();
@@ -30,14 +35,50 @@ class _MenuState extends State<Menu> {
   Softphone get _softphone => widget._softphone;
   List<Did> get _dids => widget._dids;
   bool loggingOut = false;
-  
+
   String selectedOutboundDid = "";
   List<Did> dynamicDailingDids = [];
+  bool usingCarrierCalls = false;
+  String myPhoneNumber = "";
+  UserSettings userSettings;
 
   @override
   initState(){
-    super.initState();
-    UserSettings userSettings = _fusionConnection.settings;
+    super.initState(); 
+    userSettings = _fusionConnection.settings;
+    myPhoneNumber =  userSettings.myCellPhoneNumber.isNotEmpty 
+      ? userSettings.myCellPhoneNumber.formatPhone() 
+      : _softphone.devicePhoneNumber;
+    usingCarrierCalls = userSettings.usesCarrier;
+    _fusionConnection.nsAnsweringRules()
+    .then((Map<String,dynamic> value){
+      userSettings.devices = value['devices'];
+      if(userSettings.usesCarrier != value["usesCarrier"]){
+        setState(() {
+          usingCarrierCalls = value["usesCarrier"];
+          if(value["usesCarrier"]){
+            myPhoneNumber = value["phoneNumber"];
+          }
+        });
+        List<SettingsPayload> payload = [ 
+          SettingsPayload(
+            _fusionConnection.getUid(), 
+            "uses_carrier", 
+            value["usesCarrier"] ? value["usesCarrier"].toString() : ""
+          )
+        ];
+        if(value["usesCarrier"]){
+          payload.add(
+            SettingsPayload(
+              _fusionConnection.getUid(), 
+              "cell_phone_number", 
+              value['phoneNumber']
+            )
+          );
+        }
+        userSettings.updateUserSettings(payload);
+      }
+    });
     List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
     selectedOutboundDid = userSettings.myOutboundCallerId;
     Iterable filter = deps.where((SMSDepartment dep) => dep.usesDynamicOutbound);
@@ -367,13 +408,23 @@ class _MenuState extends State<Menu> {
         ]));
   }
 
-  _row(String icon, String label, String smallText, Function onTap, Icon ico) {
+  _row(
+    String icon, 
+    String label, 
+    String smallText, 
+    Function onTap, 
+    Icon ico, 
+    { Widget trailingWidget }) {
     return GestureDetector(
         onTap: onTap,
         child: Container(
             decoration: BoxDecoration(color: Colors.transparent),
             margin: EdgeInsets.only(left: 18, right: 18, top: 12, bottom: 12),
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child: Row(
+              crossAxisAlignment: trailingWidget != null 
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.start, 
+              children: [
               Container(
                   margin: EdgeInsets.only(right: 24),
                   width: 22,
@@ -402,13 +453,26 @@ class _MenuState extends State<Menu> {
                           color: smoke,
                           fontSize: 12,
                           fontWeight: FontWeight.w400))
-              ])
+              ]), 
+              if(trailingWidget != null)
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border( left: BorderSide(width: 1, color: smoke))
+                      ),
+                      // height: 24,
+                      child: trailingWidget
+                    ),
+                  ),
+                )
             ])));
   }
 
   _line() {
     return Container(
-        margin: EdgeInsets.only(left: 18, right: 18, top: 8, bottom: 8),
+        margin: EdgeInsets.only(left: 18, right: 18, top: 0, bottom: 8),
         child: Row(children: [
           Container(margin: EdgeInsets.only(right: 24), width: 20, height: 20),
           horizontalLine(12)
@@ -619,6 +683,194 @@ class _MenuState extends State<Menu> {
     );
   }
 
+  Future<void> _savePhoneMyPhoneNumber() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setDialogState) {
+            return AlertDialog(
+              title: const Text('Add Phone Number'),
+              content: Wrap(
+                runSpacing: 16,
+                children: [
+                  Text("Please enter a phone number to forward outbound and inbound calls to"),
+                  TextFormField(
+                    initialValue: myPhoneNumber.formatPhone(),
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.digitsOnly,
+                      InputPhoneFormatter(),
+                    ],
+                    maxLength: 14,
+                    onChanged: (value){
+                      setDialogState(() {
+                        setState(() {
+                          myPhoneNumber = value.onlyNumbers();
+                        });
+                      });
+                    },
+                    style: TextStyle(color: coal),
+                    decoration: InputDecoration(
+                      counterText: "",
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: smoke)),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white)
+                      ),
+                      labelText: "Phone Number",
+                      labelStyle: TextStyle(color: smoke),
+                    ),
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  style: TextButton.styleFrom(
+                  ),
+                  child: Text('Save', 
+                    style: TextStyle(
+                      color: myPhoneNumber.length < 10
+                        ? null 
+                        :crimsonDark
+                      ),
+                    ),
+                  onPressed: myPhoneNumber.length < 10
+                    ? null 
+                    : ()  {
+                      String uid = _fusionConnection.getUid();
+                      List<SettingsPayload> payload = [
+                        SettingsPayload(
+                          uid, 
+                          "uses_carrier", 
+                          usingCarrierCalls.toString()
+                        ),
+                        SettingsPayload(
+                          uid, 
+                          "cell_phone_number", 
+                          myPhoneNumber.onlyNumbers()
+                        )
+                      ];
+                      setState(() {
+                        userSettings.updateUserSettings(payload);
+                      });
+                      if(usingCarrierCalls){
+                        RegExp fmDevice = RegExp(r'\d{4}(fm)');
+                        RegExp allDevices = RegExp(r'(<OwnDevices>)');
+                        String devices = "";
+                        devices = userSettings.devices.replaceAll(allDevices,"");
+                        devices = devices.replaceAll(fmDevice, "");
+                        List<String> devicesArray = devices.split(' ');
+                        String devicesName = "";
+                        for (String device in devicesArray) {
+                          if(device.contains("${myPhoneNumber.onlyNumbers()}") && !device.startsWith("confirm_")){
+                            devicesName += " confirm_$device";
+                          } else {
+                            devicesName += " $device";
+                          }
+                        }
+                        _updateAnsweringRule(
+                          forControl: "d", 
+                          simControl: "e", 
+                          simParams: devices.isNotEmpty 
+                            ? devicesName.trim()
+                            : "${_fusionConnection.getExtension()} confirm_${myPhoneNumber.onlyNumbers()}"
+                        );
+                      }
+                      Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: const Text('Cancel', style: TextStyle(color: Colors.black),),
+                  onPressed: () {
+                    setState(() {
+                      usingCarrierCalls = false;
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          }
+        );
+      },
+    );
+  }
+
+  void _updateAnsweringRule({ 
+    @required String forControl, 
+    @required String simControl, 
+    @required String simParams}){
+    String domain = _fusionConnection.getDomain();
+    String ext = _fusionConnection.getExtension();
+    String uid = _fusionConnection.getUid();
+    _fusionConnection.nsApiCall("answerrule", "read", {
+      'domain': domain,
+      'user': ext
+    }, callback: (Map<String,dynamic> data){
+      if(data['answering_rule'] !=  null){
+        String ruleName = "";
+        
+        if(data['answering_rule'][0] == null && data['answering_rule']['time_frame'] != null){
+          ruleName = data['answering_rule']['time_frame'];
+        } else {
+          for (var rule in data['answering_rule']) {
+              if(rule['active'] == "1"){
+                ruleName = rule['time_frame'];
+                break;
+              }
+          }
+        }
+
+        _fusionConnection.nsApiCall("answerrule", "update", {
+          "domain": domain,
+          "user": ext,
+          "uid": uid,
+          "time_frame": ruleName,
+          "for_control": forControl,
+          "sim_control": simControl,
+          "sim_parameters": simParams
+        });
+      }
+    });
+  }
+
+
+  Widget _toggle() {
+    return Switch(
+      value: usingCarrierCalls, 
+      activeColor: crimsonLight,
+      inactiveTrackColor: smoke,
+      onChanged: ((value) {
+        if(usingCarrierCalls){
+          SettingsPayload payload = SettingsPayload(
+            _fusionConnection.getUid(), 
+            "uses_carrier", 
+            value ? value.toString() : ""
+          );
+          setState(() {
+            usingCarrierCalls = value;
+            userSettings.updateUserSettings([payload]);
+          });
+          if(!value){
+            RegExp answerConfDevice = RegExp(r'(confirm_)');
+            _updateAnsweringRule(
+              forControl: "d",
+              simControl: "e", 
+              simParams: userSettings.devices.replaceAll(answerConfDevice, "")
+            );
+          }
+        } else {
+          _savePhoneMyPhoneNumber();
+          setState(() {
+            usingCarrierCalls = value;
+          });
+        }
+      })
+    );
+  }
+
   _body() {
     List<Widget> response = [
       _row("phone_outgoing", "Manage Outbound DID", "", () {
@@ -630,12 +882,14 @@ class _MenuState extends State<Menu> {
       }, null),
       
       _row("", "Edit Profile Picture", "", _editProfilePic, 
-        Icon(Icons.edit, size: 22, color: smoke.withOpacity(0.45),)),
+        Icon(Icons.edit, color: smoke.withOpacity(0.45), size: 26,)),
 
       _row("", "Clear Cache", "", _clearCache, 
-        Icon(Icons.cached, size: 22, color: smoke.withOpacity(0.45),)),
+        Icon(Icons.cached, color: smoke.withOpacity(0.45), size: 26,)),
 
-      // _row("gear_light", "Settings", "Coming soon", () {}),
+      _row("", "Use Carrier", usingCarrierCalls ? myPhoneNumber.formatPhone() : "",null,
+        Icon(Icons.phone_forwarded, color: smoke.withOpacity(0.45), size: 26,), 
+        trailingWidget: _toggle()),
       _line(),
       _row("moon_light", "Log Out", "", () {
         setState(() {
@@ -695,7 +949,8 @@ class _MenuState extends State<Menu> {
                             )
                           ],
                         ))
-                  ]))
+                  ])),
+              // SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
             ])));
   }
 }
