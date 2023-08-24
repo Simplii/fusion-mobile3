@@ -54,7 +54,13 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         if (deptNumbers.length > 0) {
           myPhoneNumber = deptNumbers[0];
         } else {
-          myPhoneNumber = _fusionConnection.getUid();
+          List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
+          for (SMSDepartment dep in deps) {
+            if(dep.numbers.length > 0 && dep.id != "-2"){
+              myPhoneNumber = dep.numbers[0];
+              groupId = dep.id;
+            }
+          }
         }
       });
     },);

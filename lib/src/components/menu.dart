@@ -7,6 +7,7 @@ import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../backend/fusion_connection.dart';
 import '../backend/softphone.dart';
@@ -760,23 +761,63 @@ class _MenuState extends State<Menu> {
                         RegExp allDevices = RegExp(r'(<OwnDevices>)');
                         String devices = "";
                         devices = userSettings.devices.replaceAll(allDevices,"");
-                        devices = devices.replaceAll(fmDevice, "");
-                        List<String> devicesArray = devices.split(' ');
-                        String devicesName = "";
-                        for (String device in devicesArray) {
-                          if(device.contains("${myPhoneNumber.onlyNumbers()}") && !device.startsWith("confirm_")){
-                            devicesName += " confirm_$device";
-                          } else {
-                            devicesName += " $device";
+                        if(userSettings.devices.contains(allDevices)){
+                          _fusionConnection.nsApiCall(
+                            'device', 
+                            'read', 
+                            { "domain" : _fusionConnection.getDomain(), "user": _fusionConnection.getExtension()  },
+                            callback: (devices){
+                               
+                              String devicesString = "";
+
+                              for (var device in devices['device']) {
+                                  String deviceName = device['aor'].split("@")[0];
+                                  devicesString += " ${deviceName.replaceAll("sip:", "")}";
+                              }
+
+                              devicesString = devicesString.replaceAll(fmDevice, "");
+
+                              _updateAnsweringRule(
+                                forControl: "d", 
+                                simControl: "e", 
+                                simParams: "${devicesString.trim()} confirm_${myPhoneNumber.onlyNumbers()}"
+                              );
+                            }
+                          );
+                        } else {
+                          List<String> devicesArray = devices.split(' ');
+                          String devicesName = "";
+                          for (String device in devicesArray) {
+                            if(device.startsWith(';')) continue;
+                            if(device.contains("${myPhoneNumber.onlyNumbers()}") && !device.startsWith("confirm_")){
+                              if(device.contains(";delay")){
+                                devicesName += " confirm_${device.substring(0,device.indexOf(';'))}";
+                              } else {
+                                devicesName += " confirm_$device";
+                              }
+                              SharedPreferences.getInstance().then((prefs){
+                                prefs.setString("phoneNumberSelected", device);
+                              });
+                            } else if(device.contains(fmDevice)){
+                              SharedPreferences.getInstance().then((prefs){
+                                prefs.setString("fmDevice", device);
+                              });
+                            } else {
+                              devicesName += " $device";
+                            }
                           }
+                          if(!devicesName.contains("${myPhoneNumber.onlyNumbers()}")){
+                            devicesName += " confirm_${myPhoneNumber.onlyNumbers()}";
+                          }
+
+                          _updateAnsweringRule(
+                            forControl: "d", 
+                            simControl: "e", 
+                            simParams: devices.isNotEmpty 
+                              ? devicesName.trim()
+                              : "${_fusionConnection.getExtension()} confirm_${myPhoneNumber.onlyNumbers()}"
+                          );
                         }
-                        _updateAnsweringRule(
-                          forControl: "d", 
-                          simControl: "e", 
-                          simParams: devices.isNotEmpty 
-                            ? devicesName.trim()
-                            : "${_fusionConnection.getExtension()} confirm_${myPhoneNumber.onlyNumbers()}"
-                        );
                       }
                       Navigator.of(context).pop();
                   },
@@ -854,11 +895,46 @@ class _MenuState extends State<Menu> {
             userSettings.updateUserSettings([payload]);
           });
           if(!value){
-            RegExp answerConfDevice = RegExp(r'(confirm_)');
-            _updateAnsweringRule(
-              forControl: "d",
-              simControl: "e", 
-              simParams: userSettings.devices.replaceAll(answerConfDevice, "")
+            RegExp answerConfDevice = RegExp(r'(confirm_)\d{10}');
+            _fusionConnection.nsApiCall(
+              "device", 
+              "read", 
+              {"domain":_fusionConnection.getDomain(), "user": _fusionConnection.getExtension()}, 
+              callback:(devices) {
+                String allDevices = "";
+                if(devices['device'].length == userSettings.devices.split(" ").where((element) => element.isNotEmpty).length){
+                  allDevices = "<OwnDevices>";
+                }
+                SharedPreferences.getInstance().then(
+                  (prefs){ 
+                    String fmDeviceSelected = prefs.getString("fmDevice") ?? "";
+                    String phoneNumber = prefs.getString("phoneNumberSelected") ?? "";
+                    String devicesString = userSettings.devices.replaceAll(answerConfDevice, "");
+                    String fm = fmDeviceSelected.isNotEmpty ? "$fmDeviceSelected" : '' ;
+                    String sanitized = "";
+                    
+                    for (String device in devicesString.split(' ')) {
+                      if(device.startsWith(';'))continue;
+                      sanitized += " $device";
+                    }
+
+                    _updateAnsweringRule(
+                      forControl: "d",
+                      simControl: "e", 
+                      simParams: allDevices.isNotEmpty 
+                        ? "${_fusionConnection.getExtension()} $allDevices"
+                        : "${sanitized} ${fm} ${sanitized.contains(phoneNumber) ? '' : phoneNumber}"
+                    );
+                    
+                    if(fmDeviceSelected.isNotEmpty ){
+                      prefs.setString("fmDevice", "");
+                    }
+                    if(phoneNumber.isNotEmpty){
+                      prefs.setString("phoneNumberSelected", "");
+                    }
+                  }
+                );
+              }
             );
           }
         } else {

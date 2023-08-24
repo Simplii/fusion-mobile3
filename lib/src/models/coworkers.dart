@@ -203,7 +203,7 @@ class CoworkerStore extends FusionStore<Coworker> {
     bool v2User = fusionConnection.settings.isV2User();
 
     if(v2User){
-      fusionConnection.apiV2Call("get","/client/coworkers",{},
+      fusionConnection.apiV2Call("post","/client/coworkers",{},
         callback: (Map<String,dynamic> datas) {
           List<Coworker> response = [];
           for (Map<String, dynamic> item in datas['items']) {
