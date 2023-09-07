@@ -439,7 +439,6 @@ class _SMSConversationSummaryViewState
           StatefulBuilder(
             builder: (BuildContext context, StateSetter setState){
               SMSConversation displayingConvo = _convo;
-              print("fun ${_refreshView}");
               return SMSConversationView(
                 fusionConnection: _fusionConnection, 
                 softphone: _softphone, 
