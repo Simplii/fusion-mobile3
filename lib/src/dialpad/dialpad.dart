@@ -254,28 +254,23 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                   height:
                                       40 * MediaQuery.of(context).textScaleFactor,
                                   alignment: Alignment.topCenter,
-                                  // width: MediaQuery.of(context).size.width - 122,
-                                  child: ListView(
+                                  child: SingleChildScrollView(
                                       scrollDirection: Axis.horizontal,
                                       controller: _dialEntryController,
-                                      children: [
-                                        Container(
-                                            alignment: Alignment.topCenter,
-                                            width: max(
-                                                MediaQuery.of(context)
-                                                        .size
-                                                        .width -
-                                                    122,
-                                                textWidth.toDouble()),
-                                            child: Text(dialedNumber,
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                    fontSize: dialedNumber.length > 10 
-                                                      ? 31 
-                                                      : 35,
-                                                    color: Colors.white))
-                                          )
-                                      ])),
+                                      child: 
+                                        Expanded(
+                                          child: Container(
+                                              alignment: Alignment.topCenter,
+                                              child: Text(dialedNumber,
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                      fontSize: dialedNumber.length > 10 
+                                                        ? 31 
+                                                        : 35,
+                                                      color: Colors.white))
+                                            ),
+                                        )
+                                      )),
                             ),
                             if (dialedNumber != '')
                               SizedBox(
