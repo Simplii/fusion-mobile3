@@ -258,18 +258,13 @@ class _DialPadState extends State<DialPad> with TickerProviderStateMixin {
                                       scrollDirection: Axis.horizontal,
                                       controller: _dialEntryController,
                                       child: 
-                                        Expanded(
-                                          child: Container(
-                                              alignment: Alignment.topCenter,
-                                              child: Text(dialedNumber,
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                      fontSize: dialedNumber.length > 10 
-                                                        ? 31 
-                                                        : 35,
-                                                      color: Colors.white))
-                                            ),
-                                        )
+                                        Text(dialedNumber,
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                fontSize: dialedNumber.length > 10 
+                                                  ? 31 
+                                                  : 35,
+                                                color: Colors.white))
                                       )),
                             ),
                             if (dialedNumber != '')
