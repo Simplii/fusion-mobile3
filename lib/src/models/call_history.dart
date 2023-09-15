@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 import 'contact.dart';
 import 'coworkers.dart';
 import 'crm_contact.dart';
@@ -22,6 +25,7 @@ class CallHistory extends FusionModel {
   bool missed;
   String direction;
   String callerId;
+  String cdrIdHash;
 
   isInternal(String domain) {
     if (to.length < 10) return false;
@@ -70,38 +74,128 @@ class CallHistory extends FusionModel {
       }
     }
     // missed = obj['to'] == "abandoned";
-    missed = obj['missed'];
+    if(obj.containsKey('coworker') && obj['coworker'] != null){
+      print("test co ${obj['coworker']}");
+      coworker = Coworker.fromV2(jsonDecode(obj['coworker']));
+    }
+    cdrIdHash = obj['cdrIdHash'].toString();
+    missed = obj['missed'].runtimeType == String 
+      ? obj['missed'] == 'true'? true : false 
+      : obj['missed'];
+  } 
+  
+  serialize(){
+    return{
+      "id": id.toString(),
+      "cdrIdHash": cdrIdHash.toString(),
+      "startTime": startTime,
+      "toDid": toDid,
+      "fromDid": fromDid,
+      "to": to,
+      "from": from,
+      "duration": duration,
+      "recordingUrl": recordingUrl,
+      "direction": direction,
+      "callerId": callerId,
+      "contact": contact,
+      "missed": missed,
+      "coworker": coworker
+    };
   }
-
   isInbound() {
     return direction == "inbound";
   }
 
   @override
-  String getId() => this.id;
+  String getId() => this.id.toString();
 }
 
 class CallHistoryStore extends FusionStore<CallHistory> {
   String id_field = "id";
   CallHistoryStore(FusionConnection fusionConnection) : super(fusionConnection);
 
-  getRecentHistory(int limit, int offset,
-      Function(List<CallHistory>, bool) callback) {
+ @override
+  storeRecord(CallHistory record) {
+    super.storeRecord(record);
+    persist(record);
+  }
+
+  persist(CallHistory record) {
+    fusionConnection.db.insert('call_history', 
+        {
+        'id': record.getId(),
+        'cdrIdHash': record.cdrIdHash,
+        'startTime': record.startTime.toString(),
+        'toDid': record.toDid,
+        'fromDid': record.fromDid,
+        'to': record.to,
+        'from': record.from,
+        'duration': record.duration,
+        'recordingUrl': record.recordingUrl ?? "",
+        'direction': record.direction,
+        'callerId': record.callerId,
+        // 'crmContact': record?.crmContact?.serialize() ?? null,
+        'contacts': record?.contact?.serialize() ?? null,
+        'coworker': record?.coworker?.serialize() ?? null,
+        'missed' : record.missed.toString()
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  getPersisted(
+    int limit, int offset,
+    Function(List<CallHistory>, bool, bool) callback) {
+    getDatabasesPath().then((path){
+      openDatabase(join(path,"fusion.db")).then((db) {
+        db.query(
+          'call_history',
+          limit: limit,
+          offset: offset,
+        ).then((List<Map<String, dynamic>> results) {
+          List<CallHistory> list = [];
+          for (Map<String, dynamic> result in results) {
+            Map<String,dynamic> copy = {...result};
+            copy['contacts']  = result['contacts'] != null 
+              ? [jsonDecode(result['contacts'])] 
+              : null;
+            list.add(CallHistory(copy));
+          }
+          list.sort((a, b) {
+            return a.startTime.isBefore(b.startTime) ? 1 : -1;
+          });
+          callback(list, false, true);
+        });
+      });
+    });
+  }
+
+  getRecentHistory(int limit, int offset,bool pullToRefresh,
+      Function(List<CallHistory>, bool, bool) callback) {
     List<CallHistory> stored = getRecords();
-    stored.sort((a, b) {
-      return a.startTime.isBefore(b.startTime) ? 1 : -1;
-    });
-    List<String> usedIds = [];
-    List<CallHistory> filtered = [];
+    if(stored.isNotEmpty && !pullToRefresh){
+      // if the app is running & user comes back to calls screen
+      stored.sort((a, b) {
+        return a.startTime.isBefore(b.startTime) ? 1 : -1;
+      });
+      List<String> usedIds = [];
+      List<CallHistory> filtered = [];
 
-    stored.forEach((element) {
-      if (!usedIds.contains(element.id)) {
-        usedIds.add(element.id);
-        filtered.add(element);
-      }
-    });
+      stored.forEach((element) {
+        if (!usedIds.contains(element.cdrIdHash)) {
+          usedIds.add(element.cdrIdHash);
+          filtered.add(element);
+        }
+      });
 
-    callback(filtered, false);
+      callback(filtered, false, false);
+    } else if(stored.isEmpty && !pullToRefresh) {
+      // app just oppened
+      // load coworkers store since recent call screen loads first before coworkers in postLogin 
+      fusionConnection.coworkers.getCoworkers((c) {});
+      getPersisted(limit,offset,callback);
+    }
+
     fusionConnection.apiV2Call(
       "get", "/calls/recent", {'limit': limit, 'offset': offset},
       callback: (Map<String, dynamic> datas) {
@@ -109,11 +203,15 @@ class CallHistoryStore extends FusionStore<CallHistory> {
         if(datas.containsKey('items')){
           for (Map<String, dynamic> item in datas['items']) {
             CallHistory obj = CallHistory(item);
-            obj.coworker = fusionConnection.coworkers
-                .lookupCoworker(obj.direction == 'inbound' ? obj.from : obj.to);
+            if(obj.cdrIdHash != "0"){
+              // backend returning an empty callHistory obj when there are no
+              // calls 
+              obj.coworker = fusionConnection.coworkers
+                  .lookupCoworker(obj.direction == 'inbound' ? obj.from : obj.to);
 
-            storeRecord(obj);
-            response.add(obj);
+              storeRecord(obj);
+              response.add(obj);
+            }
           }
 
           response.sort((a, b) {
@@ -121,7 +219,7 @@ class CallHistoryStore extends FusionStore<CallHistory> {
           });
         }
 
-        callback(response, true);
+        callback(response, true, false);
       },
       onError: () => print("MyDebugMessage failed 5 retries recent_calls")
     );
