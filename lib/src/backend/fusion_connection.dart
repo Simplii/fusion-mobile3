@@ -81,9 +81,9 @@ class FusionConnection {
   Connectivity connectivity = Connectivity();
   ConnectivityResult connectivityResult = ConnectivityResult.none;
   bool internetAvailable = true;
-  String serverRoot = "http://fusioncomm.net";
+  String serverRoot = "http://fusion-test.fusioncomm.net";
   String mediaServer = "https://fusion-media.sfo2.digitaloceanspaces.com";
-  String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
+  String defaultAvatar = "https://fusion-test.fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {
     _getCookies();
@@ -140,7 +140,7 @@ class FusionConnection {
   }
 
   final channel = WebSocketChannel.connect(
-    Uri.parse('wss://fusioncomm.net:8443'),
+    Uri.parse('wss://fusion-test.fusioncomm.net:8443'),
   );
 
   onLogOut(Function callback) {
@@ -232,6 +232,24 @@ class FusionConnection {
           user STRING,
           raw BLOB
           );'''));
+        
+        print(db.execute('''
+          CREATE TABLE IF NOT EXISTS call_history(
+          cdrIdHash TEXT PRIMARY key,
+          id TEXT,
+          startTime TEXT,
+          toDid TEXT,
+          fromDid TEXT,
+          `to` TEXT,
+          `from` TEXT,
+          duration int,
+          recordingUrl TEXT,
+          direction TEXT,
+          callerId TEXT,
+          missed TEXT,
+          contacts BLOB,
+          coworker BLOB
+          );'''));
 
         print(db.execute('''
           CREATE TABLE IF NOT EXISTS contacts(
@@ -304,7 +322,7 @@ class FusionConnection {
       data['username'] = await _getUsername();
 
       Uri url = Uri.parse(
-          'https://fusioncomm.net/api/v1/clients/api_request?username=' +
+          'https://fusion-test.fusioncomm.net/api/v1/clients/api_request?username=' +
               data['username']);
       Map<String, String> headers = await _cookieHeaders(url);
       String body = convert.jsonEncode(data);
@@ -349,7 +367,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString().trim().replaceAll(reg, '')) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
+      Uri url = Uri.parse('https://fusion-test.fusioncomm.net/api/v1' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
       if (method.toLowerCase() != 'get') {
         args[#body] = convert.jsonEncode(data);
@@ -423,7 +441,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route + urlParams);
+      Uri url = Uri.parse('https://fusion-test.fusioncomm.net/api/v2' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -480,7 +498,7 @@ class FusionConnection {
     try {
       data['username'] = await _getUsername();
 
-      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route);
+      Uri url = Uri.parse('https://fusion-test.fusioncomm.net/api/v2' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
       (await _cookieHeaders(url))
           .forEach(
@@ -669,7 +687,7 @@ print(responseBody);
 
   setupSocket() {
     int messageNum = 0;
-    final wsUrl = Uri.parse('wss://fusioncomm.net:8443/');
+    final wsUrl = Uri.parse('wss://fusion-test.fusioncomm.net:8443/');
     socketChannel = WebSocketChannel.connect(wsUrl);
     socketChannel.stream.listen((messageData) {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
@@ -814,6 +832,7 @@ print(responseBody);
     db.delete('contacts').then((value) => print("MyDebugMessage contacts rows effected ${value}"));
     db.delete('sms_conversation').then((value) => print("MyDebugMessage sms_conversation rows effected ${value}"));
     db.delete('sms_message').then((value) => print("MyDebugMessage sms_message rows effected ${value}"));
+    db.delete('call_history').then((value) => print("MyDebugMessage call_history rows effected ${value}"));
     
     SharedPreferences preferences = await SharedPreferences.getInstance();
     await preferences.clear();
