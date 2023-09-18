@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
@@ -136,7 +137,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
     _lookupHistory();
   }
 
-  _lookupHistory({bool pullToRefresh = false}) {
+  _lookupHistory({bool pullToRefresh = false}) async {
     lookupState = 1;
     _lookedUpTab = _selectedTab;
 
@@ -154,7 +155,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
       });
     });
 
-    _fusionConnection.callHistory.getRecentHistory(
+    await _fusionConnection.callHistory.getRecentHistory(
       _pageSize, 
       _page * _pageSize, 
       pullToRefresh, 
@@ -180,18 +181,12 @@ class _RecentCallsListState extends State<RecentCallsList> {
           return a.startTime.isBefore(b.startTime) ? 1 : -1;
         });
         _history = list;
-        // if(pullToRefresh){
-        //   _history.sort((a, b) {
-        //     return a.startTime.isBefore(b.startTime) ? 1 : -1;
-        //   });
-        // }
       });
     });
   }
 
   Future _refreshHistoryList() async {
-    _lookupHistory(pullToRefresh: true);
-    return Future<void>.delayed(const Duration(seconds: 3));
+    return await _lookupHistory(pullToRefresh: true);
   }
 
   List<CallHistory> _filteredHistoryItems() {
@@ -343,7 +338,13 @@ class _RecentCallsListState extends State<RecentCallsList> {
                           ? _spinner()
                 : RefreshIndicator(
               key: _refreshIndicatorKey,
-              onRefresh: _refreshHistoryList,
+              triggerMode: RefreshIndicatorTriggerMode.onEdge,
+              onRefresh: (){
+                // For android only users who have Touch vibration turned on in settings will
+                // get the feedback otherwise feedback will be ignored
+                HapticFeedback.mediumImpact(); 
+                return _refreshHistoryList();
+              },
               child: historyPage.length == 0 
                 ? Center(child: Text( _fromDialpad ? "No Match Was Found" : "No Recent Calls Found"),)
                 : ListView.builder(

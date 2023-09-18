@@ -161,9 +161,6 @@ class CallHistoryStore extends FusionStore<CallHistory> {
               : null;
             list.add(CallHistory(copy));
           }
-          list.sort((a, b) {
-            return a.startTime.isBefore(b.startTime) ? 1 : -1;
-          });
           callback(list, false, true);
         });
       });
@@ -171,24 +168,10 @@ class CallHistoryStore extends FusionStore<CallHistory> {
   }
 
   getRecentHistory(int limit, int offset,bool pullToRefresh,
-      Function(List<CallHistory>, bool, bool) callback) {
+      Function(List<CallHistory>, bool, bool) callback) async {
     List<CallHistory> stored = getRecords();
     if(stored.isNotEmpty && !pullToRefresh){
-      // if the app is running & user comes back to calls screen
-      stored.sort((a, b) {
-        return a.startTime.isBefore(b.startTime) ? 1 : -1;
-      });
-      List<String> usedIds = [];
-      List<CallHistory> filtered = [];
-
-      stored.forEach((element) {
-        if (!usedIds.contains(element.cdrIdHash)) {
-          usedIds.add(element.cdrIdHash);
-          filtered.add(element);
-        }
-      });
-
-      callback(filtered, false, false);
+      callback(stored, false, false);
     } else if(stored.isEmpty && !pullToRefresh) {
       // app just oppened
       // load coworkers store since recent call screen loads first before coworkers in postLogin 
@@ -196,7 +179,7 @@ class CallHistoryStore extends FusionStore<CallHistory> {
       getPersisted(limit,offset,callback);
     }
 
-    fusionConnection.apiV2Call(
+    await fusionConnection.apiV2Call(
       "get", "/calls/recent", {'limit': limit, 'offset': offset},
       callback: (Map<String, dynamic> datas) {
         List<CallHistory> response = [];
@@ -213,10 +196,6 @@ class CallHistoryStore extends FusionStore<CallHistory> {
               response.add(obj);
             }
           }
-
-          response.sort((a, b) {
-            return a.startTime.isBefore(b.startTime) ? 1 : -1;
-          });
         }
 
         callback(response, true, false);
