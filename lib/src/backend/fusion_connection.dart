@@ -81,9 +81,9 @@ class FusionConnection {
   Connectivity connectivity = Connectivity();
   ConnectivityResult connectivityResult = ConnectivityResult.none;
   bool internetAvailable = true;
-  String serverRoot = "http://fusioncomm.net";
+  String serverRoot = "http://zaid-fusion-dev.fusioncomm.net";
   String mediaServer = "https://fusion-media.sfo2.digitaloceanspaces.com";
-  String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
+  String defaultAvatar = "https://zaid-fusion-dev.fusioncomm.net/img/defaultuser.png";
 
   FusionConnection() {
     _getCookies();
@@ -140,7 +140,7 @@ class FusionConnection {
   }
 
   final channel = WebSocketChannel.connect(
-    Uri.parse('wss://fusioncomm.net:8443'),
+    Uri.parse('wss://zaid-fusion-dev.fusioncomm.net:8443'),
   );
 
   onLogOut(Function callback) {
@@ -304,7 +304,7 @@ class FusionConnection {
       data['username'] = await _getUsername();
 
       Uri url = Uri.parse(
-          'https://fusioncomm.net/api/v1/clients/api_request?username=' +
+          'https://zaid-fusion-dev.fusioncomm.net/api/v1/clients/api_request?username=' +
               data['username']);
       Map<String, String> headers = await _cookieHeaders(url);
       String body = convert.jsonEncode(data);
@@ -349,7 +349,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString().trim().replaceAll(reg, '')) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net/api/v1' + route + urlParams);
+      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v1' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
       if (method.toLowerCase() != 'get') {
         args[#body] = convert.jsonEncode(data);
@@ -423,7 +423,7 @@ class FusionConnection {
           urlParams += key + "=" + Uri.encodeQueryComponent(data[key].toString()) + '&';
         }
       }
-      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route + urlParams);
+      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v2' + route + urlParams);
       Map<String, String> headers = await _cookieHeaders(url);
 
       if (method.toLowerCase() != 'get') {
@@ -480,7 +480,7 @@ class FusionConnection {
     try {
       data['username'] = await _getUsername();
 
-      Uri url = Uri.parse('https://fusioncomm.net/api/v2' + route);
+      Uri url = Uri.parse('https://zaid-fusion-dev.fusioncomm.net/api/v2' + route);
       http.MultipartRequest request = new http.MultipartRequest(method, url);
       (await _cookieHeaders(url))
           .forEach(
@@ -669,9 +669,9 @@ print(responseBody);
 
   setupSocket() {
     int messageNum = 0;
-    final wsUrl = Uri.parse('wss://fusioncomm.net:8443/');
+    final wsUrl = Uri.parse('wss://zaid-fusion-dev.fusioncomm.net:8443/');
     socketChannel = WebSocketChannel.connect(wsUrl);
-    socketChannel.stream.listen((messageData) {
+    socketChannel.stream.listen((messageData) async {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
@@ -687,11 +687,10 @@ print(responseBody);
             numbers.addAll(element.numbers);
           });
           if (!numbers.contains(newMessage.from)) {
+            await messages.notifyMessage(newMessage);
+            messages.storeRecord(newMessage);
             refreshUnreads();
             unreadMessages.getRecords();
-
-            messages.notifyMessage(newMessage);
-            messages.storeRecord(newMessage);
           }
         } else if(newMessage.messageStatus != null){
           List<SMSMessage> msgs = messages.getRecords();
@@ -798,7 +797,7 @@ print(responseBody);
   }
   Future<void> clearCache() async {
     if(Platform.isIOS){
-      MethodChannel ios = MethodChannel('net.fusioncomm.ios/callkit');
+      MethodChannel ios = MethodChannel('net.zaid-fusion-dev.fusioncomm.ios/callkit');
       ios.invokeMethod("clearCache");
     } else {
       final cacheDir = await getTemporaryDirectory();

@@ -71,8 +71,8 @@ class SMSConversation extends FusionModel {
     this.isGroup = c.isGroup;
     this.lastContactTime = c.lastContactTime;
     this.lastContactTime = c.lastContactTime;
-    this.myNumber = c.myNumber;
-    this.number = c.number;
+    this.myNumber = c.myNumber.toLowerCase();
+    this.number = c.number.toLowerCase();
     this.members = c.members;
     this.message = c.message;
     this.unread = c.unread;
@@ -82,15 +82,15 @@ class SMSConversation extends FusionModel {
   }
 
   SMSConversation(Map<String, dynamic> map) {
-    String toNumber = map['lastMessage']['from'] == map['myNumber'] 
+    String toNumber = map['lastMessage']['from'].toString().toLowerCase() == map['myNumber'] 
       ? map['lastMessage']['to']
       : map['lastMessage']['from'];
     this.conversationId = map['conversationId'] ?? map['groupId'];
     this.groupName = map['groupName'];
     this.isGroup = map['isGroup'];
     this.lastContactTime = map['lastContactTime'];
-    this.myNumber = map['myNumber'];
-    this.number = map['isGroup'] != null && map['isGroup'] == true ? map['groupId'].toString() : toNumber;
+    this.myNumber = map['myNumber'].toString().toLowerCase();
+    this.number = map['isGroup'] != null && map['isGroup'] == true ? map['groupId'].toString() : toNumber.toLowerCase();
     this.members = map['conversationMembers']; //map['members'];
     this.message = map['message'];
     this.unread = map['unreadCount'];
@@ -106,8 +106,8 @@ class SMSConversation extends FusionModel {
       'groupName': this.groupName,
       'isGroup': this.isGroup,
       'lastContactTime': this.lastContactTime,
-      'myNumber': myNumber,
-      'number': number,
+      'myNumber': myNumber.toLowerCase(),
+      'number': number.toLowerCase(),
       'members': members,
       'message': message?.serialize(),
       'unread': unread,
@@ -133,8 +133,8 @@ class SMSConversation extends FusionModel {
     this.isGroup = (data['isGroup'] == 1 || data['isGroup'] == true) ? true : false;
     this.lastContactTime = data['lastContactTime'];
     this.lastContactTime = data['lastContactTime'];
-    this.myNumber = data['myNumber'];
-    this.number = data['to'] != null ? data['to'] : data['number'];
+    this.myNumber = data['myNumber'].toLowerCase();
+    this.number = data['to'] != null ? data['to'].toLowerCase() : data['number'].toLowerCase();
     this.members = data['conversationMembers'];
     this.message = SMSMessage.unserialize(data['message']);
     this.unread = data['unread'];
@@ -213,7 +213,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
           limit: limit,
           offset: offset,
           orderBy: 'lastContactTime DESC',
-          where: 'myNumber in ("' + group.numbers.join('","') + '")')
+          where: 'myNumber in ("' + [...group.numbers,fusionConnection.getUid().toString().toLowerCase()].join('","') + '")')
           .then((List<Map<String, dynamic>> results) {
         List<SMSConversation> list = [];
         for (Map<String, dynamic> result in results) {
