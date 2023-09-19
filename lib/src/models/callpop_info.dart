@@ -21,7 +21,9 @@ class CallpopInfo extends FusionModel {
     this.contacts.forEach((contact) {
       List<String> emails = [];
       contact.emails.forEach((email) {
-        emails.add(email['email']);
+        if(email['email'].runtimeType == String){
+          emails.add(email['email']);
+        }
       });
       contact.externalReferences.forEach((extRef) {
         if (extRef['externalId'] != null) {
