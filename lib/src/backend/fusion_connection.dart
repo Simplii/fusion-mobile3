@@ -232,6 +232,24 @@ class FusionConnection {
           user STRING,
           raw BLOB
           );'''));
+        
+        print(db.execute('''
+          CREATE TABLE IF NOT EXISTS call_history(
+          cdrIdHash TEXT PRIMARY key,
+          id TEXT,
+          startTime TEXT,
+          toDid TEXT,
+          fromDid TEXT,
+          `to` TEXT,
+          `from` TEXT,
+          duration int,
+          recordingUrl TEXT,
+          direction TEXT,
+          callerId TEXT,
+          missed TEXT,
+          contacts BLOB,
+          coworker BLOB
+          );'''));
 
         print(db.execute('''
           CREATE TABLE IF NOT EXISTS contacts(
@@ -814,6 +832,7 @@ print(responseBody);
     db.delete('contacts').then((value) => print("MyDebugMessage contacts rows effected ${value}"));
     db.delete('sms_conversation').then((value) => print("MyDebugMessage sms_conversation rows effected ${value}"));
     db.delete('sms_message').then((value) => print("MyDebugMessage sms_message rows effected ${value}"));
+    db.delete('call_history').then((value) => print("MyDebugMessage call_history rows effected ${value}"));
     
     SharedPreferences preferences = await SharedPreferences.getInstance();
     await preferences.clear();
