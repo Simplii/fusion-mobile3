@@ -713,8 +713,8 @@ class _ContactsListState extends State<ContactsList> {
       });
     });
 
-    _fusionConnection.callHistory.getRecentHistory(300, 0,
-        (List<CallHistory> history, bool fromServer) {
+    _fusionConnection.callHistory.getRecentHistory(100, 0, false,
+        (List<CallHistory> history, bool fromServer, bool presisted) {
           if (!mounted) return;
 
       this.setState(() {

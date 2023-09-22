@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
@@ -95,7 +96,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
   String expandedId = "";
   int _page = 0;
   int _pageSize = 100;
-
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   expand(item) {
     setState(() {
       if (expandedId == item.id)
@@ -107,6 +108,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
 
   initState() {
     super.initState();
+    _lookupHistory();
     _softphone.checkMicrophoneAccess(context);
   }
 
@@ -135,7 +137,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
     _lookupHistory();
   }
 
-  _lookupHistory([Function() callback]) {
+  _lookupHistory({bool pullToRefresh = false}) async {
     lookupState = 1;
     _lookedUpTab = _selectedTab;
 
@@ -153,34 +155,38 @@ class _RecentCallsListState extends State<RecentCallsList> {
       });
     });
 
-    _fusionConnection.callHistory
-        .getRecentHistory(_pageSize, _page * _pageSize, (List<CallHistory> history, bool fromServer) {
-          if (!mounted) return;
-          if (!fromServer && _page > 0) return;
+    await _fusionConnection.callHistory.getRecentHistory(
+      _pageSize, 
+      _page * _pageSize, 
+      pullToRefresh, 
+      (List<CallHistory> history, bool fromServer, bool presisted) {
+      if (!mounted) return;
+      if (!fromServer && _page > 0) return;
 
-          if (callback != null) callback();
-          this.setState(() {
-            if (fromServer) {
-              lookupState = 2;
-            }
-            var oldHistory = new Map();
-            _history.forEach((element) {
-              oldHistory[element.id] = element;
-            });
-            history.forEach((element) {
-              oldHistory[element.id] = element;
-            });
-            _history = oldHistory.values.toList().cast<CallHistory>();
-          });
+      this.setState(() {
+        if (fromServer) {
+          lookupState = 2;
+        }
+        Map<String,CallHistory> oldHistory = new Map<String,CallHistory>();
+        _history.forEach((element) {
+          oldHistory[element.cdrIdHash] = element;
+        });
+
+        history.forEach((element) {
+          if(oldHistory.containsKey(element.cdrIdHash))return;
+          oldHistory[element.cdrIdHash] = element;
+        });
+        List<CallHistory> list = oldHistory.values.toList();
+        list.sort((a, b) {
+          return a.startTime.isBefore(b.startTime) ? 1 : -1;
+        });
+        _history = list;
+      });
     });
   }
 
   Future _refreshHistoryList() async {
-    setState(() {      
-      _lookupHistory(() {
-        return;
-      });
-    });
+    return await _lookupHistory(pullToRefresh: true);
   }
 
   List<CallHistory> _filteredHistoryItems() {
@@ -311,7 +317,6 @@ class _RecentCallsListState extends State<RecentCallsList> {
       lookupState = 0;
     }
     if (lookupState == 0 && _fusionConnection.isLoginFinished()) {
-      print("MyDebugMessage $lookupState ");
       _lookupHistory();
     }
 
@@ -332,10 +337,18 @@ class _RecentCallsListState extends State<RecentCallsList> {
                       child: _isSpinning()
                           ? _spinner()
                 : RefreshIndicator(
-              onRefresh: () => _refreshHistoryList(),
+              key: _refreshIndicatorKey,
+              triggerMode: RefreshIndicatorTriggerMode.onEdge,
+              onRefresh: (){
+                // For android only users who have Touch vibration turned on in settings will
+                // get the feedback otherwise feedback will be ignored
+                HapticFeedback.mediumImpact(); 
+                return _refreshHistoryList();
+              },
               child: historyPage.length == 0 
-                ? Center(child: Text("No Match Was Found"),)
+                ? Center(child: Text( _fromDialpad ? "No Match Was Found" : "No Recent Calls Found"),)
                 : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         itemCount: _page == -1
                             ? historyPage.length
                             : historyPage.length + 1,
