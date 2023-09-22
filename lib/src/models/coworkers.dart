@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_gravatar/flutter_gravatar.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import '../utils.dart';
@@ -18,6 +19,21 @@ class Coworker extends FusionModel {
   String url = "";
   List emails = [];
 
+  serialize() {
+    return jsonEncode({
+      'email': this.email,
+      'extension': this.extension,
+      'uid': this.uid,
+      'firstName': this.firstName,
+      'lastName': this.lastName,
+      'statusMessage': this.statusMessage,
+      'emails': this.emails,
+      'group': this.group,
+      'presence': this.presence,
+      'url': this.url,
+    });
+  }
+
   Coworker(Map<String, dynamic> obj) {
     if (obj['email'].runtimeType == String) email = obj['email'];
     if (obj['first_name'].runtimeType == String) firstName = obj['first_name'];
@@ -32,7 +48,11 @@ class Coworker extends FusionModel {
   Coworker.fromV2(Map<String, dynamic> obj){ 
     List pictures =  obj.containsKey('pictures') ? obj['pictures'] : [];
     this.emails = obj.containsKey('emails') ? obj['emails'] : [];
-    this.url = pictures.length > 0 ? pictures.last['url'] : "";
+    this.url = obj.containsKey('url') 
+      ? obj['url'] 
+      : pictures.length > 0 
+        ? pictures.last['url'] 
+        : "";
     this.firstName = obj.containsKey('firstName') ? obj['firstName'] : "";
     this.lastName = obj.containsKey('lastName') ? obj['lastName'] : "";
     this.statusMessage = obj.containsKey('statusMessage') ? obj['statusMessage'] : "";

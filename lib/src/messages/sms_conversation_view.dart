@@ -365,7 +365,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                       unknowContacts[chosenUnknownContactIndex], 
                       () => Navigator.pop(context, true),
                       () => setState(() { 
-                        _setOnMessagePosted(); 
+                        _setOnMessagePosted(null); 
                       })
                     ));
                 });

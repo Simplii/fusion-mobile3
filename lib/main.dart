@@ -170,6 +170,14 @@ class MyApp extends StatelessWidget {
     }
     
     return MaterialApp(
+       builder: (BuildContext context, Widget child) {
+        final scaleRange = MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2);
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+              textScaleFactor: scaleRange),
+          child: child,  
+        );
+      },
       title: 'Fusion Revamped',
       navigatorKey: NavigationService.navigatorKey,
       theme: ThemeData(
