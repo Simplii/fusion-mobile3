@@ -165,10 +165,8 @@ class _MessagesListState extends State<MessagesList> {
   }
   
   refreshView(updatedConvoId){
-
-    print("MyDebugMessage ${mounted} ${updatedConvoId}");
-    if(mounted && updatedConvoId != null){
-      setState(() {
+    setState(() {
+      if(mounted && updatedConvoId != null){
         SMSConversation c = _convos.where(
           (SMSConversation con) => con.getId() == updatedConvoId).isNotEmpty 
             ? _convos.where((SMSConversation con) => con.getId() == updatedConvoId).first 
@@ -177,8 +175,8 @@ class _MessagesListState extends State<MessagesList> {
           _convos.remove(c);
           _convos.insert(0, c);
         }
-      });
-    }
+      }
+    });
   }
 
   _loadMore() {
