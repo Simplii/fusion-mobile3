@@ -67,6 +67,10 @@ class UserSettings {
             subscriber = data['subscriber'];
             if (subscriber['callid_nmbr'] == null)
               subscriber['callid_nmbr'] = '';
+            // netsapians returns empty object if last name not provided
+            if(subscriber['last_name'].runtimeType != String ){
+              subscriber['last_name'] = '';
+            }
           }
         });
   }
