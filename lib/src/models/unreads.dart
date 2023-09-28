@@ -1,4 +1,5 @@
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 
 import 'fusion_model.dart';
 import 'fusion_store.dart';
@@ -24,13 +25,31 @@ class UnreadsStore extends FusionStore<DepartmentUnreadRecord> {
   getUnreads(Function(List<DepartmentUnreadRecord>, bool) callback) {
     fusionConnection.apiV2Call("get", "/messaging/unread", {},
         callback: (List<dynamic> datas) {
-      print("urneads");print(datas);
           List<DepartmentUnreadRecord> response = [];
           clearRecords();
+          List<SMSDepartment> deps = fusionConnection.smsDepartments.allDepartments();
+          if(datas.isEmpty){
+            for (SMSDepartment dep in deps) {
+                  dep.unreadCount = 0;
+                  fusionConnection.smsDepartments.storeRecord(dep);
+              }
+          }
           for (Map<String, dynamic> item in datas.cast<Map<String, dynamic>>()) {
             DepartmentUnreadRecord obj = DepartmentUnreadRecord(item);
             storeRecord(obj);
             response.add(obj);
+            if(item.containsKey('departmentId')){
+              List nums = item['numbers'];
+              for (SMSDepartment dep in deps) {
+                if(nums.isNotEmpty && nums[0].toString().contains('@') && item['departmentId'] == -1){
+                  item['departmentId'] = -3;
+                }
+                if(dep.id == item['departmentId'].toString()){
+                  dep.unreadCount = item['unread'];
+                  fusionConnection.smsDepartments.storeRecord(dep);
+                }
+              }
+            }
           }
             callback(response, true);
 

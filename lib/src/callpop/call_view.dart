@@ -161,7 +161,7 @@ class _CallViewState extends State<CallView> {
     List<Coworker> coworker =
         coworkers.where((coworker) => coworker.extension == ext).toList();
     CallpopInfo callPopInfo = _softphone.getCallpopInfo(_activeCall.id);
-    SMSDepartment personal = _fusionConnection.smsDepartments.getDepartment("-1");
+    SMSDepartment personal = _fusionConnection.smsDepartments.getDepartment(DepartmentIds.Personal);
     List<SMSDepartment> depts = _fusionConnection.smsDepartments.allDepartments();
 
     if(personal.numbers.isEmpty && depts.isEmpty ||

@@ -22,7 +22,16 @@ Color ash = Color.fromARGB(255, 229, 227, 227);
 Color halfGray = Color.fromARGB(255,112,112,122);
 Color informationBlue = Color.fromARGB(255,0,170,255);
 Color successGreen = Color.fromARGB(255, 0, 204, 136);
-
+Color fusionChatsBg = Color.fromARGB((255 * 0.05).round(), 217, 3, 40);
+Color personalChatBg = Color.fromARGB((255 * 0.10).round(), 255, 128, 0);
+Color telegramChatBg = Color.fromARGB((255 * 0.10).round(), 42, 169, 235);
+Color whatsappChatBg = Color.fromARGB((255 * 0.20).round(), 101, 207, 114);
+Color facebookChatBg = Color.fromARGB((255 * 0.10).round(), 177, 75, 211);
+Color fusionChats = Color(0xffD90328);
+Color personalChat = Color(0xffCC6600);
+Color telegramChat = Color(0xff1B6D97);
+Color whatsappChat = Color(0xff356E3D);
+Color facebookChat = Color(0xff992EBD);
 Color translucentBlack(double amount) {
   return Color.fromARGB((255 * amount).round(), 0, 0, 0);
 }

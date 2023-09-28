@@ -75,7 +75,6 @@ class CallHistory extends FusionModel {
     }
     // missed = obj['to'] == "abandoned";
     if(obj.containsKey('coworker') && obj['coworker'] != null){
-      print("test co ${obj['coworker']}");
       coworker = Coworker.fromV2(jsonDecode(obj['coworker']));
     }
     cdrIdHash = obj['cdrIdHash'].toString();
