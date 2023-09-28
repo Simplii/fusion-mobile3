@@ -166,7 +166,7 @@ class _FusionDropdownState extends State<FusionDropdown> {
                 color: option[1] == _value ? lightHighlight : Colors.transparent,
                 border:
                     Border(bottom: BorderSide(color: lightDivider, width: 1.0))),
-            child: option.length >= 3 
+            child: option.length > 3 
               ? Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
