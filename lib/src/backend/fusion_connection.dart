@@ -545,14 +545,15 @@ print(responseBody);
     _getCookies();
     settings.lookupSubscriber();
     coworkers.getCoworkers((data) {});
+    conversations.getConversations("-2",100,0,(convos,fromServer,departmentId){});
+    dids.getDids((p0, p1) => {});
+    smsDepartments.getDepartments((List<SMSDepartment> lis) {});
     refreshUnreads();
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     setupSocket();
     if (callback != null) {
       callback(true);
     }
-
-    smsDepartments.getDepartments((List<SMSDepartment> lis) {});
     FirebaseMessaging.instance.getToken().then((token) {
       print("got token");
       print(token);
@@ -689,7 +690,7 @@ print(responseBody);
     int messageNum = 0;
     final wsUrl = Uri.parse('wss://fusioncomm.net:8443/');
     socketChannel = WebSocketChannel.connect(wsUrl);
-    socketChannel.stream.listen((messageData) {
+    socketChannel.stream.listen((messageData) async {
       Map<String, dynamic> message = convert.jsonDecode(messageData);
       if (message.containsKey('heartbeat')) {
         _heartbeats[message['heartbeat']] = true;
@@ -706,10 +707,9 @@ print(responseBody);
           });
           if (!numbers.contains(newMessage.from)) {
             refreshUnreads();
-            unreadMessages.getRecords();
-
-            messages.notifyMessage(newMessage);
+            await messages.notifyMessage(newMessage);
             messages.storeRecord(newMessage);
+            unreadMessages.getRecords();
           }
         } else if(newMessage.messageStatus != null){
           List<SMSMessage> msgs = messages.getRecords();
@@ -738,7 +738,7 @@ print(responseBody);
     _connector = connector;
   }
 
-  void autoLogin(String username, String domain) async {
+  Future<void> autoLogin(String username, String domain) async {
     String _pass;
 
     final prefs = await SharedPreferences.getInstance();
@@ -753,7 +753,7 @@ print(responseBody);
       _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
     
 
-      apiV1Call(
+      await apiV1Call(
         "get",
         "/clients/lookup_options",
         {"username": username, "password": _pass},

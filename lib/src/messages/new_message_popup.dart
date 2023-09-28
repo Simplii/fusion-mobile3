@@ -36,7 +36,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   List<SMSConversation> _convos = [];
   List<CrmContact> _crmContacts = [];
   List<Contact> _contacts = [];
-  String groupId = "-1";
+  String groupId = DepartmentIds.Personal;
   String myPhoneNumber = "";
   String _query = "";
   String _searchingFor = "";
@@ -47,8 +47,8 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
     super.initState();
     SharedPreferences.getInstance().then((prefs) {
       setState(() {
-        String _selectedDepartmentId = prefs.getString('selectedGroupId') ?? "-1";
-        groupId = _selectedDepartmentId == "-2" ? "-1" : _selectedDepartmentId;
+        String _selectedDepartmentId = prefs.getString('selectedGroupId') ?? DepartmentIds.Personal;
+        groupId = _selectedDepartmentId == DepartmentIds.AllMessages ? DepartmentIds.Personal : _selectedDepartmentId;
         SMSDepartment dep = _fusionConnection.smsDepartments.getDepartment(groupId);
         List<String> deptNumbers = dep.numbers;
         if (deptNumbers.length > 0) {
@@ -56,7 +56,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         } else {
           List<SMSDepartment> deps = _fusionConnection.smsDepartments.allDepartments();
           for (SMSDepartment dep in deps) {
-            if(dep.numbers.length > 0 && dep.id != "-2"){
+            if(dep.numbers.length > 0 && dep.id != DepartmentIds.AllMessages && dep.id != DepartmentIds.FusionChats){
               myPhoneNumber = dep.numbers[0];
               groupId = dep.id;
             }
@@ -74,13 +74,20 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   }
 
   _search(String value) {
-    String query = _searchTextController.value.text;  
+    String query = _searchTextController.value.text;
     _debounce((){
       if(query.length == 0){
         setState(() {
           _convos = [];
           _crmContacts = [];
           _contacts = [];
+        });
+      } else if(groupId == DepartmentIds.FusionChats) {
+        _fusionConnection.coworkers.search(query, (p0){
+          setState(() {
+            _contacts = [...p0];
+            _searchingFor='';
+          });
         });
       } else if (query != _searchingFor) {
         _searchingFor = query;
@@ -166,11 +173,11 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
   _header() {
     String myImageUrl = _fusionConnection.myAvatarUrl();
     List<SMSDepartment> groups = _fusionConnection.smsDepartments
-        .getRecords()
-        .where((department) => department.id != "-2")
+        .allDepartments()
+        .where((department) => department.id != DepartmentIds.AllMessages)
         .toList();
 
-    groups;
+    groups.sort(((a, b) => int.parse(a.id) < int.parse(b.id) ? -1 : 1));
     return Column(children: [
       Container(
           alignment: Alignment.center,
@@ -185,7 +192,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
             height: 36,
             child: FusionDropdown(
                 selectedNumber: myPhoneNumber,
-                departments: _fusionConnection.smsDepartments.allDepartments(),
+                departments: groups,
                 onChange: (String value) {
                   this.setState(() {
                     groupId = value;
@@ -202,7 +209,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
                         .id;
                   });
                 },
-                label: "Who are you representing?",
+                label: "Departments",
                 value: groupId,
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                 options: groups
@@ -220,6 +227,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
         search: _search,
         searchTextController: _searchTextController,
         chipsCount: chipsCount,
+        selectedDepartmentId: groupId,
       )
     ]);
   }
@@ -256,16 +264,7 @@ class _NewMessagePopupState extends State<NewMessagePopup> {
     
     SMSConversation convo = await _fusionConnection.messages.checkExistingConversation(groupId,
       myPhoneNumber,toNumbers,toContacts);
-    
-  // print("MyNumber ${convo.serialize()}");
-    // SMSConversation convo = SMSConversation.build(
-    //   myNumber: myPhoneNumber,
-    //   contacts: toContacts,
-    //   crmContacts: [],
-    //   number: toNumbers.join(','),
-    //   isGroup: chipsCount > 1 ?? false,
-    //   hash: "${toNumbers.join(':')}"
-    // );
+
     Navigator.pop(this.context);
     showModalBottomSheet(
         context: context,

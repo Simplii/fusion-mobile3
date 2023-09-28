@@ -48,7 +48,7 @@ class SMSMessage extends FusionModel {
     Map<String, dynamic> timeDateObj = checkDateObj(map['time']);
     this.convertedMms = map.containsKey('converted_mms') ? true : false;
     this.domain = map['domain'].runtimeType == String ? map['domain'] : null;
-    this.from = map['from'];
+    this.from = map['from'].toString().toLowerCase();
     this.fromMe = map['from_me'];
     this.id = map['id'].toString();
     this.isGroup = map['is_group'];
@@ -64,7 +64,7 @@ class SMSMessage extends FusionModel {
     this.smsWebhookId =
         map['sms_webhook_id'].runtimeType == int ? map['sms_webhook_id'] : 0;
     this.time = CarbonDate(timeDateObj);
-    this.to = map['to'];
+    this.to = map['to'].toString().toLowerCase();
     this.type = map['type'];
     this.unixtime = map['unixtime'];
     this.user = map['user'].runtimeType == String ? map['user'] : null;
@@ -78,7 +78,7 @@ class SMSMessage extends FusionModel {
     this.domain = map['user'].runtimeType == String ? map['user']
         .toString()
         .replaceFirst(RegExp(".*@"), "") : null;
-    this.from = map['from'];
+    this.from = map['from'].toString().toLowerCase();
     this.fromMe = map['fromMe'];
     this.id = map['id'].toString();
     this.isGroup = map['is_group'] ?? map['isGroup'];
@@ -92,7 +92,7 @@ class SMSMessage extends FusionModel {
     this.smsWebhookId =
         map['smsWebhookId'].runtimeType == int ? map['smsWebhookId'] : 0;
     this.time = CarbonDate.fromDate(map['time']);
-    this.to = map['to'];
+    this.to = map['to'].toString().toLowerCase();
     this.type = "sms";
     this.unixtime = DateTime.parse(time).toLocal().millisecondsSinceEpoch ~/ 1000;
     this.user = map['user'].runtimeType == String ? map['user']
@@ -230,23 +230,25 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
           callpopInfo.contacts.map((e) {
             name = e.name;
           });
-print("willshowinfo");
-print(name);
-print(message);
-print(callpopInfo);
           showSimpleNotification(
                 Text(name + " says: " + message.message),
                 background: smoke);
       });
       List<SMSConversation>convos = fusionConnection.conversations.getRecords();
-      SMSConversation lastMessage = await checkExistingConversation("-2", message.from, [message.to],[]);
+      SMSConversation lastMessage = await checkExistingConversation(DepartmentIds.AllMessages, message.from, [message.to],[]);
       if(lastMessage.conversationId != null){
         List<SMSConversation> convoToUpdateList = 
           convos.where((element) =>  element.conversationId == lastMessage.conversationId).toList();
         SMSConversation convoToUpdate = convoToUpdateList.isEmpty ? null : convoToUpdateList.first;
-        convoToUpdate.message.message = message.message;
-        
-      } 
+        if(convoToUpdate != null){
+          convoToUpdate.message.message = message.message;
+          convoToUpdate.unread = convoToUpdate.unread + 1;
+          convoToUpdate.lastContactTime = DateTime.parse(message.time.date).toIso8601String();
+          fusionConnection.conversations.storeRecord(convoToUpdate);
+        } else {
+          print("MDBM add new convo ");
+        }
+      }
 
       new Future.delayed(Duration(minutes: 2), () {
         notifiedMessages.remove(message.id);
@@ -265,14 +267,14 @@ print(callpopInfo);
         .delete('sms_message', where: 'id = ?', whereArgs: [record.getId()]);
     await fusionConnection.db.insert('sms_message', {
       'id': record.getId(),
-      'from': record.from,
+      'from': record.from.toLowerCase(),
       'fromMe': record.fromMe != null && record.fromMe ? 1 : 0,
       'media': record.media != null && record.media ? 1 : 0,
       'message': record.message,
       'mime': record.mime ?? '',
       'read': record.read != null && record.read ? 1 : 0,
       'time': record.unixtime,
-      'to': record.to,
+      'to': record.to.toLowerCase(),
       'user': record.user,
       'raw': record.serialize()
     });
@@ -474,7 +476,7 @@ print(callpopInfo);
       callback(matchedConversations, matchedCrmContacts, matchedContacts);
     };
 
-    fusionConnection.conversations.searchPersisted(query, "-2", 100, 0,
+    fusionConnection.conversations.searchPersisted(query, DepartmentIds.AllMessages, 100, 0,
         (List<SMSConversation> convos, fromHttp) {
       matchedConversations = convos;
       _sendFromPersisted();
@@ -559,7 +561,7 @@ print(callpopInfo);
       callback(matchedConversations, [], []);
     };
 
-    fusionConnection.conversations.searchPersisted(query, "-2", 100, 0,
+    fusionConnection.conversations.searchPersisted(query, DepartmentIds.AllMessages, 100, 0,
         (List<SMSConversation> convos, fromHttp) {
       matchedConversations = convos;
       _sendFromPersisted();
@@ -625,10 +627,10 @@ print(callpopInfo);
       whereArgs: convo.conversationId != null &&  convo.isGroup 
         ? [ convo.conversationId ] 
         : [
-          convo.myNumber,
-          convo.number,
-          convo.myNumber,
-          convo.number
+          convo.myNumber.toLowerCase(),
+          convo.number.toLowerCase(),
+          convo.myNumber.toLowerCase(),
+          convo.number.toLowerCase()
         ]).then((List<Map<String, dynamic>> results) {
           List<SMSMessage> list = [];
           for (Map<String, dynamic> result in results) {

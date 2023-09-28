@@ -21,7 +21,9 @@ class CallpopInfo extends FusionModel {
     this.contacts.forEach((contact) {
       List<String> emails = [];
       contact.emails.forEach((email) {
-        emails.add(email['email']);
+        if(email['email'].runtimeType == String){
+          emails.add(email['email']);
+        }
       });
       contact.externalReferences.forEach((extRef) {
         if (extRef['externalId'] != null) {
@@ -92,7 +94,7 @@ class CallpopInfoStore extends FusionStore<CallpopInfo> {
 
   lookupPhone(String phoneNumber, Function(CallpopInfo callpopInfo) callback) {
     if (hasRecord(phoneNumber)) {
-      getRecord(phoneNumber, callback);
+      return getRecord(phoneNumber, callback);
     }
 
     String extOrPN = phoneNumber.length <= 6 ? phoneNumber + "@" + fusionConnection.getDomain(): phoneNumber;

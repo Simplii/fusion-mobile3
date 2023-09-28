@@ -3,6 +3,7 @@ import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
+import 'package:sqflite/sqflite.dart';
 import 'dart:convert' as convert;
 
 import 'carbon_date.dart';
@@ -325,7 +326,7 @@ class Contact extends FusionModel {
       'domain': this.domain,
       'emails': this.emails,
       'firstContactDate': this.firstContactDate,
-      'coworker': this.coworker,
+      'coworker': this.coworker?.serialize(),
       'firstName': this.firstName,
       'groups': this.groups,
       'id': this.id,
@@ -359,7 +360,9 @@ class Contact extends FusionModel {
     this.domain = obj['domain'];
     this.emails = obj['emails'];
     this.firstContactDate = obj['firstContactDate'];
-    this.coworker = obj['coworker'];
+    this.coworker = obj['coworker'] != '' && obj['coworker'] != null 
+      ? Coworker(convert.jsonDecode(obj['coworker']))
+      : obj['coworker'];
     this.firstName = obj['firstName'];
     this.groups = obj['groups'].cast<String>();
     this.id = obj['id'];
@@ -474,21 +477,25 @@ class ContactsStore extends FusionStore<Contact> {
 
   searchPersisted(String query, int limit, int offset,
       Function(List<Contact>, bool) callback) {
-    fusionConnection.db.query('contacts',
-        limit: limit,
-        offset: offset,
-        where: 'searchString Like ?',
-        orderBy: "lastName asc, firstName asc",
-        whereArgs: [
-          "%" + query + "%"
-        ]).then((List<Map<String, dynamic>> results) {
-      List<Contact> list = [];
+        getDatabasesPath().then((path){
+          openDatabase(join(path,"fusion.db")).then((db){
+            db.query('contacts',
+                limit: limit,
+                offset: offset,
+                where: 'searchString Like ?',
+                orderBy: "lastName asc, firstName asc",
+                whereArgs: [
+                  "%" + query + "%"
+                ]).then((List<Map<String, dynamic>> results) {
+              List<Contact> list = [];
 
-      for (Map<String, dynamic> result in results) {
-        list.add(Contact.unserialize(result['raw']));
-      }
-      callback(list, false);
-    });
+              for (Map<String, dynamic> result in results) {
+                list.add(Contact.unserialize(result['raw']));
+              }
+              callback(list, false);
+            });
+          });
+        });
   }
 
   search(String query, int limit, int offset,

@@ -7,6 +7,7 @@ import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/models/voicemails.dart';
 import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
@@ -126,7 +127,7 @@ class _VoicemailsState extends State<Voicemails> {
 
   _openMessage(Voicemail vm) {
     String number =
-        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
+        _fusionConnection.smsDepartments.getDepartment(DepartmentIds.AllMessages).numbers[0];
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,

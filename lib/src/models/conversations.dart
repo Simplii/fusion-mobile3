@@ -1,4 +1,6 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/unreads.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'dart:convert' as convert;
@@ -26,7 +28,7 @@ class SMSConversation extends FusionModel {
   int conversationId;
   String selectedDepartmentId;
 
-  String contactName() {
+  String contactName({Coworker coworker}) {
     String name = "Unknown";
     if (contacts != null) {
       for (Contact contact in contacts) {
@@ -45,6 +47,9 @@ class SMSConversation extends FusionModel {
     if(this.isGroup){
       name = this.hash.replaceAll(':', ',').formatPhone();  
     }
+    if(coworker != null){
+      name = "${coworker.firstName} ${coworker.lastName}";
+    }
     return name;
   }
 
@@ -57,7 +62,7 @@ class SMSConversation extends FusionModel {
       this.conversationId,
       this.isGroup,
       this.hash,
-      this.selectedDepartmentId = "-1"}) {
+      this.selectedDepartmentId = DepartmentIds.Personal}) {
     this.hash = this.hash ?? this.myNumber + ":" + this.number;
     this.unread = 0;
     if (this.message != null) {
@@ -71,8 +76,8 @@ class SMSConversation extends FusionModel {
     this.isGroup = c.isGroup;
     this.lastContactTime = c.lastContactTime;
     this.lastContactTime = c.lastContactTime;
-    this.myNumber = c.myNumber;
-    this.number = c.number;
+    this.myNumber = c.myNumber.toLowerCase();
+    this.number = c.number.toLowerCase();
     this.members = c.members;
     this.message = c.message;
     this.unread = c.unread;
@@ -82,15 +87,15 @@ class SMSConversation extends FusionModel {
   }
 
   SMSConversation(Map<String, dynamic> map) {
-    String toNumber = map['lastMessage']['from'] == map['myNumber'] 
+    String toNumber = map['lastMessage']['from'].toString().toLowerCase() == map['myNumber'] 
       ? map['lastMessage']['to']
       : map['lastMessage']['from'];
     this.conversationId = map['conversationId'] ?? map['groupId'];
     this.groupName = map['groupName'];
     this.isGroup = map['isGroup'];
     this.lastContactTime = map['lastContactTime'];
-    this.myNumber = map['myNumber'];
-    this.number = map['isGroup'] != null && map['isGroup'] == true ? map['groupId'].toString() : toNumber;
+    this.myNumber = map['myNumber'].toString().toLowerCase();
+    this.number = map['isGroup'] != null && map['isGroup'] == true ? map['groupId'].toString() : toNumber.toLowerCase();
     this.members = map['conversationMembers']; //map['members'];
     this.message = map['message'];
     this.unread = map['unreadCount'];
@@ -106,8 +111,8 @@ class SMSConversation extends FusionModel {
       'groupName': this.groupName,
       'isGroup': this.isGroup,
       'lastContactTime': this.lastContactTime,
-      'myNumber': myNumber,
-      'number': number,
+      'myNumber': myNumber.toLowerCase(),
+      'number': number.toLowerCase(),
       'members': members,
       'message': message?.serialize(),
       'unread': unread,
@@ -133,8 +138,8 @@ class SMSConversation extends FusionModel {
     this.isGroup = (data['isGroup'] == 1 || data['isGroup'] == true) ? true : false;
     this.lastContactTime = data['lastContactTime'];
     this.lastContactTime = data['lastContactTime'];
-    this.myNumber = data['myNumber'];
-    this.number = data['to'] != null ? data['to'] : data['number'];
+    this.myNumber = data['myNumber'].toLowerCase();
+    this.number = data['to'] != null ? data['to'].toLowerCase() : data['number'].toLowerCase();
     this.members = data['conversationMembers'];
     this.message = SMSMessage.unserialize(data['message']);
     this.unread = data['unread'];
@@ -247,16 +252,16 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
   }
 
   getConversations(String groupId, int limit, int offset,
-      Function(List<SMSConversation> conversations, bool fromServer) callback) {
+      Function(List<SMSConversation> conversations, bool fromServer, String departmentId) callback) {
     SMSConversation lastMessageFailed = null;
     getPersisted(groupId, limit, offset, (savedConvos,fromserver){
-      callback(savedConvos, fromserver);
+      callback(savedConvos, fromserver, groupId);
       lastMessageFailed = savedConvos.where((convo) => convo.message.messageStatus == "offline").isNotEmpty 
         ? savedConvos.where((convo) => convo.message.messageStatus == "offline").toList().first
         : null;
     });
     fusionConnection.refreshUnreads();
-
+    List<Coworker> coworkers = fusionConnection.coworkers.getRecords();
     fusionConnection.apiV2Call("get", "/messaging/group/${groupId}/conversations", {
       // 'numbers': numbers.join(","),
       'limit': limit,
@@ -271,20 +276,35 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
 
         if(item['conversationMembers'] != null){
           for (Map<String, dynamic> obj in item['conversationMembers']) {
-            List<dynamic> convoMembebersContacts = obj['contacts'];
-            List<dynamic> convoMembebersLeads = obj['leads'] ?? [];
+            List<dynamic> convoMembersContacts = obj['contacts'];
+            List<dynamic> convoMembersLeads = obj['leads'] ?? [];
             dynamic number = obj['number'];
-            if(convoMembebersContacts.length > 0){
-              convoMembebersContacts.forEach((contact) { 
+            if(convoMembersContacts.length > 0){
+              convoMembersContacts.forEach((contact) { 
                 contacts.add(Contact.fromV2(contact));
               });
             } 
-            else if(convoMembebersLeads.length > 0){
-              convoMembebersLeads.forEach((lead) { 
+            else if(convoMembersLeads.length > 0){
+              convoMembersLeads.forEach((lead) { 
                 contacts.add(CrmContact.fromExpanded(lead).toContact());
               });
             }
-            else if(convoMembebersContacts.length == 0 && convoMembebersLeads.length == 0 && number != ''){
+            else if(obj['number'].toString().contains("@")){
+             
+              if(coworkers.isNotEmpty){
+                Coworker _coworker = coworkers.where((c) => c.uid.toLowerCase() == obj['number'].toString().toLowerCase()).isNotEmpty 
+                  ? coworkers.where((c) => c.uid.toLowerCase() == obj['number'].toString().toLowerCase()).first
+                  : null;
+                if(_coworker != null){
+                  Contact c = _coworker.toContact();
+
+                  contacts.add(_coworker.toContact());
+                } else {
+                  contacts.add(Contact.fake(number));
+                }
+              }
+
+            } else if(convoMembersContacts.length == 0 && convoMembersLeads.length == 0 && number != ''){
               contacts.add(Contact.fake(number));
             }
           }
@@ -303,7 +323,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
         storeRecord(convo);
         convos.add(convo);
       }
-      callback(convos, true);
+      callback(convos, true, groupId);
     });
   }
 

@@ -5,6 +5,7 @@ import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 
 import '../backend/fusion_connection.dart';
@@ -60,11 +61,12 @@ class _MessageSearchResults extends State<MessageSearchResults> {
     }
 
     String myNumber = _fusionConnection.smsDepartments
-        .lookupRecord("-2")
+        .lookupRecord(DepartmentIds.AllMessages)
         .numbers[0];
 
-      SMSConversation convo = await _fusionConnection.messages.checkExistingConversation('-2',
-      myNumber,[theirNumber],contacts);
+      SMSConversation convo = await _fusionConnection.messages.checkExistingConversation(
+        DepartmentIds.AllMessages,myNumber,[theirNumber],contacts
+      );
 
     // SMSConversation convo = SMSConversation.build(
     //   myNumber: myNumber,
@@ -158,7 +160,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
         _fusionConnection, 
         _softphone, 
         convo, 
-        "",
+        null,
         "",
         null,
         null,
