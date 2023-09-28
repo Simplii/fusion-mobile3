@@ -15,10 +15,11 @@ class SMSDepartment extends FusionModel {
   String primaryUser;
   int unreadCount;
   bool usesDynamicOutbound;
+  String protocol;
 
   SMSDepartment(Map<String, dynamic> obj) {
-    if (obj['id'].toString() == "-1") {
-      id = "-1";
+    if (obj['id'].toString() == DepartmentIds.Personal) {
+      id = DepartmentIds.Personal;
       groupName = "Personal";
       for (String n in obj['numbers']) { numbers.add(n); }
       unreadCount = obj['unread'];
@@ -27,6 +28,7 @@ class SMSDepartment extends FusionModel {
       if (obj.containsKey('mms_numbers')) {
         for (String n in obj['mms_numbers']) { mmsNumbers.add(n); }
       }
+      protocol = "sms";
     }
     else {
       id = obj['id'].toString();
@@ -36,6 +38,7 @@ class SMSDepartment extends FusionModel {
       primaryUser = obj['primary_user'];
       unreadCount = obj['unread'];
       usesDynamicOutbound = obj['uses_dynamic_outbound'];
+      protocol = obj['protocol'] ?? "sms";
     }
   }
 
@@ -48,6 +51,7 @@ class SMSDepartment extends FusionModel {
       'primaryUser': this.primaryUser,
       'unreadCount': this.unreadCount,
       'usesDynamicOutbound': this.usesDynamicOutbound,
+      'protocol': this.protocol
     });
   }
 
@@ -69,12 +73,17 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
   SMSDepartmentsStore(FusionConnection fusionConnection) : super(fusionConnection);
 
   getDepartments(Function(List<SMSDepartment>) callback) {
-    fusionConnection.apiV1Call(
+    List<SMSDepartment> deps = allDepartments();
+    if(deps.isNotEmpty){
+      callback(deps);
+    } else {
+      fusionConnection.apiV1Call(
         "get",
         "/chat/my_groups",
         {},
         callback: (List<dynamic> datas) {
-          List<String> allNumbers = [];
+          String fusionChatsNumber = fusionConnection.getUid().toString().toLowerCase();
+          List<String> allNumbers = [fusionChatsNumber];
           List<String> allMMSNumbers = [];
           int allUnread = 0;
 
@@ -86,33 +95,57 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
           }
 
           storeRecord(SMSDepartment({
-                                      'id': '-2',
-                                      'group_name': 'All Messages',
-                                      'numbers': allNumbers,
-                                      'mms_numbers': allMMSNumbers,
-                                      'unread': allUnread,
-                                      'uses_dynamic_outbound': false,
-                                      'primary_user': null
-                                    }));
+            'id': DepartmentIds.AllMessages,
+            'group_name': 'All Messages',
+            'numbers': allNumbers,
+            'mms_numbers': allMMSNumbers,
+            'unread': allUnread,
+            'uses_dynamic_outbound': false,
+            'primary_user': null,
+          }));
+
+          storeRecord(SMSDepartment({
+            'id': DepartmentIds.FusionChats,
+            'group_name': 'Fusion Chats',
+            'numbers': [fusionChatsNumber],
+            'mms_numbers': [fusionChatsNumber],
+            'unread': 0,
+            'uses_dynamic_outbound': false,
+            'primary_user': fusionConnection.getUid(),
+            'protocol': DepartmentProtocols.FusionChats
+          }));
 
           callback(allDepartments());
         });
+    }
   }
 
   getDepartment(String id) {
     return lookupRecord(id);
   }
 
-  allDepartments() {
+  List<SMSDepartment> allDepartments() {
     return getRecords();
   }
 
   SMSDepartment getDepartmentByPhoneNumber(number) {
     List<SMSDepartment> departments = allDepartments();
     for (SMSDepartment dept in departments) {
-      if (dept.numbers.contains(number))
+      if (dept.numbers.contains(number) && dept.id != DepartmentIds.AllMessages)
         return dept;
     }
     return null;
   }
+}
+
+abstract class DepartmentIds {
+  static const String Personal = "-1";
+  static const String AllMessages = "-2";
+  static const String FusionChats = "-3";
+}
+abstract class DepartmentProtocols {
+  static const String FusionChats = "fusion-chats";
+  static const String telegram = "telegram";
+  static const String whatsapp = "whatsapp";
+  static const String facebook = "facebook";
 }

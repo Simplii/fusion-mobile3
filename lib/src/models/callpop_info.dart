@@ -94,7 +94,7 @@ class CallpopInfoStore extends FusionStore<CallpopInfo> {
 
   lookupPhone(String phoneNumber, Function(CallpopInfo callpopInfo) callback) {
     if (hasRecord(phoneNumber)) {
-      getRecord(phoneNumber, callback);
+      return getRecord(phoneNumber, callback);
     }
 
     String extOrPN = phoneNumber.length <= 6 ? phoneNumber + "@" + fusionConnection.getDomain(): phoneNumber;

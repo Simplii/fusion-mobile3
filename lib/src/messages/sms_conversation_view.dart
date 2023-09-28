@@ -16,6 +16,7 @@ import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/contacts/contact_profile_view.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
+import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/quick_response.dart';
@@ -129,7 +130,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       }
     });
 
-    if (_fusionConnection.smsDepartments.lookupRecord("-2") != null) {
+    if (_fusionConnection.smsDepartments.lookupRecord(DepartmentIds.AllMessages) != null) {
       _loaded = true;
     }
     _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
@@ -142,17 +143,18 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     SMSDepartment department = _fusionConnection.smsDepartments
         .getDepartmentByPhoneNumber(_conversation.myNumber);
     this.setState(() {
-      _selectedGroupId = department?.id ?? "-1";
+      _selectedGroupId = department?.id ?? DepartmentIds.Personal;
     });
 
     _fusionConnection.quickResponses.getQuickResponses(
-      _selectedGroupId == "-2" ? "-1" : _selectedGroupId,
+      _selectedGroupId == DepartmentIds.AllMessages ? DepartmentIds.Personal : _selectedGroupId,
       (List<QuickResponse> data){
         setState(() {
           quickResponses = data;
         }); 
       }
     );
+    disableDepartmentSelection = _selectedGroupId == DepartmentIds.FusionChats;
     connectivitySubscription =
       _fusionConnection.connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
   }
@@ -240,15 +242,20 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   }
  
   _header() {
-    String myImageUrl = _fusionConnection.myAvatarUrl();
-  
+    Coworker _coworker;
+    if(_conversation.number.contains("@")){
+      _fusionConnection.coworkers.getRecord(_conversation.number, (coworker) => _coworker = coworker);
+    }
+
     List<Widget> singleMessageHeader = [
-      ContactCircle(_conversation.contacts, _conversation.crmContacts),
+      _coworker != null 
+        ? ContactCircle.withCoworkerAndDiameter([], [], _coworker, 60)
+        : ContactCircle(_conversation.contacts, _conversation.crmContacts),
       Expanded(child: Column(
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: Text(_conversation.contactName(), style: headerTextStyle)),
+            child: Text(_conversation.contactName(coworker: _coworker), style: headerTextStyle)),
           Align(
           alignment: Alignment.centerLeft,
           child: Text(_conversation.number.formatPhone(),
@@ -428,7 +435,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     List<List<String>> options = [];
 
     for (SMSDepartment department in departments) {
-      if (department.id == "-2") {
+      if (department.id == DepartmentIds.AllMessages || department.id == DepartmentIds.FusionChats) {
         continue;
       }
       options.add([department.groupName, department.id]);
@@ -893,9 +900,11 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                   secheduleIsSet = null;
                 });
                 Future.delayed(Duration(seconds: 4), (){
-                  setState(() {
-                    disableDepartmentSelection = false;
-                  });
+                  if(mounted){
+                    setState(() {
+                      disableDepartmentSelection = false;
+                    });
+                  }
                 });
               }, 
               ()=> null,

@@ -230,23 +230,25 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
           callpopInfo.contacts.map((e) {
             name = e.name;
           });
-print("willshowinfo");
-print(name);
-print(message);
-print(callpopInfo);
           showSimpleNotification(
                 Text(name + " says: " + message.message),
                 background: smoke);
       });
       List<SMSConversation>convos = fusionConnection.conversations.getRecords();
-      SMSConversation lastMessage = await checkExistingConversation("-2", message.from, [message.to],[]);
+      SMSConversation lastMessage = await checkExistingConversation(DepartmentIds.AllMessages, message.from, [message.to],[]);
       if(lastMessage.conversationId != null){
         List<SMSConversation> convoToUpdateList = 
           convos.where((element) =>  element.conversationId == lastMessage.conversationId).toList();
         SMSConversation convoToUpdate = convoToUpdateList.isEmpty ? null : convoToUpdateList.first;
-        convoToUpdate.message.message = message.message;
-        
-      } 
+        if(convoToUpdate != null){
+          convoToUpdate.message.message = message.message;
+          convoToUpdate.unread = convoToUpdate.unread + 1;
+          convoToUpdate.lastContactTime = DateTime.parse(message.time.date).toIso8601String();
+          fusionConnection.conversations.storeRecord(convoToUpdate);
+        } else {
+          print("MDBM add new convo ");
+        }
+      }
 
       new Future.delayed(Duration(minutes: 2), () {
         notifiedMessages.remove(message.id);
@@ -474,7 +476,7 @@ print(callpopInfo);
       callback(matchedConversations, matchedCrmContacts, matchedContacts);
     };
 
-    fusionConnection.conversations.searchPersisted(query, "-2", 100, 0,
+    fusionConnection.conversations.searchPersisted(query, DepartmentIds.AllMessages, 100, 0,
         (List<SMSConversation> convos, fromHttp) {
       matchedConversations = convos;
       _sendFromPersisted();
@@ -559,7 +561,7 @@ print(callpopInfo);
       callback(matchedConversations, [], []);
     };
 
-    fusionConnection.conversations.searchPersisted(query, "-2", 100, 0,
+    fusionConnection.conversations.searchPersisted(query, DepartmentIds.AllMessages, 100, 0,
         (List<SMSConversation> convos, fromHttp) {
       matchedConversations = convos;
       _sendFromPersisted();

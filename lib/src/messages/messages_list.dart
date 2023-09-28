@@ -9,8 +9,10 @@ import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
 import 'package:fusion_mobile_revamped/src/components/fusion_dropdown.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
+import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
+import 'package:fusion_mobile_revamped/src/models/unreads.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,7 +53,7 @@ class _MessagesTabState extends State<MessagesTab> {
 
   initState() {
     super.initState();
-    if (_fusionConnection.smsDepartments.lookupRecord("-2") != null) {
+    if (_fusionConnection.smsDepartments.lookupRecord(DepartmentIds.AllMessages) != null) {
       _loaded = true;
     }
     _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
@@ -135,17 +137,16 @@ class _MessagesListState extends State<MessagesList> {
   Softphone get _softphone => widget._softphone;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
-  String _selectedGroupId;
+  String _selectedGroupId = DepartmentIds.AllMessages;
   int _page = 0;
 
 
   @override
   void initState(){
     super.initState();
-    String _allDepartments = "-2";
     SharedPreferences.getInstance().then((prefs) {
       setState(() {
-        _selectedGroupId = prefs.getString('selectedGroupId') ?? _allDepartments ;
+        _selectedGroupId = prefs.getString('selectedGroupId') ?? DepartmentIds.AllMessages ;
         _page = 0;
         _lookupMessages();
       });
@@ -200,17 +201,11 @@ class _MessagesListState extends State<MessagesList> {
     });
   }
 
-  _getDepartmentName(convo) {
-    if (_selectedGroupId != "-2")
-      return "";
+  SMSDepartment _getDepartmentName(SMSConversation convo) {
+    if (_selectedGroupId != DepartmentIds.AllMessages)
+      return null;
     else {
-      SMSDepartment department = _fusionConnection.smsDepartments
-          .getDepartmentByPhoneNumber(convo.myNumber);
-
-      if (department != null)
-        return department.groupName;
-      else
-        return "";
+      return _fusionConnection.smsDepartments.getDepartmentByPhoneNumber(convo.myNumber);
     }
   }
 
@@ -219,14 +214,14 @@ class _MessagesListState extends State<MessagesList> {
     lookupState = 1;
     _fusionConnection.conversations
         .getConversations(_selectedGroupId, 100, _page * 100,
-            (List<SMSConversation> convos, bool fromServer) {
+            (List<SMSConversation> convos, bool fromServer, String departmentId) {
       if (!mounted) return;
 
       this.setState(() {
         if (fromServer != null && fromServer) {
           lookupState = 2;
         }
-
+        if(fromServer && departmentId != _selectedGroupId)return;
         if (_page == 0) {
           _convos = convos;
         } else {
@@ -258,17 +253,19 @@ class _MessagesListState extends State<MessagesList> {
   // }
 
   _changeGroup(String newGroupId) async {
-    _selectedGroupId = newGroupId;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selectedGroupId', newGroupId);
-    _page = 0;
+    setState(() {
+      _selectedGroupId = newGroupId;
+      _page = 0;
+    });
     _lookupMessages();
   }
 
   _selectedDepartmentName() {
-    return _fusionConnection.smsDepartments
-        .getDepartment(_selectedGroupId)
-        ?.groupName;
+    SMSDepartment dep = _fusionConnection.smsDepartments.getDepartment(_selectedGroupId);
+
+    return dep != null ? dep.groupName : "All Messages";
   }
 
   _groupOptions() {
@@ -276,10 +273,14 @@ class _MessagesListState extends State<MessagesList> {
         _fusionConnection.smsDepartments.allDepartments();
     List<List<String>> options = [];
 
-    departments.sort(((a, b) => int.parse(a.id) < int.parse(b.id) ? -1 : 1));
-    departments.sort((a, b) => int.parse(a.id) > 0 ? a.groupName.compareTo(b.groupName) : -1);
+    departments.sort((a,b)=> a.groupName == "All Messages" 
+      ? -1 
+      : (a.groupName != "All Messages" && int.parse(a.id) < int.parse(b.id))
+       ? -1
+       : 1
+    );
     for (SMSDepartment d in departments) {
-      options.add([d.groupName, d.id]);
+      options.add([d.groupName, d.id, d.unreadCount.toString(), d.id, d.protocol]);
     }
     return options;
   }
@@ -395,7 +396,7 @@ class SMSConversationSummaryView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
   final SMSConversation _convo;
-  final String _departmentName;
+  final SMSDepartment department;
   final String _selectedGroupId;
   Function(SMSConversation, SMSMessage) deleteConvo;
   Function refreshView;
@@ -403,7 +404,7 @@ class SMSConversationSummaryView extends StatefulWidget {
     this._fusionConnection, 
     this._softphone,
     this._convo, 
-    this._departmentName, 
+    this.department, 
     this._selectedGroupId, 
     this.deleteConvo, 
     this.refreshView,
@@ -420,7 +421,7 @@ class _SMSConversationSummaryViewState
 
   Softphone get _softphone => widget._softphone;
 
-  String get _departmentName => widget._departmentName;
+  SMSDepartment get _department => widget.department;
 
   SMSConversation get _convo => widget._convo;
   final _searchInputController = TextEditingController();
@@ -446,9 +447,11 @@ class _SMSConversationSummaryViewState
                 deleteConvo: _deleteConvo,
                 setOnMessagePosted: _refreshView,
                 changeConvo: (SMSConversation convo){
-                  setState(() {
-                    displayingConvo = convo;
-                  },);
+                  if(mounted){
+                    setState(() {
+                      displayingConvo = convo;
+                    },);
+                  }
                 }
               );
             }
@@ -456,18 +459,80 @@ class _SMSConversationSummaryViewState
         );
   }
 
+  Widget _departmentTag (){
+    Color bg = Color.fromARGB(255, 243, 242, 242);
+    Image icon = Image.asset("assets/icons/messages/department.png", height: 15,);
+    Color textColor = char;
+    
+    if(_department.protocol == DepartmentProtocols.FusionChats){
+      bg = fusionChatsBg;
+      textColor = fusionChats;
+      icon = Image.asset("assets/icons/messages/fusion_chats.png", height: 15,);
+    }
+    
+    if(_department.id == DepartmentIds.Personal){
+      bg = personalChatBg;
+      textColor = personalChat;
+      icon = Image.asset("assets/icons/messages/personal.png", height: 15,);
+    }
+    
+    if(_department.protocol == DepartmentProtocols.telegram){
+      bg = telegramChatBg;
+      textColor = telegramChat;
+      icon = Image.asset("assets/icons/messages/telegram.png", height: 15,);
+
+    }
+    
+    if(_department.protocol == DepartmentProtocols.whatsapp){
+      bg = whatsappChatBg;
+      textColor = whatsappChat;
+      icon = Image.asset("assets/icons/messages/whatsapp.png", height: 15,);
+    }
+    
+    if(_department.protocol == DepartmentProtocols.facebook){
+      bg = facebookChatBg;
+      textColor = facebookChat;
+      icon = Image.asset("assets/icons/messages/messenger.png", height: 15,);
+
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(2)
+      ),
+      padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 4,
+        children: [
+          icon,
+          Text(
+            _department.groupName,
+            style: TextStyle(fontSize: 12, color: textColor, fontWeight: FontWeight.bold),)
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     String convoLabel = '';
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(_convo.message.unixtime * 1000);
-    
+    Coworker _coworker;
+    bool internalGroupMessage = false;
+
     if(_convo.isGroup){
       convoLabel = _convo.groupName ?? 'group conversation'.toTitleCase();
     } else {
-      convoLabel = _convo.contactName() == "Unknown" &&  _convo.number!= null 
+      if(_convo.number.contains("@")){
+        _fusionConnection.coworkers.getRecord(_convo.number, (p0) => _coworker = p0);
+      }
+      String contactName = _convo.contactName(coworker: _coworker);
+      convoLabel = contactName == "Unknown" &&  _convo.number!= null 
         ?_convo.number.formatPhone()
-        : _convo.contactName();
+        : contactName;
     }
 
     return GestureDetector(
@@ -524,14 +589,22 @@ class _SMSConversationSummaryViewState
           child: Container(
               margin: EdgeInsets.only(bottom: 18, left: 16, right: 16),
               child: Row(children: [
-                ContactCircle.forSMS(_convo.contacts, _convo.crmContacts,_convo.isGroup),
+                _coworker != null 
+                  ? ContactCircle.withCoworkerAndDiameter([], [], _coworker, 60)
+                  : ContactCircle.forSMS(
+                      _convo.contacts, 
+                      _convo.crmContacts,
+                      _convo.isGroup
+                    ),
                 Expanded(
                     child: Container(
                         decoration: BoxDecoration(color: Colors.transparent),
                         child: Row(
                           children: [
                             Expanded(
-                                child: Column(children: [
+                                child: Wrap(
+                                  runSpacing: 4,
+                                  children: [
                               Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(convoLabel,
@@ -552,18 +625,20 @@ class _SMSConversationSummaryViewState
                                           left: 6, right: 6, top: 2, bottom: 2),
                                       child: Text(
                                           DateFormat("MMM d").format(date) +
-                                              (_departmentName != ""
-                                                  ? " " +
-                                                      nDash +
-                                                      " " +
-                                                      _departmentName
-                                                  : "") +
+                                              // (_departmentName != ""
+                                              //     ? " " +
+                                              //         nDash +
+                                              //         " " +
+                                              //         _departmentName
+                                              //     : "") +
                                               " \u2014 " +
                                               _convo.message.message,
                                           style: smallTextStyle,
-                                          maxLines: 2,
+                                          maxLines: 1,
                                           softWrap: true,
-                                          overflow: TextOverflow.ellipsis)))
+                                          overflow: TextOverflow.ellipsis))),
+                                    if(_departmentId == DepartmentIds.AllMessages && _department != null)
+                                      _departmentTag()
                             ])),
                             if (_convo.unread > 0)
                               Container(
@@ -606,7 +681,7 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
     Scaffold.of(context).openDrawer();
   }
 
-  String groupId = "-1";
+  String groupId = DepartmentIds.Personal;
   String myPhoneNumber = "8014569812";
   String _query = "";
   int willSearch = 0;

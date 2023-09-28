@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 
 import '../models/contact.dart';
@@ -11,9 +12,17 @@ class SendToBox extends StatefulWidget {
   final Function(int) deleteChip;
   final Function(dynamic) addChip;
   final int chipsCount;
-  const SendToBox({@required this.sendToItems, @required this.addChip,this.searchTextController, 
-    this.search,@required this.deleteChip, this.chipsCount, Key key}) 
-    : super(key: key);
+  final String selectedDepartmentId;
+  const SendToBox({
+      @required this.sendToItems, 
+      @required this.addChip,
+      this.searchTextController, 
+      this.search,
+      @required this.deleteChip, 
+      this.chipsCount,
+      @required this.selectedDepartmentId,
+      Key key
+    }) : super(key: key);
 
   @override
   State<SendToBox> createState() => _SendToBoxState();
@@ -26,7 +35,7 @@ class _SendToBoxState extends State<SendToBox> {
   Function(int) get _deleteChip  => widget.deleteChip;
   Function(dynamic) get _addChip => widget.addChip;
   int get chipsCount => widget.chipsCount;
-
+  String get _selectedDepartmentId => widget.selectedDepartmentId;
   
   
   NetworkImage _chipAvatar (int index){
@@ -54,6 +63,13 @@ class _SendToBoxState extends State<SendToBox> {
 
   @override
   Widget build(BuildContext context) {
+    RegExp pattern = RegExp(r'(\d{3,4})@[a-zA-Z]*');
+    bool addButtonDisabled = (chipsCount == 10 || 
+      (_searchTextController.value.text != '' && 
+        _selectedDepartmentId == DepartmentIds.FusionChats && 
+        !pattern.hasMatch(_searchTextController.value.text)) || 
+      _searchTextController.value.text == ''
+    );
     return Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
@@ -113,22 +129,26 @@ class _SendToBoxState extends State<SendToBox> {
               child: TextField(
                   controller: _searchTextController,
                   onChanged: _search,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                       border: InputBorder.none,
                       hintStyle: TextStyle(
                           color: Color.fromARGB(255, 153, 148, 149),
                           fontSize: 18,
                           fontWeight: FontWeight.w700),
-                      hintText: "Enter a name or phone number"),
+                      hintText: _selectedDepartmentId == DepartmentIds.FusionChats 
+                        ? "Enter extension number"
+                        : "Enter a name or phone number"),
                   style: TextStyle(
                       color: coal,
                       fontSize: 18,
                       fontWeight: FontWeight.w700))),
               GestureDetector(
-                onTap: ()=>_addChip(null),
+                onTap: addButtonDisabled 
+                  ? null 
+                  : ()=> _addChip(null),
                 child:Icon(
                   Icons.add_circle_outline, 
-                  color:(chipsCount == 10 || _searchTextController.value.text == '') 
+                  color: addButtonDisabled 
                     ? halfGray 
                     : crimsonLight
                 ),

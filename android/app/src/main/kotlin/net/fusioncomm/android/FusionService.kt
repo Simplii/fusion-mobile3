@@ -6,6 +6,7 @@ import android.os.IBinder
 import android.util.Log
 import io.flutter.plugin.common.MethodChannel
 import org.linphone.core.Call
+import org.linphone.core.Factory
 import org.linphone.core.tools.service.CoreManager
 
 
@@ -24,15 +25,14 @@ class FusionService: Service() {
         super.onCreate()
     }
     override fun onTaskRemoved(rootIntent: Intent?) {
-        Log.d("fusionService","onTaskRemoved called")
-
+        super.onTaskRemoved(rootIntent)
+        Factory.instance()
         val calls : Array<Call> = CoreManager.instance().core.calls
         if(calls.isNotEmpty()){
             for(call in calls){
                 call.terminate()
             }
         }
-        super.onTaskRemoved(rootIntent)
         //stop service
         this.stopSelf()
         serviceStarted = false

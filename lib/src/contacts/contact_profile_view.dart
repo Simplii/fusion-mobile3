@@ -328,7 +328,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
 
   _openMessage(String theirNumber) {
     String number =
-        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
+        _fusionConnection.smsDepartments.getDepartment(DepartmentIds.AllMessages).numbers[0];
 
     showModalBottomSheet(
         context: context,
@@ -510,7 +510,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             (SMSMessage message) {},
             null,
             [],
-            '-2',()=>null));
+            DepartmentIds.AllMessages,()=>null));
       } else {
         String duration = Duration(seconds: item.callLog.duration)
             .toString()
@@ -560,7 +560,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                 contacts: [_contact],
                 crmContacts: []),
             (SMSMessage message) {}, 
-            null,[],'-2',()=>null));
+            null,[],DepartmentIds.AllMessages,()=>null));
       }
     }
 
