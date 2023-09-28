@@ -226,7 +226,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isProximityListening = false;
   StreamSubscription<ProximityEvent> _proximitySub;
   bool flutterBackgroundInitialized = false;
-  List<Did> _dids = [];
   Function onMessagePosted;
   _logOut() {
     SharedPreferences.getInstance().then((SharedPreferences prefs){
@@ -293,8 +292,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _onMessage(RemoteMessage m) {
+      // print("MDBM message ${m.data}");
     if(onMessagePosted !=  null){
-      onMessagePosted();
+      onMessagePosted(()=>{});
     }
   }
 
@@ -318,7 +318,8 @@ class _MyHomePageState extends State<MyHomePage> {
     List<dynamic> members = [];
     bool isGroup = data['is_group'] == "1" ? true : false;
     String depId = '';
-
+    //need to make sure departments store is loaded
+    fusionConnection.smsDepartments.getDepartments((p0) => null);
     if(data.containsKey('numbers')){
       numbers = (jsonDecode(data['numbers']) as List<dynamic>).cast<String>();
     }
@@ -334,7 +335,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       for (SMSDepartment dep in deps) {
         for (String number in dep.numbers) {
-          if(dep.id == "-1"){
+          if(dep.id == DepartmentIds.Personal){
             // in case its a new conversation we didn't start
             depId = dep.id;
             numberUsed = number;
@@ -365,7 +366,7 @@ class _MyHomePageState extends State<MyHomePage> {
           convoContacts.add(Contact.fake(member['number']));
         }
       }
-      
+
       showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -508,11 +509,6 @@ class _MyHomePageState extends State<MyHomePage> {
                  });
           });
           checkForInitialMessage();
-          fusionConnection.dids.getDids((p0, p1) {
-            setState(() {
-              _dids = p0;
-            });
-          });
         } else {}
       }
     });
@@ -612,12 +608,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     _register();
     checkForInitialMessage();
-
-    fusionConnection.dids.getDids((p0, p1) {
-      setState(() {
-        _dids = p0;
-      });
-    });
   }
 
   _getFloatingButton() {
@@ -721,7 +711,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SafeArea(
                 child: Stack(children: [
               Scaffold(
-                  drawer: Menu(fusionConnection, _dids, softphone),
+                  drawer: Menu(fusionConnection, softphone),
                   backgroundColor: Colors.transparent,
                   body: _getTabWidget(),
                   floatingActionButton: _getFloatingButton(),

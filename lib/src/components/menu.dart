@@ -18,11 +18,9 @@ import '../utils.dart';
 class Menu extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
-  final List<Did> _dids;
 
   Menu(
     this._fusionConnection, 
-    this._dids, 
     this._softphone, 
     {Key key}
   ) : super(key: key);
@@ -34,7 +32,6 @@ class Menu extends StatefulWidget {
 class _MenuState extends State<Menu> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
   Softphone get _softphone => widget._softphone;
-  List<Did> get _dids => widget._dids;
   bool loggingOut = false;
 
   String selectedOutboundDid = "";
@@ -146,7 +143,6 @@ class _MenuState extends State<Menu> {
   }
 
   _changeDefaultOutputDevice() {
-    print(_softphone.devicesList);
     List<List<String>> options = Platform.isAndroid ? _softphone.devicesList
         .where((element) => element[2] != "Microphone")
         .toList()
@@ -481,14 +477,15 @@ class _MenuState extends State<Menu> {
   }
 
   _openOutboundDIDMenu() {
-    List<Did> sortedDids = [..._dids];
+    List<Did> _dids = [];
+    _fusionConnection.dids.getDids(((dids, fromServer) => _dids = dids));
     if(dynamicDailingDids.length > 0){
       dynamicDailingDids.forEach((element) {
-        sortedDids.add(element);
+        _dids.add(element);
       });
     }
 
-    sortedDids.sort((Did a, Did b) => a.did == selectedOutboundDid || 
+    _dids.sort((Did a, Did b) => a.did == selectedOutboundDid || 
       (a.did == selectedOutboundDid && a.favorite) ||  
       (a.did == selectedOutboundDid && a.groupName != null )
       ? -1 
@@ -509,9 +506,17 @@ class _MenuState extends State<Menu> {
                     maxHeight: MediaQuery.of(context).size.height - 250,
                     minWidth: 90,
                     maxWidth: MediaQuery.of(context).size.width),
-                child: ListView(
+                child: _dids.isEmpty 
+                  ? Center(
+                    child: Text(
+                      'No Outbound Dids Found',
+                    style: TextStyle(
+                      color: Colors.white60,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500)),)
+                  : ListView(
                     padding: EdgeInsets.all(8),
-                    children: sortedDids.map((Did option) {
+                    children: _dids.map((Did option) {
                       return GestureDetector(
                           onTap: () {
                             _fusionConnection.settings

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_gravatar/flutter_gravatar.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:fusion_mobile_revamped/src/models/carbon_date.dart';
 import '../utils.dart';
 import 'contact.dart';
 import 'crm_contact.dart';
@@ -89,7 +90,7 @@ class Coworker extends FusionModel {
       'owner': '',
       'parent_id': '',
       'phone_numbers': [{'number': uid, 'type': 'Extension'}],
-      'pictures': [],
+      'pictures': [{'url': url}],
       'socials': [],
       'type': '',
       'updated_at': {'date': '', 'timezone': '', 'timezone_type': 1},
@@ -197,7 +198,7 @@ class CoworkerStore extends FusionStore<Coworker> {
   }
 
   search(String query, Function(List<Contact>) callback) {
-    var future = new Future.delayed(const Duration(milliseconds: 10), ()
+    Future.delayed(const Duration(milliseconds: 10), ()
     {
       List<Contact> list = [];
       List<Coworker> records = getRecords();
