@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:ui' as ui;
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 uuidFromString(String str) {
   if (str.length == 0)
@@ -187,4 +188,47 @@ class InputPhoneFormatter extends TextInputFormatter {
         selection: new TextSelection.collapsed(offset: inputPhoneFormat(text).length)
       );
   }
+}
+
+String getDateTime (DateTime dateTime) {
+  DateTime now = DateTime.now().toLocal();
+  DateTime localDateTime = dateTime.toLocal();
+
+  if (localDateTime.difference(now).inDays == 0) {
+    int differenceInHours = localDateTime.difference(now).inHours.abs();
+    int differenceInMins = localDateTime.difference(now).inMinutes.abs();
+
+    if (differenceInHours > 0) {
+      return '$differenceInHours hours ago';
+    } else { 
+      return '$differenceInMins mins ago';
+    }
+  }
+
+  String timeString = DateFormat('jm').format(dateTime);
+
+  if (localDateTime.day == now.day &&
+      localDateTime.month == now.month &&
+      localDateTime.year == now.year) {
+    return timeString;
+  }
+
+  DateTime yesterday = now.subtract(const Duration(days: 1));
+
+  if (localDateTime.day == yesterday.day &&
+      localDateTime.month == now.month &&
+      localDateTime.year == now.year) {
+    return 'Yesterday';
+  }
+
+  if (now.difference(localDateTime).inDays < 4) {
+    String weekday = DateFormat(
+      'EEE',
+    ).format(localDateTime);
+
+    return '$weekday, $timeString';
+  }
+
+  String month = DateFormat('MMM d').format(localDateTime);
+  return "$month, $timeString";
 }

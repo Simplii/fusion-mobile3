@@ -298,7 +298,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  checkForInitialMessage() async {
+  checkForInitialMessage({String username}) async {
     await Firebase.initializeApp();
     RemoteMessage initialMessage =
         await FirebaseMessaging.instance.getInitialMessage();
@@ -309,17 +309,19 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if (initialMessage != null) {
-      checkForIMNotification(initialMessage.data);
+      checkForIMNotification(initialMessage.data, username: username);
     }
   }
 
-  checkForIMNotification(Map<String, dynamic> data) {
+  checkForIMNotification(Map<String, dynamic> data,{String username}) async {
     List<String> numbers = [];
     List<dynamic> members = [];
     bool isGroup = data['is_group'] == "1" ? true : false;
     String depId = '';
-    //need to make sure departments store is loaded
-    fusionConnection.smsDepartments.getDepartments((p0) => null);
+    fusionConnection.smsDepartments.getDepartments(
+      (p0) => null,
+      username: username?.toLowerCase() ?? ""
+    );
     if(data.containsKey('numbers')){
       numbers = (jsonDecode(data['numbers']) as List<dynamic>).cast<String>();
     }
@@ -508,7 +510,7 @@ class _MyHomePageState extends State<MyHomePage> {
                        device['aor'].replaceAll('sip:', ''));
                  });
           });
-          checkForInitialMessage();
+          checkForInitialMessage(username: username);
         } else {}
       }
     });
