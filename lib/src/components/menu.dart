@@ -39,11 +39,13 @@ class _MenuState extends State<Menu> {
   bool usingCarrierCalls = false;
   String myPhoneNumber = "";
   UserSettings userSettings;
+  bool DND = false;
 
   @override
   initState(){
     super.initState(); 
     userSettings = _fusionConnection.settings;
+    DND = userSettings.dnd;
     myPhoneNumber =  userSettings.myCellPhoneNumber.isNotEmpty 
       ? userSettings.myCellPhoneNumber.formatPhone() 
       : _softphone.devicePhoneNumber;
@@ -428,10 +430,10 @@ class _MenuState extends State<Menu> {
                   height: 22,
                   child: 
                   ico != null 
-                    ? ico 
-                    : label == "Log Out" && loggingOut 
-                      ? CircularProgressIndicator()
-                      : Opacity(
+                    ? label == "Log Out" && loggingOut 
+                        ? CircularProgressIndicator()
+                        : ico 
+                    : Opacity(
                           opacity: icon.contains("call_view") ? 0.45 : 1.0,
                           child: Image.asset("assets/icons/" + icon + ".png",
                               width: 22, height: 22))),
@@ -883,7 +885,7 @@ class _MenuState extends State<Menu> {
   }
 
 
-  Widget _toggle() {
+  Widget _toggleUseCarrier() {
     return Switch(
       value: usingCarrierCalls, 
       activeColor: crimsonLight,
@@ -952,6 +954,23 @@ class _MenuState extends State<Menu> {
     );
   }
 
+  Widget _toggleDND(){
+    return Switch(
+      value: DND,
+      activeColor: crimsonLight,
+      inactiveTrackColor: smoke, 
+      onChanged: (value) => setState((){
+        DND = value;
+        SettingsPayload payload = SettingsPayload(
+          _fusionConnection.getUid(), 
+          "fm_on_dnd", 
+          value ? value.toString() : ""
+        );
+        userSettings.updateUserSettings([payload]);
+      })
+    );
+  }
+
   _body() {
     List<Widget> response = [
       _row("phone_outgoing", "Manage Outbound DID", "", () {
@@ -970,14 +989,19 @@ class _MenuState extends State<Menu> {
 
       _row("", "Use Carrier", usingCarrierCalls ? myPhoneNumber.formatPhone() : "",null,
         Icon(Icons.phone_forwarded, color: smoke.withOpacity(0.45), size: 26,), 
-        trailingWidget: _toggle()),
+        trailingWidget: _toggleUseCarrier()),
+      
+      _row("", "Slience","Mute Calls & Chats",null,
+        Icon(Icons.dark_mode_outlined, color: smoke.withOpacity(0.45), size: 26,), 
+        trailingWidget: _toggleDND()),
       _line(),
-      _row("moon_light", "Log Out", "", () {
+
+      _row("", "Log Out", "", () {
         setState(() {
           loggingOut = true;
         });
         _fusionConnection.logOut();
-      },null)
+      }, Icon(Icons.logout, color: smoke.withOpacity(0.45), size: 26))
     ];
     return response;
   }
