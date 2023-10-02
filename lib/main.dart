@@ -313,7 +313,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  checkForIMNotification(Map<String, dynamic> data,{String username}) async {
+  checkForIMNotification(Map<String, dynamic> data,{String username}) {
     List<String> numbers = [];
     List<dynamic> members = [];
     bool isGroup = data['is_group'] == "1" ? true : false;
