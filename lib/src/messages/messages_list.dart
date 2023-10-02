@@ -521,7 +521,6 @@ class _SMSConversationSummaryViewState
     DateTime date =
         DateTime.fromMillisecondsSinceEpoch(_convo.message.unixtime * 1000);
     Coworker _coworker;
-    bool internalGroupMessage = false;
 
     if(_convo.isGroup){
       convoLabel = _convo.groupName ?? 'group conversation'.toTitleCase();
@@ -624,7 +623,7 @@ class _SMSConversationSummaryViewState
                                       padding: EdgeInsets.only(
                                           left: 6, right: 6, top: 2, bottom: 2),
                                       child: Text(
-                                          DateFormat("MMM d").format(date) +
+                                              getDateTime(date) +
                                               // (_departmentName != ""
                                               //     ? " " +
                                               //         nDash +

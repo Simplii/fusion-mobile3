@@ -72,7 +72,7 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
   String id_field = "id";
   SMSDepartmentsStore(FusionConnection fusionConnection) : super(fusionConnection);
 
-  getDepartments(Function(List<SMSDepartment>) callback) {
+  getDepartments(Function(List<SMSDepartment>) callback, {String username}) {
     List<SMSDepartment> deps = allDepartments();
     if(deps.isNotEmpty){
       callback(deps);
@@ -83,6 +83,7 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
         {},
         callback: (List<dynamic> datas) {
           String fusionChatsNumber = fusionConnection.getUid().toString().toLowerCase();
+          fusionChatsNumber = fusionChatsNumber.isNotEmpty ? fusionChatsNumber : username;
           List<String> allNumbers = [fusionChatsNumber];
           List<String> allMMSNumbers = [];
           int allUnread = 0;
