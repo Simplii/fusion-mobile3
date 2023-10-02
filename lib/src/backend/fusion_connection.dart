@@ -575,7 +575,8 @@ print(responseBody);
           isDepartment: data["dynamicDialingDepartment"] != '' ?? false,
           cellPhoneNumber: data["cellPhoneNumber"] ?? "",
           useCarrier: data["usesCarrier"] ?? false,
-          simParams: nsAnsweringRules['devices']);
+          simParams: nsAnsweringRules['devices'],
+          dndIsOn: data["fmOnDnd"] ?? false);
       });
     }
   }
