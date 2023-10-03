@@ -660,36 +660,36 @@ class _MenuState extends State<Menu> {
     }
   }
 
-  Future<void> _clearCache() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Clear Cache'),
-          content: Text('This action will clear all app data in your phone and log you out.'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Continue', style: TextStyle(color: crimsonDark),),
-              onPressed: () async {
-                _fusionConnection.clearCache().then((value){
-                  if(Platform.isIOS){
-                    Navigator.of(context).pop();
-                  }
-                });
-              },
-            ),
-            TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.black),),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // Future<void> _clearCache() async {
+  //   return showDialog<void>(
+  //     context: context,
+  //     barrierDismissible: false, // user must tap button!
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text('Clear Cache'),
+  //         content: Text('This action will clear all app data in your phone and log you out.'),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             child: Text('Continue', style: TextStyle(color: crimsonDark),),
+  //             onPressed: () async {
+  //               _fusionConnection.clearCache().then((value){
+  //                 if(Platform.isIOS){
+  //                   Navigator.of(context).pop();
+  //                 }
+  //               });
+  //             },
+  //           ),
+  //           TextButton(
+  //             child: const Text('Cancel', style: TextStyle(color: Colors.black),),
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> _savePhoneMyPhoneNumber() async {
     return showDialog<void>(
@@ -971,6 +971,18 @@ class _MenuState extends State<Menu> {
     );
   }
 
+  void _performLogout(){
+    setState(() {
+      loggingOut = true;
+    });
+    _fusionConnection.clearCache().then((value){
+      if(Platform.isIOS){
+        Navigator.of(context).pop();
+      }
+      _fusionConnection.logOut();
+    });
+  }
+
   _body() {
     List<Widget> response = [
       _row("phone_outgoing", "Manage Outbound DID", "", () {
@@ -984,8 +996,8 @@ class _MenuState extends State<Menu> {
       _row("", "Edit Profile Picture", "", _editProfilePic, 
         Icon(Icons.edit, color: smoke.withOpacity(0.45), size: 26,)),
 
-      _row("", "Clear Cache", "", _clearCache, 
-        Icon(Icons.cached, color: smoke.withOpacity(0.45), size: 26,)),
+      // _row("", "Clear Cache", "", _clearCache, 
+      //   Icon(Icons.cached, color: smoke.withOpacity(0.45), size: 26,)),
 
       _row("", "Use Carrier", usingCarrierCalls ? myPhoneNumber.formatPhone() : "",null,
         Icon(Icons.phone_forwarded, color: smoke.withOpacity(0.45), size: 26,), 
@@ -996,12 +1008,7 @@ class _MenuState extends State<Menu> {
         trailingWidget: _toggleDND()),
       _line(),
 
-      _row("", "Log Out", "", () {
-        setState(() {
-          loggingOut = true;
-        });
-        _fusionConnection.logOut();
-      }, Icon(Icons.logout, color: smoke.withOpacity(0.45), size: 26))
+      _row("", "Log Out", "", _performLogout, Icon(Icons.logout, color: smoke.withOpacity(0.45), size: 26))
     ];
     return response;
   }
