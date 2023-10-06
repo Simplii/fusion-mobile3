@@ -49,6 +49,7 @@ class _DispositionViewState extends State<DispositionView> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: DispositionListView(
+                key: GlobalKey(),
                 fromCallView: false,
                 fusionConnection: _fusionConnection,
                 onDone: _onDone,
