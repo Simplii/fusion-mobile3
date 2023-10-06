@@ -39,7 +39,6 @@ class _DispositionListViewState extends State<DispositionListView> {
   bool get _fromCallView => widget.fromCallView;
   UserSettings get settings => widget.fusionConnection.settings;
   Function get _onDone => widget.onDone;
-  final TextEditingController _notesTextController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _showError = false;
   Disposition _selectedDisposition;
@@ -48,14 +47,15 @@ class _DispositionListViewState extends State<DispositionListView> {
   List<DispositionCustomField> dispositionCustomFields = [];
   CallType _selectedCallType;
   Map<String,dynamic> _fieldValues = {};
+  String _notes = "";
 
   @override
   initState(){
     super.initState();
-    _notesTextController.text = _softphone.dispositionNotes;
-    _selectedDisposition = _softphone.selectedDisposition;
-    _selectedCallType = _softphone.selectedCallType;
-    _fieldValues = _softphone.fieldValues;
+    _notes = _softphone.getCallDispositionData(_call.id, "dispositionNotes");
+    _selectedDisposition = _softphone.getCallDispositionData(_call.id, "selectedDisposition");
+    _selectedCallType = _softphone.getCallDispositionData(_call.id, "selectedCallType");
+    _fieldValues = _softphone.getCallDispositionData(_call.id, "fieldValues");
     _callTypeEnabled = settings.isFeatureEnabled("Hubspot");
     List<dynamic> schema = settings.options["schema"];
     schema.where((element) => element['object_type'] == "call_disposition").toList();
@@ -99,7 +99,7 @@ class _DispositionListViewState extends State<DispositionListView> {
       List<Map<String, dynamic>> dispositionGroups = info.dispositionGroups.cast<Map<String, dynamic>>();
       for (Map<String, dynamic> group in dispositionGroups) {
         DispositionGroup dispoGroup = DispositionGroup(
-          id: group["id"],
+          id: group["id"].toString(),
           name: group["name"]
         );
         for (Map<String, dynamic> dispo in group["dispositions"]) {
@@ -167,7 +167,11 @@ class _DispositionListViewState extends State<DispositionListView> {
                             onPressed: () => {
                               setState(() {
                                 _showError = false;
-                                _softphone.selectedDisposition = groups[0].dispositions[index];
+                                _softphone.setCallDispositionData(
+                                  callId: _call.id, 
+                                  name: "selectedDisposition",
+                                  selectedDisposition: groups[0].dispositions[index]
+                                );
                                 _selectedDisposition = groups[0].dispositions[index];
                                 Navigator.of(context).pop();
                               },)
@@ -246,7 +250,11 @@ class _DispositionListViewState extends State<DispositionListView> {
                             ),
                             onPressed: () => {
                               setState(() {
-                                _softphone.selectedCallType = _callTypes[index];
+                                _softphone.setCallDispositionData(
+                                  callId: _call.id, 
+                                  name: "selectedCallType",
+                                  selectedCallType: _callTypes[index]
+                                );
                                 _selectedCallType = _callTypes[index];
                                 Navigator.of(context).pop();
                               },)
@@ -326,8 +334,12 @@ class _DispositionListViewState extends State<DispositionListView> {
                 ),
                 onChanged: (value) {
                   setState(() {
-                    _softphone.fieldValues[customField.id.toString()] = value;
                     _fieldValues[customField.id.toString()] = value; 
+                    _softphone.setCallDispositionData(
+                      callId: _call.id, 
+                      name: "fieldValues",
+                      fieldValues: _fieldValues
+                    );
                   });
                 },
               );
@@ -394,8 +406,12 @@ class _DispositionListViewState extends State<DispositionListView> {
                             ),
                             onPressed: () => {
                               setState(() {
-                                _softphone.fieldValues[field.id.toString()] =  options[index];
                                 _fieldValues[field.id.toString()] =  options[index];
+                                _softphone.setCallDispositionData(
+                                  callId: _call.id, 
+                                  name: "fieldValues",
+                                  fieldValues: _fieldValues
+                                );
                                 Navigator.of(context).pop();
                               },)
                             },
@@ -424,7 +440,7 @@ class _DispositionListViewState extends State<DispositionListView> {
     SetDispositionPayload payload = SetDispositionPayload(
       phoneNumber: _phoneNumber, 
       fieldValues: _fieldValues, 
-      notes: _notesTextController.text
+      notes: _notes
     );
     
     if(_selectedCallType != null){
@@ -440,17 +456,6 @@ class _DispositionListViewState extends State<DispositionListView> {
       payload.toJson()
     );
     _softphone.endedCalls.removeWhere((call) => call.id == _call.id);
-    setState(() {
-      _softphone.selectedDisposition = null;
-      _softphone.selectedCallType = null;
-      _softphone.dispositionNotes = "";
-      _softphone.fieldValues = {};
-      //clear local vars incase of multiple dispo popups
-      _notesTextController.text = "";
-      _selectedDisposition = null;
-      _selectedCallType = null;
-      _fieldValues = {};
-    });
     _onDone();
   }
 
@@ -597,8 +602,14 @@ class _DispositionListViewState extends State<DispositionListView> {
                     style: TextStyle(
                       color: Colors.white,
                     ),
-                    controller: _notesTextController,
-                    onChanged: (value) => _softphone.dispositionNotes = value,
+                    initialValue: _notes,
+                    onChanged: (value) => {
+                      _softphone.setCallDispositionData(
+                        callId: _call.id, 
+                        name: "dispositionNotes",
+                        dispositionNotes: value
+                      )
+                    },
                     minLines: 7,
                     maxLines: 10,
                     decoration: InputDecoration(

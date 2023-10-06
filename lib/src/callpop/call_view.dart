@@ -640,126 +640,136 @@ class _CallViewState extends State<CallView> {
         onWillPop: () async {
           return false;
         },
-        child: Container(
-            decoration: BoxDecoration(
-                image: DecorationImage(
-                  colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.8), BlendMode.dstATop),
-                    image: _softphone.getCallerPic(_activeCall),
-                    fit: BoxFit.cover
-                )
-              ),
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              body: Stack(
-                children: [
-                  if (_softphone.getHoldState(_activeCall) || dialpadVisible)
-                    Container(
-                        child: Container(
-                      decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [translucentWhite(0.0), Colors.black],
-                      )),
-                    )),
-                  if (_softphone.getHoldState(_activeCall) || dialpadVisible)
-                    ClipRect(
-                        child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 21, sigmaY: 21),
-                            child: Container())),
-                  SafeArea(
-                      bottom: false,
-                      child: Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // if (Platform.isIOS && isIncoming && isRinging)
-                            //   CallActionButtons(
-                            //       actions: actions,
-                            //       isRinging: isRinging,
-                            //       isIncoming: isIncoming,
-                            //       dialPadOpen: dialpadVisible,
-                            //       resumeDisabled:
-                            //           _softphone.isCellPhoneCallActive,
-                            //       isOnConference:
-                            //           _softphone.isCallMerged(_activeCall),
-                            //       setDialpad: (bool isOpen) {
-                            //         setState(() {
-                            //           dialpadVisible = isOpen;
-                            //         });
-                            //       },
-                            //       callIsRecording:
-                            //           _softphone.getRecordState(_activeCall),
-                            //       callIsMuted: _softphone.getMuted(_activeCall),
-                            //       callOnHold:
-                            //           _softphone.getHoldState(_activeCall)),
-                            CallHeaderDetails(
-                                callerName: callerName,
-                                companyName: companyName,
-                                callerNumber:
-                                    callerNumber.toString().formatPhone(),
-                                isRinging: isRinging,
-                                prefix: _activeCall.direction == "INCOMING" || 
-                                _activeCall.direction == "inbound" 
-                                  ? _linePrefix
-                                  : "",
-                                callIsRecording:
-                                    _softphone.getRecordState(_activeCall),
-                                callRunTime: callRunTime),
-                            if (_softphone.getHoldState(_activeCall))
-                              _onHoldView()
-                            else
-                              _showDisposition 
-                                ?  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
-                                      child: DispositionListView(
-                                        fromCallView: true,
-                                        softphone: _softphone, 
-                                        fusionConnection: _fusionConnection, 
-                                        call: _activeCall, 
-                                        phoneNumber: callerNumber, 
-                                        onDone: _openDisposition),
-                                    )
-                                  ) 
-                                : Spacer(),
-                            if (!_softphone.getHoldState(_activeCall) &&
-                                dialpadVisible)
-                              CallDialPad(_softphone, _activeCall),
-                            if ((!Platform.isIOS || !isIncoming || !isRinging ) && !_showDisposition)
-                              CallActionButtons(
-                                  actions: actions,
-                                  isRinging: isRinging,
-                                  isIncoming: isIncoming,
-                                  dialPadOpen: dialpadVisible,
-                                  isOnConference:
-                                      _softphone.isCallMerged(_activeCall),
-                                  setDialpad: (bool isOpen) {
-                                    setState(() {
-                                      dialpadVisible = isOpen;
-                                    });
-                                  },
-                                  loading: TextBtnPressed,
-                                  callIsRecording:
-                                      _softphone.getRecordState(_activeCall),
-                                  callIsMuted: _softphone.getMuted(_activeCall),
-                                  callOnHold:
-                                      _softphone.getHoldState(_activeCall)),
-                            CallFooterDetails(
-                                _fusionConnection, _softphone, _activeCall, _openDisposition)
-                          ],
-                        ),
-                      )),
-                  if (connectedCalls.length > 0)
-                    AnsweredWhileOnCall(
-                        calls: connectedCalls,
-                        softphone: _softphone,
-                        activeCall: _activeCall),
-                  if (incomingCall != null)
-                    IncomingWhileOnCall(
-                        call: incomingCall, softphone: _softphone)
-                ],
-              ),
-            )));
+        child: GestureDetector(
+          onTap: () {
+            FocusScopeNode currentFocus = FocusScope.of(context);
+            if (!currentFocus.hasPrimaryFocus) {
+              currentFocus.unfocus();
+            }
+          },
+          child: Container(
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                    colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.8), BlendMode.dstATop),
+                      image: _softphone.getCallerPic(_activeCall),
+                      fit: BoxFit.cover
+                  )
+                ),
+              child: Scaffold(
+                backgroundColor: Colors.transparent,
+                body: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: _showDisposition ? 21 : 0, sigmaY: _showDisposition ?21 :0),
+                  child: Stack(
+                    children: [
+                      if (_softphone.getHoldState(_activeCall) || dialpadVisible)
+                        Container(
+                            child: Container(
+                          decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [translucentWhite(0.0), Colors.black],
+                          )),
+                        )),
+                      if (_softphone.getHoldState(_activeCall) || dialpadVisible)
+                        ClipRect(
+                            child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 21, sigmaY: 21),
+                                child: Container())),
+                      SafeArea(
+                          bottom: false,
+                          child: Container(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // if (Platform.isIOS && isIncoming && isRinging)
+                                //   CallActionButtons(
+                                //       actions: actions,
+                                //       isRinging: isRinging,
+                                //       isIncoming: isIncoming,
+                                //       dialPadOpen: dialpadVisible,
+                                //       resumeDisabled:
+                                //           _softphone.isCellPhoneCallActive,
+                                //       isOnConference:
+                                //           _softphone.isCallMerged(_activeCall),
+                                //       setDialpad: (bool isOpen) {
+                                //         setState(() {
+                                //           dialpadVisible = isOpen;
+                                //         });
+                                //       },
+                                //       callIsRecording:
+                                //           _softphone.getRecordState(_activeCall),
+                                //       callIsMuted: _softphone.getMuted(_activeCall),
+                                //       callOnHold:
+                                //           _softphone.getHoldState(_activeCall)),
+                                CallHeaderDetails(
+                                    callerName: callerName,
+                                    companyName: companyName,
+                                    callerNumber:
+                                        callerNumber.toString().formatPhone(),
+                                    isRinging: isRinging,
+                                    prefix: _activeCall.direction == "INCOMING" || 
+                                    _activeCall.direction == "inbound" 
+                                      ? _linePrefix
+                                      : "",
+                                    callIsRecording:
+                                        _softphone.getRecordState(_activeCall),
+                                    callRunTime: callRunTime),
+                                if (_softphone.getHoldState(_activeCall))
+                                  _onHoldView()
+                                else
+                                   _showDisposition 
+                                   ?  Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
+                                          child: DispositionListView(
+                                            fromCallView: true,
+                                            softphone: _softphone, 
+                                            fusionConnection: _fusionConnection, 
+                                            call: _activeCall, 
+                                            phoneNumber: callerNumber, 
+                                            onDone: _openDisposition),
+                                        )
+                                      ) 
+                                   : Spacer(),
+                                if (!_softphone.getHoldState(_activeCall) &&
+                                    dialpadVisible)
+                                  CallDialPad(_softphone, _activeCall),
+                                if ((!Platform.isIOS || !isIncoming || !isRinging )&& !_showDisposition)
+                                  CallActionButtons(
+                                      actions: actions,
+                                      isRinging: isRinging,
+                                      isIncoming: isIncoming,
+                                      dialPadOpen: dialpadVisible,
+                                      isOnConference:
+                                          _softphone.isCallMerged(_activeCall),
+                                      setDialpad: (bool isOpen) {
+                                        setState(() {
+                                          dialpadVisible = isOpen;
+                                        });
+                                      },
+                                      loading: TextBtnPressed,
+                                      callIsRecording:
+                                          _softphone.getRecordState(_activeCall),
+                                      callIsMuted: _softphone.getMuted(_activeCall),
+                                      callOnHold:
+                                          _softphone.getHoldState(_activeCall)),
+                                CallFooterDetails( _softphone, _activeCall, _openDisposition)
+                              ],
+                            ),
+                          )),
+                      if (connectedCalls.length > 0)
+                        AnsweredWhileOnCall(
+                            calls: connectedCalls,
+                            softphone: _softphone,
+                            activeCall: _activeCall),
+                      if (incomingCall != null)
+                        IncomingWhileOnCall(
+                            call: incomingCall, softphone: _softphone)
+                    ],
+                  ),
+                ),
+              )),
+        ));
   }
 }

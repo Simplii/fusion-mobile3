@@ -112,12 +112,22 @@ class Softphone implements SipUaHelperListener {
   bool callInitiated = false;
   // call dispositions stuff
     List<Call> endedCalls = [];
-    String dispositionNotes = "";
-    Disposition selectedDisposition;
-    CallType selectedCallType;
-    Map<String,dynamic> fieldValues = {};
+    // String dispositionNotes = "";
+    // Disposition selectedDisposition;
+    // CallType selectedCallType;
+    // Map<String,dynamic> fieldValues = {};
   // end call dispositions
   
+  /*
+    hashMap{
+      callid:{
+        dispositionNotes: ''
+        selectedDisposition: Disposition
+        selectedCallType: CallType
+        fieldValues: {}
+      }
+    }
+  */
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
       _callKit = MethodChannel('net.fusioncomm.ios/callkit');
@@ -1563,6 +1573,14 @@ class Softphone implements SipUaHelperListener {
       });
 
       _setCallDataValue(call.id, "startTime", DateTime.now());
+      setCallDispositionData(
+        callId: call.id, 
+        name: "fieldValues", 
+        dispositionNotes: "",
+        selectedCallType: null,
+        selectedDisposition: null,
+        fieldValues: {}
+      );
     }
 
     if (callIdsAnswered.contains(_uuidFor(call))) answerCall(call);
@@ -2071,5 +2089,31 @@ class Softphone implements SipUaHelperListener {
       bluetoothAvailable = false;
       this.outputDevice = "Phone";
     }
+  }
+
+  void setCallDispositionData({
+    @required String callId,
+    @required String name,
+    String dispositionNotes, 
+    Disposition selectedDisposition, 
+    CallType selectedCallType, 
+    Map<String,dynamic> fieldValues}) {
+    var data = _getCallDataById(callId);
+    if(name == "dispositionNotes" && dispositionNotes != null){
+      data[name] = dispositionNotes;
+    }
+    if(name == "selectedDisposition" && selectedDisposition != null){
+      data[name] = selectedDisposition;
+    }
+    if(name == "selectedCallType" && selectedCallType != null){
+      data[name] = selectedCallType;
+    }
+    if(name == "fieldValues" && fieldValues != null){
+      data[name] = fieldValues;
+    }
+  }
+  dynamic getCallDispositionData(String id, String name) {
+    var data = _getCallDataById(id);
+    return data[name];
   }
 }
