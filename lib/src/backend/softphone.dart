@@ -110,24 +110,7 @@ class Softphone implements SipUaHelperListener {
   String linePrefix = "";
   List<List<String>> devicesList = [];
   bool callInitiated = false;
-  // call dispositions stuff
-    List<Call> endedCalls = [];
-    // String dispositionNotes = "";
-    // Disposition selectedDisposition;
-    // CallType selectedCallType;
-    // Map<String,dynamic> fieldValues = {};
-  // end call dispositions
-  
-  /*
-    hashMap{
-      callid:{
-        dispositionNotes: ''
-        selectedDisposition: Disposition
-        selectedCallType: CallType
-        fieldValues: {}
-      }
-    }
-  */
+  List<Call> endedCalls = [];  // call dispositions 
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
       _callKit = MethodChannel('net.fusioncomm.ios/callkit');
