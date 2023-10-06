@@ -13,6 +13,7 @@ import 'package:fusion_mobile_revamped/src/callpop/call_footer_details.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_header_details.dart';
 import 'package:fusion_mobile_revamped/src/callpop/incoming_while_on_call.dart';
 import 'package:fusion_mobile_revamped/src/callpop/transfer_call_popup.dart';
+import 'package:fusion_mobile_revamped/src/components/disposition.dart';
 import 'package:fusion_mobile_revamped/src/components/popup_menu.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
 import 'package:fusion_mobile_revamped/src/messages/sms_conversation_view.dart';
@@ -47,7 +48,7 @@ class _CallViewState extends State<CallView> {
   bool dialpadVisible = false;
   Timer _timer;
   bool TextBtnPressed = false;
-
+  bool _showDisposition = false;
   initState() {
     super.initState();
     _timer = new Timer.periodic(
@@ -588,6 +589,12 @@ class _CallViewState extends State<CallView> {
     ));
   }
 
+  void _openDisposition(){
+    setState(() {
+      _showDisposition = !_showDisposition;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_activeCall == null) {
@@ -702,11 +709,24 @@ class _CallViewState extends State<CallView> {
                             if (_softphone.getHoldState(_activeCall))
                               _onHoldView()
                             else
-                              Spacer(),
+                              _showDisposition 
+                                ?  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
+                                      child: DispositionListView(
+                                        fromCallView: true,
+                                        softphone: _softphone, 
+                                        fusionConnection: _fusionConnection, 
+                                        call: _activeCall, 
+                                        phoneNumber: callerNumber, 
+                                        onDone: _openDisposition),
+                                    )
+                                  ) 
+                                : Spacer(),
                             if (!_softphone.getHoldState(_activeCall) &&
                                 dialpadVisible)
                               CallDialPad(_softphone, _activeCall),
-                            if (!Platform.isIOS || !isIncoming || !isRinging)
+                            if ((!Platform.isIOS || !isIncoming || !isRinging ) && !_showDisposition)
                               CallActionButtons(
                                   actions: actions,
                                   isRinging: isRinging,
@@ -726,7 +746,7 @@ class _CallViewState extends State<CallView> {
                                   callOnHold:
                                       _softphone.getHoldState(_activeCall)),
                             CallFooterDetails(
-                                _fusionConnection, _softphone, _activeCall)
+                                _fusionConnection, _softphone, _activeCall, _openDisposition)
                           ],
                         ),
                       )),

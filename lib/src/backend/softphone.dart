@@ -14,6 +14,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/backend/ln_call.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
+import 'package:fusion_mobile_revamped/src/models/disposition.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:ringtone_player/ringtone_player.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -109,7 +110,14 @@ class Softphone implements SipUaHelperListener {
   String linePrefix = "";
   List<List<String>> devicesList = [];
   bool callInitiated = false;
-
+  // call dispositions stuff
+    List<Call> endedCalls = [];
+    String dispositionNotes = "";
+    Disposition selectedDisposition;
+    CallType selectedCallType;
+    Map<String,dynamic> fieldValues = {};
+  // end call dispositions
+  
   Softphone(this._fusionConnection) {
     if (Platform.isIOS)
       _callKit = MethodChannel('net.fusioncomm.ios/callkit');
@@ -1321,6 +1329,9 @@ class Softphone implements SipUaHelperListener {
     for (Call c in calls) {
       if (c == call || c.id == call.id) {
         toRemove.add(c);
+        if(isConnected(c)){
+          endedCalls.add(c);
+        }
       }
     }
 
@@ -1625,7 +1636,7 @@ class Softphone implements SipUaHelperListener {
     }
   }
 
-  ImageProvider getCallerPic (Call call){
+  ImageProvider getCallerPic (Call call, {String callerName}){
     if(call == null){
       return AssetImage("assets/background.png");
     } else {
@@ -1644,9 +1655,17 @@ class Softphone implements SipUaHelperListener {
            String url = contact.pictures.last['url'];
            return NetworkImage(url);
         } else {
+          if(callerName != null && callerName.isNotEmpty){
+            return callerName.split(" ").length > 1 
+              ? NetworkImage(avatarUrl(callerName.split(" ")[0], callerName.split(" ")[1]))
+              : AssetImage("assets/blank_avatar.png");
+          }
           return AssetImage("assets/background.png");
         }
       } else {
+        if(callerName != null){
+          return AssetImage("assets/blank_avatar.png");
+        }
         return AssetImage("assets/background.png");
       }
     }

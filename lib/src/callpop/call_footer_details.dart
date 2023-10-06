@@ -11,13 +11,18 @@ import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:sip_ua/sip_ua.dart';
 
 class CallFooterDetails extends StatefulWidget {
-  CallFooterDetails(this._fusionConnection, this._softphone, this._activeCall,
+  CallFooterDetails(
+    this._fusionConnection, 
+    this._softphone, 
+    this._activeCall,
+    this.toggleDisposition,
       {Key key})
       : super(key: key);
 
   final Softphone _softphone;
   final FusionConnection _fusionConnection;
   final Call _activeCall;
+  final Function toggleDisposition;
 
   @override
   State<StatefulWidget> createState() => _CallFooterDetailsState();
@@ -25,25 +30,26 @@ class CallFooterDetails extends StatefulWidget {
 
 class _CallFooterDetailsState extends State<CallFooterDetails> {
   List<String> _options = [];
-
+  Function get _toggleDisposition => widget.toggleDisposition;
   void _openDispositionWindow() {
-    double maxHeight = MediaQuery.of(context).size.height * 0.5;
-    double contentHeight = _options.length * 60.0;
-    if (contentHeight < maxHeight) maxHeight = contentHeight;
+    // double maxHeight = MediaQuery.of(context).size.height * 0.5;
+    // double contentHeight = _options.length * 60.0;
+    // if (contentHeight < maxHeight) maxHeight = contentHeight;
 
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (contact) => PopupMenu(
-            label: "Call Outcomes",
-            bottomChild: Container(
-                constraints: BoxConstraints(
-                    minHeight: 0,
-                    minWidth: 90,
-                    maxWidth: MediaQuery.of(context).size.width - 136,
-                    maxHeight: maxHeight),
-                child: ListView(padding: EdgeInsets.all(8), children: []))));
+    // showModalBottomSheet(
+    //     context: context,
+    //     backgroundColor: Colors.transparent,
+    //     isScrollControlled: true,
+    //     builder: (contact) => PopupMenu(
+    //         label: "Call Outcomes",
+    //         bottomChild: Container(
+    //             constraints: BoxConstraints(
+    //                 minHeight: 0,
+    //                 minWidth: 90,
+    //                 maxWidth: MediaQuery.of(context).size.width - 136,
+    //                 maxHeight: maxHeight),
+    //             child: ListView(padding: EdgeInsets.all(8), children: []))));
+
   }
 
   List<List<String>> _dropdownOptions() {
@@ -105,22 +111,28 @@ class _CallFooterDetailsState extends State<CallFooterDetails> {
             ])),
         Spacer(),
         if (widget._softphone.isConnected(widget._activeCall))
-          FusionDropdown(
-              options: _dropdownOptions(),
-              label: "Set Call Disposition",
-              onChange: _setCallOutcome,
-              button: Container(
-                  decoration: BoxDecoration(
-                      color: ash,
-                      borderRadius: BorderRadius.all(Radius.circular(8))),
-                  padding:
-                      EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
-                  child: Text('Call Outcome',
-                      style: TextStyle(
-                          color: coal,
-                          fontSize: 12,
-                          height: 1.4,
-                          fontWeight: FontWeight.w700))))
+          // FusionDropdown(
+          //     options: _dropdownOptions(),
+          //     label: "Set Call Disposition",
+          //     onChange: _setCallOutcome,
+          //     button: Container(
+          //         decoration: BoxDecoration(
+          //             color: ash,
+          //             borderRadius: BorderRadius.all(Radius.circular(8))),
+          //         padding:
+          //             EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
+          //         child: Text('Dispositions',
+          //             style: TextStyle(
+          //                 color: coal,
+          //                 fontSize: 12,
+          //                 height: 1.4,
+          //                 fontWeight: FontWeight.w700))))
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ash
+            ),
+            onPressed: _toggleDisposition, 
+            child: Text("Dsposition"))
       ]),
     );
   }
