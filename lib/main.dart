@@ -293,7 +293,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _onMessage(RemoteMessage m) {
-      // print("MDBM message ${m.data}");
     if(onMessagePosted !=  null){
       onMessagePosted(()=>{});
     }
@@ -711,7 +710,6 @@ class _MyHomePageState extends State<MyHomePage> {
           fusionConnection: fusionConnection,
           softphone: softphone,
           onDone: ()=> setState(() {
-            print("MDBM ${softphone.endedCalls}");
           }),
         );
       }
