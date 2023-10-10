@@ -577,7 +577,7 @@ print(responseBody);
           useCarrier: data["usesCarrier"] ?? false,
           simParams: nsAnsweringRules['devices'],
           dndIsOn: data["fmOnDnd"] ?? false,
-          forceDispositionEnabled: data["forceDispositionEnabled"],);
+          forceDispoEnabled: data["forceDispositionEnabled"],);
       });
     }
   }
