@@ -174,7 +174,7 @@ class UserSettings {
     bool useCarrier,
     String simParams,
     bool dndIsOn,
-    bool forceDispositionEnabled,
+    bool forceDispoEnabled,
     }) {
       usesCarrier = useCarrier;
       myCellPhoneNumber = cellPhoneNumber;
@@ -183,7 +183,7 @@ class UserSettings {
       devices = simParams;
       dynamicDialingIsActive = isFeatureEnabled("Dynamic Dialing");
       dnd = dndIsOn;
-      forceDispositionEnabled = forceDispositionEnabled;
+      forceDispositionEnabled = forceDispoEnabled;
   }
 
   bool updateUserSettings (List<SettingsPayload> settings) {

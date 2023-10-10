@@ -1322,7 +1322,7 @@ class Softphone implements SipUaHelperListener {
     for (Call c in calls) {
       if (c == call || c.id == call.id) {
         toRemove.add(c);
-        if(isConnected(c)){
+        if(isConnected(c) && _fusionConnection.settings.forceDispositionEnabled){
           endedCalls.add(c);
         }
       }
