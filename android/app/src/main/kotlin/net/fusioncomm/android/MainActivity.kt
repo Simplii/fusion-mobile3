@@ -538,7 +538,6 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun getMyPhoneNumber(){
-        myPhoneNumber = telephonyManager.line1Number ?: "";
         var gson = Gson();
         channel.invokeMethod("setMyPhoneNumber",  gson.toJson(myPhoneNumber) )
     }
