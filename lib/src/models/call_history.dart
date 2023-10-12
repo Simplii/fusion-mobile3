@@ -11,29 +11,29 @@ import 'fusion_store.dart';
 import '../utils.dart';
 
 class CallHistory extends FusionModel {
-  String id;
-  DateTime startTime;
-  String toDid;
-  String fromDid;
-  String to;
-  String from;
-  int duration;
-  String recordingUrl;
-  Coworker coworker;
-  Contact contact;
-  CrmContact crmContact;
-  bool missed;
-  String direction;
-  String callerId;
-  String cdrIdHash;
+  String? id;
+  DateTime? startTime;
+  String? toDid;
+  String? fromDid;
+  String? to;
+  String? from;
+  int? duration;
+  String? recordingUrl;
+  Coworker? coworker;
+  Contact? contact;
+  CrmContact? crmContact;
+  bool? missed;
+  String? direction;
+  String? callerId;
+  String? cdrIdHash;
 
   isInternal(String domain) {
-    if (to.length < 10) return false;
+    if (to!.length < 10) return false;
     if (direction == 'inbound')
-      return to.substring(to.length - domain.length)
+      return to!.substring(to!.length - domain.length)
           .toLowerCase() == domain.toLowerCase();
     else
-      return from.substring(from.length - domain.length)
+      return from!.substring(from!.length - domain.length)
           .toLowerCase() == domain.toLowerCase();
   }
 
@@ -191,7 +191,7 @@ class CallHistoryStore extends FusionStore<CallHistory> {
               // backend returning an empty callHistory obj when there are no
               // calls 
               obj.coworker = fusionConnection.coworkers
-                  .lookupCoworker(obj.direction == 'inbound' ? obj.from : obj.to);
+                  .lookupCoworker(obj.direction == 'inbound' ? obj.from! : obj.to!);
 
               storeRecord(obj);
               response.add(obj);

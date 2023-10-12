@@ -23,47 +23,47 @@ import '../utils.dart';
 import 'edit_contact_view.dart';
 
 class ContactProfileView extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  Contact _contact;
-  final Softphone _softphone;
-  final Function refreshUi;
+  final FusionConnection? _fusionConnection;
+  Contact? _contact;
+  final Softphone? _softphone;
+  final Function? refreshUi;
 
   ContactProfileView(
     this._fusionConnection, 
     this._softphone, 
     this._contact, 
     this.refreshUi, 
-    {Key key}) : super(key: key);
+    {Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ContactProfileViewState();
 }
 
 class _ContactProfileViewState extends State<ContactProfileView> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
 
-  Softphone get _softphone => widget._softphone;
+  Softphone? get _softphone => widget._softphone;
 
-  Contact get _contact => widget._contact;
+  Contact? get _contact => widget._contact;
   TextEditingController _messageInputController = TextEditingController();
   String _selectedTab = 'profile';
-  String _selectedPhone = null;
-  String _selectedEmail = null;
-  List<TimelineItem> _timelineItems = [];
+  String? _selectedPhone = null;
+  String? _selectedEmail = null;
+  List<TimelineItem>? _timelineItems = [];
   bool _editing = false;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
-  Function get _refreshUi => widget.refreshUi;
+  Function? get _refreshUi => widget.refreshUi;
 
   _lookupTimeline() {
     if (lookupState == 1) return;
     lookupState = 1;
 
-      _fusionConnection.timelineItems.getTimelineFromNumbers(
-          _contact.phoneNumbers
+      _fusionConnection!.timelineItems.getTimelineFromNumbers(
+          _contact!.phoneNumbers!
               .map((number) => number['number'])
               .where((number) => number.length >= 10)
               .toList()
-              .cast<String>(), (List<TimelineItem> items, bool fromServer) {
+              .cast<String>(), (List<TimelineItem>? items, bool fromServer) {
         print("gottimeline");
         print(items);
         if (!mounted) return;
@@ -110,15 +110,15 @@ class _ContactProfileViewState extends State<ContactProfileView> {
   }
 
   _contactOccupation() {
-    bool hasTitle = _contact.jobTitle != null && _contact.jobTitle != "";
-    bool hasCompany = _contact.company != null && _contact.company != "";
+    bool hasTitle = _contact!.jobTitle != null && _contact!.jobTitle != "";
+    bool hasCompany = _contact!.company != null && _contact!.company != "";
 
     if (hasTitle && hasCompany)
-      return _contact.jobTitle + " " + mDash + " " + _contact.company;
+      return _contact!.jobTitle! + " " + mDash + " " + _contact!.company!;
     else if (hasTitle && !hasCompany)
-      return _contact.jobTitle;
+      return _contact!.jobTitle;
     else if (!hasTitle && hasCompany)
-      return _contact.company;
+      return _contact!.company;
     else
       return null;
   }
@@ -136,23 +136,23 @@ class _ContactProfileViewState extends State<ContactProfileView> {
 
   _footer() {
     List<Widget> children = [];
-    List<ContactCrmReference> crms = _contact.crms();
+    List<ContactCrmReference> crms = _contact!.crms();
     crms = crms.sublist(0, min(crms.length, 5));
 
     for (ContactCrmReference crmRef in crms) {
       children.add(GestureDetector(
           onTap: () {
-            launch(crmRef.url);
+            launch(crmRef.url!);
           },
           child: Container(
               decoration: BoxDecoration(color: Colors.transparent),
               padding: EdgeInsets.only(right: 8),
-              child: Image.network(crmRef.icon, width: 24, height: 24))));
+              child: Image.network(crmRef.icon!, width: 24, height: 24))));
     }
 
-    if (_contact.uid != null && _contact.uid != "") {
-      Coworker coworker =
-          _fusionConnection.coworkers.lookupCoworker(_contact.uid);
+    if (_contact!.uid != null && _contact!.uid != "") {
+      Coworker? coworker =
+          _fusionConnection!.coworkers.lookupCoworker(_contact!.uid!);
       if (coworker != null) {
         children.add(Container(
             margin: EdgeInsets.only(left: 8),
@@ -168,9 +168,9 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                       height: 1.4,
                       fontWeight: FontWeight.w800)),
               Text(
-                  (coworker.firstName != null ? coworker.firstName : '') +
+                  (coworker.firstName != null ? coworker.firstName : '')! +
                       ' ' +
-                      (coworker.lastName != null ? coworker.lastName : ''),
+                      (coworker.lastName != null ? coworker.lastName! : ''),
                   textAlign: TextAlign.left,
                   style: TextStyle(
                       color: char,
@@ -186,20 +186,20 @@ class _ContactProfileViewState extends State<ContactProfileView> {
   }
 
   _header() {
-    String occupation = _contactOccupation();
-    String contactStatus = null;
+    String? occupation = _contactOccupation();
+    String? contactStatus = null;
     List<List<String>> settingOptions = [
 
     ];
 
-    if (new RegExp(r"^[0-9]+$").hasMatch(_contact.id)) {
+    if (new RegExp(r"^[0-9]+$").hasMatch(_contact!.id!)) {
       settingOptions.add(["Edit", "edit"]);
     }
 
-    List<ContactCrmReference> crms = _contact.crms();
+    List<ContactCrmReference> crms = _contact!.crms();
 
     for (ContactCrmReference ref in crms) {
-      settingOptions.add(["Open in " + ref.crmName, "open:" + ref.url]);
+      settingOptions.add(["Open in " + ref.crmName!, "open:" + ref.url!]);
     }
 
     return Column(children: [
@@ -218,8 +218,9 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             height: 70,
             alignment: Alignment.centerRight,
             child: FusionDropdown(
+                selectedNumber: "",
                 onChange: _settingsAction,
-                label: _contact.name,
+                label: _contact!.name,
                 options: settingOptions,
                 button: Container(
                     decoration: BoxDecoration(color: Colors.transparent),
@@ -232,7 +233,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
           margin: EdgeInsets.only(top: 8, left: 24, right: 24),
           child: Align(
               alignment: Alignment.center,
-              child: Text(_contact.name,
+              child: Text(_contact!.name!,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: coal,
@@ -273,7 +274,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     return [
       _renderFieldGroup(
           "phone_filled_dark",
-          _contact.phoneNumbers
+          _contact!.phoneNumbers
               .map((number) {
                 Map<String, dynamic> phone = number;
                 return _renderField(
@@ -288,7 +289,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
               .cast<Widget>()),
       _renderFieldGroup(
           "mail_filled_dark",
-          _contact.emails
+          _contact!.emails
               .map((email) {
                 Map<String, dynamic> mail = email;
                 return _renderField(
@@ -321,14 +322,14 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     ]);
   }
 
-  _makeCall(String number) {
+  _makeCall(String? number) {
     Navigator.pop(context);
-    _softphone.makeCall(number);
+    _softphone!.makeCall(number);
   }
 
   _openMessage(String theirNumber) {
     String number =
-        _fusionConnection.smsDepartments.getDepartment(DepartmentIds.AllMessages).numbers[0];
+        _fusionConnection!.smsDepartments.getDepartment(DepartmentIds.AllMessages).numbers[0];
 
     showModalBottomSheet(
         context: context,
@@ -338,10 +339,12 @@ class _ContactProfileViewState extends State<ContactProfileView> {
           builder: (BuildContext context,StateSetter setState) {
             SMSConversation displayingConvo = SMSConversation.build(
               isGroup: false,
-              contacts: [_contact],
+              contacts: _contact != null ? [_contact!] : [],
               crmContacts: [],
               myNumber: number,
-              number: theirNumber);
+              number: theirNumber,
+              hash: number + ":" + theirNumber
+              );
           return SMSConversationView(
             fusionConnection: _fusionConnection, 
             softphone: _softphone, 
@@ -359,7 +362,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
       );
   }
 
-  _renderField(String type, String label, String value, bool selected) {
+  _renderField(String type, String? label, String? value, bool selected) {
     if (type == "phone") {
       if (_selectedPhone == value)
         return GestureDetector(
@@ -374,7 +377,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                     borderRadius: BorderRadius.all(Radius.circular(16))),
                 margin: EdgeInsets.only(top: 8, bottom: 8, right: 12),
                 child: Column(children: [
-                  _renderField("text", label, value.formatPhone(), true),
+                  _renderField("text", label, value!.formatPhone(), true),
                   Row(children: [horizontalLine(0)]),
                   Container(
                       margin: EdgeInsets.only(
@@ -395,7 +398,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                 _selectedPhone = value;
               });
             },
-            child: _renderField("text", label, value.formatPhone(), false));
+            child: _renderField("text", label, value!.formatPhone(), false));
     } else if (type == "text" || type == "email") {
       return Container(
           decoration: BoxDecoration(color: Colors.transparent),
@@ -404,14 +407,14 @@ class _ContactProfileViewState extends State<ContactProfileView> {
             Container(
                 margin: EdgeInsets.only(bottom: 4),
                 alignment: Alignment.centerLeft,
-                child: Text(value,
+                child: Text(value!,
                     style: TextStyle(
                         color: coal,
                         fontSize: 16,
                         fontWeight: FontWeight.w700))),
             Align(
                 alignment: Alignment.centerLeft,
-                child: Text(label,
+                child: Text(label!,
                     style: TextStyle(
                         color: selected ? char : smoke,
                         fontSize: 14,
@@ -438,7 +441,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
               ? Center(child: SpinKitThreeBounce(color: smoke, size: 50))
               : Text(
                   "This is the beginning of your communications history with " +
-                      _contact.name,
+                      _contact!.name!,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: smoke,
@@ -450,11 +453,11 @@ class _ContactProfileViewState extends State<ContactProfileView> {
   }
 
   _isSpinning() {
-    return lookupState < 2 && _timelineItems.length == 0;
+    return lookupState < 2 && _timelineItems!.length == 0;
   }
 
   _isEmpty() {
-    return lookupState >= 2 && _timelineItems.length == 0;
+    return lookupState >= 2 && _timelineItems!.length == 0;
   }
 
   List<Widget> _getTimeline() {
@@ -465,14 +468,14 @@ class _ContactProfileViewState extends State<ContactProfileView> {
       return [_noHistoryMessage()];
 
     List<Widget> list = [];
-    DateTime lastDate;
-    Widget toAdd;
+    DateTime? lastDate;
+    Widget? toAdd;
 
-    for (TimelineItem item in _timelineItems) {
-      DateTime thisTime = item.time;
+    for (TimelineItem item in _timelineItems!) {
+      DateTime? thisTime = item.time;
 
       if (lastDate == null ||
-          thisTime.difference(lastDate).inHours.abs() > 24) {
+          thisTime!.difference(lastDate).inHours.abs() > 24) {
         lastDate = thisTime;
 
         if (toAdd != null) {
@@ -487,7 +490,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                   margin:
                       EdgeInsets.only(left: 4, right: 4, bottom: 12, top: 12),
                   child: Text(
-                    DateFormat("E MMM d, y").format(thisTime),
+                    DateFormat("E MMM d, y").format(thisTime!),
                     style: TextStyle(
                         color: char, fontSize: 12, fontWeight: FontWeight.w700),
                   )),
@@ -497,29 +500,38 @@ class _ContactProfileViewState extends State<ContactProfileView> {
 
       if (item.type == "message") {
         //TEMP SMSMessageView props NEEDS ATTENTION
+        String myNum = item.phoneNumber == item.message!.to
+                    ? item.message!.from
+                    : item.message!.to;
         list.add(SMSMessageView(
             _fusionConnection,
-            item.message,
+            item.message!,
             SMSConversation.build(
-                myNumber: item.phoneNumber == item.message.to
-                    ? item.message.from
-                    : item.message.to,
-                number: item.phoneNumber,
-                contacts: [_contact],
+                isGroup: false,// need to be updated
+                myNumber: myNum,
+                number: item.phoneNumber!,
+                contacts: _contact != null ? [_contact!] : [],
+                hash: myNum + ":" + item.phoneNumber!,
                 crmContacts: []),
-            (SMSMessage message) {},
+            (SMSMessage? message) {},
             null,
             [],
             DepartmentIds.AllMessages,()=>null));
       } else {
-        String duration = Duration(seconds: item.callLog.duration)
+        String duration = Duration(seconds: item.callLog.duration!)
             .toString()
             .split('.')
             .first
             .padLeft(8, "0");
 
-        if (item.callLog.duration < 60 * 60) duration = duration.substring(3);
+        if (item.callLog.duration! < 60 * 60) duration = duration.substring(3);
         //TEMP SMSMessageView props NEEDS ATTENTION
+        String myNum =  item.callLog.type == "Outgoing"
+                    ? item.callLog.from
+                    : item.callLog.to;
+        String otherNum = item.callLog.type == "Outgoing"
+                    ? item.callLog.to
+                    : item.callLog.from;
         list.add(SMSMessageView(
             _fusionConnection,
             SMSMessage({
@@ -530,16 +542,16 @@ class _ContactProfileViewState extends State<ContactProfileView> {
               "isGroup": false,
               "message": (duration +
                   " " +
-                  item.callLog.type +
+                  item.callLog.type! +
                   " call " +
                   ((item.callLog.disposition == null ||
-                          item.callLog.disposition.trim().length == 0)
+                          item.callLog.disposition!.trim().length == 0)
                       ? ""
-                      : (mDash + " " + item.callLog.disposition + " ")) +
+                      : (mDash + " " + item.callLog.disposition! + " ")) +
                   ((item.callLog.note == null ||
-                          item.callLog.note.trim().length == 0)
+                          item.callLog.note!.trim().length == 0)
                       ? ""
-                      : (mDash + " " + item.callLog.note))),
+                      : (mDash + " " + item.callLog.note!))),
               "mime": "",
               "read": true,
               "time": {
@@ -547,19 +559,17 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                 "timezone": "",
                 "timezone_type": 3
               },
-              "unixtime": (item.time.millisecondsSinceEpoch / 1000).round(),
+              "unixtime": (item.time!.millisecondsSinceEpoch / 1000).round(),
               'user': false
             }),
             SMSConversation.build(
-                myNumber: item.callLog.type == "Outgoing"
-                    ? item.callLog.from
-                    : item.callLog.to,
-                number: item.callLog.type == "Outgoing"
-                    ? item.callLog.to
-                    : item.callLog.from,
-                contacts: [_contact],
+                myNumber: myNum,
+                number: otherNum,
+                contacts: _contact != null ? [_contact!] : [],
+                hash: myNum + ":" + otherNum,
+                isGroup: false,
                 crmContacts: []),
-            (SMSMessage message) {}, 
+            (SMSMessage? message) {}, 
             null,[],DepartmentIds.AllMessages,()=>null));
       }
     }
@@ -574,11 +584,11 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     List<Widget> children = [];
     Widget bodyContainer;
 
-    if (_editing) {
-      bodyContainer = EditContactView(_fusionConnection, _contact, () {
+    if (_editing && _contact != null) {
+      bodyContainer = EditContactView(_fusionConnection, _contact!, () {
         setState(() {
           this._editing = false;
-          if(_refreshUi != null) _refreshUi();
+          if(_refreshUi != null) _refreshUi!();
         });
       },null);
     } else {

@@ -15,26 +15,26 @@ import "../utils.dart";
 import '../styles.dart';
 
 class Voicemails extends StatefulWidget {
-  Voicemails(this._fusionConnection, this._softphone, {Key key})
+  Voicemails(this._fusionConnection, this._softphone, {Key? key})
       : super(key: key);
 
-  final FusionConnection _fusionConnection;
-  final Softphone _softphone;
+  final FusionConnection? _fusionConnection;
+  final Softphone? _softphone;
 
   @override
   State<StatefulWidget> createState() => _VoicemailsState();
 }
 
 class _VoicemailsState extends State<Voicemails> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
 
-  Softphone get _softphone => widget._softphone;
+  Softphone? get _softphone => widget._softphone;
   List<Voicemail> _voicemails = [];
   int _lookupState = 0;
-  String _openVmId = "";
+  String? _openVmId = "";
   int _audioPosition = 0;
   AudioPlayer _audioPlayer = AudioPlayer();
-  String _playingUrl = null;
+  String? _playingUrl = null;
   bool _isPlaying = false;
 
   initState() {
@@ -73,7 +73,7 @@ class _VoicemailsState extends State<Voicemails> {
     if (_lookupState == 1) return;
     _lookupState = 1;
 
-    _fusionConnection.voicemails
+    _fusionConnection!.voicemails
         .getVoicemails((List<Voicemail> vms, bool fromServer) {
       setState(() {
             _lookupState = 2;
@@ -112,33 +112,36 @@ class _VoicemailsState extends State<Voicemails> {
   }
 
   _openProfile(Voicemail vm) {
-    if (vm.contacts.length > 0)
+    if (vm.contacts!.length > 0)
       showModalBottomSheet(
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
           builder: (context) => ContactProfileView(
-              _fusionConnection, _softphone, vm.contacts[0],null));
+              _fusionConnection, _softphone, vm.contacts![0],null));
   }
 
   _makeCall(Voicemail vm) {
-    _softphone.makeCall(vm.phoneNumber);
+    _softphone!.makeCall(vm.phoneNumber);
   }
 
   _openMessage(Voicemail vm) {
-    String number =
-        _fusionConnection.smsDepartments.getDepartment(DepartmentIds.AllMessages).numbers[0];
+    String? number =
+        _fusionConnection!.smsDepartments.getDepartment(DepartmentIds.AllMessages).numbers[0];
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => StatefulBuilder(
+        builder: (context) => number != null 
+        ? StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
           SMSConversation displayingConvo = SMSConversation.build(
-            contacts: vm.contacts,
+            hash:  number + ":" + vm.phoneNumber!,
+            isGroup: false,//needs to be updated
+            contacts: vm.contacts ?? [],
             crmContacts: [],
             myNumber: number,
-            number: vm.phoneNumber);
+            number: vm.phoneNumber!);
           return SMSConversationView(
             fusionConnection: _fusionConnection, 
             softphone: _softphone, 
@@ -152,7 +155,8 @@ class _VoicemailsState extends State<Voicemails> {
             }
           );
           },
-        ),
+        )
+        : Center(child: Text("No personal number found"),)
       );
   }
 
@@ -183,14 +187,14 @@ class _VoicemailsState extends State<Voicemails> {
                         color: char, fontSize: 13, fontWeight: FontWeight.w400))
               ]),
               Row(children: [
-                Text(vm.phoneNumber.formatPhone(),
+                Text(vm.phoneNumber!.formatPhone(),
                     style: TextStyle(
                         color: char,
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
                         height: 1.4)),
                 Spacer(),
-                Text(vm.duration.printDuration(),
+                Text(vm.duration!.printDuration(),
                     style: TextStyle(
                         color: char.withAlpha((255 * 0.66).round()),
                         fontSize: 13,
@@ -304,7 +308,7 @@ class _VoicemailsState extends State<Voicemails> {
                                                       fontWeight:
                                                           FontWeight.w400)),
                                               Spacer(),
-                                              Text(vm.duration.printDuration(),
+                                              Text(vm.duration!.printDuration(),
                                                   style: TextStyle(
                                                       color: char,
                                                       fontSize: 10,
@@ -315,7 +319,7 @@ class _VoicemailsState extends State<Voicemails> {
                                         Container(
                                             alignment: FractionalOffset(
                                                 (_audioPosition /
-                                                      vm.duration),
+                                                      vm.duration!),
                                                 0),
                                             child: Container(
                                             margin: EdgeInsets.only(
@@ -340,7 +344,7 @@ class _VoicemailsState extends State<Voicemails> {
                                     _openProfile(vm);
                                   },
                                       opacity:
-                                          vm.contacts.length > 0 ? 1.0 : 0.35),
+                                          vm.contacts!.length > 0 ? 1.0 : 0.35),
                                   actionButton("Call", "phone_dark", 18, 18,
                                       () {
                                     _makeCall(vm);

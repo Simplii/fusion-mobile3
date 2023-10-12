@@ -15,17 +15,17 @@ import 'messages_list.dart';
 import 'sms_conversation_view.dart';
 
 class MessageSearchResults extends StatefulWidget {
-  final FusionConnection _fusionConnection;
+  final FusionConnection? _fusionConnection;
   final List<SMSConversation> _conversations;
   final List<Contact> _contacts;
   final List<CrmContact> _crmContacts;
-  final String _myNumber;
-  final Softphone _softphone;
-  final Function(dynamic) addChip;
+  final String? _myNumber;
+  final Softphone? _softphone;
+  final Function(dynamic)? addChip;
   final bool showContactList;
   MessageSearchResults(this._myNumber, this._conversations, this._contacts,
       this._crmContacts, this._fusionConnection, this._softphone, this.addChip, this.showContactList,
-      {Key key})
+      {Key? key})
       : super(key: key);
 
   @override
@@ -33,15 +33,15 @@ class MessageSearchResults extends StatefulWidget {
 }
 
 class _MessageSearchResults extends State<MessageSearchResults> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
-  Softphone get _softphone => widget._softphone;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
+  Softphone? get _softphone => widget._softphone;
 
   List<SMSConversation> get _conversations => widget._conversations;
 
   List<Contact> get _contacts => widget._contacts;
 
   List<CrmContact> get _crmContacts => widget._crmContacts;
-  Function(dynamic) get _addChip => widget.addChip;
+  Function(dynamic)? get _addChip => widget.addChip;
   bool get _showContactsList => widget.showContactList; 
  
   
@@ -56,47 +56,66 @@ class _MessageSearchResults extends State<MessageSearchResults> {
     }
     for (CrmContact c in crmContacts) {
       if (c.phone_number != null) {
-        theirNumber = c.phone_number;
+        theirNumber = c.phone_number!;
       }
     }
 
-    String myNumber = _fusionConnection.smsDepartments
+    String? myNumber = _fusionConnection!.smsDepartments
         .lookupRecord(DepartmentIds.AllMessages)
         .numbers[0];
 
-      SMSConversation convo = await _fusionConnection.messages.checkExistingConversation(
+    if(myNumber == null ){
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => Container(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height / 2),
+          child: Center(
+            child: Text("No valid texting number found"),
+          ),
+        )
+      );
+    } else if(theirNumber.isEmpty){
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => Container(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height / 2),
+          child: Center(
+            child: Text("No recepiant valid number found"),
+          ),
+        )
+      );
+    } else {
+      SMSConversation? convo = await _fusionConnection!.messages.checkExistingConversation(
         DepartmentIds.AllMessages,myNumber,[theirNumber],contacts
       );
 
-    // SMSConversation convo = SMSConversation.build(
-    //   myNumber: myNumber,
-    //   contacts: contacts,
-    //   crmContacts: crmContacts,
-    //   number: theirNumber,
-    // );
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder:(BuildContext context, StateSetter setState){
-          SMSConversation displayingConvo = convo;
-          return SMSConversationView(
-            fusionConnection: _fusionConnection, 
-            softphone: _softphone, 
-            smsConversation: displayingConvo, 
-            deleteConvo: null,
-            setOnMessagePosted: null,
-            changeConvo: (SMSConversation UpdatedConvo){
-              setState(() {
-                displayingConvo = UpdatedConvo;
-              },);
-            }
-          );
-        } 
-      )
-    );
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => StatefulBuilder(
+          builder:(BuildContext context, StateSetter setState){
+            SMSConversation? displayingConvo = convo;
+            return SMSConversationView(
+              fusionConnection: _fusionConnection, 
+              softphone: _softphone, 
+              smsConversation: displayingConvo, 
+              deleteConvo: null,
+              setOnMessagePosted: null,
+              changeConvo: (SMSConversation UpdatedConvo){
+                setState(() {
+                  displayingConvo = UpdatedConvo;
+                },);
+              }
+            );
+          } 
+        )
+      );
+    } 
   }
 
   _contactBubbles() {
@@ -113,7 +132,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
                 ContactCircle.withDiameterAndMargin([c], [], 60, 0),
                 Align(
                     alignment: Alignment.center,
-                    child: Text(c.firstName,
+                    child: Text(c.firstName!,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                             color: coal,
@@ -121,7 +140,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
                             fontWeight: FontWeight.w700))),
                 Align(
                     alignment: Alignment.center,
-                    child: Text(c.lastName,
+                    child: Text(c.lastName!,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                             color: coal,
@@ -139,13 +158,13 @@ class _MessageSearchResults extends State<MessageSearchResults> {
               margin: EdgeInsets.only(top: 12),
               child: Column(children: [
                 ContactCircle.withDiameterAndMargin([], [c], 60, 0),
-                Text(c.name.split(r' ')[0],
+                Text(c.name!.split(r' ')[0],
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         color: coal,
                         fontSize: 12,
                         fontWeight: FontWeight.w700)),
-                Text(c.name.split(r' ').sublist(1).join(' '),
+                Text(c.name!.split(r' ').sublist(1).join(' '),
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         color: coal, fontSize: 12, fontWeight: FontWeight.w700))
@@ -192,8 +211,8 @@ class _MessageSearchResults extends State<MessageSearchResults> {
   
     List<Map<String,dynamic>> newContactsList = [];
     _contacts.forEach((element) { 
-      if(element.phoneNumbers.length > 1){
-        element.phoneNumbers.forEach((number) {
+      if(element.phoneNumbers!.length > 1){
+        element.phoneNumbers!.forEach((number) {
           newContactsList.add({
           'contact' : element,
           'phone' : number['number'],
@@ -201,10 +220,10 @@ class _MessageSearchResults extends State<MessageSearchResults> {
         });
         });
       } 
-      else if(element.phoneNumbers.length == 1) {
+      else if(element.phoneNumbers!.length == 1) {
         newContactsList.add({
           'contact' : element,
-          'phone' : element.phoneNumbers[0]['number']
+          'phone' : element.phoneNumbers![0]['number']
         });
       }
 
@@ -232,7 +251,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
                     c.phoneNumbers = [{ 'number':newContactsList[index]['phone'].toString(),
                       'type':newContactsList[index]['type']
                     }];
-                    _addChip(c);
+                    _addChip!(c);
                   }
                 },
                 child: Padding(

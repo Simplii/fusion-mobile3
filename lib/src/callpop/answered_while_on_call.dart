@@ -12,37 +12,37 @@ import 'package:sip_ua/sip_ua.dart';
 enum Views { Main, DialPad, Hold }
 
 class AnsweredWhileOnCall extends StatefulWidget {
-  AnsweredWhileOnCall({Key key, this.activeCall, this.softphone, this.calls})
+  AnsweredWhileOnCall({Key? key, this.activeCall, this.softphone, this.calls})
       : super(key: key);
 
-  final Softphone softphone;
-  final List<Call> calls;
-  final Call activeCall;
+  final Softphone? softphone;
+  final List<Call>? calls;
+  final Call? activeCall;
 
   @override
   State<StatefulWidget> createState() => _AnsweredWhileOnCallState();
 }
 
 class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
-  List<Call> get calls => widget.calls;
+  List<Call>? get calls => widget.calls;
 
-  Call get activeCall => widget.activeCall;
+  Call? get activeCall => widget.activeCall;
 
-  Softphone get softphone => widget.softphone;
+  Softphone? get softphone => widget.softphone;
 
   switchGestureDetector(Widget child, call) {
     return GestureDetector(
         onTap: () {
-          softphone.makeActiveCall(call);
+          softphone!.makeActiveCall(call);
         },
         child: Container(decoration: clearBg(), child: child));
   }
 
   _callRow(Call call) {
-    CallpopInfo info = softphone.getCallpopInfo(call.id);
+    CallpopInfo? info = softphone!.getCallpopInfo(call.id);
     TextStyle textStyle = TextStyle(
         fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white);
-    bool isMerged = softphone.isCallMerged(call);
+    bool isMerged = softphone!.isCallMerged(call);
 
     return switchGestureDetector(
         Padding(
@@ -52,16 +52,16 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
             ContactCircle.withDiameterAndMargin(info != null ? info.contacts : [],
                 info != null ? info.crmContacts : [], 24, 8),
 
-            Text(softphone.getCallerName(call), style: textStyle),
+            Text(softphone!.getCallerName(call), style: textStyle),
             Expanded(child: switchGestureDetector(Container(), call)),
-            if (softphone.getHoldState(call)) Text("Hold", style: textStyle),
-            Text(" " + mDash + " " + softphone.getCallRunTimeString(call),
+            if (softphone!.getHoldState(call)) Text("Hold", style: textStyle),
+            Text(" " + mDash + " " + softphone!.getCallRunTimeString(call),
                 style: textStyle),
             if (!isMerged &&
                 false) // disabing until we can support conference calling
               GestureDetector(
                   onTap: () {
-                    softphone.mergeCalls(activeCall, call);
+                    softphone!.mergeCalls(activeCall, call);
                   },
                   child: Container(
                       decoration: clearBg(),
@@ -78,7 +78,7 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
   _hangupButton(call) {
     return GestureDetector(
       onTap: () {
-        widget.softphone.hangUp(call);
+        widget.softphone!.hangUp(call);
       },
       child: Center(
           child: Container(
@@ -101,7 +101,7 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
   Widget build(BuildContext context) {
     return Column(children: [
       Container(
-          height: 45 + 0 + calls.length * 37.0,
+          height: 45 + 0 + calls!.length * 37.0,
           padding: EdgeInsets.only(top: 42, bottom: 0),
           decoration: BoxDecoration(
               color: coal,
@@ -112,11 +112,11 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
           child: Container(
               padding: EdgeInsets.only(left: 12, right: 12, bottom: 12),
               child: Column(
-                  children: calls
+                  children: calls!
                       .map((Call c) => _callRow(c))
                       .toList()
                       .cast<Widget>()))),
-      if(softphone.assistedTransferInit)
+      if(softphone!.assistedTransferInit)
       Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -130,8 +130,8 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
             child: GestureDetector(
               onTap: () {
                 Call newCall =
-                    calls.where((call) => call.id != activeCall.id).first;
-                softphone.completeAssistedTransfer(activeCall,newCall);
+                    calls!.where((call) => call.id != activeCall!.id).first;
+                softphone!.completeAssistedTransfer(activeCall,newCall);
               },
               child: Column(children: [
                 Image.asset(

@@ -7,13 +7,13 @@ import 'fusion_store.dart';
 import 'messages.dart';
 
 class Voicemail extends FusionModel {
-  String id;
-  String path;
-  DateTime time;
-  String phoneNumber;
-  int duration;
-  List<Contact> contacts;
-  Coworker coworker;
+  String? id;
+  String? path;
+  late DateTime time;
+  String? phoneNumber;
+  int? duration;
+  List<Contact>? contacts;
+  Coworker? coworker;
 
   Voicemail(Map<String, dynamic> obj) {
     this.id = obj['index'];
@@ -26,9 +26,9 @@ class Voicemail extends FusionModel {
 
   contactName() {
     if (coworker != null)
-      return coworker.getName();
+      return coworker!.getName();
 
-    for (Contact c in contacts) {
+    for (Contact c in contacts!) {
       if (c.fullName() != "Unknown") {
         return c.fullName();
       }
@@ -37,7 +37,7 @@ class Voicemail extends FusionModel {
   }
 
   @override
-  String getId() => this.id;
+  String? getId() => this.id;
 }
 
 class VoicemailStore extends FusionStore<Voicemail> {
@@ -54,9 +54,9 @@ class VoicemailStore extends FusionStore<Voicemail> {
       for (Map<String, dynamic> item in datas['items']) {
         Voicemail obj = Voicemail(item);
 
-        if (obj.phoneNumber.length <= 6)
+        if (obj.phoneNumber!.length <= 6)
           obj.coworker = fusionConnection.coworkers.lookupCoworker(
-              obj.phoneNumber + '@' + fusionConnection.getDomain());
+              obj.phoneNumber! + '@' + fusionConnection.getDomain());
 
         storeRecord(obj);
         response.add(obj);

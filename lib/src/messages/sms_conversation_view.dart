@@ -38,11 +38,11 @@ import '../styles.dart';
 import '../utils.dart';
 
 class SMSConversationView extends StatefulWidget {
-  final FusionConnection fusionConnection;
-  final SMSConversation smsConversation;
-  final Softphone softphone;
-  final Function(SMSConversation, SMSMessage) deleteConvo;
-  final Function setOnMessagePosted;
+  final FusionConnection? fusionConnection;
+  final SMSConversation? smsConversation;
+  final Softphone? softphone;
+  final Function(SMSConversation, SMSMessage?)? deleteConvo;
+  final Function? setOnMessagePosted;
   final Function(SMSConversation) changeConvo;
   SMSConversationView(
     {this.fusionConnection, 
@@ -50,8 +50,8 @@ class SMSConversationView extends StatefulWidget {
     this.smsConversation, 
     this.deleteConvo,
     this.setOnMessagePosted,
-    this.changeConvo,
-     Key key}
+    required this.changeConvo,
+     Key? key}
   ) : super(key: key);
 
   // static openConversation(
@@ -90,63 +90,63 @@ class SMSConversationView extends StatefulWidget {
 }
 
 class _SMSConversationViewState extends State<SMSConversationView> {
-  FusionConnection get _fusionConnection => widget.fusionConnection;
+  FusionConnection? get _fusionConnection => widget.fusionConnection;
 
-  Softphone get _softphone => widget.softphone;
-  StreamSubscription<ConnectivityResult> connectivitySubscription;
-  SMSConversation get _conversation => widget.smsConversation;
+  Softphone? get _softphone => widget.softphone;
+  StreamSubscription<ConnectivityResult>? connectivitySubscription;
+  SMSConversation? get _conversation => widget.smsConversation;
   TextEditingController _messageInputController = TextEditingController();
   bool _loaded = false;
   List<XFile> _mediaToSend = [];
   List<SMSMessage> _messages = [];
   List<String> _savedImgPaths = [];
   String _selectedGroupId = "";
-  Timer _debounceMessageInput;
+  Timer? _debounceMessageInput;
   int textLength = 0;
-  Function(SMSConversation, SMSMessage) get _deleteConvo => widget.deleteConvo;
-  Function get _setOnMessagePosted => widget.setOnMessagePosted;
+  Function(SMSConversation, SMSMessage?)? get _deleteConvo => widget.deleteConvo;
+  Function? get _setOnMessagePosted => widget.setOnMessagePosted;
   bool showSnackBar = false;
   String snackBarText = "";
   bool isSavedMessage = false;
   bool loading = false;
   List<QuickResponse> quickResponses = [];
-  DateTime secheduleIsSet;
+  DateTime? secheduleIsSet;
 
-  Function get _changeConvo => widget.changeConvo;
+  Function(SMSConversation) get _changeConvo => widget.changeConvo;
   bool disableDepartmentSelection = false;
   initState() {
     super.initState();
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
       String savedMessage =
-          prefs.getString(_conversation.hash + "_savedMessage");
+          prefs.getString("${_conversation?.hash ?? ""}_savedMessage") ?? "";
       _messageInputController.text = savedMessage;
       isSavedMessage = savedMessage != null && savedMessage.length > 0;
 
       final String path = getApplicationDocumentsDirectory().toString();
-      List<String> savedImgs =
-          prefs.getStringList(_conversation.hash + "_savedImages");
+      List<String>? savedImgs =
+          prefs.getStringList("${_conversation!.hash}_savedImages");
       if (savedImgs != null) {
         savedImgs.map((e) => {_mediaToSend.add(XFile("$path/$e"))});
       }
     });
 
-    if (_fusionConnection.smsDepartments.lookupRecord(DepartmentIds.AllMessages) != null) {
+    if (_fusionConnection!.smsDepartments.lookupRecord(DepartmentIds.AllMessages) != null) {
       _loaded = true;
     }
-    _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
+    _fusionConnection!.smsDepartments.getDepartments((List<SMSDepartment> list) {
       if (!mounted) return;
       this.setState(() {
         _loaded = true;
       });
     });
 
-    SMSDepartment department = _fusionConnection.smsDepartments
-        .getDepartmentByPhoneNumber(_conversation.myNumber);
+    SMSDepartment? department = _fusionConnection!.smsDepartments
+        .getDepartmentByPhoneNumber(_conversation!.myNumber);
     this.setState(() {
       _selectedGroupId = department?.id ?? DepartmentIds.Personal;
     });
 
-    _fusionConnection.quickResponses.getQuickResponses(
+    _fusionConnection!.quickResponses.getQuickResponses(
       _selectedGroupId == DepartmentIds.AllMessages ? DepartmentIds.Personal : _selectedGroupId,
       (List<QuickResponse> data){
         setState(() {
@@ -156,12 +156,12 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     );
     disableDepartmentSelection = _selectedGroupId == DepartmentIds.FusionChats;
     connectivitySubscription =
-      _fusionConnection.connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+      _fusionConnection!.connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
   }
 
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     setState(() {
-      _fusionConnection.connectivityResult = result;
+      _fusionConnection!.connectivityResult = result;
     });
   }
 
@@ -171,7 +171,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
     super.dispose();
   }
 
-  _openMedia(SMSMessage message) {
+  _openMedia(SMSMessage? message) {
     showModalBottomSheet(
         context: context,
         backgroundColor: translucentBlack(0.3),
@@ -181,11 +181,11 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         });
   }
 
-  _mediaGallery(SMSMessage activeMessage) {
+  _mediaGallery(SMSMessage? activeMessage) {
     List<SMSMessage> galleryItems = _messages
         .where((SMSMessage message) {
-          return message.mime != null && message.mime.contains("image") || message.mime != null &&
-              message.mime.contains("video");
+          return message.mime != null && message.mime!.contains("image") || message.mime != null &&
+              message.mime!.contains("video");
         })
         .toList()
         .cast<SMSMessage>();
@@ -207,20 +207,20 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               scrollPhysics: const BouncingScrollPhysics(),
               builder: (BuildContext context, int index) {
                 SMSMessage message = galleryItems[index];
-                if (message.mime.contains("image"))
+                if (message.mime!.contains("image"))
                   return PhotoViewGalleryPageOptions(
-                    imageProvider: NetworkImage(message.message),
+                    imageProvider: NetworkImage(message.message!),
                     initialScale: PhotoViewComputedScale.contained * 0.8,
                     heroAttributes:
-                        PhotoViewHeroAttributes(tag: galleryItems[index].id),
+                        PhotoViewHeroAttributes(tag: galleryItems[index].id!),
                   );
                 else
                   return PhotoViewGalleryPageOptions.customChild(
                       initialScale: PhotoViewComputedScale.contained * 0.8,
                       heroAttributes:
-                          PhotoViewHeroAttributes(tag: galleryItems[index].id),
+                          PhotoViewHeroAttributes(tag: galleryItems[index].id!),
                       child: VideoPlayer(
-                          VideoPlayerController.network(message.message)));
+                          VideoPlayerController.network(message.message!)));
               },
               itemCount: galleryItems.length,
               loadingBuilder: (context, event) => Center(
@@ -231,7 +231,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                     value: event == null
                         ? 0
                         : event.cumulativeBytesLoaded /
-                            event.expectedTotalBytes,
+                            event.expectedTotalBytes!,
                   ),
                 ),
               ),
@@ -242,23 +242,23 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   }
  
   _header() {
-    Coworker _coworker;
-    if(_conversation.number.contains("@")){
-      _fusionConnection.coworkers.getRecord(_conversation.number, (coworker) => _coworker = coworker);
+    Coworker? _coworker;
+    if(_conversation!.number.contains("@")){
+      _fusionConnection!.coworkers.getRecord(_conversation!.number, (coworker) => _coworker = coworker);
     }
 
     List<Widget> singleMessageHeader = [
       _coworker != null 
         ? ContactCircle.withCoworkerAndDiameter([], [], _coworker, 60)
-        : ContactCircle(_conversation.contacts, _conversation.crmContacts),
+        : ContactCircle(_conversation!.contacts, _conversation!.crmContacts),
       Expanded(child: Column(
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: Text(_conversation.contactName(coworker: _coworker), style: headerTextStyle)),
+            child: Text(_conversation!.contactName(coworker: _coworker), style: headerTextStyle)),
           Align(
           alignment: Alignment.centerLeft,
-          child: Text(_conversation.number.formatPhone(),
+          child: Text(_conversation!.number.formatPhone(),
               style: subHeaderTextStyle))]
         )
       ),
@@ -273,13 +273,13 @@ class _SMSConversationViewState extends State<SMSConversationView> {
           maxWidth: 50,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: _conversation.contacts.length,
+            itemCount: _conversation!.contacts!.length,
             shrinkWrap: true,
             itemBuilder: (context, index) {
-              String imageUrl = _conversation.contacts[index].pictures.length > 0 
-              ? _conversation.contacts[index].pictures.last['url'] 
-              : avatarUrl(_conversation.contacts[index].firstName, 
-                _conversation.contacts[index].lastName);
+              String imageUrl = _conversation!.contacts![index]!.pictures!.length > 0 
+              ? _conversation!.contacts![index]!.pictures!.last['url'] 
+              : avatarUrl(_conversation!.contacts![index]!.firstName, 
+                _conversation!.contacts![index]!.lastName);
               return Align(
                 widthFactor: 0.6,
                 child: ClipRRect(
@@ -306,7 +306,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         )
     );
     List<Contact> unknowContacts = 
-      _conversation.contacts.where((contact) => contact.id == '').toList();
+      _conversation!.contacts.where((contact) => contact.id == '').toList();
     List<List<String>> contactsToAdd = List.generate(unknowContacts.length, 
       (index) => ["Add ${unknowContacts[index].name} as a new contact", 
       "addContact-${index} "], 
@@ -321,11 +321,11 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               width: 36,
               height: 5)),
       Row(children: [
-        if(_conversation.isGroup)
+        if(_conversation!.isGroup)
           groupMessageHeader,
-        if(!_conversation.isGroup)
+        if(!_conversation!.isGroup)
           ...singleMessageHeader,
-        if(!_conversation.isGroup)
+        if(!_conversation!.isGroup)
         IconButton(
             icon: Opacity(
                 opacity: 0.66,
@@ -336,9 +336,10 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                 )),
             onPressed: () {
               Navigator.pop(context);
-              widget.softphone.makeCall(_conversation.number);
+              widget.softphone!.makeCall(_conversation!.number);
             }),
         FusionDropdown(
+          selectedNumber: "",
             onChange: (String chosen) {
               if (chosen == "contactprofile") {
                 Future.delayed(Duration(milliseconds: 10), () {
@@ -349,19 +350,20 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                       builder: (context) => ContactProfileView(
                           _fusionConnection,
                           _softphone,
-                          _conversation.contacts[0],null));
+                          _conversation!.contacts![0],null));
                 });
               } else if (chosen == "deleteconversation") {
-                if(_deleteConvo != null){
-                  _deleteConvo(_conversation,null);
-                  _fusionConnection.conversations.deleteConversation(
-                      _conversation,
+                if(_deleteConvo != null && _conversation != null){
+                  _deleteConvo!(_conversation!,null);
+                  _fusionConnection!.conversations.deleteConversation(
+                      _conversation!,
                       _selectedGroupId);
                 }
                 Navigator.pop(context, true);
               } else if (chosen.contains("addContact")) {
                 int chosenUnknownContactIndex = int.parse(chosen.split('-').last);
                 Future.delayed(Duration(milliseconds: 10), () {
+                  if(unknowContacts[chosenUnknownContactIndex] == null)return;
                   showModalBottomSheet(
                     constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height - 50),
                     context: context,
@@ -369,15 +371,15 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                     isScrollControlled: true,
                     builder: (context) => EditContactView(
                       _fusionConnection, 
-                      unknowContacts[chosenUnknownContactIndex], 
+                      unknowContacts[chosenUnknownContactIndex]!, 
                       () => Navigator.pop(context, true),
                       () => setState(() { 
-                        _setOnMessagePosted(null); 
+                        _setOnMessagePosted!(null); 
                       })
                     ));
                 });
               } else if (chosen == "markunread"){
-                _fusionConnection.conversations.markUnread(_conversation.message.id,_conversation, 
+                _fusionConnection!.conversations.markUnread(_conversation!.message!.id,_conversation!, 
                   () => Navigator.pop(this.context)
                 );
               } else {
@@ -387,7 +389,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
               }
             },
             value: "",
-            options: _conversation.contacts.length > 0
+            options: _conversation!.contacts.length > 0
                 ? [
                     ["Open Contact Profile", "contactprofile"],
                     ["Shared Media", "sharedmedia"],
@@ -400,14 +402,8 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                     ["Delete Conversation", "deleteconversation"],
                     ["Mark Unread", "markunread"],
                   ],
-            label: _conversation.contactName(),
-            button: IconButton(
-                iconSize: 32,
-                icon: Image.asset(
-                  "assets/icons/three_dots.png",
-                  width: 4,
-                  height: 16,
-                )))
+            label: _conversation!.contactName(),
+            button: Icon(Icons.more_vert, size: 32,color: smoke,))
       ]),
       Row(children: [horizontalLine(16)]),
       Row(children: [
@@ -430,50 +426,51 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   // }
 
   _departmentName() {
-    List departments = _fusionConnection.smsDepartments.allDepartments();
+    List departments = _fusionConnection!.smsDepartments.allDepartments();
 
     List<List<String>> options = [];
 
-    for (SMSDepartment department in departments) {
+    for (SMSDepartment department in departments as Iterable<SMSDepartment>) {
       if (department.id == DepartmentIds.AllMessages || department.id == DepartmentIds.FusionChats) {
         continue;
       }
-      options.add([department.groupName, department.id]);
+      options.add([department.groupName ?? "", department.id ?? ""]);
     }
-
-    return Container(
-        decoration: dropdownDecoration,
-        padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
-        height: 36,
-        child: FusionDropdown(
-          disabled: disableDepartmentSelection,
-            departments: departments,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            value: _selectedGroupId,
-            selectedNumber: _conversation.myNumber,
-            options: options,
-            onChange: _onDepartmentChange,
-            onNumberTap: _onNumberSelect,
-            label: "All Departments"));
+    if(_conversation != null && _conversation!.myNumber != null){
+      return Container(
+          decoration: dropdownDecoration,
+          padding: EdgeInsets.only(top: 0, bottom: 0, right: 0, left: 8),
+          height: 36,
+          child: FusionDropdown(
+            disabled: disableDepartmentSelection,
+              departments: departments as List<SMSDepartment>?,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              value: _selectedGroupId,
+              selectedNumber: _conversation!.myNumber!,
+              options: options,
+              onChange: _onDepartmentChange,
+              onNumberTap: _onNumberSelect,
+              label: "All Departments"));
+    }
   }
 
   _onDepartmentChange(String newDeptId) {
-    SMSDepartment dept =
-        _fusionConnection.smsDepartments.getDepartment(newDeptId);
+    SMSDepartment? dept =
+        _fusionConnection!.smsDepartments.getDepartment(newDeptId);
     setState(() {
-      _conversation.myNumber = dept.numbers[0];
+      _conversation!.myNumber = dept!.numbers[0];
       _selectedGroupId = newDeptId;
-      _conversation.conversationId = null;
+      _conversation!.conversationId = null;
     });
   }
   
   _onNumberSelect(String newNumber) {
-    SMSDepartment dept =
-        _fusionConnection.smsDepartments.getDepartmentByPhoneNumber(newNumber);
+    SMSDepartment? dept =
+        _fusionConnection!.smsDepartments.getDepartmentByPhoneNumber(newNumber);
     setState(() {
-      _conversation.myNumber = newNumber;
-      _selectedGroupId = dept.id;
-      _conversation.conversationId = null;
+      _conversation!.myNumber = newNumber;
+      _selectedGroupId = dept != null ? dept.id! : DepartmentIds.Personal;
+      _conversation!.conversationId = null;
     });
   }
 
@@ -482,12 +479,12 @@ class _SMSConversationViewState extends State<SMSConversationView> {
 
     String imgExt = p.extension(path);
     String imagePath =
-        _conversation.hash + "_savedImage_" + randomString(10) + "." + imgExt;
+        "${_conversation!.hash}_savedImage_" + randomString(10) + "." + imgExt;
 
     _savedImgPaths.add(imagePath);
 
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
-      prefs.setStringList(_conversation.hash + "_savedImages", _savedImgPaths);
+      prefs.setStringList("${_conversation!.hash}_savedImages", _savedImgPaths);
     });
 
     image.saveTo('$path/$imagePath');
@@ -496,7 +493,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   _attachImage(String source) {
     final ImagePicker _picker = ImagePicker();
     if (source == "camera") {
-      _picker.pickImage(source: ImageSource.camera).then((XFile file) {
+      _picker.pickImage(source: ImageSource.camera).then((XFile? file) {
         if (file != null) {
           this.setState(() {
             _mediaToSend.add(file);
@@ -505,7 +502,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         }
       });
     } else if (source == 'videos') {
-      _picker.pickVideo(source: ImageSource.gallery).then((XFile file) {
+      _picker.pickVideo(source: ImageSource.gallery).then((XFile? file) {
         if (file != null) {
           this.setState(() {
             _mediaToSend.add(file);
@@ -514,7 +511,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         }
       });
     } else if (source == 'recordvideo') {
-      _picker.pickVideo(source: ImageSource.camera).then((XFile file) {
+      _picker.pickVideo(source: ImageSource.camera).then((XFile? file) {
         if (file != null) {
           this.setState(() {
             _mediaToSend.add(file);
@@ -588,16 +585,16 @@ class _SMSConversationViewState extends State<SMSConversationView> {
 
   _saveLocalState(lastMessage) {
     if (_debounceMessageInput?.isActive ?? false)
-      _debounceMessageInput.cancel();
+      _debounceMessageInput!.cancel();
     _debounceMessageInput = Timer(const Duration(milliseconds: 1000), () {
       SharedPreferences.getInstance().then((SharedPreferences prefs) {
-        prefs.setString(_conversation.hash + "_savedMessage", lastMessage);
+        prefs.setString("${_conversation!.hash}_savedMessage", lastMessage);
       });
     });
   }
 
   _openQuickResponses(){
-    List<String> messages = quickResponses.map((qr) => qr.message,).toList();
+    List<String?> messages = quickResponses.map((qr) => qr.message,).toList();
      showModalBottomSheet(
       backgroundColor: Colors.transparent,
       constraints: BoxConstraints(
@@ -614,7 +611,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                 return GestureDetector(
                   onTap: (){
                     setState(() {
-                      _messageInputController.text = messages[index];
+                      _messageInputController.text = messages[index]!;
                     });
                     Navigator.pop(context);
                   },
@@ -622,7 +619,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                     margin: EdgeInsets.only(top: index == 0 ? 8 : 0),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text(messages[index], style:TextStyle(
+                      child: Text(messages[index]!, style:TextStyle(
                         fontSize: 16,
                         color: Colors.white
                       ),textAlign: TextAlign.center,),
@@ -662,7 +659,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
         bottomChild: DateTimePicker(
           iosStyle: true,
           height: 240,
-          onComplete: (DateTime selectedDateTime){
+          onComplete: (DateTime? selectedDateTime){
             setState(() {
               if(selectedDateTime != null) secheduleIsSet = selectedDateTime;
             });
@@ -701,7 +698,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                 children: [
                   Expanded(
                     child: Text("Will be sent: " + 
-                      dateFormatter.add_jm().format(secheduleIsSet).toString(),
+                      dateFormatter.add_jm().format(secheduleIsSet!).toString(),
                       style: TextStyle(
                         fontSize: 18,
                       ),
@@ -723,6 +720,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             Row(
             children: [
               FusionDropdown(
+                selectedNumber: "",
                 onChange: (String value) {
                   if(value == "schedule"){
                     _openMessageScheduling();
@@ -782,7 +780,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                           && !isSavedMessage
                           && _messageInputController.text.contains("https://fusioncomm.net/media")){
                         SharedPreferences.getInstance().then((SharedPreferences prefs) {
-                          String imageUri = prefs.getString("copiedImagePath");
+                          String imageUri = prefs.getString("copiedImagePath")!;
                           if(imageUri.length == 0){
                             this.setState(() {
                               _saveLocalState(changedTo);
@@ -865,38 +863,38 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       disableDepartmentSelection = true;
       loading = true;
     });
-    await _fusionConnection.checkInternetConnection();
+    await _fusionConnection!.checkInternetConnection();
     setState(() {
       loading = false;
     });
     
     setState(() {
       if (_messageInputController.value.text.trim().length > 0) {
-        if(!_fusionConnection.internetAvailable){
-          if(_conversation.message != null){
-            _fusionConnection.messages.offlineMessage(
+        if(!_fusionConnection!.internetAvailable){
+          if(_conversation!.message != null){
+            _fusionConnection!.messages.offlineMessage(
               _messageInputController.value.text, 
-              _conversation, 
+              _conversation!, 
               _selectedGroupId, 
               null, 
               _setOnMessagePosted, 
               ()=>null,
-              secheduleIsSet ?? secheduleIsSet);
+              secheduleIsSet);
           } else {
             toast("unable to connect to the internet".toUpperCase());
           }
           _messageInputController.text = "";
           
         } else {
-          _fusionConnection.messages
+          _fusionConnection!.messages
             .sendMessage(
               _messageInputController.value.text, 
-              _conversation, 
+              _conversation!, 
               _selectedGroupId, 
               null,
               (){
                 setState(() {
-                  if(_setOnMessagePosted != null)_setOnMessagePosted(_conversation.getId());
+                  if(_setOnMessagePosted != null)_setOnMessagePosted!(_conversation!.getId());
                   secheduleIsSet = null;
                 });
                 Future.delayed(Duration(seconds: 4), (){
@@ -915,9 +913,9 @@ class _SMSConversationViewState extends State<SMSConversationView> {
       }
       if (_mediaToSend.length > 0) {
         for (XFile file in _mediaToSend) {
-          _fusionConnection.messages.sendMessage(
+          _fusionConnection!.messages.sendMessage(
             '', 
-            _conversation,
+            _conversation!,
             _selectedGroupId,
             file,
             _setOnMessagePosted,
@@ -967,7 +965,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                                           _fusionConnection, _conversation,
                                           (List<SMSMessage> messages) {
                                           _messages = messages;
-                                        }, _openMedia,_deleteConvo, _selectedGroupId,_setOnMessagePosted,_changeConvo)
+                                        }, _openMedia,_deleteConvo, _selectedGroupId,_setOnMessagePosted,_changeConvo )
                                       : Container())
                             ]))),
                   ]))),
@@ -995,37 +993,45 @@ class _SMSConversationViewState extends State<SMSConversationView> {
 }
 
 class ConvoMessagesList extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final SMSConversation _conversation;
+  final FusionConnection? _fusionConnection;
+  final SMSConversation? _conversation;
   final Function(List<SMSMessage>) _onPulledMessages;
   final Function(SMSMessage) _openMedia;
-  final Function(SMSConversation, SMSMessage) _deleteConvo;
-  final Function setOnMessagePosted;
+  final Function(SMSConversation, SMSMessage?)? _deleteConvo;
+  final Function? setOnMessagePosted;
   final Function(SMSConversation) changeConvo;
   String _selectedGroupId;
-  ConvoMessagesList(this._fusionConnection, this._conversation,
-      this._onPulledMessages, this._openMedia, this._deleteConvo, this._selectedGroupId, 
-      this.setOnMessagePosted, this.changeConvo, {Key key}) : super(key: key);
+  ConvoMessagesList(
+    this._fusionConnection, 
+    this._conversation,
+    this._onPulledMessages, 
+    this._openMedia, 
+    this._deleteConvo, 
+    this._selectedGroupId, 
+    this.setOnMessagePosted, 
+    this.changeConvo, 
+    {Key? key}
+  ) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ConvoMessagesListState();
 }
 
 class _ConvoMessagesListState extends State<ConvoMessagesList> {
-  SMSConversation get _conversation => widget._conversation;
+  SMSConversation? get _conversation => widget._conversation;
 
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
 
   Function(SMSMessage) get _openMedia => widget._openMedia;
-  Function(SMSConversation, SMSMessage) get _deleteMessage => widget._deleteConvo;
-  Function get _setOnMessagePosted => widget.setOnMessagePosted;
+  Function(SMSConversation, SMSMessage?)? get _deleteMessage => widget._deleteConvo;
+  Function? get _setOnMessagePosted => widget.setOnMessagePosted;
   Function(SMSConversation) get _changeConvo => widget.changeConvo;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSMessage> _messages = [];
-  String _subscriptionKey;
+  String? _subscriptionKey;
   String get _selectedGroupId => widget._selectedGroupId;
-  String _lookedupNumber = "";
-  String _lookedupMyNumber = "";
+  String? _lookedupNumber = "";
+  String? _lookedupMyNumber = "";
 
   @override
   dispose() {
@@ -1035,7 +1041,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
 
   _clearSubscription() {
     if (_subscriptionKey != null) {
-      _fusionConnection.messages.clearSubscription(_subscriptionKey);
+      _fusionConnection!.messages.clearSubscription(_subscriptionKey);
       _subscriptionKey = null;
     }
   }
@@ -1058,7 +1064,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   _lookupMessages() {
     lookupState = 1;
     _clearSubscription();
-    _subscriptionKey = _fusionConnection.messages.subscribe(_conversation,
+    _subscriptionKey = _fusionConnection!.messages.subscribe(_conversation,
         (List<SMSMessage> messages) {
           
       if (!mounted) return;
@@ -1068,7 +1074,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
         }
       });
     });
-    _fusionConnection.messages.getMessages(_conversation, 200, 0,
+    _fusionConnection!.messages.getMessages(_conversation!, 200, 0,
         (List<SMSMessage> messages, fromServer) {
       if (!mounted) return;
       this.setState(() {
@@ -1079,9 +1085,9 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     },_selectedGroupId);
   }
 
-  Future<SMSConversation> _departmentSwitch () async {
-    SMSConversation convo = await _fusionConnection.messages.checkExistingConversation(
-          _selectedGroupId, _conversation.myNumber, [_conversation.number], []);
+  Future<SMSConversation?> _departmentSwitch () async {
+    SMSConversation? convo = await _fusionConnection!.messages.checkExistingConversation(
+          _selectedGroupId, _conversation!.myNumber, [_conversation!.number], []);
     return convo;
   }
 
@@ -1095,7 +1101,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
               ? Center(child: SpinKitThreeBounce(color: smoke, size: 50))
               : Text(
                   "This is the beginning of your text history with " +
-                      _conversation.contactName(),
+                      _conversation!.contactName()!,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: smoke,
@@ -1108,16 +1114,16 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
 
   _messagesList() {
     List<Widget> list = [];
-    DateTime lastDate;
-    Widget toAdd;
+    DateTime? lastDate;
+    Widget? toAdd;
 
     _messages.sort((SMSMessage m1, SMSMessage m2) {
-      return m1.unixtime > m2.unixtime ? -1 : 1;
+      return m1.unixtime! > m2.unixtime! ? -1 : 1;
     });
 
     for (SMSMessage msg in _messages) {
       DateTime thisTime =
-          DateTime.fromMillisecondsSinceEpoch(msg.unixtime * 1000);
+          DateTime.fromMillisecondsSinceEpoch(msg.unixtime! * 1000);
       
       if (lastDate == null ||
           thisTime.difference(lastDate).inHours.abs() > TimeOfDay.now().hour) {
@@ -1139,10 +1145,20 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
           horizontalLine(8)
         ]);
       }
-      list.add(SMSMessageView(_fusionConnection, msg, _conversation,
+      list.add(
+        SMSMessageView(
+          _fusionConnection, 
+          msg, 
+          _conversation,
           (SMSMessage message) {
-        _openMedia(message);
-      },_deleteMessage,_messages,_selectedGroupId,_setOnMessagePosted));
+            _openMedia(message);
+          },
+          _deleteMessage,
+          _messages,
+          _selectedGroupId,
+          _setOnMessagePosted
+        )
+      );
     }
 
     return list;
@@ -1151,16 +1167,16 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
   @override
   Widget build(BuildContext context) {
     if (lookupState != 0 &&
-        (_conversation.number != _lookedupNumber ||
-            _conversation.myNumber != _lookedupMyNumber)) {
+        (_conversation!.number != _lookedupNumber ||
+            _conversation!.myNumber != _lookedupMyNumber)) {
             lookupState = 0;
             _messages = [];
         if(_lookedupNumber != "" && _lookedupMyNumber != ""){
-          _departmentSwitch().then((SMSConversation value){
-            if(value.conversationId != null){
+          _departmentSwitch().then((SMSConversation? value){
+            if(value!.conversationId != null){
               _lookedupNumber = value.number;
               _lookedupMyNumber = value.myNumber;
-              _changeConvo(value);
+              _changeConvo!(value);
               _lookupMessages();
             } 
           });
@@ -1168,8 +1184,8 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
     }
 
     if (lookupState == 0) {
-      _lookedupNumber = _conversation.number;
-      _lookedupMyNumber = _conversation.myNumber;
+      _lookedupNumber = _conversation!.number;
+      _lookedupMyNumber = _conversation!.myNumber;
       _lookupMessages();
     }
 
@@ -1180,17 +1196,20 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
 }
 
 class SMSMessageView extends StatefulWidget {
-  final FusionConnection _fusionConnection;
+  final FusionConnection? _fusionConnection;
   final SMSMessage _message;
-  final SMSConversation _conversation;
+  final SMSConversation? _conversation;
   final Function(SMSMessage) _openMedia;
-  final Function(SMSConversation, SMSMessage) _deleteMessage;
-  final Function setOnMessagePosted;
+  final Function(SMSConversation, SMSMessage?)? _deleteMessage;
+  final Function? setOnMessagePosted;
   List<SMSMessage> _messages;
   String _selectedGroupId;
-  SMSMessageView(this._fusionConnection, this._message, this._conversation,
+  SMSMessageView(
+    this._fusionConnection, 
+    this._message, 
+    this._conversation,
       this._openMedia, this._deleteMessage, this._messages, this._selectedGroupId,
-      this.setOnMessagePosted, {Key key})
+      this.setOnMessagePosted, {Key? key})
       : super(key: key);
 
   @override
@@ -1198,9 +1217,9 @@ class SMSMessageView extends StatefulWidget {
 }
 
 class _SMSMessageViewState extends State<SMSMessageView> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
 
-  SMSConversation get _conversation => widget._conversation;
+  SMSConversation? get _conversation => widget._conversation;
 
   SMSMessage get _message => widget._message;
   final _searchInputController = TextEditingController();
@@ -1208,21 +1227,21 @@ class _SMSMessageViewState extends State<SMSMessageView> {
   final GlobalKey<TooltipState> tooltipkey = GlobalKey<TooltipState>();
   List<SMSMessage> get _messages => widget._messages;
   String get _selectedGroupId => widget._selectedGroupId;
-  Function get _setOnMessagePosted => widget.setOnMessagePosted;
+  Function? get _setOnMessagePosted => widget.setOnMessagePosted;
   _openMedia() {
     widget._openMedia(_message);
   }
 
-  _deleteMessage(SMSMessage message){
+  _deleteMessage(SMSMessage? message){
     if(widget._deleteMessage == null) return;
     if(_messages.length == 1)
-      widget._deleteMessage(_conversation,null);
-    else if(_messages.reversed.last.id == message.id)
-      widget._deleteMessage(_conversation,_messages.reversed.elementAt(_messages.length - 2));
+      widget._deleteMessage!(_conversation!,null);
+    else if(_messages.reversed.last.id == message!.id)
+      widget._deleteMessage!(_conversation!,_messages.reversed.elementAt(_messages.length - 2));
     
-    _messages.removeWhere((msg) => msg.id == message.id);
-    _conversation.message = _messages.reversed.last;
-    _fusionConnection.conversations.storeRecord(_conversation);
+    _messages.removeWhere((msg) => msg.id == message!.id);
+    _conversation!.message = _messages.reversed.last;
+    _fusionConnection!.conversations.storeRecord(_conversation!);
   }
 
   _messageText(String message, TextStyle style) {
@@ -1255,21 +1274,21 @@ class _SMSMessageViewState extends State<SMSMessageView> {
   }
 
   _renderMessage() {
-    bool isFromMe = _message.from == _conversation.myNumber;
+    bool isFromMe = _message!.from == _conversation!.myNumber;
     double maxWidth =
         (MediaQuery.of(context).size.width - (isFromMe ? 0 : 40)) * 0.8;
     return Align(
         alignment: isFromMe ? Alignment.centerRight : Alignment.centerLeft,
-        child: _message.mime != null &&
-                _message.mime.toString().contains('image')
+        child: _message!.mime != null &&
+                _message!.mime.toString().contains('image')
             ? GestureDetector(
                 onLongPress: () async {
-                  await Clipboard.setData(ClipboardData(text: _message.message));
+                  await Clipboard.setData(ClipboardData(text: _message!.message ?? ""));
                   Clipboard.getData(Clipboard.kTextPlain)
                     .then((value){
-                      if(value.text != ''){
+                      if(value!.text != ''){
                         tooltipkey.currentState?.ensureTooltipVisible();
-                        urlToXFile(Uri.parse(value.text)).then((value) {
+                        urlToXFile(Uri.parse(value.text!)).then((value) {
                           SharedPreferences.getInstance().then((SharedPreferences prefs) {
                             prefs.setString("copiedImagePath", value.path);
                           });
@@ -1298,7 +1317,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                               message:'Copied',
                               key: tooltipkey,
                               triggerMode: TooltipTriggerMode.manual,
-                              child: Image.network(_message.message),
+                              child: Image.network(_message!.message!),
                             )
                           )
                         )
@@ -1317,7 +1336,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                       bottomRight: Radius.circular(8),
                     )),
                 child: _messageText(
-                    _message.message,
+                    _message!.message!,
                     TextStyle(
                         fontSize: 14,
                         height: 1.4,
@@ -1325,20 +1344,20 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                         color: isFromMe ? coal : Colors.white))));
   }
 
-  Future<void> _tryResendFailedMessage(SMSMessage message) async {
+  Future<void> _tryResendFailedMessage(SMSMessage? message) async {
     Navigator.pop(context);
-    await _fusionConnection.checkInternetConnection();
-    if(!_fusionConnection.internetAvailable){
+    await _fusionConnection!.checkInternetConnection();
+    if(!_fusionConnection!.internetAvailable){
       toast("unable to connect to the internet".toUpperCase());
     } else {
-       await _fusionConnection.messages.resendFailedMessage(message);
+       await _fusionConnection!.messages.resendFailedMessage(message!);
        setState(() { 
         _messages.removeWhere((msg) => msg.id == message.id);
        });
      
-      _fusionConnection.messages.sendMessage(
+      _fusionConnection!.messages.sendMessage(
         message.message, 
-        _conversation, 
+        _conversation!, 
         _selectedGroupId, 
         null,
         _setOnMessagePosted, 
@@ -1349,7 +1368,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
 
   }
 
-  _openFailedMessageDialog(SMSMessage message){
+  _openFailedMessageDialog(SMSMessage? message){
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1379,13 +1398,13 @@ class _SMSMessageViewState extends State<SMSMessageView> {
     );
   }
 
-  _openScheduledMessage(SMSMessage message ){
+  _openScheduledMessage(SMSMessage? message ){
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (BuildContext context) { 
-        DateTime date = DateTime.parse(message.scheduledAt).toLocal();
+        DateTime date = DateTime.parse(message!.scheduledAt!).toLocal();
         DateFormat dateFormatter = DateFormat('MMM d,');
         return PopupMenu(
         label: "Scheduled Message",
@@ -1420,7 +1439,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                   onPressed: (){
                     setState(() {  
                       _messages.removeWhere((msg) => msg.id == message.id);
-                      _fusionConnection.messages.deleteMessage(this._message.id,_selectedGroupId);
+                      _fusionConnection!.messages.deleteMessage(this._message!.id,_selectedGroupId);
                     });
                     Navigator.of(context).pop();
                   },
@@ -1439,19 +1458,19 @@ class _SMSMessageViewState extends State<SMSMessageView> {
   @override
   Widget build(BuildContext context) {
     DateTime date =
-        DateTime.fromMillisecondsSinceEpoch(_message.unixtime * 1000);
+        DateTime.fromMillisecondsSinceEpoch(_message!.unixtime! * 1000);
     List<Widget> children = [];
-    bool scheduledMessage = _message.scheduledAt != null 
-      ? DateTime.parse(_message.scheduledAt).toLocal().isAfter(DateTime.now()) 
+    bool scheduledMessage = _message!.scheduledAt != null 
+      ? DateTime.parse(_message!.scheduledAt!).toLocal().isAfter(DateTime.now()) 
       : false;
 
-    if (_message.from != _conversation.myNumber) {
-      List<Contact> matchedContact;
-      _conversation.contacts.forEach((element){
-        Contact c = element;
+    if (_message!.from != _conversation!.myNumber) {
+      List<Contact?>? matchedContact;
+      _conversation!.contacts!.forEach((element){
+        Contact c = element!;
         bool match = false;
-        for (var numberObj in c.phoneNumbers) {
-          if(_message.from == numberObj['number']){
+        for (var numberObj in c.phoneNumbers!) {
+          if(_message!.from == numberObj['number']){
             match = true;
             break;
           }
@@ -1461,24 +1480,24 @@ class _SMSMessageViewState extends State<SMSMessageView> {
         }
       });
       children.add(ContactCircle.withDiameter(
-          matchedContact ?? _conversation.contacts, _conversation.crmContacts, 44));
+          matchedContact ?? _conversation!.contacts, _conversation!.crmContacts, 44));
       children.add(Expanded(
           child: Column(children: [
         Align(
             alignment: Alignment.centerLeft,
             child: Text(matchedContact != null
-              ? "${matchedContact[0].name.toTitleCase()} ${mDash} ${DateFormat.jm().format(date)}" 
-              : "${_message.from.formatPhone()} ${mDash} ${DateFormat.jm().format(date)}",
+              ? "${matchedContact![0]!.name!.toTitleCase()} ${mDash} ${DateFormat.jm().format(date)}" 
+              : "${_message!.from!.formatPhone()} ${mDash} ${DateFormat.jm().format(date)}",
                 style: TextStyle(
                     fontSize: 10, fontWeight: FontWeight.w800, color: smoke))),
         _renderMessage()
       ])));
     } else {
 
-      Contact myContact = null;
-      if(_message.user != null){
-        myContact = _fusionConnection.coworkers.lookupCoworker(_message.user.split('@')[0] + 
-          "@" + _fusionConnection.getDomain())?.toContact();
+      Contact? myContact = null;
+      if(_message!.user != null){
+        myContact = _fusionConnection!.coworkers.lookupCoworker(_message!.user!.split('@')[0] + 
+          "@" + _fusionConnection!.getDomain())?.toContact();
       }
 
       
@@ -1490,9 +1509,9 @@ class _SMSMessageViewState extends State<SMSMessageView> {
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _message.messageStatus == 'delivered' 
+              _message!.messageStatus == 'delivered' 
                 ? Icon (Icons.check,size: 10, color:smoke)
-                : (_message.messageStatus == 'failed' || _message.messageStatus == 'offline')
+                : (_message!.messageStatus == 'failed' || _message!.messageStatus == 'offline')
                   ? Icon(Icons.clear,size: 10, color: smoke,)
                   : Container(),
               Container(
@@ -1520,7 +1539,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
                 ),
               child: _renderMessage() ,
             ),
-            if(_message.messageStatus =="offline")
+            if(_message!.messageStatus =="offline")
               IconButton(
                 padding: EdgeInsets.only(left: 5),
                 constraints: BoxConstraints(),
@@ -1541,7 +1560,7 @@ class _SMSMessageViewState extends State<SMSMessageView> {
       key: UniqueKey(),
       direction: DismissDirection.endToStart,
       onDismissed: (direction) {
-        _fusionConnection.messages.deleteMessage(this._message.id,_selectedGroupId);
+        _fusionConnection!.messages.deleteMessage(this._message.id,_selectedGroupId);
         _deleteMessage(this._message);
         if(this._messages.length == 0){
           Navigator.pop(context);

@@ -78,7 +78,7 @@ BoxDecoration dropdownDecoration = BoxDecoration(
     color: translucentSmoke,
     borderRadius: BorderRadius.all(Radius.circular(4)));
 
-horizontalLine(double margin, {Color color}) {
+horizontalLine(double margin, {Color? color}) {
   return Expanded(
       child: Container(
           margin: EdgeInsets.only(top: margin, bottom: margin),
@@ -106,10 +106,10 @@ bottomRedBar(bool clear) {
 }
 
 actionButton(
-    String label, String icon, double width, double height, Function onTap, {double opacity}) {
+    String label, String icon, double width, double height, Function onTap, {double? opacity}) {
   return Expanded(
       child: GestureDetector(
-          onTap: onTap,
+          onTap: onTap as void Function()?,
           child: Opacity(
               opacity: opacity != null ? opacity : 0.66,
               child: Container(
@@ -164,7 +164,7 @@ darken(Color color, int amount) {
   return lighten(color, 0 - amount);
 }
 
-raisedButtonBorder(Color color, {int lightenAmount, int darkenAmount}) {
+raisedButtonBorder(Color color, {int? lightenAmount, int? darkenAmount}) {
   return BoxDecoration(
             boxShadow: [
               BoxShadow(

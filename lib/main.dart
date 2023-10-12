@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:all_sensors/all_sensors.dart';
@@ -10,7 +11,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_apns/flutter_apns.dart';
+// import 'package:flutter_apns/flutter_apns.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_view.dart';
@@ -39,38 +40,38 @@ import 'src/messages/sms_conversation_view.dart';
 import 'src/styles.dart';
 import 'src/utils.dart';
 
-FlutterCallkeep __callKeep = FlutterCallkeep();
-bool __callKeepInited = false;
-
-class NavigationService {
-  static final navigatorKey = GlobalKey<NavigatorState>();
-
-  static Future<void> pushVideoView() {
-    return navigatorKey.currentState
-        .push(MaterialPageRoute(builder: (context) => MyHomePage()));
-  }
-}
-
+final navigatorKey = GlobalKey<NavigatorState>();
+Map<String,dynamic> messageData = {};
 registerNotifications() {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('app_icon_background');
-  final IOSInitializationSettings initializationSettingsIOS =
-      IOSInitializationSettings(
+  final DarwinInitializationSettings initializationSettingsIOS =
+      DarwinInitializationSettings(
           onDidReceiveLocalNotification:
-              (int i, String a, String b, String s) {});
-  final MacOSInitializationSettings initializationSettingsMacOS =
-      MacOSInitializationSettings();
+              (int i, String? a, String? b, String? s) {});
+  // final MacOSInitializationSettings initializationSettingsMacOS =
+  //     MacOSInitializationSettings();
   final InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-      macOS: initializationSettingsMacOS);
-  flutterLocalNotificationsPlugin.initialize(initializationSettings,
-      onSelectNotification: (String s) {});
+      iOS: initializationSettingsIOS);
+  flutterLocalNotificationsPlugin.initialize(
+    initializationSettings, 
+    onDidReceiveNotificationResponse: _notificationResponse
+  );
   return flutterLocalNotificationsPlugin;
 }
+
+void _notificationResponse(NotificationResponse response) {
+    
+  if(messageData.isNotEmpty){
+    print("MDBM message data ${messageData}");
+    // checkForIMNotification(messageData);
+  }
+}
+
 @pragma('vm:entry-point')
 Future<dynamic> backgroundMessageHandler(RemoteMessage message) async {
   SharedPreferences pres = await SharedPreferences.getInstance();
@@ -146,10 +147,10 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
-  FusionConnection _fusionConnection;
-  Softphone _softphone;
-  RemoteMessage _launchMessage;
-
+  late FusionConnection _fusionConnection;
+  late Softphone _softphone;
+  RemoteMessage? _launchMessage;
+  static final GlobalKey navigationKey = GlobalKey<NavigatorState>();
   MyApp() {
     _fusionConnection = FusionConnection();
     _softphone = Softphone(_fusionConnection);
@@ -171,17 +172,18 @@ class MyApp extends StatelessWidget {
     }
     
     return MaterialApp(
-       builder: (BuildContext context, Widget child) {
-        final scaleRange = MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2);
+       builder: (BuildContext context, Widget? child) {
+        final double scaleRange = MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2);
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
               textScaleFactor: scaleRange),
-          child: child,  
+          child: child!,  
         );
       },
       title: 'Fusion Revamped',
-      navigatorKey: NavigationService.navigatorKey,
+      navigatorKey: navigatorKey,
       theme: ThemeData(
+        // useMaterial3: true,
         primarySwatch: Colors.grey,
       ),
       home: MyHomePage(
@@ -194,16 +196,16 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   MyHomePage(
-      {Key key,
+      {Key? key,
       this.title,
-      this.softphone,
-      this.fusionConnection,
+      required this.softphone,
+      required this.fusionConnection,
       this.launchMessage})
       : super(key: key);
   final Softphone softphone;
   final FusionConnection fusionConnection;
-  final String title;
-  final RemoteMessage launchMessage;
+  final String? title;
+  final RemoteMessage? launchMessage;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -217,17 +219,17 @@ class _MyHomePageState extends State<MyHomePage> {
   String _auth_key = "";
   String _aor = "";
   final phoneNumberController = TextEditingController();
-  String receivedMsg;
-  List<Call> calls;
-  Call activeCall;
-  RemoteMessage _launchMessage;
+  String? receivedMsg;
+  List<Call>? calls;
+  Call? activeCall;
+  RemoteMessage? _launchMessage;
   bool _isRegistering = false;
   bool _logged_in = false;
   bool _callInProgress = false;
   bool _isProximityListening = false;
-  StreamSubscription<ProximityEvent> _proximitySub;
+  late StreamSubscription<ProximityEvent> _proximitySub;
   bool flutterBackgroundInitialized = false;
-  Function onMessagePosted;
+  Function? onMessagePosted;
   _logOut() {
     SharedPreferences.getInstance().then((SharedPreferences prefs){
       prefs.remove('username');
@@ -259,13 +261,13 @@ class _MyHomePageState extends State<MyHomePage> {
     softphone.onUpdate(() {
       setState(() {});
     });
+    _setupPermissions();
     _autoLogin();
 
-    final connector = createPushConnector();
-    connector.configure(
-        onLaunch: _onLaunch, onResume: _onResume, onMessage: _onMessage);
-    fusionConnection.setAPNSConnector(connector);
-    _setupPermissions();
+    // final connector = createPushConnector();
+    // connector.configure(
+    //     onLaunch: _onLaunch, onResume: _onResume, onMessage: _onMessage);
+    // fusionConnection!.setAPNSConnector(connector);
     _setupFirebase();
     fusionConnection.setRefreshUi(() {
       this.setState(() {
@@ -273,34 +275,36 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     });
   }
-
-  _setupPermissions() {
-    [
-      Permission.phone,
-      Permission.bluetoothConnect,
-      Permission.bluetooth,
-      Permission.notification,
-    ].request().then((Map<Permission, PermissionStatus> statuses) {
-    });
+  
+  Future<void> _setupPermissions() async {
+    await Permission.phone.request();
+    await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      criticalAlert: true,
+      provisional: false,
+      sound: true
+    );
   }
 
-  Future<void> _onLaunch(RemoteMessage m) {
+  Future<void> _onLaunch(RemoteMessage m) async {
     _launchMessage = m;
   }
 
-  Future<void> _onResume(RemoteMessage m) {
+  Future<void> _onResume(RemoteMessage m) async {
     softphone.reregister();
   }
 
-  Future<void> _onMessage(RemoteMessage m) {
+  Future<void> _onMessage(RemoteMessage m) async {
     if(onMessagePosted !=  null){
-      onMessagePosted(()=>{});
+      onMessagePosted!(()=>{});
     }
   }
 
-  checkForInitialMessage({String username}) async {
+  checkForInitialMessage({String? username}) async {
     await Firebase.initializeApp();
-    RemoteMessage initialMessage =
+    RemoteMessage? initialMessage =
         await FirebaseMessaging.instance.getInitialMessage();
 
     if (initialMessage == null && _launchMessage != null) {
@@ -313,7 +317,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  checkForIMNotification(Map<String, dynamic> data,{String username}) {
+  checkForIMNotification(Map<String, dynamic> data,{String? username}) {
     List<String> numbers = [];
     List<dynamic> members = [];
     bool isGroup = data['is_group'] == "1" ? true : false;
@@ -339,11 +343,11 @@ class _MyHomePageState extends State<MyHomePage> {
         for (String number in dep.numbers) {
           if(dep.id == DepartmentIds.Personal){
             // in case its a new conversation we didn't start
-            depId = dep.id;
+            depId = dep.id!;
             numberUsed = number;
           }
           if(numbers.contains(number)){
-            depId = dep.id;
+            depId = dep.id!;
             numberUsed = number;
           }
         }
@@ -352,8 +356,8 @@ class _MyHomePageState extends State<MyHomePage> {
       List<Contact> convoContacts = [];
 
       for (Map<String,dynamic> member in members) {
-        List<dynamic> memberContacts = member['contacts'];
-        List<dynamic> memberLeads = member['leads'];
+        List<dynamic> memberContacts = member['contacts'] ?? [];
+        List<dynamic> memberLeads = member['leads'] ?? [];
         if(memberContacts.isNotEmpty){
           memberContacts.forEach((contact) { 
             convoContacts.add(Contact(contact));
@@ -419,6 +423,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           contacts: contacts,
                           crmContacts: [],
                           isGroup: false,
+                          hash: data['to_number'] + ":" + data['from_number'],
                           selectedDepartmentId: depId,
                           myNumber: data['to_number'],
                           number: data['from_number']);
@@ -444,43 +449,90 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  _setupFirebase() {
-    FirebaseMessaging.onMessage.listen((event) {
-      print("fbmessage");print(event.data);
-      event.data;
-      if (Platform.isIOS) {
-        if (event.data.containsKey("remove_fusion_call")) {
-          softphone.stopRinging(event.data["uuid"]);
-        }
-      }
-      setState(() {});
-    });
+  // _setupFirebase() {
+  //   FirebaseMessaging.onMessage.listen((event) {
+  //     print("fbmessage");print(event.data);
+  //     event.data;
+  //     if (Platform.isIOS) {
+  //       if (event.data.containsKey("remove_fusion_call")) {
+  //         softphone.stopRinging(event.data["uuid"]);
+  //       }
+  //     }
 
-    FirebaseMessaging.onMessageOpenedApp.listen((event) {
-      checkForIMNotification(event.data);
-    });
+  //     // setState(() {}); this cause memory leak
+  //   }); 
+
+  //   FirebaseMessaging.onMessageOpenedApp.listen((event) {
+  //     checkForIMNotification(event.data);
+  //   });
+  // }
+  Future<void> _setupFirebase() async {
+    // Get any messages which caused the application to open from
+    // a terminated state.
+    RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+
+    // If the message also contains a data property with a "type" of "chat",
+    // navigate to a chat screen
+    // if (initialMessage != null) {
+    //   checkForIMNotification(initialMessage.data);
+    // }
+
+    // Also handle any interaction when the app is in the background via a
+    // Stream listener
+    FirebaseMessaging.onMessageOpenedApp.listen(
+      (RemoteMessage message)=>checkForIMNotification(message.data)
+    );
+    FirebaseMessaging.onMessage.listen(_handleForgroundMessage);
   }
+  
+  void _handleForgroundMessage(RemoteMessage message) {
+    if(message.notification != null){
+      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = registerNotifications();
+      if(message.data.containsKey('remove_fusion_call')){
+        var id = intIdForString(message.data['remove_fusion_call']);
+        flutterLocalNotificationsPlugin.cancel(id);
+      } else {
+        const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
+          'fusion1', 
+          'Fusion chats',
+          channelDescription: 'Fusion incoming messages',
+          importance: Importance.max,
+          icon: "@mipmap/app_icon",
+        );
 
+        const NotificationDetails platformChannelSpecifics = NotificationDetails(
+          android: androidPlatformChannelSpecifics
+        );
+        flutterLocalNotificationsPlugin.show(
+          Random().nextInt(1000),
+          message.data['title'],
+          message.data['from_number'] + " says: " + message.data['body'], 
+          platformChannelSpecifics,
+        );
+        messageData = message.data;
+      }
+    }
+  }
   _autoLogin() {
     SharedPreferences.getInstance().then((SharedPreferences prefs) {
-      String username = prefs.getString("username");
+      String? username = prefs.getString("username");
       if (username != null) {
         String domain = username.split('@')[1];
-        String sub_login = prefs.getString("sub_login");
-        String aor = prefs.getString("aor");
-        String auth_key = prefs.getString("auth_key");
+        String? sub_login = prefs.getString("sub_login");
+        String? aor = prefs.getString("aor");
+        String? auth_key = prefs.getString("auth_key");
 
         if (auth_key != null && auth_key != "") {
           fusionConnection.autoLogin(username, domain);
           setState(() {
-            _sub_login = sub_login;
+            _sub_login = sub_login ?? "";
             _auth_key = auth_key;
-            _aor = aor;
+            _aor = aor ?? "";
             _logged_in = true;
             _isRegistering = true;
           });
 
-          softphone.register(sub_login, auth_key, aor.replaceAll('sip:', ''));
+          softphone.register(sub_login, auth_key, aor!.replaceAll('sip:', ''));
           softphone.onUnregister(() {
                  fusionConnection.nsApiCall('device', 'read', {
         'domain': fusionConnection.getDomain(),
@@ -604,7 +656,7 @@ class _MyHomePageState extends State<MyHomePage> {
         builder: (context) => NewMessagePopup(fusionConnection, softphone, onMessagePosted));
   }
 
-  void _loginSuccess(String username, String password) {
+  void _loginSuccess(String? username, String? password) {
     this.setState(() {
       _logged_in = true;
     });
@@ -655,7 +707,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     if (softphone.activeCall != null &&
-        softphone.isConnected(softphone.activeCall) != null
+        softphone.isConnected(softphone.activeCall!) != null
         && !FlutterBackground.isBackgroundExecutionEnabled
         && Platform.isAndroid) {
       if(!flutterBackgroundInitialized){
@@ -671,12 +723,12 @@ class _MyHomePageState extends State<MyHomePage> {
               (value) => print("disablebgexecutionvalue" + value.toString()));
     }
     if (softphone.activeCall != null
-        && softphone.isConnected(softphone.activeCall) != null
+        && softphone.isConnected(softphone.activeCall!) != null
         && !softphone.getHoldState(softphone.activeCall)
         && !softphone.isSpeakerEnabled()
         && !_isProximityListening) {
       _isProximityListening = true;
-      _proximitySub = proximityEvents.listen((ProximityEvent event) {
+      _proximitySub = proximityEvents!.listen((ProximityEvent event) {
         setState(() {
         });
       });

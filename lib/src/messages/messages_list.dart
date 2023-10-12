@@ -24,12 +24,12 @@ import 'message_search_results.dart';
 import 'sms_conversation_view.dart';
 
 class MessagesTab extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final Softphone _softphone;
+  final FusionConnection? _fusionConnection;
+  final Softphone? _softphone;
   final Function setOnMessagePosted;
   final Function clearOnMessagePosted;
 
-  MessagesTab(this._fusionConnection, this._softphone,this.setOnMessagePosted, this.clearOnMessagePosted, {Key key})
+  MessagesTab(this._fusionConnection, this._softphone,this.setOnMessagePosted, this.clearOnMessagePosted, {Key? key})
       : super(key: key);
 
   @override
@@ -37,38 +37,38 @@ class MessagesTab extends StatefulWidget {
 }
 
 class _MessagesTabState extends State<MessagesTab> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
   Function get _setOnMessagePosted => widget.setOnMessagePosted;
   Function get _clearOnMessagePosted => widget.clearOnMessagePosted;
 
-  Softphone get _softphone => widget._softphone;
-  SMSConversation openConversation = null;
+  Softphone? get _softphone => widget._softphone;
+  SMSConversation? openConversation = null;
   bool showingResults = false;
   List<SMSConversation> _convos = [];
   List<CrmContact> _crmContacts = [];
   List<Contact> _contacts = [];
   String _myNumber = "";
   bool _loaded = false;
-  StreamSubscription<ConnectivityResult> connectivitySubscription;
+  late StreamSubscription<ConnectivityResult> connectivitySubscription;
 
   initState() {
     super.initState();
-    if (_fusionConnection.smsDepartments.lookupRecord(DepartmentIds.AllMessages) != null) {
+    if (_fusionConnection!.smsDepartments.lookupRecord(DepartmentIds.AllMessages) != null) {
       _loaded = true;
     }
-    _fusionConnection.smsDepartments.getDepartments((List<SMSDepartment> list) {
+    _fusionConnection!.smsDepartments.getDepartments((List<SMSDepartment> list) {
       if (!mounted) return;
       this.setState(() {
         _loaded = true;
       });
     });
     connectivitySubscription =
-      _fusionConnection.connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+      _fusionConnection!.connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
   }
   
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     setState(() {
-      _fusionConnection.connectivityResult = result;
+      _fusionConnection!.connectivityResult = result;
     });
   }
 
@@ -117,12 +117,12 @@ class _MessagesTabState extends State<MessagesTab> {
 }
 
 class MessagesList extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final Softphone _softphone;
+  final FusionConnection? _fusionConnection;
+  final Softphone? _softphone;
   final Function setOnMessagePosted;
   final Function clearOnMessagePosted;
 
-  MessagesList(this._fusionConnection, this._softphone,this.setOnMessagePosted, this.clearOnMessagePosted, {Key key})
+  MessagesList(this._fusionConnection, this._softphone,this.setOnMessagePosted, this.clearOnMessagePosted, {Key? key})
       : super(key: key);
 
   @override
@@ -130,11 +130,11 @@ class MessagesList extends StatefulWidget {
 }
 
 class _MessagesListState extends State<MessagesList> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
   Function get _setOnMessagePosted => widget.setOnMessagePosted;
   Function get _clearOnMessagePosted => widget.clearOnMessagePosted;
 
-  Softphone get _softphone => widget._softphone;
+  Softphone? get _softphone => widget._softphone;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<SMSConversation> _convos = [];
   String _selectedGroupId = DepartmentIds.AllMessages;
@@ -168,7 +168,7 @@ class _MessagesListState extends State<MessagesList> {
   refreshView(updatedConvoId){
     setState(() {
       if(mounted && updatedConvoId != null){
-        SMSConversation c = _convos.where(
+        SMSConversation? c = _convos.where(
           (SMSConversation con) => con.getId() == updatedConvoId).isNotEmpty 
             ? _convos.where((SMSConversation con) => con.getId() == updatedConvoId).first 
             : null;
@@ -187,12 +187,12 @@ class _MessagesListState extends State<MessagesList> {
     }
   }
 
-  void deleteConvo(SMSConversation conversation, SMSMessage lastMessage){
+  void deleteConvo(SMSConversation conversation, SMSMessage? lastMessage){
     this.setState(() {
-      if(conversation!= null && lastMessage != null) {
+      if(lastMessage != null) {
         _convos.forEach((convo) {
             if(convo.getId() == conversation.getId())
-            convo.message.message = lastMessage.message;
+            convo.message!.message = lastMessage.message;
         });
       } else {
         _convos.removeWhere((convo) => convo.getId() == conversation.getId());
@@ -201,18 +201,18 @@ class _MessagesListState extends State<MessagesList> {
     });
   }
 
-  SMSDepartment _getDepartmentName(SMSConversation convo) {
+  SMSDepartment? _getDepartmentName(SMSConversation convo) {
     if (_selectedGroupId != DepartmentIds.AllMessages)
       return null;
     else {
-      return _fusionConnection.smsDepartments.getDepartmentByPhoneNumber(convo.myNumber);
+      return _fusionConnection!.smsDepartments.getDepartmentByPhoneNumber(convo.myNumber);
     }
   }
 
   _lookupMessages() {
     if(_selectedGroupId == null) return;
     lookupState = 1;
-    _fusionConnection.conversations
+    _fusionConnection!.conversations
         .getConversations(_selectedGroupId, 100, _page * 100,
             (List<SMSConversation> convos, bool fromServer, String departmentId) {
       if (!mounted) return;
@@ -225,15 +225,15 @@ class _MessagesListState extends State<MessagesList> {
         if (_page == 0) {
           _convos = convos;
         } else {
-          Map<String, SMSConversation> allconvos = {};
+          Map<String?, SMSConversation> allconvos = {};
           for (SMSConversation s in _convos) allconvos[s.getId()] = s;
           for (SMSConversation s in convos) allconvos[s.getId()] = s;
           _convos = allconvos.values.toList().cast<SMSConversation>();
         }
 
         _convos.sort((SMSConversation a, SMSConversation b) {
-          return DateTime.parse(a.lastContactTime)
-                  .isAfter(DateTime.parse(b.lastContactTime))
+          return DateTime.parse(a.lastContactTime!)
+                  .isAfter(DateTime.parse(b.lastContactTime!))
               ? -1
               : 1;
         });
@@ -263,24 +263,30 @@ class _MessagesListState extends State<MessagesList> {
   }
 
   _selectedDepartmentName() {
-    SMSDepartment dep = _fusionConnection.smsDepartments.getDepartment(_selectedGroupId);
+    SMSDepartment? dep = _fusionConnection!.smsDepartments.getDepartment(_selectedGroupId);
 
     return dep != null ? dep.groupName : "All Messages";
   }
 
-  _groupOptions() {
+  List<List<String>> _groupOptions() {
     List<SMSDepartment> departments =
-        _fusionConnection.smsDepartments.allDepartments();
+        _fusionConnection!.smsDepartments.allDepartments();
     List<List<String>> options = [];
 
     departments.sort((a,b)=> a.groupName == "All Messages" 
       ? -1 
-      : (a.groupName != "All Messages" && int.parse(a.id) < int.parse(b.id))
+      : (a.groupName != "All Messages" && int.parse(a.id!) < int.parse(b.id!))
        ? -1
        : 1
     );
     for (SMSDepartment d in departments) {
-      options.add([d.groupName, d.id, d.unreadCount.toString(), d.id, d.protocol]);
+      options.add([
+        d.groupName ?? "", 
+        d.id ?? "", 
+        d.unreadCount.toString(), 
+        d.id ?? "", 
+        d.protocol ?? ""
+      ]);
     }
     return options;
   }
@@ -368,6 +374,7 @@ class _MessagesListState extends State<MessagesList> {
                               overflow: TextOverflow.ellipsis,
                             ))),
                     FusionDropdown(
+                      selectedNumber: "",
                         onChange: _changeGroup,
                         value: _selectedGroupId,
                         options: _groupOptions(),
@@ -393,13 +400,13 @@ class _MessagesListState extends State<MessagesList> {
 }
 
 class SMSConversationSummaryView extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final Softphone _softphone;
+  final FusionConnection? _fusionConnection;
+  final Softphone? _softphone;
   final SMSConversation _convo;
-  final SMSDepartment department;
+  final SMSDepartment? department;
   final String _selectedGroupId;
-  Function(SMSConversation, SMSMessage) deleteConvo;
-  Function refreshView;
+  Function(SMSConversation, SMSMessage?)? deleteConvo;
+  Function? refreshView;
   SMSConversationSummaryView(
     this._fusionConnection, 
     this._softphone,
@@ -408,7 +415,7 @@ class SMSConversationSummaryView extends StatefulWidget {
     this._selectedGroupId, 
     this.deleteConvo, 
     this.refreshView,
-    {Key key}
+    {Key? key}
   ): super(key: key);
 
   @override
@@ -417,21 +424,21 @@ class SMSConversationSummaryView extends StatefulWidget {
 
 class _SMSConversationSummaryViewState
     extends State<SMSConversationSummaryView> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
 
-  Softphone get _softphone => widget._softphone;
+  Softphone? get _softphone => widget._softphone;
 
-  SMSDepartment get _department => widget.department;
+  SMSDepartment? get _department => widget.department;
 
   SMSConversation get _convo => widget._convo;
   final _searchInputController = TextEditingController();
 
   String get _departmentId => widget._selectedGroupId;
-  Function(SMSConversation, SMSMessage) get _deleteConvo => widget.deleteConvo;
-  Function get _refreshView => widget.refreshView;
+  Function(SMSConversation, SMSMessage?)? get _deleteConvo => widget.deleteConvo;
+  Function? get _refreshView => widget.refreshView;
 
   _openConversation() {
-    _fusionConnection.conversations.markRead(_convo);
+    _fusionConnection!.conversations.markRead(_convo);
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -464,32 +471,32 @@ class _SMSConversationSummaryViewState
     Image icon = Image.asset("assets/icons/messages/department.png", height: 15,);
     Color textColor = char;
     
-    if(_department.protocol == DepartmentProtocols.FusionChats){
+    if(_department!.protocol == DepartmentProtocols.FusionChats){
       bg = fusionChatsBg;
       textColor = fusionChats;
       icon = Image.asset("assets/icons/messages/fusion_chats.png", height: 15,);
     }
     
-    if(_department.id == DepartmentIds.Personal){
+    if(_department!.id == DepartmentIds.Personal){
       bg = personalChatBg;
       textColor = personalChat;
       icon = Image.asset("assets/icons/messages/personal.png", height: 15,);
     }
     
-    if(_department.protocol == DepartmentProtocols.telegram){
+    if(_department!.protocol == DepartmentProtocols.telegram){
       bg = telegramChatBg;
       textColor = telegramChat;
       icon = Image.asset("assets/icons/messages/telegram.png", height: 15,);
 
     }
     
-    if(_department.protocol == DepartmentProtocols.whatsapp){
+    if(_department!.protocol == DepartmentProtocols.whatsapp){
       bg = whatsappChatBg;
       textColor = whatsappChat;
       icon = Image.asset("assets/icons/messages/whatsapp.png", height: 15,);
     }
     
-    if(_department.protocol == DepartmentProtocols.facebook){
+    if(_department!.protocol == DepartmentProtocols.facebook){
       bg = facebookChatBg;
       textColor = facebookChat;
       icon = Image.asset("assets/icons/messages/messenger.png", height: 15,);
@@ -508,7 +515,7 @@ class _SMSConversationSummaryViewState
         children: [
           icon,
           Text(
-            _department.groupName,
+            _department!.groupName!,
             style: TextStyle(fontSize: 12, color: textColor, fontWeight: FontWeight.bold),)
         ],
       ),
@@ -517,21 +524,21 @@ class _SMSConversationSummaryViewState
 
   @override
   Widget build(BuildContext context) {
-    String convoLabel = '';
+    String? convoLabel = '';
     DateTime date =
-        DateTime.fromMillisecondsSinceEpoch(_convo.message.unixtime * 1000);
-    Coworker _coworker;
+        DateTime.fromMillisecondsSinceEpoch(_convo.message!.unixtime! * 1000);
+    Coworker? _coworker;
 
-    if(_convo.isGroup){
+    if(_convo.isGroup!){
       convoLabel = _convo.groupName ?? 'group conversation'.toTitleCase();
     } else {
-      if(_convo.number.contains("@")){
-        _fusionConnection.coworkers.getRecord(_convo.number, (p0) => _coworker = p0);
+      if(_convo.number!.contains("@")){
+        _fusionConnection!.coworkers.getRecord(_convo.number, (p0) => _coworker = p0);
       }
-      String contactName = _convo.contactName(coworker: _coworker);
+      String? contactName = _convo.contactName(coworker: _coworker);
       convoLabel = contactName == "Unknown" &&  _convo.number!= null 
-        ?_convo.number.formatPhone()
-        : contactName;
+        ?_convo.number!.formatPhone()
+        : contactName!;
     }
 
     return GestureDetector(
@@ -553,8 +560,8 @@ class _SMSConversationSummaryViewState
           ),
           onDismissed: (DismissDirection direction) {
             if(_deleteConvo != null){
-              _fusionConnection.conversations.deleteConversation(_convo, _departmentId);
-              _deleteConvo(_convo,null);
+              _fusionConnection!.conversations.deleteConversation(_convo, _departmentId);
+              _deleteConvo!(_convo,null);
             }
           },
           confirmDismiss: (DismissDirection direction) async {
@@ -631,7 +638,7 @@ class _SMSConversationSummaryViewState
                                               //         _departmentName
                                               //     : "") +
                                               " \u2014 " +
-                                              _convo.message.message,
+                                              _convo.message!.message!,
                                           style: smallTextStyle,
                                           maxLines: 1,
                                           softWrap: true,
@@ -639,7 +646,7 @@ class _SMSConversationSummaryViewState
                                     if(_departmentId == DepartmentIds.AllMessages && _department != null)
                                       _departmentTag()
                             ])),
-                            if (_convo.unread > 0)
+                            if (_convo.unread! > 0)
                               Container(
                                 width: 8,
                                 height: 8,
@@ -648,7 +655,7 @@ class _SMSConversationSummaryViewState
                                     shape: BoxShape.circle,
                                     color: informationBlue),
                               ),
-                            if(_convo.message.messageStatus == "offline")
+                            if(_convo.message!.messageStatus == "offline")
                               Icon(Icons.error_outline, color: Colors.red,)
                           ],
                         )))
@@ -658,14 +665,14 @@ class _SMSConversationSummaryViewState
 }
 
 class SearchMessagesView extends StatefulWidget {
-  final FusionConnection _fusionConnection;
+  final FusionConnection? _fusionConnection;
   final Function() _onClearSearch;
   final Function(List<SMSConversation>, List<CrmContact>, List<Contact>)
       _onHasResults;
 
   SearchMessagesView(
       this._fusionConnection, this._onHasResults, this._onClearSearch,
-      {Key key})
+      {Key? key})
       : super(key: key);
 
   @override
@@ -673,7 +680,7 @@ class SearchMessagesView extends StatefulWidget {
 }
 
 class _SearchMessagesViewState extends State<SearchMessagesView> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
   final _searchInputController = TextEditingController();
 
   _openMenu() {
@@ -684,7 +691,7 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
   String myPhoneNumber = "8014569812";
   String _query = "";
   int willSearch = 0;
-  String _searchingFor;
+  String? _searchingFor;
 
   Function() get _onClearSearch => widget._onClearSearch;
 
@@ -703,7 +710,7 @@ class _SearchMessagesViewState extends State<SearchMessagesView> {
         String query = _searchInputController.value.text;
         _searchingFor = query;
 
-        _fusionConnection.messages.searchV2(query, (List<SMSConversation> convos,
+        _fusionConnection!.messages.searchV2(query, (List<SMSConversation> convos,
             List<CrmContact> crmContacts, List<Contact> contacts) {
               if(!mounted)return;
           if (mounted && query == _searchingFor) {

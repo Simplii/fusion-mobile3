@@ -20,10 +20,10 @@ import '../styles.dart';
 import 'contact_profile_view.dart';
 
 class RecentContactsTab extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final Softphone _softphone;
+  final FusionConnection? _fusionConnection;
+  final Softphone? _softphone;
 
-  RecentContactsTab(this._fusionConnection, this._softphone, {Key key})
+  RecentContactsTab(this._fusionConnection, this._softphone, {Key? key})
       : super(key: key);
 
   @override
@@ -31,10 +31,10 @@ class RecentContactsTab extends StatefulWidget {
 }
 
 class _RecentContactsTabState extends State<RecentContactsTab> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
 
-  Softphone get _softphone => widget._softphone;
-  SMSConversation openConversation = null;
+  Softphone? get _softphone => widget._softphone;
+  SMSConversation? openConversation = null;
   bool _showingResults = false;
   String _selectedTab = 'coworkers';
   String _query = '';
@@ -42,7 +42,7 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
   
   @override initState(){ 
     super.initState(); 
-    v2Domain = _fusionConnection.settings.isV2User();
+    v2Domain = _fusionConnection!.settings!.isV2User();
   }
 
   _getTitle() {
@@ -108,18 +108,18 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
 }
 
 class ContactsSearchList extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final Softphone _softphone;
+  final FusionConnection? _fusionConnection;
+  final Softphone? _softphone;
   final String _query;
   final String selectedTab;
-  final Function(Contact contact, CrmContact crmContact) onSelect;
+  final Function(Contact contact, CrmContact? crmContact)? onSelect;
   final bool isV2Domain;
   final bool fromDialpad;
-  bool embedded = false;
+  bool? embedded = false;
 
   ContactsSearchList(
       this._fusionConnection, this._softphone, this._query, this.selectedTab, this.isV2Domain,
-      {Key key, this.embedded, this.onSelect, this.fromDialpad = false})
+      {Key? key, this.embedded, this.onSelect, this.fromDialpad = false})
       : super(key: key);
 
   @override
@@ -127,21 +127,21 @@ class ContactsSearchList extends StatefulWidget {
 }
 
 class _ContactsSearchListState extends State<ContactsSearchList> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
 
-  Softphone get _softphone => widget._softphone;
+  Softphone? get _softphone => widget._softphone;
 
-  bool get _embedded => widget.embedded == null ? false : widget.embedded;
+  bool? get _embedded => widget.embedded == null ? false : widget.embedded;
   bool get _fromDialpad => widget.fromDialpad;
 
   String get _query => widget._query;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<Contact> _contacts = [];
-  String _lookedUpQuery;
+  String? _lookedUpQuery;
   bool get _isV2Domain => widget.isV2Domain;
   String get _selectedTab => widget.selectedTab;
   String _typeFilter = "Fusion Contacts";
-  String _subscriptionKey;
+  String? _subscriptionKey;
   int _page = 0;
   bool _hasPulledFromServer = false;
 
@@ -151,17 +151,17 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
   _subscribeCoworkers(List<String> uids, Function(List<Coworker>) callback) {
     if (_subscriptionKey != null) {
-      _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
+      _fusionConnection!.coworkers.clearSubscription(_subscriptionKey);
     }
 
-    _subscriptionKey = _fusionConnection.coworkers.subscribe(uids, callback);
+    _subscriptionKey = _fusionConnection!.coworkers.subscribe(uids, callback);
   }
 
   @override
   dispose() {
     super.dispose();
     if (_subscriptionKey != null) {
-      _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
+      _fusionConnection!.coworkers.clearSubscription(_subscriptionKey);
     }
   }
 
@@ -179,7 +179,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     if (_typeFilter == 'Fusion Contacts') {
       if (_page == -1) return;
       if(_isV2Domain){
-        _fusionConnection.contacts.searchV2(_query, 100, _page * 100, _fromDialpad,
+        _fusionConnection!.contacts.searchV2(_query, 100, _page * 100, _fromDialpad,
           (List<Contact> contacts, bool fromServer) {
           if (thisLookup != _lookedUpQuery) return;
           if (!mounted) return;
@@ -197,7 +197,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             if (_page == 0) {
               _contacts = contacts;
             } else {
-              Map<String, Contact> list = {};
+              Map<String?, Contact> list = {};
 
               _contacts.forEach((Contact c) {
                 list[c.id] = c;
@@ -214,7 +214,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
           });
         });
       } else {
-        _fusionConnection.contacts.search(_query, 100, _page * 100,
+        _fusionConnection!.contacts.search(_query, 100, _page * 100,
           (List<Contact> contacts, bool fromServer) {
           if (thisLookup != _lookedUpQuery) return;
           if (!mounted) return;
@@ -233,7 +233,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             if (_page == 0) {
               _contacts = contacts;
             } else {
-              Map<String, Contact> list = {};
+              Map<String?, Contact> list = {};
 
               _contacts.forEach((Contact c) {
                 list[c.id] = c;
@@ -252,8 +252,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       }
     } else if (_typeFilter == 'Integrated Contacts') {
       if (_page == -1) return;
-      _fusionConnection.integratedContacts.search(_query, 100, _page * 100,
-          (List<Contact> contacts, bool fromServer, bool hasMore) {
+      _fusionConnection!.integratedContacts.search(_query, 100, _page * 100,
+          (List<Contact> contacts, bool fromServer, bool? hasMore) {
         if (thisLookup != _lookedUpQuery) return;
         if (!mounted) return;
         if (_typeFilter != 'Integrated Contacts') return;
@@ -271,7 +271,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
           if (_page == 0) {
             _contacts = contacts;
           } else {
-            Map<String, Contact> list = {};
+            Map<String?, Contact> list = {};
             _contacts.forEach((Contact c) {
               list[c.id] = c;
             });
@@ -289,7 +289,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         });
       });
     } else if (_typeFilter == 'Coworkers') {
-      _fusionConnection.coworkers.search(_query, (List<Contact> contacts) {
+      _fusionConnection!.coworkers.search(_query, (List<Contact> contacts) {
         if (thisLookup != _lookedUpQuery) return;
         if (!mounted) return;
         if (_typeFilter != 'Coworkers') return;
@@ -302,7 +302,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         _subscribeCoworkers(
             contacts
                 .map((Contact c) {
-                  return c.coworker.uid;
+                  return c.coworker!.uid;
                 })
                 .toList()
                 .cast<String>(), (List<Coworker> coworkers) {
@@ -359,7 +359,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     return GestureDetector(
         onTap: () {
           if (widget.onSelect != null)
-            widget.onSelect(contact, null);
+            widget.onSelect!(contact, null);
           else
             _openProfile(contact);
         },
@@ -387,7 +387,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                     child: Column(children: [
                   Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(contact.name,
+                      child: Text(contact.name!,
                           style: TextStyle(
                               color: coal,
                               fontSize: 14,
@@ -407,8 +407,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                               Image.asset("assets/icons/phone_filled_dark.png", width: 10, height: 10),
                             Text(
                               contact.coworker != null
-                                  ? (contact.coworker.statusMessage != null
-                                      ? contact.coworker.statusMessage
+                                  ? (contact.coworker!.statusMessage != null
+                                      ? contact.coworker!.statusMessage!
                                       : '')
                                   : contact.firstNumber() != null 
                                     ? contact.firstNumber().toString().formatPhone() 
@@ -430,16 +430,16 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   _sortList(List<Contact> list) {
     _contacts.sort((a, b) {
       if (_typeFilter == 'Integrated Contacts')
-        return (a.name)
+        return a.name!
             .trim()
             .toLowerCase()
-            .compareTo((b.name).trim().toLowerCase());
+            .compareTo(b.name!.trim().toLowerCase());
 
       else
-        return (a.lastName + " " + a.firstName)
+        return (a.lastName! + " " + a.firstName!)
             .trim()
             .toLowerCase()
-            .compareTo((b.lastName + " " + b.firstName).trim().toLowerCase());
+            .compareTo((b.lastName! + " " + b.firstName!).trim().toLowerCase());
     });
   }
 
@@ -447,7 +447,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     String usingLetter = '';
     List<Widget> rows = [];
     _contacts.forEach((item) {
-      String letter = (item.firstName + item.lastName).trim()[0].toLowerCase();
+      String letter = (item.firstName! + item.lastName!).trim()[0].toLowerCase();
       if (usingLetter != letter) {
         usingLetter = letter;
       } else {
@@ -460,20 +460,20 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
   _letterFor(Contact item) {
     if (_typeFilter == 'Integrated Contacts') {
-      if (item.name.trim().length == 0)
+      if (item.name!.trim().length == 0)
         return " ";
       else
-        return (item.name).trim()[0].toLowerCase();
+        return item.name!.trim()[0].toLowerCase();
     } else if (_typeFilter == 'Fusion Contacts') {
-      if ((item.lastName + item.firstName).trim().length == 0)
+      if ((item.lastName! + item.firstName!).trim().length == 0)
         return " ";
       else
-        return (item.lastName + item.firstName).trim()[0].toLowerCase();
+        return (item.lastName! + item.firstName!).trim()[0].toLowerCase();
     } else {
-      if ((item.firstName + item.lastName).trim().length == 0)
+      if ((item.firstName! + item.lastName!).trim().length == 0)
         return " ";
       else
-        return (item.firstName + item.lastName).trim()[0].toLowerCase();
+        return (item.firstName! + item.lastName!).trim()[0].toLowerCase();
     }
   }
 
@@ -488,7 +488,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     return lookupState < 2 &&
         _contacts.length == 0 &&
         (_typeFilter != 'Coworkers' ||
-            _fusionConnection.coworkers.hasntLoaded());
+            _fusionConnection!.coworkers.hasntLoaded());
   }
 
   @override
@@ -560,7 +560,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                     },
                     padding: _fromDialpad 
                       ? null 
-                      : EdgeInsets.only(left: 12, right: 12, top: _embedded ? 28 : 40)
+                      : EdgeInsets.only(left: 12, right: 12, top: _embedded! ? 28 : 40)
                   )
               ),
           ],
@@ -571,7 +571,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     return Expanded(
         child: Container(
             decoration: BoxDecoration(
-                color: _embedded ? Colors.transparent : Colors.white,
+                color: _embedded! ? Colors.transparent : Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(16))),
             padding: EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
             child: Stack(children: [
@@ -596,7 +596,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                             }
                           },
                           padding: EdgeInsets.only(
-                              left: 12, right: 12, top: _embedded ? 28 : 40))),
+                              left: 12, right: 12, top: _embedded! ? 28 : 40))),
               Container(
                   decoration: BoxDecoration(
                     boxShadow: [],
@@ -609,8 +609,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                           1.0
                         ],
                         colors: [
-                          _embedded ? particle : Colors.white,
-                          _embedded
+                          _embedded! ? particle : Colors.white,
+                          _embedded!
                               ? particle.withAlpha(0)
                               : translucentWhite(0.0)
                         ]),
@@ -618,7 +618,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                                     width: MediaQuery.of(context).size.width,
 
                   padding: EdgeInsets.only(
-                      left: 12, top: _embedded ? 0 : 12, bottom: 32),
+                      left: 12, top: _embedded! ? 0 : 12, bottom: 32),
                   child: Text(
                       _typeFilter,
                       style: TextStyle(
@@ -647,11 +647,11 @@ class ContactsList extends StatefulWidget {
   final Softphone _softphone;
   final String _label;
   final String _selectedTab;
-  final Function(Contact contact, CrmContact crmContact) onSelect;
+  final Function(Contact? contact, CrmContact? crmContact)? onSelect;
 
   ContactsList(
       this._fusionConnection, this._softphone, this._label, this._selectedTab,
-      {Key key, this.onSelect})
+      {Key? key, this.onSelect})
       : super(key: key);
 
   @override
@@ -668,10 +668,10 @@ class _ContactsListState extends State<ContactsList> {
   String get _selectedTab => widget._selectedTab;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<CallHistory> _history = [];
-  String _lookedUpTab;
-  String _subscriptionKey;
-  Map<String, Coworker> _coworkers = {};
-  String _expandedId = "";
+  String? _lookedUpTab;
+  String? _subscriptionKey;
+  Map<String?, Coworker> _coworkers = {};
+  String? _expandedId = "";
 
   expand(item) {
     setState(() {
@@ -750,8 +750,8 @@ class _ContactsListState extends State<ContactsList> {
         return false;
       }
     }).map((item) {
-      if (item.coworker != null && _coworkers[item.coworker.uid] != null) {
-        item.coworker = _coworkers[item.coworker.uid];
+      if (item.coworker != null && _coworkers[item.coworker!.uid] != null) {
+        item.coworker = _coworkers[item.coworker!.uid];
       }
       return CallHistorySummaryView(_fusionConnection, _softphone, item,
           expanded: _expandedId == item.id,
@@ -762,9 +762,9 @@ class _ContactsListState extends State<ContactsList> {
           onSelect: widget.onSelect == null
               ? null
               : () {
-                  widget.onSelect(
+                  widget.onSelect!(
                       item.coworker != null
-                          ? item.coworker.toContact()
+                          ? item.coworker!.toContact()
                           : item.contact,
                       item.crmContact);
                 });
@@ -1041,12 +1041,12 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
 }*/
 
 class SearchContactsBar extends StatefulWidget {
-  final FusionConnection _fusionConnection;
+  final FusionConnection? _fusionConnection;
   final Function() _onClearSearch;
   final Function(String query) _onChange;
 
   SearchContactsBar(this._fusionConnection, this._onChange, this._onClearSearch,
-      {Key key})
+      {Key? key})
       : super(key: key);
 
   @override
@@ -1054,9 +1054,9 @@ class SearchContactsBar extends StatefulWidget {
 }
 
 class _SearchContactsBarState extends State<SearchContactsBar> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
+  FusionConnection? get _fusionConnection => widget._fusionConnection;
   final _searchInputController = TextEditingController();
-  String _selectedTab;
+  String? _selectedTab;
 
   _openMenu() {
     Scaffold.of(context).openDrawer();

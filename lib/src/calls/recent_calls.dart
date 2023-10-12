@@ -15,6 +15,7 @@ import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
@@ -25,7 +26,7 @@ class RecentCallsTab extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
 
-  RecentCallsTab(this._fusionConnection, this._softphone, {Key key})
+  RecentCallsTab(this._fusionConnection, this._softphone, {Key? key})
       : super(key: key);
 
   @override
@@ -36,7 +37,7 @@ class _RecentCallsTabState extends State<RecentCallsTab> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
 
   Softphone get _softphone => widget._softphone;
-  SMSConversation openConversation = null;
+  SMSConversation? openConversation = null;
   bool _showingResults = false;
   String _selectedTab = 'all';
   String _query = '';
@@ -53,7 +54,10 @@ class _RecentCallsTabState extends State<RecentCallsTab> {
       }, () {
       }),
       Container(height: 4),
-      Expanded(child:RecentCallsList(_fusionConnection, _softphone, "Recent Calls", _selectedTab,
+      Expanded(child:RecentCallsList(
+          _fusionConnection, 
+          _softphone, "Recent Calls", 
+          _selectedTab,
           query: _query))
     ];
     return Container(child: Column(children: children));
@@ -63,15 +67,15 @@ class _RecentCallsTabState extends State<RecentCallsTab> {
 class RecentCallsList extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final Softphone _softphone;
-  final String _label;
+  final String? _label;
   final String _selectedTab;
-  final String query;
-  final Function(Contact contact, CrmContact crmContact) onSelect;
+  final String? query;
+  final Function(Contact? contact, CrmContact? crmContact)? onSelect;
   final bool fromDialpad;
 
   RecentCallsList(
       this._fusionConnection, this._softphone, this._label, this._selectedTab,
-      {Key key, this.onSelect, this.query, this.fromDialpad = false})
+      {Key? key, this.onSelect, this.query, this.fromDialpad = false})
       : super(key: key);
 
   @override
@@ -83,17 +87,17 @@ class _RecentCallsListState extends State<RecentCallsList> {
 
   Softphone get _softphone => widget._softphone;
 
-  String get _label => widget._label;
+  String? get _label => widget._label;
 
   String get _selectedTab => widget._selectedTab;
   bool get _fromDialpad => widget.fromDialpad;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   List<CallHistory> _history = [];
-  String _lookedUpTab;
-  String _subscriptionKey;
-  Map<String, Coworker> _coworkers = {};
+  String? _lookedUpTab;
+  String? _subscriptionKey;
+  Map<String?, Coworker> _coworkers = {};
   String rand = randomString(10);
-  String expandedId = "";
+  String? expandedId = "";
   int _page = 0;
   int _pageSize = 100;
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
@@ -167,7 +171,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
         if (fromServer) {
           lookupState = 2;
         }
-        Map<String,CallHistory> oldHistory = new Map<String,CallHistory>();
+        Map<String?,CallHistory> oldHistory = new Map<String?,CallHistory>();
         _history.forEach((element) {
           oldHistory[element.cdrIdHash] = element;
         });
@@ -178,7 +182,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
         });
         List<CallHistory> list = oldHistory.values.toList();
         list.sort((a, b) {
-          return a.startTime.isBefore(b.startTime) ? 1 : -1;
+          return a.startTime!.isBefore(b.startTime!) ? 1 : -1;
         });
         _history = list;
       });
@@ -191,18 +195,18 @@ class _RecentCallsListState extends State<RecentCallsList> {
 
   List<CallHistory> _filteredHistoryItems() {
     return _history.where((item) {
-      String searchQuery = item.to + ":" + item.from + ":";
+      String searchQuery = item.to! + ":" + item.from! + ":";
 
       if (item.contact != null)
-        searchQuery += item.contact.searchString() + ":";
+        searchQuery += item.contact!.searchString() + ":";
 
       if (item.crmContact != null)
-        searchQuery += item.crmContact.company + ":" + item.crmContact.name + ":" + item.crmContact.crm;
+        searchQuery += item.crmContact!.company! + ":" + item.crmContact!.name! + ":" + item.crmContact!.crm!;
 
       if (item.coworker != null)
-        searchQuery += item.coworker.firstName + ':' + item.coworker.lastName;
+        searchQuery += item.coworker!.firstName! + ':' + item.coworker!.lastName!;
 
-      if (widget.query != "" && !searchQuery.contains(widget.query)) {
+      if (widget.query != "" && !searchQuery.contains(widget.query!)) {
         return false;
       } else if (_selectedTab == 'all') {
         return true;
@@ -221,18 +225,18 @@ class _RecentCallsListState extends State<RecentCallsList> {
   _historyList() {
     List<Widget> response = [Container(height: 50)];
     response.addAll(_history.where((item) {
-      String searchQuery = item.to + ":" + item.from + ":";
+      String searchQuery = item.to! + ":" + item.from! + ":";
 
       if (item.contact != null)
-        searchQuery += item.contact.searchString() + ":";
+        searchQuery += item.contact!.searchString() + ":";
 
       if (item.crmContact != null)
-        searchQuery += item.crmContact.company + ":" + item.crmContact.name + ":" + item.crmContact.crm;
+        searchQuery += item.crmContact!.company! + ":" + item.crmContact!.name! + ":" + item.crmContact!.crm!;
 
       if (item.coworker != null)
-        searchQuery += item.coworker.firstName + ':' + item.coworker.lastName;
+        searchQuery += item.coworker!.firstName! + ':' + item.coworker!.lastName!;
 
-      if (widget.query != "" && !searchQuery.contains(widget.query)) {
+      if (widget.query != "" && !searchQuery.contains(widget.query!)) {
         return false;
       } else if (_selectedTab == 'all') {
         return true;
@@ -246,8 +250,8 @@ class _RecentCallsListState extends State<RecentCallsList> {
         return false;
       }
     }).map((item) {
-      if (item.coworker != null && _coworkers[item.coworker.uid] != null) {
-        item.coworker = _coworkers[item.coworker.uid];
+      if (item.coworker != null && _coworkers[item.coworker!.uid] != null) {
+        item.coworker = _coworkers[item.coworker!.uid];
       }
       return CallHistorySummaryView(_fusionConnection, _softphone, item,
           onExpand: () { expand(item); },
@@ -255,9 +259,9 @@ class _RecentCallsListState extends State<RecentCallsList> {
           onSelect: widget.onSelect == null
               ? null
               : () {
-                  widget.onSelect(
+                  widget.onSelect!(
                       item.coworker != null
-                          ? item.coworker.toContact()
+                          ? item.coworker!.toContact()
                           : item.contact,
                       item.crmContact);
                 });
@@ -267,15 +271,15 @@ class _RecentCallsListState extends State<RecentCallsList> {
   }
 
   _historyRow(CallHistory item, int index) {
-      if (item.coworker != null && _coworkers[item.coworker.uid] != null) {
-        item.coworker = _coworkers[item.coworker.uid];
+      if (item.coworker != null && _coworkers[item.coworker!.uid] != null) {
+        item.coworker = _coworkers[item.coworker!.uid];
       }
       Widget ret = _fromDialpad 
         ? DialpadRecentCalls(
           date: item.startTime,
           contact: item.coworker == null 
             ? item.contact != null ? item.contact : Contact.fake(item.toDid)
-            : item.coworker.toContact(),
+            : item.coworker!.toContact(),
           crmContact: item.crmContact,
           softphone: _softphone,
           onSelect: widget.onSelect)
@@ -286,9 +290,9 @@ class _RecentCallsListState extends State<RecentCallsList> {
           onSelect: widget.onSelect == null
               ? null
               : () {
-                  widget.onSelect(
+                  widget.onSelect!(
                       item.coworker != null
-                          ? item.coworker.toContact()
+                          ? item.coworker!.toContact()
                           : item.contact,
                       item.crmContact);
                 });
@@ -391,7 +395,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
                     top: 12,
                     left: 16,
                   ),
-                  child: Text(_label.toUpperCase(), style: headerTextStyle)),
+                  child: Text(_label!.toUpperCase(), style: headerTextStyle)),
             ])));
   }
 }
@@ -400,14 +404,14 @@ class CallHistorySummaryView extends StatefulWidget {
   final FusionConnection _fusionConnection;
   final CallHistory _historyItem;
   final Softphone _softphone;
-  final bool expanded;
-  Function() onSelect;
-  Function() onExpand;
-  Function refreshHistoryList;
+  final bool? expanded;
+  Function()? onSelect;
+  Function()? onExpand;
+  Function? refreshHistoryList;
 
   CallHistorySummaryView(
       this._fusionConnection, this._softphone, this._historyItem,
-      {Key key, this.onSelect, this.onExpand, this.expanded,this.refreshHistoryList})
+      {Key? key, this.onSelect, this.onExpand, this.expanded,this.refreshHistoryList})
       : super(key: key);
 
   @override
@@ -420,8 +424,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   Softphone get _softphone => widget._softphone;
 
   CallHistory get _historyItem => widget._historyItem;
-  bool get _expanded => widget.expanded;
-  Function get _refreshHistoryList => widget.refreshHistoryList;
+  bool? get _expanded => widget.expanded;
+  Function? get _refreshHistoryList => widget.refreshHistoryList;
 
   initState() {
     super.initState();
@@ -429,15 +433,15 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     if (_historyItem.coworker == null) {
       var matchingCoworker = _fusionConnection.coworkers
           .lookupCoworker(_historyItem.isInbound()
-          ? _historyItem.from
-          : _historyItem.to);
+          ? _historyItem.from!
+          : _historyItem.to!);
       setState(() {
         _historyItem.coworker = matchingCoworker;
       });
     }
   }
 
-  List<Contact> _contacts() {
+  List<Contact?> _contacts() {
     if (_historyItem.contact != null) {
       return [_historyItem.contact];
     } else {
@@ -445,7 +449,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     }
   }
 
-  List<CrmContact> _crmContacts() {
+  List<CrmContact?> _crmContacts() {
     if (_historyItem.crmContact != null) {
       return [_historyItem.crmContact];
     } else {
@@ -455,16 +459,16 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
 
   _expand() {
     if (widget.onExpand != null) {
-      widget.onExpand();
+      widget.onExpand!();
     }
   }
 
-  String _getLinePrefix (String callerId){
-    String linePrefix;
-    List<dynamic> domainPrefixes = _fusionConnection.settings.domainPrefixes();
+  String _getLinePrefix (String? callerId){
+    String? linePrefix;
+    List<dynamic>? domainPrefixes = _fusionConnection.settings.domainPrefixes();
     if (domainPrefixes != null) {
       domainPrefixes.forEach((prefix) {
-        if (callerId.startsWith(prefix)) {
+        if (callerId!.startsWith(prefix)) {
           linePrefix = prefix;
         }
       });
@@ -474,26 +478,26 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
 
   _name() {
     if (_historyItem.coworker != null) {
-      return _historyItem.coworker.firstName +
+      return _historyItem.coworker!.firstName! +
           ' ' +
-          _historyItem.coworker.lastName;
+          _historyItem.coworker!.lastName!;
     } else if (_historyItem.contact != null) {
       String linePrefix = _getLinePrefix(_historyItem.callerId);
       return linePrefix != ""
-          ? linePrefix + "_" + _historyItem.contact.name.toTitleCase()
-          : _historyItem.contact.name.toTitleCase();
+          ? linePrefix + "_" + _historyItem.contact!.name!.toTitleCase()
+          : _historyItem.contact!.name!.toTitleCase();
     } else if (_historyItem.crmContact != null) {
-      return _historyItem.crmContact.name;
+      return _historyItem.crmContact!.name;
     } else if (_historyItem.callerId != '') {
       String linePrefix =  _getLinePrefix(_historyItem.callerId);
-      return _historyItem.callerId.startsWith(linePrefix) && 
-             _historyItem.callerId.replaceAll(linePrefix + "_", "") != "" 
+      return _historyItem.callerId!.startsWith(linePrefix) && 
+             _historyItem.callerId!.replaceAll(linePrefix + "_", "") != "" 
                 ? _historyItem.callerId
-                : _historyItem.callerId + "Unknown";
+                : _historyItem.callerId! + "Unknown";
     } else {
       return _historyItem.direction == 'inbound'
-          ? _historyItem.fromDid.formatPhone()
-          : _historyItem.toDid.formatPhone();
+          ? _historyItem.fromDid!.formatPhone()
+          : _historyItem.toDid!.formatPhone();
     }
   }
 
@@ -512,8 +516,21 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _openMessage() {
-    String number =
-        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
+    String? number = _fusionConnection.smsDepartments.getDepartment(DepartmentIds.Personal).numbers[0];
+    if(number == null){
+      return showModalBottomSheet(
+        context: context,
+        backgroundColor: coal,
+        shape: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        builder: (context)=> Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height / 3,
+          ),
+          child: Center(
+            child: Text("No personal sms number found", style: TextStyle(color: Colors.white),),
+          ),
+        ));
+    }
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -523,11 +540,12 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
               SMSConversation displayingConvo = SMSConversation.build(
                 isGroup: false,
                 contacts:
-                    _historyItem.contact != null ? [_historyItem.contact] : [],
+                    _historyItem.contact != null ? [_historyItem.contact!] : [],
                 crmContacts: _historyItem.crmContact != null
-                    ? [_historyItem.crmContact]
+                    ? [_historyItem.crmContact!]
                     : [],
                 myNumber: number,
+                hash: number + ":" + _historyItem.getOtherNumber(_fusionConnection.getDomain()),
                 number: _historyItem.getOtherNumber(_fusionConnection.getDomain())
               );
               return SMSConversationView(
@@ -555,10 +573,10 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _openProfile() {
-    Contact contact = _historyItem.contact;
-    Contact newContact = null;
+    Contact? contact = _historyItem.contact;
+    Contact? newContact = null;
     if (contact == null && _historyItem.coworker != null){
-      contact = _historyItem.coworker.toContact();
+      contact = _historyItem.coworker!.toContact();
     }
     else if (contact == null && _historyItem.coworker == null && _historyItem.direction == "inbound"){
       newContact = Contact.fake(_historyItem.fromDid);
@@ -575,7 +593,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           builder: (context) => ContactProfileView(
                 _fusionConnection, _softphone, contact, (){
                   setState(() {
-                    _refreshHistoryList();
+                    _refreshHistoryList!();
                   });
                 }
               ));
@@ -585,8 +603,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height - 60),
         isScrollControlled: true,
         builder: (context) => EditContactView(
-            _fusionConnection, newContact, () => Navigator.pop(context, true),(){
-              _refreshHistoryList(); 
+            _fusionConnection, newContact!, () => Navigator.pop(context, true),(){
+              _refreshHistoryList!(); 
             }));
     }
   }
@@ -595,7 +613,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   Widget build(BuildContext context) {
     List<Widget> children = [_topPart()];
     bool haveProfile = _historyItem.contact != null || _historyItem.coworker != null ? true : false;
-    if (_expanded) {
+    if (_expanded!) {
       children.add(Container(
           child: Row(children: [horizontalLine(0)]),
           margin: EdgeInsets.only(top: 4, bottom: 4)));
@@ -611,10 +629,10 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     }
 
     return Container(
-        height: _expanded ? 132 : 76,
+        height: _expanded! ? 132 : 76,
         padding: EdgeInsets.all(4),
         margin: EdgeInsets.only(bottom: 0, left: 12, right: 12),
-        decoration: _expanded
+        decoration: _expanded!
             ? BoxDecoration(
                 color: particle,
                 borderRadius: BorderRadius.only(
@@ -646,7 +664,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     return GestureDetector(
         onTap: () {
           if (widget.onSelect != null)
-            widget.onSelect();
+            widget.onSelect!();
           else
             _expand();
         },
@@ -668,7 +686,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                           Container(
                               margin: EdgeInsets.only(top: 4),
                               decoration: BoxDecoration(
-                                color: _expanded
+                                color: _expanded!
                                     ? Colors.white
                                     : Color.fromARGB(255, 243, 242, 242),
                                 borderRadius:
@@ -709,7 +727,7 @@ class SearchCallsBar extends StatefulWidget {
   final Function(String query) _onChange;
 
   SearchCallsBar(this._fusionConnection, this._onChange, this._onClearSearch,
-      {Key key})
+      {Key? key})
       : super(key: key);
 
   @override
@@ -717,9 +735,8 @@ class SearchCallsBar extends StatefulWidget {
 }
 
 class _SearchCallsBarState extends State<SearchCallsBar> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
   final _searchInputController = TextEditingController();
-  String _selectedTab;
+  String? _selectedTab_selectedTab;
 
   _openMenu() {
     Scaffold.of(context).openDrawer();

@@ -9,16 +9,16 @@ import 'fusion_model.dart';
 import 'fusion_store.dart';
 
 class Coworker extends FusionModel {
-  String email = "";
-  String extension = "";
-  String uid = "";
-  String firstName = "";
-  String lastName = "";
-  String statusMessage = "";
-  String group = "";
-  String presence = "";
-  String url = "";
-  List emails = [];
+  String? email = "";
+  String? extension = "";
+  String? uid = "";
+  String? firstName = "";
+  String? lastName = "";
+  String? statusMessage = "";
+  String? group = "";
+  String? presence = "";
+  String? url = "";
+  List? emails = [];
 
   serialize() {
     return jsonEncode({
@@ -47,11 +47,11 @@ class Coworker extends FusionModel {
   }
   
   Coworker.fromV2(Map<String, dynamic> obj){ 
-    List pictures =  obj.containsKey('pictures') ? obj['pictures'] : [];
+    List? pictures =  obj.containsKey('pictures') ? obj['pictures'] : [];
     this.emails = obj.containsKey('emails') ? obj['emails'] : [];
     this.url = obj.containsKey('url') 
       ? obj['url'] 
-      : pictures.length > 0 
+      : pictures!.length > 0 
         ? pictures.last['url'] 
         : "";
     this.firstName = obj.containsKey('firstName') ? obj['firstName'] : "";
@@ -64,11 +64,11 @@ class Coworker extends FusionModel {
   }
 
   getName() {
-    return (firstName + " " + lastName).trim();
+    return (firstName! + " " + lastName!).trim();
   }
 
   getDomain() {
-    return uid.split('@')[1];
+    return uid!.split('@')[1];
   }
 
   toContact() {
@@ -86,7 +86,7 @@ class Coworker extends FusionModel {
       'id': uid,
       'job_title': '',
       'lead_creation_date': '',
-      'name': firstName + ' ' + lastName,
+      'name': firstName! + ' ' + lastName!,
       'owner': '',
       'parent_id': '',
       'phone_numbers': [{'number': uid, 'type': 'Extension'}],
@@ -104,18 +104,18 @@ class Coworker extends FusionModel {
   }
 
   @override
-  String getId() => this.uid.toLowerCase();
+  String getId() => this.uid!.toLowerCase();
 }
 
 
 class CoworkerSubscription {
-  final List<String> _uids;
+  final List<String>? _uids;
   final Function(List<Coworker>) _callback;
 
   CoworkerSubscription(this._uids, this._callback);
 
   testMatches(Coworker message) {
-    return _uids == null || _uids.contains(message.uid);
+    return _uids == null || _uids!.contains(message.uid);
   }
 
   sendMatching(List<Coworker> items) {
@@ -141,7 +141,7 @@ class CoworkerStore extends FusionStore<Coworker> {
     return getRecords().length == 0;
   }
 
-  subscribe(List<String> uids, Function(List<Coworker>) callback) {
+  subscribe(List<String>? uids, Function(List<Coworker>) callback) {
     String name = randomString(20);
     subscriptions[name] = CoworkerSubscription(uids, callback);
     return name;
@@ -162,20 +162,20 @@ class CoworkerStore extends FusionStore<Coworker> {
     }
   }
 
-  Coworker lookupCoworker(String uid) {
+  Coworker? lookupCoworker(String uid) {
     return lookupRecord(uid.toLowerCase());
   }
 
   String avatarFor(Coworker c) {
-    String url = fusionConnection.settings.avatarForUser(c.uid);
+    String url = fusionConnection.settings!.avatarForUser(c.uid!);
     if (url == fusionConnection.defaultAvatar && c.email != "") {
       try {
-        return Gravatar(c.email).imageUrl(defaultImage: avatarUrl(c.firstName, c.lastName)); }
+        return Gravatar(c.email!).imageUrl(defaultImage: avatarUrl(c.firstName, c.lastName)); }
       catch (e) {
         return avatarUrl(c.firstName, c.lastName);
       }
-    } else if(url == fusionConnection.defaultAvatar && c.emails.length > 0){
-      String mostRecentWorkEmail = c.emails.where((email) => email['type'] == "Work").toList().last['email'];
+    } else if(url == fusionConnection.defaultAvatar && c.emails!.length > 0){
+      String mostRecentWorkEmail = c.emails!.where((email) => email['type'] == "Work").toList().last['email'];
       try {
         return Gravatar(mostRecentWorkEmail).imageUrl(defaultImage: avatarUrl(c.firstName, c.lastName)); }
       catch (e) {
@@ -188,8 +188,8 @@ class CoworkerStore extends FusionStore<Coworker> {
     }
   }
 
-  storePresence(String uid, String status, String message) {
-    Coworker record = lookupCoworker(uid);
+  storePresence(String uid, String? status, String? message) {
+    Coworker? record = lookupCoworker(uid);
     if (record != null) {
       record.presence = status;
       record.statusMessage = message;
@@ -203,12 +203,12 @@ class CoworkerStore extends FusionStore<Coworker> {
       List<Contact> list = [];
       List<Coworker> records = getRecords();
       records.sort((Coworker c1, Coworker c2) {
-        return (c1.firstName + c1.lastName)
-            .compareTo(c2.firstName + c2.lastName);
+        return (c1.firstName! + c1.lastName!)
+            .compareTo(c2.firstName! + c2.lastName!);
       });
       for (Coworker c in records) {
-        if ((c.firstName + " " + c.lastName
-            + " " + c.email + " " + c.uid).contains(query)) {
+        if ((c.firstName! + " " + c.lastName!
+            + " " + c.email! + " " + c.uid!).contains(query)) {
           list.add(c.toContact());
         }
       }
@@ -217,12 +217,8 @@ class CoworkerStore extends FusionStore<Coworker> {
   }
 
   getCoworkers(Function(List<Coworker>) callback) {
-    var future = new Future.delayed(const Duration(milliseconds: 10), () {
-      callback(getRecords());
-    });
-
     bool v2User = fusionConnection.settings.isV2User();
-
+    print("MDBM $v2User");
     if(v2User){
       fusionConnection.apiV2Call("post","/client/coworkers",{},
         callback: (Map<String,dynamic> datas) {

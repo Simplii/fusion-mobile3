@@ -16,34 +16,31 @@ import 'sms_departments.dart';
 class SMSConversation extends FusionModel {
   List<CrmContact> crmContacts = [];
   List<Contact> contacts = [];
-  String groupName;
-  String hash;
-  bool isGroup;
-  String lastContactTime;
-  List<dynamic> members;
-  SMSMessage message;
-  String number;
-  String myNumber;
-  int unread;
-  int conversationId;
-  String selectedDepartmentId;
+  String? groupName;
+  late String hash;
+  bool isGroup = false;
+  String lastContactTime = "";
+  List<dynamic> members = [];
+  SMSMessage? message;
+  late String number;
+  late String myNumber;
+  late int unread;
+  int? conversationId;
+  late String selectedDepartmentId;
 
-  String contactName({Coworker coworker}) {
+  String contactName({Coworker? coworker}) {
     String name = "Unknown";
-    if (contacts != null) {
-      for (Contact contact in contacts) {
-        if (contact.name != null && contact.name.trim() != "") {
-          name = contact.name;
-        }
+    for (Contact contact in contacts!) {
+      if (contact.name != null && contact.name?.trim() != "") {
+        name = contact.name ?? "Unknown";
       }
     }
-    if (crmContacts != null) {
-      for (CrmContact contact in crmContacts) {
-        if (contact.name != null && contact.name.trim() != "") {
-          name = contact.name;
-        }
+    for (CrmContact contact in crmContacts) {
+      if (contact.name != null && contact.name?.trim() != "") {
+        name = contact.name ?? "Unknown";
       }
     }
+
     if(this.isGroup){
       name = this.hash.replaceAll(':', ',').formatPhone();  
     }
@@ -54,19 +51,19 @@ class SMSConversation extends FusionModel {
   }
 
   SMSConversation.build(
-      {this.myNumber,
-      this.number,
+      {required this.myNumber,
+      required this.number,
       this.message,
-      this.contacts,
-      this.crmContacts,
+      required this.contacts,
+      required this.crmContacts,
       this.conversationId,
-      this.isGroup,
-      this.hash,
+      required this.isGroup,
+      required this.hash,
       this.selectedDepartmentId = DepartmentIds.Personal}) {
     this.hash = this.hash ?? this.myNumber + ":" + this.number;
     this.unread = 0;
     if (this.message != null) {
-      this.lastContactTime = message.time.date;
+      this.lastContactTime = message!.time.date!;
     }
   }
 
@@ -76,8 +73,8 @@ class SMSConversation extends FusionModel {
     this.isGroup = c.isGroup;
     this.lastContactTime = c.lastContactTime;
     this.lastContactTime = c.lastContactTime;
-    this.myNumber = c.myNumber.toLowerCase();
-    this.number = c.number.toLowerCase();
+    this.myNumber = c.myNumber!.toLowerCase();
+    this.number = c.number!.toLowerCase();
     this.members = c.members;
     this.message = c.message;
     this.unread = c.unread;
@@ -87,7 +84,7 @@ class SMSConversation extends FusionModel {
   }
 
   SMSConversation(Map<String, dynamic> map) {
-    String toNumber = map['lastMessage']['from'].toString().toLowerCase() == map['myNumber'] 
+    String? toNumber = map['lastMessage']['from'].toString().toLowerCase() == map['myNumber'] 
       ? map['lastMessage']['to']
       : map['lastMessage']['from'];
     this.conversationId = map['conversationId'] ?? map['groupId'];
@@ -95,12 +92,12 @@ class SMSConversation extends FusionModel {
     this.isGroup = map['isGroup'];
     this.lastContactTime = map['lastContactTime'];
     this.myNumber = map['myNumber'].toString().toLowerCase();
-    this.number = map['isGroup'] != null && map['isGroup'] == true ? map['groupId'].toString() : toNumber.toLowerCase();
+    this.number = map['isGroup'] != null && map['isGroup'] == true ? map['groupId'].toString() : toNumber!.toLowerCase();
     this.members = map['conversationMembers']; //map['members'];
     this.message = map['message'];
     this.unread = map['unreadCount'];
     this.crmContacts = map['crm_contacts'] ?? [];
-    this.contacts = map['contacts'];
+    this.contacts = map['contacts'] ?? [];
     this.hash = map['hash'];
   }
 
@@ -134,13 +131,13 @@ class SMSConversation extends FusionModel {
     
     Map<String, dynamic> data = convert.jsonDecode(dataString);
     this.conversationId = data['groupId'] != null ? data['groupId'] : data['conversationId'];
-    this.groupName = data['groupName'];
+    this.groupName = data['groupName'] ?? "";
     this.isGroup = (data['isGroup'] == 1 || data['isGroup'] == true) ? true : false;
     this.lastContactTime = data['lastContactTime'];
     this.lastContactTime = data['lastContactTime'];
     this.myNumber = data['myNumber'].toLowerCase();
     this.number = data['to'] != null ? data['to'].toLowerCase() : data['number'].toLowerCase();
-    this.members = data['conversationMembers'];
+    this.members = data['conversationMembers'] ?? [];
     this.message = SMSMessage.unserialize(data['message']);
     this.unread = data['unread'];
     this.crmContacts = data['crmContacts']
@@ -161,7 +158,9 @@ class SMSConversation extends FusionModel {
   }
 
   String searchString() {
-    return [number, myNumber, message.message].join(' ');
+    return message?.message != null 
+    ? [number, myNumber, message?.message].join(' ')
+    : "";
   }
 
   @override
@@ -253,11 +252,12 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
 
   getConversations(String groupId, int limit, int offset,
       Function(List<SMSConversation> conversations, bool fromServer, String departmentId) callback) {
-    SMSConversation lastMessageFailed = null;
+
+    SMSConversation? lastMessageFailed = null;
     getPersisted(groupId, limit, offset, (savedConvos,fromserver){
       callback(savedConvos, fromserver, groupId);
-      lastMessageFailed = savedConvos.where((convo) => convo.message.messageStatus == "offline").isNotEmpty 
-        ? savedConvos.where((convo) => convo.message.messageStatus == "offline").toList().first
+      lastMessageFailed = savedConvos.where((convo) => convo.message?.messageStatus == "offline").isNotEmpty 
+        ? savedConvos.where((convo) => convo.message?.messageStatus == "offline").toList().first
         : null;
     });
     fusionConnection.refreshUnreads();
@@ -292,8 +292,8 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
             else if(obj['number'].toString().contains("@")){
              
               if(coworkers.isNotEmpty){
-                Coworker _coworker = coworkers.where((c) => c.uid.toLowerCase() == obj['number'].toString().toLowerCase()).isNotEmpty 
-                  ? coworkers.where((c) => c.uid.toLowerCase() == obj['number'].toString().toLowerCase()).first
+                Coworker? _coworker = coworkers.where((c) => c.uid!.toLowerCase() == obj['number'].toString().toLowerCase()).isNotEmpty 
+                  ? coworkers.where((c) => c.uid!.toLowerCase() == obj['number'].toString().toLowerCase()).first
                   : null;
                 if(_coworker != null){
                   Contact c = _coworker.toContact();
@@ -315,8 +315,8 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
         if(item['lastMessage'] != null ){
           item['message'] = SMSMessage.fromV2(item['lastMessage']);
         }
-        if(lastMessageFailed != null && item['groupId'] == lastMessageFailed.conversationId){
-          item['message'] = lastMessageFailed.message;
+        if(lastMessageFailed != null && item['groupId'] == lastMessageFailed!.conversationId){
+          item['message'] = lastMessageFailed!.message;
         }  
         if(item['message']== null)break;
         SMSConversation convo =  SMSConversation(item);

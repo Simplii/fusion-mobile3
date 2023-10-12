@@ -10,7 +10,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_apns/src/connector.dart';
+// import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
@@ -38,7 +38,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:websocket_manager/websocket_manager.dart';
+// import 'package:websocket_manager/websocket_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import '../utils.dart';
@@ -51,30 +51,30 @@ class FusionConnection {
   String _password = '';
   String _domain = '';
   Map<String, bool> _heartbeats = {};
-  CrmContactsStore crmContacts;
-  ContactsStore contacts;
-  CallpopInfoStore callpopInfos;
+  late CrmContactsStore crmContacts;
+  late ContactsStore contacts;
+  late CallpopInfoStore callpopInfos;
   // WebsocketManager _socket;
-  WebSocketChannel socketChannel;
-  SMSConversationsStore conversations;
-  SMSMessagesStore messages;
-  UserSettings settings;
-  SMSDepartmentsStore smsDepartments;
-  CallHistoryStore callHistory;
-  CoworkerStore coworkers;
-  IntegratedContactsStore integratedContacts;
-  ContactFieldStore contactFields;
-  TimelineItemStore timelineItems;
-  ParkLineStore parkLines;
-  VoicemailStore voicemails;
-  DidStore dids;
-  UnreadsStore unreadMessages;
-  QuickResponsesStore quickResponses;
-  Database db;
-  PushConnector _connector;
-  String _pushkitToken;
-  Softphone _softphone;
-  PersistCookieJar _cookies;
+  late WebSocketChannel socketChannel;
+  late SMSConversationsStore conversations;
+  late SMSMessagesStore messages;
+  late UserSettings settings;
+  late SMSDepartmentsStore smsDepartments;
+  late CallHistoryStore callHistory;
+  late CoworkerStore coworkers;
+  late IntegratedContactsStore integratedContacts;
+  late ContactFieldStore contactFields;
+  late TimelineItemStore timelineItems;
+  late ParkLineStore parkLines;
+  late VoicemailStore voicemails;
+  late DidStore dids;
+  late UnreadsStore unreadMessages;
+  late QuickResponsesStore quickResponses;
+  late Database db;
+  // PushConnector? _connector;
+  String? _pushkitToken;
+  Softphone? _softphone;
+  PersistCookieJar? _cookies;
   Function _onLogOut = () {};
   Function _refreshUi = () {};
   Map<String, bool> received_smses = {};
@@ -117,7 +117,7 @@ class FusionConnection {
     return _username != "" && _password != "";
   }
 
-  _getCookies({Function callback}) async {
+  _getCookies({Function? callback}) async {
     getApplicationDocumentsDirectory().then((directory) {
       _cookies = PersistCookieJar(
           persistSession: true,
@@ -128,14 +128,14 @@ class FusionConnection {
       if (callback != null) {
         callback();
       }
-    }).onError((er, err) {
+    }).onError((dynamic er, err) {
       print("cookie error");
       print(er);
-      callback();
+      callback!();
     });
   }
 
-  setSoftphone(Softphone softphone) {
+  setSoftphone(Softphone? softphone) {
     _softphone = softphone;
   }
 
@@ -147,7 +147,7 @@ class FusionConnection {
     _onLogOut = callback;
   }
 
-  setPushkitToken(String token) {
+  setPushkitToken(String? token) {
     _pushkitToken = token;
   }
 
@@ -188,13 +188,13 @@ class FusionConnection {
           _password = '';
           try {
             if (_softphone != null) {
-              _softphone.stopInbound();
-              _softphone.close();
+              _softphone!.stopInbound();
+              _softphone!.close();
               setSoftphone(null);
             }
             _onLogOut();
           } catch (e) {}
-          _cookies.deleteAll();
+          _cookies!.deleteAll();
           _clearDataStores();
         });
       });
@@ -283,10 +283,10 @@ class FusionConnection {
 
   _saveCookie(Response response) {
     if (response.headers.containsKey('set-cookie')) {
-      List<String> cookieStrings = response.headers['set-cookie'].split("HttpOnly,");
+      List<String> cookieStrings = response.headers['set-cookie']!.split("HttpOnly,");
       for (String cookieString in cookieStrings) {
         Cookie cookie = Cookie.fromSetCookieValue(cookieString);
-        _cookies.saveFromResponse(response.request.url, [cookie]);
+        _cookies!.saveFromResponse(response.request!.url, [cookie]);
       }
     }
   }
@@ -294,7 +294,7 @@ class FusionConnection {
   Future<Map<String, String>> _cookieHeaders(url) async {
     Completer<Map<String, String>> c = new Completer<Map<String, String>>();
     var runIt = () async {
-      List<Cookie> cookies = await _cookies.loadForRequest(url);
+      List<Cookie> cookies = await _cookies!.loadForRequest(url);
       String cookiesHeader = "";
       Map<String, String> headers = {};
 
@@ -314,7 +314,7 @@ class FusionConnection {
   }
 
   nsApiCall(String object, String action, Map<String, dynamic> data,
-      {Function callback}) async {
+      {required Function callback}) async {
     var client = http.Client();
     try {
       data['action'] = action;
@@ -330,10 +330,10 @@ class FusionConnection {
 
       var uriResponse = await client.post(url, headers: headers, body: body);
       _saveCookie(uriResponse);
-      Map<String, dynamic> jsonResponse = {};
+      Map<String, dynamic>? jsonResponse = {};
       try {
         jsonResponse =
-            convert.jsonDecode(uriResponse.body) as Map<String, dynamic>;
+            convert.jsonDecode(uriResponse.body) as Map<String, dynamic>?;
       } catch (e) {}
       print(url);
       print(jsonResponse);
@@ -345,7 +345,7 @@ class FusionConnection {
   }
 
   apiV1Call(String method, String route, Map<String, dynamic> data,  
-      {Function callback, Function onError, int retryCount=0}) async {
+      {Function? callback, Function? onError, int retryCount=0}) async {
     var client = http.Client();
 
     try {
@@ -357,7 +357,7 @@ class FusionConnection {
         'patch': client.patch,
         'put': client.put,
         'delete': client.delete
-      }[method.toLowerCase()];
+      }[method.toLowerCase()]!;
 
       Map<Symbol, dynamic> args = {};
       String urlParams = '?';
@@ -375,10 +375,10 @@ class FusionConnection {
       }
 
       args[#headers] = headers;
-      Response uriResponse;
+      Response? uriResponse;
       try {
         uriResponse = await Function.apply(fn, [url], args);
-        if(uriResponse.body != '{"error":"invalid_login"}'){
+        if(uriResponse!.body != '{"error":"invalid_login"}'){
           _saveCookie(uriResponse);
         }
       } catch (e) {
@@ -386,7 +386,7 @@ class FusionConnection {
         print("MyDebugMessage apiCallV1 error ${e}");
       }
       print('url $url');
-      print(uriResponse.body);
+      print(uriResponse!.body);
       print(data);
       print(urlParams);
 
@@ -420,7 +420,7 @@ class FusionConnection {
   }
 
   apiV2Call(String method, String route, Map<String, dynamic> data,
-      {Function callback,Function onError, int retryCount = 0}) async {
+      {Function? callback,Function? onError, int retryCount = 0}) async {
      var client = http.Client();
 
     try {
@@ -430,7 +430,7 @@ class FusionConnection {
         'patch': client.patch,
         'put': client.put,
         'delete': client.delete
-      }[method.toLowerCase()];
+      }[method.toLowerCase()]!;
 
       data['username'] = await _getUsername();
       Map<Symbol, dynamic> args = {};
@@ -450,10 +450,10 @@ class FusionConnection {
       }
 
       args[#headers] = headers;
-      Response uriResponse;
+      Response? uriResponse;
       try {
         uriResponse = await Function.apply(fn, [url], args);
-        if(uriResponse.body != '{"error":"invalid_login"}'){
+        if(uriResponse!.body != '{"error":"invalid_login"}'){
           _saveCookie(uriResponse);
         }
       } catch (e) {
@@ -465,7 +465,7 @@ class FusionConnection {
       print(url);
       print(urlParams);
       print(data);
-      print(uriResponse.body);
+      print(uriResponse!.body);
       if (uriResponse.body == '{"error":"invalid_login"}') {
        if (onError != null){
           if(retryCount >= 5){
@@ -493,7 +493,7 @@ class FusionConnection {
 
   apiV2Multipart(String method, String route, Map<String, dynamic> data,
       List<http.MultipartFile> files,
-      {Function callback}) async {
+      {required Function callback}) async {
     var client = http.Client();
     try {
       data['username'] = await _getUsername();
@@ -526,7 +526,7 @@ print(responseBody);
   }
 
   myAvatarUrl() {
-    return settings.myAvatar();
+    return settings!.myAvatar();
   }
 
   getUid() {
@@ -543,11 +543,11 @@ print(responseBody);
 
   _postLoginSetup(Function(bool) callback) async {
     _getCookies();
-    settings.lookupSubscriber();
+    settings!.lookupSubscriber();
     coworkers.getCoworkers((data) {});
-    conversations.getConversations("-2",100,0,(convos,fromServer,departmentId){});
+    await smsDepartments.getDepartments((List<SMSDepartment> lis) {});
     dids.getDids((p0, p1) => {});
-    smsDepartments.getDepartments((List<SMSDepartment> lis) {});
+    conversations.getConversations("-2",100,0,(convos,fromServer,departmentId){});
     refreshUnreads();
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     setupSocket();
@@ -562,14 +562,14 @@ print(responseBody);
           {"token": token, "pn_tok": _pushkitToken});
     });
     
-    if(settings.options.containsKey("enabled_features")){
+    if(settings!.options.containsKey("enabled_features")){
       Map<String,dynamic> nsAnsweringRules = await this.nsAnsweringRules();
       apiV2Call("get", "/user", {},callback: (Map<String,dynamic> data){
         if(data == null) return;
-        settings.setMyUserInfo(
+        settings!.setMyUserInfo(
             outboundCallerId: data.containsKey("dynamicDialingDepartment") && 
             data["dynamicDialingDepartment"] != '' && 
-            settings.isFeatureEnabled("Dynamic Dialing")
+            settings!.isFeatureEnabled("Dynamic Dialing")
               ? data["dynamicDialingDepartment"]
               : data["outboundCallerId"],
           isDepartment: data["dynamicDialingDepartment"] != '' ?? false,
@@ -624,7 +624,7 @@ print(responseBody);
     return ret;
   }
 
-  login(String username, String password, Function(bool) callback) {
+  login(String username, String? password, Function(bool) callback) {
     if(password == null )return;
     apiV1Call(
         "get",
@@ -647,7 +647,7 @@ print(responseBody);
         _password = password;
         _domain = _username.split('@')[1];
         _extension = _username.split('@')[0];
-        settings.setOptions(response);
+        settings!.setOptions(response);
         _postLoginSetup(callback);
       } else {
         callback(false);
@@ -675,7 +675,7 @@ print(responseBody);
     String beat = randomString(30);
     _sendToSocket({'heartbeat': beat});
     Future.delayed(const Duration(seconds: 15), () {
-      if (_heartbeats[beat] != null && !_heartbeats[beat]) {
+      if (_heartbeats[beat] != null && !_heartbeats[beat]!) {
         socketChannel.sink.close();
         setupSocket();
       }
@@ -713,7 +713,7 @@ print(responseBody);
             messages.storeRecord(newMessage);
             unreadMessages.getRecords();
           }
-        } else if(newMessage.messageStatus != null){
+        } else if(newMessage.messageStatus.isNotEmpty){
           List<SMSMessage> msgs = messages.getRecords();
           for (SMSMessage message in msgs) {
             if(message.id == newMessage.id){
@@ -730,31 +730,30 @@ print(responseBody);
       }
 
       if (_softphone != null)
-        _softphone.checkCallIds(message);
+        _softphone!.checkCallIds(message);
     });
     _reconnectSocket();
     _sendHeartbeat();
   }
 
-  void setAPNSConnector(PushConnector connector) {
-    _connector = connector;
-  }
+  // void setAPNSConnector(PushConnector connector) {
+  //   _connector = connector;
+  // }
 
   Future<void> autoLogin(String username, String domain) async {
-    String _pass;
-
+    String? _pass;
     final prefs = await SharedPreferences.getInstance();
+    final String? deviceToken = await FirebaseMessaging.instance.getToken();
     _pass = await prefs.getString('fusion-data1');
     
-    if(_pass != null && _pass.isNotEmpty){
-      final String deviceToken = await FirebaseMessaging.instance.getToken();
+    if(_pass != null && _pass.isNotEmpty && deviceToken != null){
       final String hash = generateMd5(username.trim().toLowerCase() + deviceToken + fusionDataHelper);
       final enc.Key key = enc.Key.fromUtf8(hash);
-      final enc.IV iv = enc.IV.fromLength(16);
+      // final enc.IV iv = enc.IV.fromLength(16); (ok in 5.0.1 not in 5.0.3)
+      final enc.IV iv = enc.IV.allZerosOfLength(16);
       final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key,padding: null));
       _pass = encrypter.decrypt(enc.Encrypted.fromBase64(_pass), iv: iv);
     
-
       await apiV1Call(
         "get",
         "/clients/lookup_options",
@@ -766,7 +765,7 @@ print(responseBody);
           if (response.containsKey("access_key")) {
             _username = username.split('@')[0] + '@' + response['domain'];
             _username = _username;
-            _password = _pass;
+            _password = _pass!;
             _domain = _username.split('@')[1];
             _extension = _username.split('@')[0];
             settings.setOptions(response);
@@ -789,18 +788,20 @@ print(responseBody);
     _refreshUi = callback;
   }
 
-  void encryptFusionData(String username, String password) async {
-    if(password ==null)return;
-    final String deviceToken = await FirebaseMessaging.instance.getToken();
-    final String hash = generateMd5(username.trim().toLowerCase() + deviceToken +  fusionDataHelper);
+  void encryptFusionData(String username, String? password) async {
+    if(password == null)return;
+    final String? deviceToken = await FirebaseMessaging.instance.getToken();
+    if(deviceToken != null){
+      final String hash = generateMd5(username.trim().toLowerCase() + deviceToken +  fusionDataHelper);
 
-    final enc.Key key = enc.Key.fromUtf8(hash);
-    final enc.IV iv = enc.IV.fromLength(16);
-
-    final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key, padding: null));
-    final enc.Encrypted encrypted = encrypter.encrypt(password, iv: iv);
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('fusion-data1', encrypted.base64);
+      final enc.Key key = enc.Key.fromUtf8(hash);
+      // final iv = IV.fromLength(16); (ok in 5.0.1 not in 5.0.3)
+      final iv = enc.IV.allZerosOfLength(16);
+      final enc.Encrypter encrypter = enc.Encrypter(enc.AES(key, padding: null));
+      final enc.Encrypted encrypted = encrypter.encrypt(password, iv: iv);
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString('fusion-data1', encrypted.base64);
+    }
   }
 
   Future<void> checkInternetConnection() async {

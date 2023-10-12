@@ -8,14 +8,14 @@ import 'fusion_model.dart';
 import 'fusion_store.dart';
 
 class SMSDepartment extends FusionModel {
-  String groupName;
-  String id;
+  String? groupName;
+  String? id;
   List<String> numbers = [];
   List<String> mmsNumbers = [];
-  String primaryUser;
-  int unreadCount;
-  bool usesDynamicOutbound;
-  String protocol;
+  String? primaryUser;
+  int? unreadCount;
+  bool? usesDynamicOutbound;
+  String? protocol;
 
   SMSDepartment(Map<String, dynamic> obj) {
     if (obj['id'].toString() == DepartmentIds.Personal) {
@@ -65,19 +65,19 @@ class SMSDepartment extends FusionModel {
         "favorite" : false
       });
   }
-  String getId() => this.id;
+  String? getId() => this.id;
 }
 
 class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
   String id_field = "id";
   SMSDepartmentsStore(FusionConnection fusionConnection) : super(fusionConnection);
 
-  getDepartments(Function(List<SMSDepartment>) callback, {String username}) {
+  getDepartments(Function(List<SMSDepartment>) callback, {String username = ""}) async {
     List<SMSDepartment> deps = allDepartments();
     if(deps.isNotEmpty){
       callback(deps);
     } else {
-      fusionConnection.apiV1Call(
+      await fusionConnection.apiV1Call(
         "get",
         "/chat/my_groups",
         {},
@@ -89,7 +89,7 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
           int allUnread = 0;
 
           for (Map<String, dynamic> data in datas) {
-            allUnread += data['unread'];
+            allUnread += data['unread'] as int;
             for (String n in data['mms_numbers']) { allMMSNumbers.add(n); }
             for (String n in data['numbers']) { allNumbers.add(n); }
             storeRecord(SMSDepartment(data));
@@ -121,7 +121,7 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
     }
   }
 
-  getDepartment(String id) {
+  getDepartment(String? id) {
     return lookupRecord(id);
   }
 
@@ -129,7 +129,7 @@ class SMSDepartmentsStore extends FusionStore<SMSDepartment> {
     return getRecords();
   }
 
-  SMSDepartment getDepartmentByPhoneNumber(number) {
+  SMSDepartment? getDepartmentByPhoneNumber(number) {
     List<SMSDepartment> departments = allDepartments();
     for (SMSDepartment dept in departments) {
       if (dept.numbers.contains(number) && dept.id != DepartmentIds.AllMessages)
