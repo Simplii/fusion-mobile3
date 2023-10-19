@@ -53,27 +53,27 @@ class _ContactProfileViewState extends State<ContactProfileView> {
   bool _editing = false;
   int lookupState = 0; // 0 - not looking up; 1 - looking up; 2 - got results
   Function get _refreshUi => widget.refreshUi;
-
+  bool _loading = false;
   _lookupTimeline() {
     if (lookupState == 1) return;
     lookupState = 1;
 
-      _fusionConnection.timelineItems.getTimelineFromNumbers(
-          _contact.phoneNumbers
-              .map((number) => number['number'])
-              .where((number) => number.length >= 10)
-              .toList()
-              .cast<String>(), (List<TimelineItem> items, bool fromServer) {
-        print("gottimeline");
-        print(items);
-        if (!mounted) return;
-        this.setState(() {
-          if (fromServer) {
-            lookupState = 2;
-          }
-          _timelineItems = items;
-        });
-      });
+      // _fusionConnection.timelineItems.getTimelineFromNumbers(
+      //     _contact.phoneNumbers
+      //         .map((number) => number['number'])
+      //         .where((number) => number.length >= 10)
+      //         .toList()
+      //         .cast<String>(), (List<TimelineItem> items, bool fromServer) {
+      //   print("gottimeline");
+      //   print(items);
+      //   if (!mounted) return;
+      //   this.setState(() {
+      //     if (fromServer) {
+      //       lookupState = 2;
+      //     }
+      //     _timelineItems = items;
+      //   });
+      // });
 
   }
 
@@ -192,7 +192,8 @@ class _ContactProfileViewState extends State<ContactProfileView> {
 
     ];
 
-    if (new RegExp(r"^[0-9]+$").hasMatch(_contact.id)) {
+    if (new RegExp(r"^[0-9]+$").hasMatch(_contact.id) && 
+      _contact.type != ContactType.PrivateContact) {
       settingOptions.add(["Edit", "edit"]);
     }
 
@@ -322,13 +323,25 @@ class _ContactProfileViewState extends State<ContactProfileView> {
   }
 
   _makeCall(String number) {
+    RegExp reg = RegExp(r'[\s()-]');
     Navigator.pop(context);
-    _softphone.makeCall(number);
+    _softphone.makeCall(number.replaceAll(reg, ""));
   }
 
-  _openMessage(String theirNumber) {
-    String number =
-        _fusionConnection.smsDepartments.getDepartment(DepartmentIds.AllMessages).numbers[0];
+  _openMessage(String theirNumber) async {
+    setState(() {
+      _loading = true;
+    });
+    SMSDepartment dept = _fusionConnection.smsDepartments.getDepartment(DepartmentIds.Personal);
+    SMSConversation convo = await _fusionConnection.messages.checkExistingConversation(
+      DepartmentIds.Personal,
+      dept.numbers[0],
+      [theirNumber],
+      [_contact]
+    );
+    setState(() {
+      _loading = false;
+    });
 
     showModalBottomSheet(
         context: context,
@@ -336,12 +349,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
         isScrollControlled: true,
         builder: (context) => StatefulBuilder(
           builder: (BuildContext context,StateSetter setState) {
-            SMSConversation displayingConvo = SMSConversation.build(
-              isGroup: false,
-              contacts: [_contact],
-              crmContacts: [],
-              myNumber: number,
-              number: theirNumber);
+            SMSConversation displayingConvo = convo;
           return SMSConversationView(
             fusionConnection: _fusionConnection, 
             softphone: _softphone, 
@@ -385,7 +393,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                         }),
                         actionButton("Message", "message_dark", 18, 18, () {
                           _openMessage(value);
-                        })
+                        },isLoading: _loading)
                       ]))
                 ])));
       else

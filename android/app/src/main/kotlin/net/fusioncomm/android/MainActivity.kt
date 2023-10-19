@@ -538,6 +538,7 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun getMyPhoneNumber(){
+        myPhoneNumber = telephonyManager.line1Number ?: "";
         var gson = Gson();
         channel.invokeMethod("setMyPhoneNumber",  gson.toJson(myPhoneNumber) )
     }
@@ -624,6 +625,13 @@ class MainActivity : FlutterFragmentActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             "net.fusioncomm.android/calling"
         );
+
+        // Contacts Provider Channel
+        ContactsProvider(MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "net.fusioncomm.ios/contacts"
+        ), this)
+
         channel.setMethodCallHandler { call, result ->
             print("gotflmethod")
             print(call.method);

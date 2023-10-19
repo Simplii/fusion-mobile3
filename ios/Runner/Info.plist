@@ -67,5 +67,7 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSContactsUsageDescription</key>
+ 		<string>Allow access to contacts</string>
 </dict>
 </plist>

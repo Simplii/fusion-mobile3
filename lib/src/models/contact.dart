@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
@@ -65,7 +66,7 @@ class Contact extends FusionModel {
   String crmId;
   int unread = 0;
   List<dynamic> fieldValues = [];
-
+  Uint8List profileImage;
   @override
   String getId() => this.id;
 
@@ -174,6 +175,7 @@ class Contact extends FusionModel {
     this.crmId = contactObject['crm_id'].runtimeType == int
         ? contactObject['crm_id'].toString()
         : contactObject['crm_id'];
+    this.profileImage = contactObject["profileImage"] ?? null;
   }
 
   Contact.fake(dynamic number){
@@ -633,4 +635,10 @@ class ContactsStore extends FusionStore<Contact> {
         }
       );
   }
+}
+
+abstract class ContactType {
+  static const PrivateContact = "Private Contact";
+  static const Contact = "Contact";
+  static const Lead = "Lead";
 }

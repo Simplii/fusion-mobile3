@@ -12,7 +12,8 @@ import Firebase
     
     var providerDelegate: ProviderDelegate!
     var callkitChannel: FlutterMethodChannel!
-
+    var contactsChannel: FlutterMethodChannel!
+    
     override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
         print("opened from url")
         print(url)
@@ -89,7 +90,11 @@ import Firebase
         
         setupCallkitFlutterLink()
         providerDelegate = ProviderDelegate(channel: callkitChannel)
-        
+        if #available(iOS 13.0.0, *) {
+            ContactsProvider(channel: contactsChannel)
+        } else {
+            // Fallback on earlier versions
+        }
         FirebaseApp.configure() //add this before the code below
 
         GeneratedPluginRegistrant.register(with: self)
@@ -142,6 +147,9 @@ import Firebase
         let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
         callkitChannel = FlutterMethodChannel(
             name: "net.fusioncomm.ios/callkit",
+            binaryMessenger: controller.binaryMessenger)
+        contactsChannel = FlutterMethodChannel(
+            name: "net.fusioncomm.ios/contacts",
             binaryMessenger: controller.binaryMessenger)
     }
 

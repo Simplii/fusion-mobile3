@@ -180,6 +180,7 @@ class _ContactCircleState extends State<ContactCircle> {
   @override
   Widget build(BuildContext context) {
     String imageUrl = null;
+    ImageProvider profileImage = null;
     Coworker coworker = _coworker;
     List<Contact> groupAvatar = _contacts.length > 4 ? _contacts.sublist(0,4) : _contacts;
     if (_contacts != null) {
@@ -187,15 +188,19 @@ class _ContactCircleState extends State<ContactCircle> {
         if (contact.coworker != null && coworker == null) {
           coworker = contact.coworker;
         }
-        else if(contact.pictures.length > 0){
+        else if(contact.pictures.length > 0 && contact.profileImage == null){
           imageUrl = contact.pictures.last['url'];
         }
-        else if (contact.emails != null) {
+        else if (contact.emails != null && contact.profileImage == null) {
           for (Map<String, dynamic> email in contact.emails) {
             try {
               imageUrl = _gravatarUrl(email['email'], contact.firstName, contact.lastName);
             } catch (e) {}
           }
+        }
+        else if(contact.profileImage != null){
+          profileImage = MemoryImage(contact.profileImage);
+          imageUrl = null;
         }
       }
     }
@@ -221,7 +226,7 @@ class _ContactCircleState extends State<ContactCircle> {
       presence = coworker.presence;
     }
 
-    if (imageUrl == null
+    if (imageUrl == null && profileImage == null
         && (_contacts.length > 0 || _crmContacts.length > 0)) {
       imageUrl = avatarUrl(_firstName(), _lastName());
     }
@@ -231,7 +236,7 @@ class _ContactCircleState extends State<ContactCircle> {
         child: Container(
             width: _diameter - 4,
             height: _diameter - 4,
-            child: imageUrl != null 
+            child: imageUrl != null  
               ? CircleAvatar(
                   //backgroundImage here will be a fallback incase the image we're getting
                   //from imageUrl was deleted from the server
@@ -239,7 +244,9 @@ class _ContactCircleState extends State<ContactCircle> {
                   foregroundImage: NetworkImage(imageUrl),
                 )
               : CircleAvatar(
-                  backgroundImage: AssetImage("assets/blank_avatar.png"),
+                  backgroundImage: profileImage != null 
+                    ? profileImage 
+                    : AssetImage("assets/blank_avatar.png"),
                 ),
             )
         );
