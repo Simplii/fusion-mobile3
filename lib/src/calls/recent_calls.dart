@@ -15,6 +15,7 @@ import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
@@ -472,6 +473,10 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     return linePrefix ?? "";
   }
 
+  _contactName(){
+    return _historyItem.phoneContact.name.toTitleCase();
+  }
+
   _name() {
     if (_historyItem.coworker != null) {
       return _historyItem.coworker.firstName +
@@ -512,8 +517,21 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   }
 
   _openMessage() {
-    String number =
-        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
+    String number = _fusionConnection.smsDepartments.getDepartment(DepartmentIds.Personal).numbers[0];
+    if(number == null){
+      return showModalBottomSheet(
+        context: context,
+        backgroundColor: coal,
+        shape: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        builder: (context)=> Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height / 3,
+          ),
+          child: Center(
+            child: Text("No personal sms number found", style: TextStyle(color: Colors.white),),
+          ),
+        ));
+    }
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -528,6 +546,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                     ? [_historyItem.crmContact]
                     : [],
                 myNumber: number,
+                hash: number + ":" + _historyItem.getOtherNumber(_fusionConnection.getDomain()),
                 number: _historyItem.getOtherNumber(_fusionConnection.getDomain())
               );
               return SMSConversationView(
@@ -656,12 +675,18 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           Expanded(
               child: Container(
                   decoration: BoxDecoration(color: Colors.transparent),
-                  child: Column(children: [
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(_name() != null ? _name() : "Unknown",
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                    Wrap(
+                      spacing: 8,
+                        children: [Text(_name() != null ? _name() : "Unknown",
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16))),
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                                if(_historyItem.phoneContact != null)
+                              Text("(${_contactName()} Device Contact)", 
+                                style: TextStyle(fontSize: 12,fontWeight: FontWeight.w600),)
+                        ]),
                     Align(
                         alignment: Alignment.centerLeft,
                         child: Row(children: [

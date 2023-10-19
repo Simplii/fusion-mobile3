@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
@@ -14,8 +17,10 @@ import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../backend/fusion_connection.dart';
+import '../models/phone_contact.dart';
 import '../styles.dart';
 import 'contact_profile_view.dart';
 
@@ -53,7 +58,7 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
     }[_selectedTab];
   }
 
-  _tabIcon(String name, String icon, double width, double height) {
+  _tabIcon(String name, String icon, double width, double height, {IconData iconData}) {
     return Expanded(
         child: GestureDetector(
             onTapUp: (e) {},
@@ -68,7 +73,11 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
                 child: Column(children: [
                   Container(
                       padding: EdgeInsets.only(top: 12, bottom: 12),
-                      child: Image.asset(
+                      child: iconData != null 
+                        ? Icon(
+                          iconData, 
+                          color: _selectedTab == name ? Colors.white : smoke,) 
+                        : Image.asset(
                           "assets/icons/" +
                               icon +
                               (_selectedTab == name ? '_selected' : '') +
@@ -87,6 +96,15 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
           _tabIcon("coworkers", "briefcase", 23, 20.5),
           !v2Domain ? _tabIcon("integrated", "integrated", 23, 20.5) : null,
           _tabIcon("fusion", "personalcontact", 23, 20.5),
+          _tabIcon(
+            "addressBook", 
+            "Phone Contacts", 
+            23, 
+            20.5, 
+            iconData: _selectedTab == "addressBook" 
+              ? Icons.contact_phone 
+              : Icons.contact_phone_outlined
+          ),
         ].where((child) => child != null).toList().cast()));
   }
 
@@ -118,7 +136,11 @@ class ContactsSearchList extends StatefulWidget {
   bool embedded = false;
 
   ContactsSearchList(
-      this._fusionConnection, this._softphone, this._query, this.selectedTab, this.isV2Domain,
+      this._fusionConnection, 
+      this._softphone, 
+      this._query, 
+      this.selectedTab, 
+      this.isV2Domain, 
       {Key key, this.embedded, this.onSelect, this.fromDialpad = false})
       : super(key: key);
 
@@ -128,7 +150,6 @@ class ContactsSearchList extends StatefulWidget {
 
 class _ContactsSearchListState extends State<ContactsSearchList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
   Softphone get _softphone => widget._softphone;
 
   bool get _embedded => widget.embedded == null ? false : widget.embedded;
@@ -319,7 +340,48 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
           });
         });
       });
+    } else if (_typeFilter == "Phone Contacts"){
+        if (thisLookup != _lookedUpQuery) return;
+        if (!mounted) return;
+        if (!mounted || _typeFilter != 'Phone Contacts') return;
+        _checkContactsPermission().then((PermissionStatus status) {
+          if(status.isGranted){
+            _fusionConnection.phoneContacts.getAdderssBookContacts(_query).then((List<PhoneContact> contacts){
+              setState(() {
+                if(contacts.isEmpty && _fusionConnection.phoneContacts.syncing){
+                  print("MDBM syncing contacts");
+                } else {
+                  _contacts = [];
+                  Map<String, Contact> list = {};
+                  _contacts.forEach((Contact c) {
+                    list[c.id] = c;
+                  });
+                  contacts.forEach((PhoneContact c) {
+                    list[c.id] = c.toContact();
+                  });
+                  _contacts = list.values.toList().cast<Contact>();
+                  _sortList(_contacts); 
+                }
+              });  
+            });
+          }
+        });
     }
+  }
+  
+  Future<PermissionStatus> _checkContactsPermission() async {
+    final PermissionStatus status = await Permission.contacts.status;
+    try {
+      if (status.isDenied || status.isPermanentlyDenied) {
+        await Permission.contacts.request();
+        setState(() {  
+          lookupState = 0;
+        });
+      }
+    } catch (e) {
+      print('e ${e.toString()}');
+    }
+    return status;
   }
 
   _openProfile(Contact contact) {
@@ -429,7 +491,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
   _sortList(List<Contact> list) {
     _contacts.sort((a, b) {
-      if (_typeFilter == 'Integrated Contacts')
+      if (_typeFilter == 'Integrated Contacts' || 
+        _typeFilter == 'Phone Contacts')
         return (a.name)
             .trim()
             .toLowerCase()
@@ -443,20 +506,20 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     });
   }
 
-  _searchList() {
-    String usingLetter = '';
-    List<Widget> rows = [];
-    _contacts.forEach((item) {
-      String letter = (item.firstName + item.lastName).trim()[0].toLowerCase();
-      if (usingLetter != letter) {
-        usingLetter = letter;
-      } else {
-        letter = "";
-      }
-      rows.add(_resultRow(letter, item));
-    });
-    return rows;
-  }
+  // _searchList() {
+  //   String usingLetter = '';
+  //   List<Widget> rows = [];
+  //   _contacts.forEach((item) {
+  //     String letter = (item.firstName + item.lastName).trim()[0].toLowerCase();
+  //     if (usingLetter != letter) {
+  //       usingLetter = letter;
+  //     } else {
+  //       letter = "";
+  //     }
+  //     rows.add(_resultRow(letter, item));
+  //   });
+  //   return rows;
+  // }
 
   _letterFor(Contact item) {
     if (_typeFilter == 'Integrated Contacts') {
@@ -502,7 +565,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       _typeFilter = 'Integrated Contacts';
     else if (_selectedTab == 'fusion')
       _typeFilter = 'Fusion Contacts';
-
+    else if(_selectedTab == 'addressBook')
+      _typeFilter = 'Phone Contacts';
     if (_typeFilter != origType) {
       _contacts = [];
     }
@@ -583,6 +647,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                               ? _contacts.length
                               : _contacts.length + 1,
                           itemBuilder: (BuildContext context, int index) {
+                            if(_contacts.length == 0)
+                              return Container(height: 20);
                             if (index >= _contacts.length) {
                               _loadMore();
                               return Container(height: 20);

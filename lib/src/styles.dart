@@ -106,7 +106,7 @@ bottomRedBar(bool clear) {
 }
 
 actionButton(
-    String label, String icon, double width, double height, Function onTap, {double opacity}) {
+    String label, String icon, double width, double height, Function onTap, {double opacity, bool isLoading}) {
   return Expanded(
       child: GestureDetector(
           onTap: onTap,
@@ -119,7 +119,9 @@ actionButton(
                     Container(
                         width: width,
                         height: height,
-                        child: Image.asset("assets/icons/" + icon + ".png",
+                        child: isLoading != null && isLoading 
+                          ? CircularProgressIndicator()
+                          : Image.asset("assets/icons/" + icon + ".png",
                             width: width, height: height)),
                     Text(" " + label,
                         style: TextStyle(

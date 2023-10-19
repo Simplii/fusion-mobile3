@@ -15,6 +15,7 @@ import 'package:fusion_mobile_revamped/src/backend/fusion_sip_ua_helper.dart';
 import 'package:fusion_mobile_revamped/src/backend/ln_call.dart';
 import 'package:fusion_mobile_revamped/src/models/callpop_info.dart';
 import 'package:fusion_mobile_revamped/src/models/disposition.dart';
+import 'package:fusion_mobile_revamped/src/models/phone_contact.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:ringtone_player/ringtone_player.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -1604,7 +1605,17 @@ class Softphone implements SipUaHelperListener {
       String ext = call.remote_identity.onlyNumbers();
       List<Coworker> coworker =
           coworkers.where((coworker) => coworker.extension == ext).toList();
-
+      List<PhoneContact> phoneContacts = _fusionConnection.phoneContacts.getRecords();
+      if(phoneContacts.isNotEmpty && data != null){
+        for (PhoneContact phoneContact in phoneContacts) {
+          for(Map<String,dynamic>phoneNumber in phoneContact.phoneNumbers){
+            String number = phoneNumber["number"];
+            if(number.contains(data.phoneNumber)){
+              return phoneContact.name;
+            }
+          } 
+        }
+      }
       if (coworker.length > 0) {
         Coworker _coworker = coworker.first;
         return "${_coworker.firstName} ${_coworker.lastName}";
@@ -1648,6 +1659,17 @@ class Softphone implements SipUaHelperListener {
           coworkers.where((coworker) => coworker.extension == ext).isNotEmpty 
             ? coworkers.where((coworker) => coworker.extension == ext).first
             : null;
+      List<PhoneContact> phoneContacts = _fusionConnection.phoneContacts.getRecords();
+      if(phoneContacts.isNotEmpty && data != null){
+        for (PhoneContact phoneContact in phoneContacts) {
+          for(Map<String,dynamic>phoneNumber in phoneContact.phoneNumbers){
+            String number = phoneNumber["number"];
+            if(number.contains(data.phoneNumber) && phoneContact.profileImage != null){
+              return MemoryImage(phoneContact.profileImage);
+            }
+          } 
+        }
+      }
       if(coworker != null && !coworker.url.contains("nameAvatar")){
         return NetworkImage(coworker.url);
       } else if(data != null && data.contacts.length > 0){
@@ -1677,7 +1699,18 @@ class Softphone implements SipUaHelperListener {
       return "";
     } else {
       CallpopInfo data = getCallpopInfo(call.id);
+      List<PhoneContact> phoneContacts = _fusionConnection.phoneContacts.getRecords();
       if (data != null) {
+         if(phoneContacts.isNotEmpty){
+          for (PhoneContact phoneContact in phoneContacts) {
+            for(Map<String,dynamic>phoneNumber in phoneContact.phoneNumbers){
+              String number = phoneNumber["number"];
+              if(number.contains(data.phoneNumber)){
+                return phoneContact.company;
+              }
+            } 
+          }
+        }
         return data.getCompany();
       } else {
         return "";
