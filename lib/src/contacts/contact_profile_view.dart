@@ -287,7 +287,8 @@ class _ContactProfileViewState extends State<ContactProfileView> {
               })
               .toList()
               .cast<Widget>()),
-      _renderFieldGroup(
+      if(_contact.emails.isNotEmpty)
+        _renderFieldGroup(
           "mail_filled_dark",
           _contact.emails
               .map((email) {

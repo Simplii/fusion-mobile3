@@ -63,22 +63,23 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
                                 )
                         )
                 )
+
                 val emailsArray = getContactEmails(contactId)
                 val addressesArray = getContactAddresses(contactId)
-                contacts.add(
-                        mapOf<String,Any>(
-                                Pair("id",contactId),
-                                Pair("name", name),
-                                Pair("firstName", firstName),
-                                Pair("lastName", lastName),
-                                Pair("phoneNumbers", phoneNumbersArray),
-                                Pair("emails", emailsArray),
-                                Pair("addresses", addressesArray),
-                                Pair("imageData", image ?: ""),
-                                Pair("company", company),
-                                Pair("jobTitle", jobTitle)
-                        )
+                val contactObj = mapOf<String,Any>(
+                    Pair("id",contactId),
+                    Pair("name", name),
+                    Pair("firstName", firstName),
+                    Pair("lastName", lastName),
+                    Pair("phoneNumbers", phoneNumbersArray),
+                    Pair("emails", emailsArray),
+                    Pair("addresses", addressesArray),
+                    Pair("imageData", image ?: ""),
+                    Pair("company", company),
+                    Pair("jobTitle", jobTitle)
                 )
+//                Log.d("MDBM", "contactObj ${gson.toJson(contactObj)}")
+                contacts.add(contactObj)
             }
             cursor.close()
         }
@@ -96,6 +97,7 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
                 null,
                 null
         )
+        val contactPhoneNumber = mutableMapOf<String,Any>()
         if(contactPhoneCursor != null && contactPhoneCursor.count > 0){
             while (contactPhoneCursor.moveToNext()){
                 val phoneNumber:String = contactPhoneCursor.getString(
@@ -108,14 +110,27 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
                                 ContactsContract.CommonDataKinds.Phone.TYPE
                         )
                 )
+                val number:String = PhoneNumberUtils.normalizeNumber(phoneNumber)
 
-                phoneNumbers.add(
-                        mapOf(
-                                Pair("type", getPhoneNumberType(phoneType)),
-                                Pair("number", PhoneNumberUtils.normalizeNumber(phoneNumber)),
-                                Pair("smsCapable", getPhoneNumberType(phoneType) == "mobile"),
-                        )
-                )
+                if(!contactPhoneNumber.containsKey(number)){
+                    contactPhoneNumber[number] = getPhoneNumberType(phoneType)
+                    phoneNumbers.add(
+                            mapOf(
+                                    Pair("type", getPhoneNumberType(phoneType)),
+                                    Pair("number", PhoneNumberUtils.normalizeNumber(phoneNumber)),
+                                    Pair("smsCapable", getPhoneNumberType(phoneType) == "mobile"),
+                            )
+                    )
+                } else if(contactPhoneNumber.containsKey(number) &&
+                        contactPhoneNumber[number] != getPhoneNumberType(phoneType)){
+                    phoneNumbers.add(
+                            mapOf(
+                                    Pair("type", getPhoneNumberType(phoneType)),
+                                    Pair("number", PhoneNumberUtils.normalizeNumber(phoneNumber)),
+                                    Pair("smsCapable", getPhoneNumberType(phoneType) == "mobile"),
+                            )
+                    )
+                }
             }
             contactPhoneCursor.close()
         }
@@ -162,11 +177,16 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
                 firstName = given ?: ""
                 lastName = family ?: ""
                 name = display ?: ""
-                Log.d("MDBM", "ccc $given $contactId")
+
                 if(firstName.isEmpty() && name.isNotEmpty()){
                     firstName = name.split(" ")[0]
                 }
-                if(lastName.isEmpty() && name.isNotEmpty() && name.split(" ").count() == 2){
+                if(firstName.isNotEmpty() &&
+                        firstName.trim() == name.trim() && name.split(" ").count() > 1){
+                    // sanitize first name
+                    firstName = name.split(" ")[0]
+                }
+                if(lastName.isEmpty() && name.isNotEmpty() && name.split(" ").count() > 1){
                     lastName = name.split(" ")[1]
                 }
 
