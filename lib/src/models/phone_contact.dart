@@ -51,7 +51,7 @@ class PhoneContact extends FusionModel{
     lastName = contactObject['lastName'];
     company = contactObject['company'];
     jobTitle = contactObject['jobTitle'];
-    name = "${contactObject['firstName']} ${contactObject['lastName']}";
+    name = contactObject['name'];
     phoneNumbers = [];
     if(contactObject['phoneNumbers'] != null){
       for (var number in contactObject['phoneNumbers']) {
@@ -184,6 +184,7 @@ class PhoneContact extends FusionModel{
       'crmName': this.crmName,
       'crmId': this.crmId,
       'unread': this.unread,
+      'profileImage': this.profileImage
     });
   }
 

@@ -87,7 +87,6 @@ class CallHistory extends FusionModel {
       ? obj['missed'] == 'true'? true : false 
       : obj['missed'];
     if(obj.containsKey('phoneContact') && obj['phoneContact'] != null){
-      print("MDBM PhoneContact ${obj['phoneContact']}");
        Map<String,dynamic> data = jsonDecode(obj['phoneContact']);
       phoneContact = PhoneContact(data);
     }
@@ -211,7 +210,6 @@ class CallHistoryStore extends FusionStore<CallHistory> {
                   List<String> numbers = 
                     phoneContact.phoneNumbers.map((e) => e["number"]).toList().cast<String>();
                   if(numbers.contains(obj.fromDid) || numbers.contains(obj.toDid)){
-                    print("MDBM found ${phoneContact.profileImage}");
                     obj.phoneContact = phoneContact;
                   }
                 }

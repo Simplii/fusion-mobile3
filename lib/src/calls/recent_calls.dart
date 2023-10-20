@@ -267,6 +267,19 @@ class _RecentCallsListState extends State<RecentCallsList> {
     return response;
   }
 
+  Contact _getItemContact(CallHistory item){
+    if(item.coworker != null){
+      return item.coworker.toContact();
+    }
+    if(item.contact != null){
+      return  item.contact;
+    } else if(item.phoneContact != null) {
+      return item.phoneContact.toContact();
+    } else {
+      return Contact.fake(item.toDid);
+    }
+  }
+
   _historyRow(CallHistory item, int index) {
       if (item.coworker != null && _coworkers[item.coworker.uid] != null) {
         item.coworker = _coworkers[item.coworker.uid];
@@ -274,9 +287,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
       Widget ret = _fromDialpad 
         ? DialpadRecentCalls(
           date: item.startTime,
-          contact: item.coworker == null 
-            ? item.contact != null ? item.contact : Contact.fake(item.toDid)
-            : item.coworker.toContact(),
+          contact: _getItemContact(item),
           crmContact: item.crmContact,
           softphone: _softphone,
           onSelect: widget.onSelect)
@@ -441,6 +452,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   List<Contact> _contacts() {
     if (_historyItem.contact != null) {
       return [_historyItem.contact];
+    } else if(_historyItem.phoneContact != null) {
+      return [_historyItem.phoneContact.toContact()];
     } else {
       return [];
     }
@@ -473,10 +486,6 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     return linePrefix ?? "";
   }
 
-  _contactName(){
-    return _historyItem.phoneContact.name.toTitleCase();
-  }
-
   _name() {
     if (_historyItem.coworker != null) {
       return _historyItem.coworker.firstName +
@@ -489,6 +498,11 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           : _historyItem.contact.name.toTitleCase();
     } else if (_historyItem.crmContact != null) {
       return _historyItem.crmContact.name;
+    } else if(_historyItem.phoneContact != null){
+      String linePrefix = _getLinePrefix(_historyItem.callerId);
+      return linePrefix != ""
+          ? linePrefix + "_" + _historyItem.phoneContact.name.toTitleCase()
+          : _historyItem.phoneContact.name.toTitleCase();
     } else if (_historyItem.callerId != '') {
       String linePrefix =  _getLinePrefix(_historyItem.callerId);
       return _historyItem.callerId.startsWith(linePrefix) && 
@@ -678,15 +692,12 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                    Wrap(
-                      spacing: 8,
-                        children: [Text(_name() != null ? _name() : "Unknown",
+                     Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(_name() != null ? _name() : "Unknown",
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 16)),
-                                if(_historyItem.phoneContact != null)
-                              Text("(${_contactName()} Device Contact)", 
-                                style: TextStyle(fontSize: 12,fontWeight: FontWeight.w600),)
-                        ]),
+                        ),
                     Align(
                         alignment: Alignment.centerLeft,
                         child: Row(children: [
