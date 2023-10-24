@@ -576,7 +576,8 @@ print(responseBody);
           cellPhoneNumber: data["cellPhoneNumber"] ?? "",
           useCarrier: data["usesCarrier"] ?? false,
           simParams: nsAnsweringRules['devices'],
-          dndIsOn: data["fmOnDnd"] ?? false);
+          dndIsOn: data["fmOnDnd"] ?? false,
+          forceDispoEnabled: data["forceDispositionEnabled"],);
       });
     }
   }
