@@ -15,7 +15,8 @@ class UserSettings {
   bool usesCarrier = false;
   String devices = "";
   bool dnd = false;
-
+  bool forceDispositionEnabled = false;
+  
   myContact() {
     if (subscriber['first_name'] == null) subscriber['first_name'] = "";
     if (subscriber['last_name'] == null) subscriber['last_name'] = "";
@@ -172,7 +173,8 @@ class UserSettings {
     String cellPhoneNumber,
     bool useCarrier,
     String simParams,
-    bool dndIsOn
+    bool dndIsOn,
+    bool forceDispoEnabled,
     }) {
       usesCarrier = useCarrier;
       myCellPhoneNumber = cellPhoneNumber;
@@ -181,6 +183,7 @@ class UserSettings {
       devices = simParams;
       dynamicDialingIsActive = isFeatureEnabled("Dynamic Dialing");
       dnd = dndIsOn;
+      forceDispositionEnabled = forceDispoEnabled;
   }
 
   bool updateUserSettings (List<SettingsPayload> settings) {

@@ -14,6 +14,7 @@ import 'package:flutter_apns/flutter_apns.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fusion_mobile_revamped/src/callpop/call_view.dart';
+import 'package:fusion_mobile_revamped/src/callpop/disposition.dart';
 import 'package:fusion_mobile_revamped/src/dialpad/dialpad_modal.dart';
 import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
@@ -292,7 +293,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _onMessage(RemoteMessage m) {
-      // print("MDBM message ${m.data}");
     if(onMessagePosted !=  null){
       onMessagePosted(()=>{});
     }
@@ -703,6 +703,17 @@ class _MyHomePageState extends State<MyHomePage> {
       return CallView(fusionConnection, softphone, closeView: _openCallView);
     }
 
+    if(softphone.endedCalls.isNotEmpty){
+      for (var call in softphone.endedCalls) {
+        return DispositionView(
+          terminatedCall: call,
+          fusionConnection: fusionConnection,
+          softphone: softphone,
+          onDone: ()=> setState(() {
+          }),
+        );
+      }
+    }
     return Container(
         decoration: BoxDecoration(
             image: DecorationImage(
