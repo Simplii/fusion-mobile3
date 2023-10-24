@@ -26,14 +26,14 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
                 ContactsContract.Contacts.DISPLAY_NAME_PRIMARY
             else ContactsContract.Contacts.DISPLAY_NAME
     override fun run() {
-        val contacts: List<Map<String,Any>> = getContacts()
+        val contacts: List<Map<String,Any?>> = getContacts()
         Handler(Looper.getMainLooper()).post {
             channel.invokeMethod("CONTACTS_LOADED",gson.toJson(contacts))
         }
     }
 
     @SuppressLint("Range")
-    fun getContacts() : List<Map<String,Any>>{
+    fun getContacts() : List<Map<String,Any?>>{
         var cursor: Cursor? = contentResolver.query(
                 ContactsContract.Contacts.CONTENT_URI,
                 null,
@@ -41,7 +41,7 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
                 null,
                 null
         )
-        val contacts:MutableList<Map<String,Any>> = mutableListOf()
+        val contacts:MutableList<Map<String,Any?>> = mutableListOf()
 
         if(cursor != null && cursor.count > 0){
             while (cursor.moveToNext()){
@@ -66,7 +66,7 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
 
                 val emailsArray = getContactEmails(contactId)
                 val addressesArray = getContactAddresses(contactId)
-                val contactObj = mapOf<String,Any>(
+                val contactObj = mapOf<String,Any?>(
                     Pair("id",contactId),
                     Pair("name", name),
                     Pair("firstName", firstName),
@@ -74,7 +74,7 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
                     Pair("phoneNumbers", phoneNumbersArray),
                     Pair("emails", emailsArray),
                     Pair("addresses", addressesArray),
-                    Pair("imageData", image ?: ""),
+                    Pair("profileImage", image ?: null),
                     Pair("company", company),
                     Pair("jobTitle", jobTitle)
                 )

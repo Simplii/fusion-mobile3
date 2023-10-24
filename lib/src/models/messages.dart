@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sqflite/sqlite_api.dart';
 
 import '../backend/fusion_connection.dart';
 import '../messages/messages_list.dart';
@@ -277,7 +278,7 @@ class SMSMessagesStore extends FusionStore<SMSMessage> {
       'to': record.to.toLowerCase(),
       'user': record.user,
       'raw': record.serialize()
-    });
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   clearSubscription(name) {

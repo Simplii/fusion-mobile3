@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/models/fusion_model.dart';
+import 'package:fusion_mobile_revamped/src/utils.dart';
+import 'package:overlay_support/overlay_support.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sql.dart';
 
 import 'contact.dart';
@@ -101,7 +104,10 @@ class PhoneContact extends FusionModel{
     socials = [];
     owner = null;
     if(contactObject.containsKey('imageData')){
-      profileImage = _getImageBinary(contactObject['imageData']);
+      profileImage = getImageBinary(contactObject['imageData']);
+    }
+    if(contactObject.containsKey('profileImage')){
+      profileImage = getImageBinary(contactObject['profileImage']);
     }
     if(name.trim().isEmpty){
       firstName = "Unknown";
@@ -138,21 +144,6 @@ class PhoneContact extends FusionModel{
       }
     );
     return c;
-  }
-
-  Uint8List _getImageBinary(dynamicList) {
-    if(Platform.isIOS){
-      return dynamicList as Uint8List;
-    }
-    if(Platform.isAndroid){
-      if(dynamicList.runtimeType != String){
-        List<dynamic>dy = dynamicList as List<dynamic>;
-        List<int> intList = dy.cast<int>().toList();
-        Uint8List data = Uint8List.fromList(intList);
-        return data;
-      }
-    }
-    return null;
   }
 
   serialize() {
@@ -219,6 +210,7 @@ class PhoneContact extends FusionModel{
     this.crmName = obj['crmName'];
     this.crmId = obj['crmId'];
     this.unread = obj['unread'];
+    this.profileImage = getImageBinary(obj['profileImage']);
   }
 
    searchString() {
@@ -240,7 +232,7 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
     @required MethodChannel contactsChannel
   }) : super(fusionConnection, methodChannel: contactsChannel);
   bool syncing = false;
-
+  bool initSync = false;
   persist(PhoneContact record, ) {
     List<String> numbers = record.phoneNumbers.map((phoneNumber) => phoneNumber['number']).toList().cast<String>();
     print("MDBM ${record.id}");
@@ -310,24 +302,31 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
           persist(contact);
         }
         syncing = false;
+        initSync = false;
         break;
       default:
          print("contacts default");
     }
   }
 
-  void syncPhoneContacts(){
-    syncing = true;
-    try {
-      if(Platform.isIOS){
-        methodChannel.invokeMethod('getContacts');
+  void syncPhoneContacts() async {
+    final PermissionStatus status = await Permission.contacts.status;
+    if(status.isGranted){
+      if(!syncing){
+        syncing = true;
+        try {
+          if(Platform.isIOS){
+            methodChannel.invokeMethod('getContacts');
+          } else {
+            methodChannel.invokeMethod('syncContacts');
+          }
+        } on PlatformException catch (e) {
+          print("MDBM syncPhoneContacts error $e");
+        }
       } else {
-        methodChannel.invokeMethod('syncContacts');
+        toast("contacts sync in progress");
       }
-    } on PlatformException catch (e) {
-      print("MDBM syncPhoneContacts error $e");
     }
-
   }
 
 
@@ -352,6 +351,7 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
           contacts = list;
 
           if(list.isEmpty && query.isEmpty && !syncing){
+            initSync = true;
             syncPhoneContacts();
             // try {
             //   List result = [];

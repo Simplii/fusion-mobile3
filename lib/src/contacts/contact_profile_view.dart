@@ -334,6 +334,28 @@ class _ContactProfileViewState extends State<ContactProfileView> {
       _loading = true;
     });
     SMSDepartment dept = _fusionConnection.smsDepartments.getDepartment(DepartmentIds.Personal);
+    
+    if(dept.numbers.isEmpty){
+      return showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) => 
+          Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height / 3
+            ),
+            color: coal,
+            child: Center(
+              child: Text("No personal number found", 
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          )
+      ).whenComplete(() =>  setState(() {
+        _loading = false;
+      }));
+    }
+   
     SMSConversation convo = await _fusionConnection.messages.checkExistingConversation(
       DepartmentIds.Personal,
       dept.numbers[0],
