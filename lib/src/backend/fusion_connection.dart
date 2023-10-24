@@ -109,6 +109,7 @@ class FusionConnection {
     unreadMessages = UnreadsStore(this);
     quickResponses = QuickResponsesStore(this);
     phoneContacts = PhoneContactsStore(fusionConnection: this, contactsChannel: contactsChannel);
+    phoneContacts.setup();
     getDatabase();
   }
 
@@ -570,18 +571,13 @@ print(responseBody);
 
   _postLoginSetup(Function(bool) callback) async {
     _getCookies();
-    phoneContacts.setup();
     settings.lookupSubscriber();
     coworkers.getCoworkers((data) {});
     conversations.getConversations("-2",100,0,(convos,fromServer,departmentId){});
     dids.getDids((p0, p1) => {});
     smsDepartments.getDepartments((List<SMSDepartment> lis) {});
     refreshUnreads();
-    // final PermissionStatus status = await Permission.contacts.status;
-    // if(status.isGranted){
-    //   print("MDBM syncContacts");
-    //   contactsChannel.invokeMethod('syncContacts');
-    // }
+    // phoneContacts.syncPhoneContacts();
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     setupSocket();
     if (callback != null) {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
+import 'package:fusion_mobile_revamped/src/models/phone_contact.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:convert' as convert;
@@ -349,6 +350,7 @@ class Contact extends FusionModel {
       'crmName': this.crmName,
       'crmId': this.crmId,
       'unread': this.unread,
+      'profileImage': this.profileImage
     });
   }
 
@@ -385,6 +387,7 @@ class Contact extends FusionModel {
     this.crmName = obj['crmName'];
     this.crmId = obj['crmId'];
     this.unread = obj['unread'];
+    this.profileImage = getImageBinary(obj['profileImage']);
   }
 
   Contact.copy(Contact contact) {
@@ -479,22 +482,39 @@ class ContactsStore extends FusionStore<Contact> {
 
   searchPersisted(String query, int limit, int offset,
       Function(List<Contact>, bool) callback) {
+        print("MDBM query $query");
         getDatabasesPath().then((path){
           openDatabase(join(path,"fusion.db")).then((db){
             db.query('contacts',
-                limit: limit,
-                offset: offset,
-                where: 'searchString Like ?',
-                orderBy: "lastName asc, firstName asc",
-                whereArgs: [
-                  "%" + query + "%"
-                ]).then((List<Map<String, dynamic>> results) {
-              List<Contact> list = [];
+              limit: limit,
+              offset: offset,
+              where: 'searchString Like ?',
+              orderBy: "lastName asc, firstName asc",
+              whereArgs: [
+                "%" + query + "%"
+              ]).then((List<Map<String, dynamic>> results) {
+              if(results.isEmpty){
+                db.query('phone_contacts',limit: limit,
+                  offset: offset,
+                  where: 'searchString Like ?',
+                  orderBy: "lastName asc, firstName asc",
+                  whereArgs: ["%" + query + "%"]
+                  ).then((List<Map<String, dynamic>>  res){
+                    
+                    List<Contact> list = [];
+                    for (Map<String, dynamic> result in res) {
+                      list.add(PhoneContact.unserialize(result['raw']).toContact());
+                    }
+                    callback(list, false);
+                  });
+              } else {
+                List<Contact> list = [];
 
-              for (Map<String, dynamic> result in results) {
-                list.add(Contact.unserialize(result['raw']));
+                for (Map<String, dynamic> result in results) {
+                  list.add(Contact.unserialize(result['raw']));
+                }
+                callback(list, false);
               }
-              callback(list, false);
             });
           });
         });
@@ -503,7 +523,6 @@ class ContactsStore extends FusionStore<Contact> {
   search(String query, int limit, int offset,
       Function(List<Contact>, bool) callback) {
     query = query.toLowerCase();
-
     searchPersisted(query, limit, offset, callback);
 
     fusionConnection.apiV1Call("get", "/clients/filtered_contacts", {

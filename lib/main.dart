@@ -365,10 +365,17 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         } else if(memberContacts.isEmpty && 
           memberLeads.isEmpty && member['number'] != numberUsed){
-          convoContacts.add(Contact.fake(member['number']));
+          fusionConnection.phoneContacts.searchDb(member['number'])
+          .then((res) {
+            if(res != null){
+              print("MDBM res ${res}");
+            } else {
+              convoContacts.add(Contact.fake(member['number']));
+            }
+          });
         }
       }
-
+      print("MDBM res here group");
       showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -404,10 +411,10 @@ class _MyHomePageState extends State<MyHomePage> {
     else if (data.containsKey('to_number') && !isGroup) {
       fusionConnection.contacts.search(data['from_number'], 10, 0,
           (contacts, fromServer) {
-        if (fromServer) {
+        if (fromServer || contacts.isNotEmpty) {
           fusionConnection.integratedContacts.search(data['from_number'], 10, 0,
               (crmContacts, fromServer, hasMore) {
-            if (fromServer) {
+            if (fromServer || contacts.isNotEmpty) {
               contacts.addAll(crmContacts);
               showModalBottomSheet(
                   context: context,

@@ -165,7 +165,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   String _subscriptionKey;
   int _page = 0;
   bool _hasPulledFromServer = false;
-
+  String _message = "No Match Was Found";
   initState() {
     super.initState();
   }
@@ -348,8 +348,11 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
           if(status.isGranted){
             _fusionConnection.phoneContacts.getAdderssBookContacts(_query).then((List<PhoneContact> contacts){
               setState(() {
-                if(contacts.isEmpty && _fusionConnection.phoneContacts.syncing){
-                  print("MDBM syncing contacts");
+
+                if(contacts.isEmpty && _fusionConnection.phoneContacts.initSync){
+                  lookupState = 2;
+                  _contacts = [];
+                  _message = "Contacts import has started, this might take a while feel free to navigate away from this screen but don't close the app";
                 } else {
                   _contacts = [];
                   Map<String, Contact> list = {};
@@ -372,7 +375,12 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   Future<PermissionStatus> _checkContactsPermission() async {
     final PermissionStatus status = await Permission.contacts.status;
     try {
-      if (status.isDenied || status.isPermanentlyDenied) {
+      if (status.isDenied) {
+        await Permission.contacts.request();
+        setState(() {  
+          lookupState = 0;
+        });
+      } else if (status.isPermanentlyDenied){
         await Permission.contacts.request();
         setState(() {  
           lookupState = 0;
@@ -642,7 +650,17 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
               Container(
                   child: _isSpinning()
                       ? _spinner()
-                      : ListView.builder(
+                      : _contacts.isEmpty 
+                        ? Center(
+                          child: Text(
+                            _message, 
+                            textAlign: TextAlign.center, 
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              height: 1.5
+                            ),),
+                        )
+                        : ListView.builder(
                           itemCount: _page == -1
                               ? _contacts.length
                               : _contacts.length + 1,
