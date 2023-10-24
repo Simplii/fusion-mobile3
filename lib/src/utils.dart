@@ -234,16 +234,11 @@ String getDateTime (DateTime dateTime) {
 }
 
 Uint8List getImageBinary(dynamicList) {
-  if(Platform.isIOS && dynamicList != null){
-    return dynamicList as Uint8List;
-  }
-  if(Platform.isAndroid && dynamicList != null){
-    if(dynamicList.runtimeType != String){
-      List<dynamic>dy = dynamicList as List<dynamic>;
-      List<int> intList = dy.cast<int>().toList();
-      Uint8List data = Uint8List.fromList(intList);
-      return data;
-    }
+  if(dynamicList != null && dynamicList.runtimeType != String){
+    List<dynamic>dy = dynamicList as List<dynamic>;
+    List<int> intList = dy.cast<int>().toList();
+    Uint8List data = Uint8List.fromList(intList);
+    return data;
   }
   return null;
 }
