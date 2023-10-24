@@ -103,9 +103,6 @@ class PhoneContact extends FusionModel{
     pictures = [];
     socials = [];
     owner = null;
-    if(contactObject.containsKey('imageData')){
-      profileImage = getImageBinary(contactObject['imageData']);
-    }
     if(contactObject.containsKey('profileImage')){
       profileImage = getImageBinary(contactObject['profileImage']);
     }
@@ -235,7 +232,6 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
   bool initSync = false;
   persist(PhoneContact record, ) {
     List<String> numbers = record.phoneNumbers.map((phoneNumber) => phoneNumber['number']).toList().cast<String>();
-    print("MDBM ${record.id}");
     fusionConnection.db.insert('phone_contacts', {
       'id': record.id,
       'company': record.company,
@@ -295,9 +291,13 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
     switch(methodCall.method) {
       case "CONTACTS_LOADED":
         List result = [];
-        result = jsonDecode(methodCall.arguments);
+        result = Platform.isAndroid 
+          ? jsonDecode(methodCall.arguments)
+          : methodCall.arguments;
         for (var c in result) {
-          PhoneContact contact = PhoneContact(c);
+          PhoneContact contact = Platform.isAndroid 
+            ? PhoneContact(c)
+            : PhoneContact(Map<String, dynamic>.from(c));
           storeRecord(contact);
           persist(contact);
         }
@@ -315,11 +315,7 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
       if(!syncing){
         syncing = true;
         try {
-          if(Platform.isIOS){
-            methodChannel.invokeMethod('getContacts');
-          } else {
-            methodChannel.invokeMethod('syncContacts');
-          }
+          methodChannel.invokeMethod('syncContacts');
         } on PlatformException catch (e) {
           print("MDBM syncPhoneContacts error $e");
         }
@@ -331,7 +327,7 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
 
 
   Future<List<PhoneContact>> getAdderssBookContacts(String query,{bool pullNewContacts}) async{
-    List<PhoneContact> contacts = getRecords();
+    List<PhoneContact> contacts = getRecords();  
     if(contacts.isNotEmpty && query.isEmpty){
       return contacts;
     } else {

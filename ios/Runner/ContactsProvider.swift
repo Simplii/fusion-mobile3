@@ -22,17 +22,16 @@ class ContactsProvider: NSObject {
         contactsChannel.setMethodCallHandler({
               (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // This method is invoked on the UI thread.
-            if(call.method == "getContacts"){
+            if(call.method == "syncContacts"){
                 Task.init{
-                   return await self.getContacts(result: result)
+                    return await self.getContacts(results: result)
                 }
                 
             }
           })
     }
     
-    private func getContacts(result:FlutterResult) async {
-        print("IOS get contacts")
+    private func getContacts(results:FlutterResult) async {
         let contactStore = CNContactStore()
         let keys = [
             CNContactGivenNameKey,
@@ -48,7 +47,7 @@ class ContactsProvider: NSObject {
         ] as [CNKeyDescriptor]
         
         let fetchRequest : CNContactFetchRequest = CNContactFetchRequest(keysToFetch: keys)
-        var contactsToSend:[Any] = []
+        var contactsToSend:[[String:Any]] = []
         do {
             
             try contactStore.enumerateContacts(with: fetchRequest, usingBlock: {
@@ -62,10 +61,9 @@ class ContactsProvider: NSObject {
                 contactToSend["lastName"] = contact.familyName
                 contactToSend["jobtitle"] = contact.jobTitle
                 contactToSend["company"] = contact.organizationName
+                contactToSend["name"] = contact.givenName + " " + contact.familyName
+                contactToSend["profileImage"] = contact.imageData
                 
-                if(contact.imageData != nil){
-                    contactToSend["imageData"] = contact.imageData
-                }
                 contactToSend["id"] = contact.identifier
                 
                 contactToSend["phoneNumbers"] = contactPhoneNumbers(contact: contact)
@@ -80,7 +78,7 @@ class ContactsProvider: NSObject {
         } catch {
             print("error")
         }
-        return result(contactsToSend)
+        return contactsChannel.invokeMethod("CONTACTS_LOADED", arguments: contactsToSend)
     }
     
     func contactPhoneNumbers (contact:CNContact) -> [[String:Any]] {
@@ -100,7 +98,10 @@ class ContactsProvider: NSObject {
                     phoneNumberObj["type"] = "work"
                 }
             }
-            phoneNumberObj["number"] = phoneNumber.value.stringValue
+            
+            let number = phoneNumber.value.value(forKey: "digits") as? String
+            phoneNumberObj["number"] = number ?? ""
+            
             if(!phoneNumberObj.isEmpty){
                 contactPhoneNumbers.append(phoneNumberObj)
             }
