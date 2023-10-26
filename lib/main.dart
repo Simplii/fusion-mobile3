@@ -287,20 +287,20 @@ class _MyHomePageState extends State<MyHomePage> {
       sound: true
     );
   }
+  // FOR IOS
+  // Future<void> _onLaunch(RemoteMessage m) async {
+  //   _launchMessage = m;
+  // }
 
-  Future<void> _onLaunch(RemoteMessage m) async {
-    _launchMessage = m;
-  }
+  // Future<void> _onResume(RemoteMessage m) async {
+  //   softphone.reregister();
+  // }
 
-  Future<void> _onResume(RemoteMessage m) async {
-    softphone.reregister();
-  }
-
-  Future<void> _onMessage(RemoteMessage m) async {
-    if(onMessagePosted !=  null){
-      onMessagePosted!(()=>{});
-    }
-  }
+  // Future<void> _onMessage(RemoteMessage m) async {
+  //   if(onMessagePosted !=  null){
+  //     onMessagePosted!(()=>{});
+  //   }
+  // }
 
   checkForInitialMessage({String? username}) async {
     await Firebase.initializeApp();

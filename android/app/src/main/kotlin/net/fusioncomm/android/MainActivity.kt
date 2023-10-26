@@ -202,6 +202,8 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.IncomingReceived -> {
+                    audioManager.mode = AudioManager.MODE_NORMAL;
+                    audioManager.isSpeakerphoneOn = true;
                     channel.invokeMethod(
                         "lnIncomingReceived",
                         mapOf(
@@ -214,6 +216,8 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.PushIncomingReceived -> {
+                    audioManager.mode = AudioManager.MODE_NORMAL;
+                    audioManager.isSpeakerphoneOn = true;
                     channel.invokeMethod(
                         "lnPushIncomingReceived",
                         mapOf(Pair("uuid", uuid))
@@ -225,6 +229,7 @@ class MainActivity : FlutterFragmentActivity() {
                 }
                 Call.State.OutgoingProgress -> {
                     audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+                    audioManager.isSpeakerphoneOn = false;
                     uuidCalls[uuid] = call
                     channel.invokeMethod(
                         "lnOutgoingInit",
@@ -295,6 +300,8 @@ class MainActivity : FlutterFragmentActivity() {
                     )
                 }
                 Call.State.End -> {
+                    audioManager.mode = AudioManager.MODE_NORMAL;
+                    audioManager.isSpeakerphoneOn = false;
                     channel.invokeMethod(
                         "lnEnd",
                         mapOf(Pair("uuid", uuid))
