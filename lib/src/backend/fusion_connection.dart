@@ -577,7 +577,7 @@ print(responseBody);
     dids.getDids((p0, p1) => {});
     smsDepartments.getDepartments((List<SMSDepartment> lis) {});
     refreshUnreads();
-    // phoneContacts.syncPhoneContacts();
+    phoneContacts.syncPhoneContacts();
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     setupSocket();
     if (callback != null) {

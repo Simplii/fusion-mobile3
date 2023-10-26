@@ -8,7 +8,6 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
-import android.os.HandlerThread
 import android.os.Looper
 import android.provider.ContactsContract
 import android.telephony.PhoneNumberUtils
@@ -17,8 +16,8 @@ import com.google.gson.Gson
 import io.flutter.plugin.common.MethodChannel
 import java.io.IOException
 import java.io.InputStream
-import java.util.Locale
 
+@SuppressLint("Range")
 class ContactsThread constructor(private var channel: MethodChannel, private var contentResolver: ContentResolver): Thread() {
     private val gson = Gson();
     private val displayNameCol: String =
@@ -32,8 +31,8 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
         }
     }
 
-    @SuppressLint("Range")
-    fun getContacts() : List<Map<String,Any?>>{
+
+    private fun getContacts() : List<Map<String,Any?>>{
         var cursor: Cursor? = contentResolver.query(
                 ContactsContract.Contacts.CONTENT_URI,
                 null,
@@ -86,8 +85,7 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
         return contacts;
     }
 
-    @SuppressLint("Range")
-    fun getContactPhoneNumbers (contactId:String): Array<Map<String,Any>> {
+    private fun getContactPhoneNumbers (contactId:String): Array<Map<String,Any>> {
         val phoneNumbers:MutableList<Map<String,Any>> = mutableListOf()
 
         val contactPhoneCursor: Cursor? = contentResolver.query(
@@ -118,7 +116,7 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
                             mapOf(
                                     Pair("type", getPhoneNumberType(phoneType)),
                                     Pair("number", PhoneNumberUtils.normalizeNumber(phoneNumber)),
-                                    Pair("smsCapable", getPhoneNumberType(phoneType) == "mobile"),
+                                    Pair("z", getPhoneNumberType(phoneType) == "mobile"),
                             )
                     )
                 } else if(contactPhoneNumber.containsKey(number) &&
@@ -137,8 +135,7 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
         return phoneNumbers.toTypedArray();
     }
 
-    @SuppressLint("Range")
-    fun getContactStructuredName (contactId:String): Triple<String, String, String> {
+    private fun getContactStructuredName (contactId:String): Triple<String, String, String> {
         var firstName = ""
         var lastName = ""
         var name = ""
@@ -196,8 +193,7 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
         return Triple(firstName,lastName,name);
     }
 
-    @SuppressLint("Range")
-    fun getContactEmails (contactId:String): Array<Map<String,Any>> {
+    private fun getContactEmails (contactId:String): Array<Map<String,Any>> {
         //something wrong here
         val phoneEmails:MutableList<Map<String,Any>> = mutableListOf()
 
@@ -239,8 +235,7 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
         return phoneEmails.toTypedArray();
     }
 
-    @SuppressLint("Range")
-    fun getContactAddresses (contactId:String): Array<Map<String,Any>> {
+    private fun getContactAddresses (contactId:String): Array<Map<String,Any>> {
         val addresses:MutableList<Map<String,Any>> = mutableListOf()
         val addressesCursor: Cursor? = contentResolver.query(
                 ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI,
@@ -345,7 +340,7 @@ class ContactsThread constructor(private var channel: MethodChannel, private var
             null
         }
     }
-    @SuppressLint("Range")
+
     private fun getCompanyInfo(contactId: String): Pair<String, String>  {
         val selection = ContactsContract.Data.MIMETYPE + " = ? AND " +
                 ContactsContract.CommonDataKinds.Organization.CONTACT_ID + " = ?"

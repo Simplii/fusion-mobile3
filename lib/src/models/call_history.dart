@@ -209,7 +209,9 @@ class CallHistoryStore extends FusionStore<CallHistory> {
                 for (PhoneContact phoneContact in phoneContacts) {
                   List<String> numbers = 
                     phoneContact.phoneNumbers.map((e) => e["number"]).toList().cast<String>();
-                  if(numbers.contains(obj.fromDid) || numbers.contains(obj.toDid)){
+                  if(obj.isInbound() && numbers.contains(obj.fromDid)){
+                    obj.phoneContact = phoneContact;
+                  } else if(!obj.isInbound() && numbers.contains(obj.toDid)){
                     obj.phoneContact = phoneContact;
                   }
                 }

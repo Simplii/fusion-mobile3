@@ -324,7 +324,7 @@ class Contact extends FusionModel {
       'addresses': this.addresses,
       'company': this.company,
       'contacts': this.contacts,
-      'createdAt': this.createdAt.serialize(),
+      'createdAt': this.createdAt?.serialize(),
       'deleted': this.deleted,
       'domain': this.domain,
       'emails': this.emails,
@@ -345,7 +345,7 @@ class Contact extends FusionModel {
       'lastCommunication': this.lastCommunication,
       'type': this.type,
       'uid': this.uid,
-      'updatedAt': this.updatedAt.serialize(),
+      'updatedAt': this.updatedAt?.serialize(),
       'crmUrl': this.crmUrl,
       'crmName': this.crmName,
       'crmId': this.crmId,
@@ -359,7 +359,7 @@ class Contact extends FusionModel {
     this.addresses = obj['addresses'];
     this.company = obj['company'];
     this.contacts = obj['contacts'];
-    this.createdAt = CarbonDate.unserialize(obj['createdAt']);
+    this.createdAt = CarbonDate?.unserialize(obj['createdAt']);
     this.deleted = obj['deleted'];
     this.domain = obj['domain'];
     this.emails = obj['emails'];
@@ -382,7 +382,7 @@ class Contact extends FusionModel {
     this.lastCommunication = obj['lastCommunication'];
     this.type = obj['type'];
     this.uid = obj['uid'];
-    this.updatedAt = CarbonDate.unserialize(obj['updatedAt']);
+    this.updatedAt = CarbonDate?.unserialize(obj['updatedAt']);
     this.crmUrl = obj['crmUrl'];
     this.crmName = obj['crmName'];
     this.crmId = obj['crmId'];

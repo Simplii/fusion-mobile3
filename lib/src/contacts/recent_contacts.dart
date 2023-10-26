@@ -352,7 +352,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                 if(contacts.isEmpty && _fusionConnection.phoneContacts.initSync){
                   lookupState = 2;
                   _contacts = [];
-                  _message = "Contacts import has started, this might take a while feel free to navigate away from this screen but don't close the app";
+                  _message = "Contacts sync has started, this might take a while feel free to navigate away from this screen but don't close the app";
                 } else {
                   _contacts = [];
                   Map<String, Contact> list = {};
@@ -367,21 +367,23 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                 }
               });  
             });
+          } else if(status.isPermanentlyDenied || status.isDenied){
+            setState(() {
+              _contacts = [];
+              lookupState = 2;
+              _message = "Please allow Fusion Mobile access to your contacts from settings for this feature to work";
+            });
           }
         });
     }
   }
   
   Future<PermissionStatus> _checkContactsPermission() async {
-    final PermissionStatus status = await Permission.contacts.status;
+    PermissionStatus status = await Permission.contacts.status;
     try {
-      if (status.isDenied) {
+      if (status.isDenied || status.isPermanentlyDenied) {
         await Permission.contacts.request();
-        setState(() {  
-          lookupState = 0;
-        });
-      } else if (status.isPermanentlyDenied){
-        await Permission.contacts.request();
+        status = await Permission.contacts.status;
         setState(() {  
           lookupState = 0;
         });
@@ -428,6 +430,10 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   _resultRow(String letter, Contact contact) {
     return GestureDetector(
         onTap: () {
+          FocusScopeNode currentFocus = FocusScope.of(context);
+          if (!currentFocus.hasPrimaryFocus) {
+            currentFocus.unfocus();
+          }
           if (widget.onSelect != null)
             widget.onSelect(contact, null);
           else
@@ -921,208 +927,6 @@ class _ContactsListState extends State<ContactsList> {
             ])));
   }
 }
-/*
-class CallHistorySummaryView extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final CallHistory _historyItem;
-  final Softphone _softphone;
-  Function() onSelect;
-
-  CallHistorySummaryView(
-      this._fusionConnection, this._softphone, this._historyItem,
-      {Key key, this.onSelect})
-      : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() => _CallHistorySummaryViewState();
-}
-
-class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
-
-  Softphone get _softphone => widget._softphone;
-
-  CallHistory get _historyItem => widget._historyItem;
-  bool _expanded = false;
-
-  List<Contact> _contacts() {
-    if (_historyItem.contact != null) {
-      return [_historyItem.contact];
-    } else {
-      return [];
-    }
-  }
-
-  List<CrmContact> _crmContacts() {
-    if (_historyItem.crmContact != null) {
-      return [_historyItem.crmContact];
-    } else {
-      return [];
-    }
-  }
-
-  _expand() {
-    this.setState(() {
-      _expanded = !_expanded;
-    });
-  }
-
-  _name() {
-    if (_historyItem.contact != null) {
-      return _historyItem.contact.name;
-    } else if (_historyItem.crmContact != null) {
-      return _historyItem.crmContact.name;
-    } else if (_historyItem.coworker != null) {
-      return _historyItem.coworker.firstName +
-          ' ' +
-          _historyItem.coworker.lastName;
-    } else {
-      return _historyItem.toDid;
-    }
-  }
-
-  _isMissed() {
-    return _historyItem.missed && _historyItem.direction == "inbound";
-  }
-
-  _icon() {
-    if (_historyItem.direction == 'outbound') {
-      return "assets/icons/phone_outgoing.png";
-    } else if (_isMissed()) {
-      return "assets/icons/phone_missed_red.png";
-    } else {
-      return "assets/icons/phone_incoming.png";
-    }
-  }
-
-  _openMessage() {
-    String number =
-        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => SMSConversationView(
-            _fusionConnection,
-            _softphone,
-            SMSConversation.build(
-                contacts:
-                    _historyItem.contact != null ? [_historyItem.contact] : [],
-                crmContacts: _historyItem.crmContact != null
-                    ? [_historyItem.crmContact]
-                    : [],
-                myNumber: number,
-                number: _historyItem.direction == "outbound"
-                    ? _historyItem.toDid
-                    : _historyItem.fromDid)));
-  }
-
-  _makeCall() {
-    _softphone.makeCall(_historyItem.direction == "inbound"
-        ? _historyItem.fromDid
-        : _historyItem.toDid);
-  }
-
-  _openProfile() {
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => ContactProfileView(
-            _fusionConnection, _softphone, _historyItem.contact));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> children = [_topPart()];
-
-    if (_expanded) {
-      children.add(Container(
-          child: horizontalLine(0),
-          margin: EdgeInsets.only(top: 4, bottom: 4)));
-      children.add(Container(
-          height: 28,
-          margin: EdgeInsets.only(top: 12, bottom: 12),
-          child: Row(children: [
-            actionButton("Profile", "user_dark", 18, 18, _openProfile),
-            actionButton("Call", "phone_dark", 18, 18, _makeCall),
-            actionButton("Message", "message_dark", 18, 18, _openMessage)
-            // _actionButton("Video", "video_dark", 18, 18, () {}),
-          ])));
-    }
-
-    return Container(
-        height: _expanded ? 132 : 76,
-        padding: EdgeInsets.all(4),
-        margin: EdgeInsets.only(bottom: 0, left: 12, right: 12),
-        decoration: _expanded
-            ? BoxDecoration(
-                color: particle,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(36),
-                  topRight: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                ))
-            : null,
-        child: Column(children: children));
-  }
-
-  _topPart() {
-    return GestureDetector(
-        onTap: () {
-          if (widget.onSelect != null)
-            widget.onSelect();
-          else
-            _expand();
-        },
-        child: Row(children: [
-          ContactCircle.withCoworker(
-              _contacts(), _crmContacts(), _historyItem.coworker),
-          Expanded(
-              child: Container(
-                  decoration: BoxDecoration(color: Colors.transparent),
-                  child: Column(children: [
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(_name(),
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16))),
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Row(children: [
-                          Container(
-                              margin: EdgeInsets.only(top: 4),
-                              decoration: BoxDecoration(
-                                color: _expanded
-                                    ? Colors.white
-                                    : Color.fromARGB(255, 243, 242, 242),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(4)),
-                              ),
-                              padding: EdgeInsets.only(
-                                  left: 6, right: 6, top: 2, bottom: 2),
-                              child: Row(children: [
-                                Image.asset(_icon(), width: 12, height: 12),
-                                Text(
-                                    " " +
-                                        mDash +
-                                        " " +
-                                        DateFormat.jm()
-                                            .format(_historyItem.startTime),
-                                    style: TextStyle(
-                                        color:
-                                            _isMissed() ? crimsonLight : coal,
-                                        fontSize: 12,
-                                        height: 1.4,
-                                        fontWeight: FontWeight.w400))
-                              ])),
-                          Expanded(child: Container())
-                        ]))
-                  ])))
-        ]));
-  }
-}*/
 
 class SearchContactsBar extends StatefulWidget {
   final FusionConnection _fusionConnection;
