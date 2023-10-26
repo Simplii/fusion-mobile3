@@ -69,7 +69,7 @@ class ContactsProvider: NSObject {
                 contactToSend["phoneNumbers"] = contactPhoneNumbers(contact: contact)
                 contactToSend["emails"] = contactEmails(contact: contact)
                 contactToSend["addresses"] = contactAddresses(contact: contact)
-                contactToSend["socials"] = contactSocials(contact: contact)
+//                contactToSend["socials"] = contactSocials(contact: contact)
 //                contact.socialProfiles.forEach { profile in
 //                    print("profile ",profile.label ?? "",profile.value.urlString)
 //                }
@@ -100,6 +100,7 @@ class ContactsProvider: NSObject {
             }
             
             let number = phoneNumber.value.value(forKey: "digits") as? String
+            print("MDBM ")
             phoneNumberObj["number"] = number ?? ""
             
             if(!phoneNumberObj.isEmpty){
@@ -108,7 +109,7 @@ class ContactsProvider: NSObject {
         }
         return contactPhoneNumbers
     }
-    
+//flutter: MDBM phoneNumbers = [8018976133]
     func contactEmails (contact:CNContact) -> [[String:Any]] {
         var contactEmails: [[String:Any]] = []
         contact.emailAddresses.forEach { emailAddress in
@@ -165,7 +166,7 @@ class ContactsProvider: NSObject {
     func contactSocials (contact:CNContact) -> [[String:Any]] {
         var contactSocials: [[String:Any]] = []
         contact.socialProfiles.forEach { profile in
-            var profileObj : [String:Any] = [:]
+            let profileObj : [String:Any] = [:]
             print("MDBM profile \(profile)")
 //            profileObj["id"] = profile.identifier
 //            profileObj["type"] = "other"

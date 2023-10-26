@@ -1606,22 +1606,21 @@ class Softphone implements SipUaHelperListener {
       List<Coworker> coworker =
           coworkers.where((coworker) => coworker.extension == ext).toList();
       List<PhoneContact> phoneContacts = _fusionConnection.phoneContacts.getRecords();
-      if(phoneContacts.isNotEmpty && data != null){
-        for (PhoneContact phoneContact in phoneContacts) {
-          for(Map<String,dynamic>phoneNumber in phoneContact.phoneNumbers){
-            String number = phoneNumber["number"];
-            if(number.contains(data.phoneNumber)){
-              return phoneContact.name;
-            }
-          } 
-        }
-      }
       if (coworker.length > 0) {
         Coworker _coworker = coworker.first;
         return "${_coworker.firstName} ${_coworker.lastName}";
       } else if (data != null) {
         if (data.getName().trim().length > 0 && data.contacts.length > 0)
           return data.getName();
+        else if(phoneContacts.isNotEmpty && data != null)
+          for (PhoneContact phoneContact in phoneContacts) {
+            for(Map<String,dynamic>phoneNumber in phoneContact.phoneNumbers){
+              String number = phoneNumber["number"];
+              if(number.contains(data.phoneNumber)){
+                return phoneContact.name;
+              }
+            } 
+          }
         else
           return call.remote_display_name != null && 
             !call.remote_display_name.startsWith("sip:")
@@ -1660,7 +1659,7 @@ class Softphone implements SipUaHelperListener {
             ? coworkers.where((coworker) => coworker.extension == ext).first
             : null;
       List<PhoneContact> phoneContacts = _fusionConnection.phoneContacts.getRecords();
-      if(phoneContacts.isNotEmpty && data != null){
+      if(phoneContacts.isNotEmpty && data != null && data.contacts.isEmpty){
         for (PhoneContact phoneContact in phoneContacts) {
           for(Map<String,dynamic>phoneNumber in phoneContact.phoneNumbers){
             String number = phoneNumber["number"];

@@ -530,8 +530,24 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     }
   }
 
+  List<Contact> _messageContacts(CallHistory item){
+    List<Contact> contacts = [];
+    if(_historyItem.contact != null){
+      contacts.add(_historyItem.contact);
+    } else if(_historyItem.coworker != null){
+      contacts.add(_historyItem.coworker.toContact());
+    } else if(_historyItem.phoneContact != null){
+      contacts.add(_historyItem.phoneContact.toContact());
+    }
+    return contacts;
+  }
+
   _openMessage() {
-    String number = _fusionConnection.smsDepartments.getDepartment(DepartmentIds.Personal).numbers[0];
+    bool isExt = _historyItem.fromDid.length < 6 || _historyItem.toDid.length < 6;
+    String number = _fusionConnection.smsDepartments.getDepartment(isExt 
+      ? DepartmentIds.FusionChats 
+      : DepartmentIds.Personal
+    ).numbers[0];
     if(number == null){
       return showModalBottomSheet(
         context: context,
@@ -554,8 +570,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           builder: (BuildContext context, StateSetter setState) {
               SMSConversation displayingConvo = SMSConversation.build(
                 isGroup: false,
-                contacts:
-                    _historyItem.contact != null ? [_historyItem.contact] : [],
+                contacts: _messageContacts(_historyItem),
                 crmContacts: _historyItem.crmContact != null
                     ? [_historyItem.crmContact]
                     : [],
@@ -592,6 +607,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     Contact newContact = null;
     if (contact == null && _historyItem.coworker != null){
       contact = _historyItem.coworker.toContact();
+    } else if(contact == null && _historyItem.phoneContact != null) {
+      contact = _historyItem.phoneContact.toContact();
     }
     else if (contact == null && _historyItem.coworker == null && _historyItem.direction == "inbound"){
       newContact = Contact.fake(_historyItem.fromDid);
@@ -627,7 +644,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   @override
   Widget build(BuildContext context) {
     List<Widget> children = [_topPart()];
-    bool haveProfile = _historyItem.contact != null || _historyItem.coworker != null ? true : false;
+    bool haveProfile = _historyItem.contact != null || 
+      _historyItem.coworker != null || _historyItem.phoneContact != null ? true : false;
     if (_expanded) {
       children.add(Container(
           child: Row(children: [horizontalLine(0)]),

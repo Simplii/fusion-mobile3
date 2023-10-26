@@ -232,6 +232,7 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
   bool initSync = false;
   persist(PhoneContact record, ) {
     List<String> numbers = record.phoneNumbers.map((phoneNumber) => phoneNumber['number']).toList().cast<String>();
+    print("MDBM numbers = ${numbers.toString()}");
     fusionConnection.db.insert('phone_contacts', {
       'id': record.id,
       'company': record.company,
@@ -241,22 +242,24 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
       'phoneNumbers': numbers.toString(),
       'raw': record.serialize(),
       'profileImage': record.profileImage
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }, conflictAlgorithm: ConflictAlgorithm.replace).then((value) => value);
   }
 
   // Future<List<PhoneContact>> searchPhoneContact(query) {
 
   // }
 
-  Future<PhoneContact> searchDb(phoneNumber) async {
+  Future<PhoneContact> searchDb(String phoneNumber) async {
     PhoneContact contact;
        
     List<Map<String,dynamic>>results = await fusionConnection.db.query('phone_contacts',                
-      where: 'phoneNumbers LIKE (${List.filled([phoneNumber].length, '?').join(',')})',
+      // where: 'phoneNumbers LIKE (${List.filled([phoneNumber].length, '?').join(',')})',
+      where: 'searchString LIKE ?',
       orderBy: "lastName asc, firstName asc",
-      whereArgs: [[ "%" + phoneNumber + "%"]],
+      // whereArgs: [[ "%" + phoneNumber + "%"]],
+      whereArgs: ["%$phoneNumber%"],
     );
-
+      
     if(results != null && results.length > 0){
       Map<String,dynamic> result = results.first;
       PhoneContact phoneContact = PhoneContact.unserialize(result['raw']);
@@ -271,7 +274,7 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
     List<PhoneContact> phoneContacts = getRecords();
     if(phoneContacts.isNotEmpty){
       for (PhoneContact phoneContact in phoneContacts) {
-        List<String> numbers = phoneContact.phoneNumbers.map((e) => e["number"]).toList();
+        List<String> numbers = phoneContact.phoneNumbers.map((e) => e["number"]).toList().cast<String>();
         if(numbers.contains(phoneNumber)){
           contact = phoneContact;
         }
@@ -326,7 +329,7 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
   }
 
 
-  Future<List<PhoneContact>> getAdderssBookContacts(String query,{bool pullNewContacts}) async{
+  Future<List<PhoneContact>> getAdderssBookContacts(String query) async{
     List<PhoneContact> contacts = getRecords();  
     if(contacts.isNotEmpty && query.isEmpty){
       return contacts;
@@ -349,23 +352,6 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
           if(list.isEmpty && query.isEmpty && !syncing){
             initSync = true;
             syncPhoneContacts();
-            // try {
-            //   List result = [];
-            //   if(Platform.isIOS){
-            //     result = await methodChannel.invokeMethod('getContacts');
-            //   } else {
-            //     var data = await methodChannel.invokeMethod('getContacts');
-            //     result = jsonDecode(data);
-            //   }
-            //   for (var c in result) {
-            //     PhoneContact contact = PhoneContact(c);
-            //     storeRecord(contact);
-            //     persist(contact);
-            //     contacts.add(contact);
-            //   }
-            // } on PlatformException catch (e) {
-            //   print("MDBM getAdderssBookContacts error $e");
-            // }
           }
         });
     }
