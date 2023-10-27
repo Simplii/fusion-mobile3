@@ -137,7 +137,9 @@ class PhoneContact extends FusionModel{
       'crm_name': '',
       'crm_id': '',
       'coworker': null,
-      'profileImage': this.profileImage
+      'profileImage': this.profileImage,
+      'created_at': null,
+      'updated_at': null
       }
     );
     return c;

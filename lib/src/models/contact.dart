@@ -135,14 +135,18 @@ class Contact extends FusionModel {
   }
 
   Contact(Map<String, dynamic> contactObject) {
-    Map<String, dynamic> createdAtDateObj =
+    Map<String, dynamic>? createdAtDateObj;
+    if(contactObject['created_at'] != null)
+      createdAtDateObj =
         checkDateObj(contactObject['created_at'])!;
-    Map<String, dynamic> updatedAtDateObj =
+    Map<String, dynamic>? updatedAtDateObj;
+    if(contactObject['updated_at'] != null)
+      updatedAtDateObj =
         checkDateObj(contactObject['updated_at'])!;
     this.addresses = contactObject['addresses'];
     this.company = contactObject['company'];
     this.contacts = contactObject['contacts'];
-    this.createdAt = CarbonDate(createdAtDateObj);
+    this.createdAt = createdAtDateObj != null ?  CarbonDate(createdAtDateObj) : null;
     this.deleted = contactObject['deleted'];
     this.domain = contactObject['domain'];
     this.emails = contactObject['emails'];
@@ -170,7 +174,7 @@ class Contact extends FusionModel {
     if (contactObject['uid'].runtimeType == String) {
       this.uid = contactObject['uid'];
     }
-    this.updatedAt = CarbonDate(updatedAtDateObj);
+    this.updatedAt = updatedAtDateObj != null ? CarbonDate(updatedAtDateObj) : null;
     this.crmUrl = contactObject['crm_url'];
     this.crmName = contactObject['crm_name'];
     this.crmId = contactObject['crm_id'].runtimeType == int
