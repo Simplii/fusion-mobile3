@@ -333,7 +333,12 @@ class _ContactProfileViewState extends State<ContactProfileView> {
     setState(() {
       _loading = true;
     });
-    SMSDepartment dept = _fusionConnection.smsDepartments.getDepartment(DepartmentIds.Personal);
+
+    SMSDepartment dept = _fusionConnection.smsDepartments.getDepartment(
+      _contact.coworker != null 
+      ? DepartmentIds.FusionChats
+      : DepartmentIds.Personal
+    );
     
     if(dept.numbers.isEmpty){
       return showModalBottomSheet(

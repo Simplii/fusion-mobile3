@@ -168,6 +168,9 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   String _message = "No Match Was Found";
   initState() {
     super.initState();
+    _fusionConnection.phoneContacts.toUpdateView((){
+      _lookupQuery();
+    });
   }
 
   _subscribeCoworkers(List<String> uids, Function(List<Coworker>) callback) {
