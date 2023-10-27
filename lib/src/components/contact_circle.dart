@@ -77,8 +77,11 @@ class _ContactCircleState extends State<ContactCircle> {
 
 
   Widget _chatHeads(int idx, Contact c){
-    String? _imageUrl =  
-      c.pictures!.length > 0 ? c.pictures!.last['url'] : avatarUrl(c.firstName, c.lastName);
+    String _imageUrl =  
+      c.pictures.length > 0 ? c.pictures.last['url'] : avatarUrl(c.firstName, c.lastName);
+    ImageProvider image = c.profileImage != null 
+          ? MemoryImage(c.profileImage!) 
+          : NetworkImage(_imageUrl) as ImageProvider;
 
     switch (idx) {
       case 0:
@@ -91,7 +94,7 @@ class _ContactCircleState extends State<ContactCircle> {
               borderRadius: BorderRadius.circular(50),
               image: DecorationImage(
                 fit: BoxFit.cover,
-                image: NetworkImage(_imageUrl!) 
+                image: image 
               )
             ),
           ),
@@ -109,7 +112,7 @@ class _ContactCircleState extends State<ContactCircle> {
               borderRadius: BorderRadius.circular(50),
               image: DecorationImage(
                 fit: BoxFit.cover,
-                image: NetworkImage(_imageUrl!)
+                image: image
               )
             ),
           ),
@@ -127,7 +130,7 @@ class _ContactCircleState extends State<ContactCircle> {
               borderRadius: BorderRadius.circular(50),
               image: DecorationImage(
                 fit: BoxFit.cover,
-                image: NetworkImage(_imageUrl!)
+                image: image
               )
             ),
           ),
@@ -165,7 +168,7 @@ class _ContactCircleState extends State<ContactCircle> {
                 borderRadius: BorderRadius.circular(50),
                 image: DecorationImage(
                   fit: BoxFit.cover,
-                  image:  NetworkImage(_imageUrl!) 
+                  image: image 
                 )
               ),
             ),
@@ -180,6 +183,7 @@ class _ContactCircleState extends State<ContactCircle> {
   @override
   Widget build(BuildContext context) {
     String? imageUrl = null;
+    ImageProvider? profileImage = null;
     Coworker? coworker = _coworker;
     List<Contact?>? groupAvatar = _contacts!.length > 4 ? _contacts!.sublist(0,4) : _contacts;
     if (_contacts != null) {
@@ -187,15 +191,19 @@ class _ContactCircleState extends State<ContactCircle> {
         if (contact!.coworker != null && coworker == null) {
           coworker = contact.coworker;
         }
-        else if(contact.pictures!.length > 0){
-          imageUrl = contact.pictures!.last['url'];
+        else if(contact.pictures.length > 0 && contact.profileImage == null){
+          imageUrl = contact.pictures.last['url'];
         }
-        else if (contact.emails != null) {
-          for (Map<String, dynamic> email in contact.emails!) {
+        else if (contact.emails.isNotEmpty && contact.profileImage == null) {
+          for (Map<String, dynamic> email in contact.emails) {
             try {
               imageUrl = _gravatarUrl(email['email'], contact.firstName!, contact.lastName!);
             } catch (e) {}
           }
+        }
+        else if(contact.profileImage != null){
+          profileImage = MemoryImage(contact.profileImage!);
+          imageUrl = null;
         }
       }
     }
@@ -221,7 +229,7 @@ class _ContactCircleState extends State<ContactCircle> {
       presence = coworker.presence;
     }
 
-    if (imageUrl == null
+    if (imageUrl == null && profileImage == null
         && (_contacts!.length > 0 || _crmContacts!.length > 0)) {
       imageUrl = avatarUrl(_firstName(), _lastName());
     }
@@ -236,10 +244,14 @@ class _ContactCircleState extends State<ContactCircle> {
                   //backgroundImage here will be a fallback incase the image we're getting
                   //from imageUrl was deleted from the server
                   backgroundImage: NetworkImage(avatarUrl(_firstName(), _lastName())),
-                  foregroundImage: NetworkImage(imageUrl),
+                  foregroundImage: profileImage != null 
+                    ? profileImage 
+                    : NetworkImage(imageUrl),
                 )
               : CircleAvatar(
-                  backgroundImage: AssetImage("assets/blank_avatar.png"),
+                  backgroundImage: profileImage != null 
+                    ? profileImage 
+                    : AssetImage("assets/blank_avatar.png"),
                 ),
             )
         );

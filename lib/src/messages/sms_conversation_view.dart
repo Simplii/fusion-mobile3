@@ -276,10 +276,14 @@ class _SMSConversationViewState extends State<SMSConversationView> {
             itemCount: _conversation!.contacts!.length,
             shrinkWrap: true,
             itemBuilder: (context, index) {
-              String imageUrl = _conversation!.contacts![index]!.pictures!.length > 0 
-              ? _conversation!.contacts![index]!.pictures!.last['url'] 
-              : avatarUrl(_conversation!.contacts![index]!.firstName, 
-                _conversation!.contacts![index]!.lastName);
+              String imageUrl = _conversation!.contacts[index].pictures.length > 0 
+              ? _conversation!.contacts[index].pictures.last['url'] 
+              : avatarUrl(_conversation!.contacts[index].firstName, 
+                _conversation!.contacts[index].lastName);
+              ImageProvider image = _conversation!.contacts[index].profileImage != null
+                ? MemoryImage(_conversation!.contacts[index].profileImage!)
+                : NetworkImage(imageUrl) as ImageProvider;
+
               return Align(
                 widthFactor: 0.6,
                 child: ClipRRect(
@@ -293,7 +297,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
                           border: Border.all(color: particle, width: 2),
                           image: DecorationImage(
                             fit: BoxFit.cover,
-                            image: NetworkImage(imageUrl)
+                            image: image
                           )
                         ),
                       )

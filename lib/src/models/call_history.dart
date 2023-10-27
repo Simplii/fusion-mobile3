@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:fusion_mobile_revamped/src/models/phone_contact.dart';
 import 'package:path/path.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'contact.dart';
 import 'coworkers.dart';
@@ -26,6 +28,7 @@ class CallHistory extends FusionModel {
   String? direction;
   String? callerId;
   String? cdrIdHash;
+  PhoneContact? phoneContact;
 
   isInternal(String domain) {
     if (to!.length < 10) return false;
@@ -83,6 +86,10 @@ class CallHistory extends FusionModel {
     missed = obj['missed'].runtimeType == String 
       ? obj['missed'] == 'true'? true : false 
       : obj['missed'];
+    if(obj.containsKey('phoneContact') && obj['phoneContact'] != null){
+       Map<String,dynamic> data = jsonDecode(obj['phoneContact']);
+      phoneContact = PhoneContact(data);
+    }
   } 
   
   serialize(){
@@ -100,7 +107,8 @@ class CallHistory extends FusionModel {
       "callerId": callerId,
       "contact": contact,
       "missed": missed,
-      "coworker": coworker
+      "coworker": coworker,
+      "phoneContact": phoneContact
     };
   }
   isInbound() {
@@ -136,9 +144,10 @@ class CallHistoryStore extends FusionStore<CallHistory> {
         'direction': record.direction,
         'callerId': record.callerId,
         // 'crmContact': record?.crmContact?.serialize() ?? null,
-        'contacts': record?.contact?.serialize() ?? null,
-        'coworker': record?.coworker?.serialize() ?? null,
-        'missed' : record.missed.toString()
+        'contacts': record.contact?.serialize() ?? null,
+        'coworker': record.coworker?.serialize() ?? null,
+        'missed' : record.missed.toString(),
+        'phoneContact': record.phoneContact?.serialize() ?? null
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -179,7 +188,11 @@ class CallHistoryStore extends FusionStore<CallHistory> {
       fusionConnection.coworkers.getCoworkers((c) {});
       getPersisted(limit,offset,callback);
     }
-
+    final PermissionStatus status = await Permission.contacts.status;
+    List<PhoneContact> phoneContacts = [];
+    if(status.isGranted){
+      phoneContacts = await fusionConnection.phoneContacts.getAdderssBookContacts("");
+    }
     await fusionConnection.apiV2Call(
       "get", "/calls/recent", {'limit': limit, 'offset': offset},
       callback: (Map<String, dynamic> datas) {
@@ -192,7 +205,17 @@ class CallHistoryStore extends FusionStore<CallHistory> {
               // calls 
               obj.coworker = fusionConnection.coworkers
                   .lookupCoworker(obj.direction == 'inbound' ? obj.from! : obj.to!);
-
+              if(phoneContacts.isNotEmpty){
+                for (PhoneContact phoneContact in phoneContacts) {
+                  List<String> numbers = 
+                    phoneContact.phoneNumbers.map((e) => e["number"]).toList().cast<String>();
+                  if(obj.isInbound() && numbers.contains(obj.fromDid)){
+                    obj.phoneContact = phoneContact;
+                  } else if(!obj.isInbound() && numbers.contains(obj.toDid)){
+                    obj.phoneContact = phoneContact;
+                  }
+                }
+              }
               storeRecord(obj);
               response.add(obj);
             }

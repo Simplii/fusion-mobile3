@@ -1003,7 +1003,7 @@ class _MenuState extends State<Menu> {
         Icon(Icons.phone_forwarded, color: smoke.withOpacity(0.45), size: 26,), 
         trailingWidget: _toggleUseCarrier()),
       
-      _row("", "Slience","Mute Calls & Chats",null,
+      _row("", "Silence","Mute Calls & Chats",null,
         Icon(Icons.dark_mode_outlined, color: smoke.withOpacity(0.45), size: 26,), 
         trailingWidget: _toggleDND()),
       _line(),

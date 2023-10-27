@@ -1,4 +1,6 @@
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
+import 'package:fusion_mobile_revamped/src/models/phone_contact.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'contact.dart';
 import 'coworkers.dart';
 import 'crm_contact.dart';
@@ -45,7 +47,12 @@ class VoicemailStore extends FusionStore<Voicemail> {
 
   VoicemailStore(FusionConnection fusionConnection) : super(fusionConnection);
 
-  getVoicemails(Function(List<Voicemail>, bool) callback) {
+  getVoicemails(Function(List<Voicemail>, bool) callback) async {
+    final PermissionStatus status = await Permission.contacts.status;
+    List<PhoneContact> phoneContacts = [];
+    if(status.isGranted){
+      phoneContacts = await fusionConnection.phoneContacts.getAdderssBookContacts("");
+    }
     fusionConnection
         .apiV2Call("get", "/user/voicemails", {"limit": 200, "start": 0},
             callback: (Map<String, dynamic> datas) {
@@ -54,10 +61,19 @@ class VoicemailStore extends FusionStore<Voicemail> {
       for (Map<String, dynamic> item in datas['items']) {
         Voicemail obj = Voicemail(item);
 
-        if (obj.phoneNumber!.length <= 6)
+        if (obj.phoneNumber!.length <= 6) {
           obj.coworker = fusionConnection.coworkers.lookupCoworker(
-              obj.phoneNumber! + '@' + fusionConnection.getDomain());
-
+          obj.phoneNumber! + '@' + fusionConnection.getDomain());
+        }
+        if(phoneContacts.isNotEmpty && obj.contacts!.isEmpty){
+          for (PhoneContact phoneContact in phoneContacts) {
+            List<String> numbers = 
+              phoneContact.phoneNumbers.map((e) => e["number"]).toList().cast<String>();
+            if(numbers.contains(obj.phoneNumber)){
+              obj.contacts = [phoneContact.toContact()];
+            }
+          }
+        }
         storeRecord(obj);
         response.add(obj);
       }

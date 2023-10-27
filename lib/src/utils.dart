@@ -232,3 +232,13 @@ String getDateTime (DateTime dateTime) {
   String month = DateFormat('MMM d').format(localDateTime);
   return "$month, $timeString";
 }
+
+Uint8List? getImageBinary(dynamicList) {
+  if(dynamicList != null && dynamicList.runtimeType != String){
+    List<dynamic>dy = dynamicList as List<dynamic>;
+    List<int> intList = dy.cast<int>().toList();
+    Uint8List data = Uint8List.fromList(intList);
+    return data;
+  }
+  return null;
+}
