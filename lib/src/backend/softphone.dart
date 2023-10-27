@@ -1616,7 +1616,11 @@ class Softphone implements SipUaHelperListener {
           for (PhoneContact phoneContact in phoneContacts) {
             for(Map<String,dynamic>phoneNumber in phoneContact.phoneNumbers){
               String number = phoneNumber["number"];
-              if(number.contains(data.phoneNumber)){
+              number = number.startsWith("+1") ? number.replaceAll("+1", ""): number;
+              String otherNumber = data.phoneNumber.startsWith("+1") 
+                ? data.phoneNumber.replaceAll("+1", "")
+                : data.phoneNumber; 
+              if(number == otherNumber){
                 return phoneContact.name;
               }
             } 
@@ -1663,7 +1667,11 @@ class Softphone implements SipUaHelperListener {
         for (PhoneContact phoneContact in phoneContacts) {
           for(Map<String,dynamic>phoneNumber in phoneContact.phoneNumbers){
             String number = phoneNumber["number"];
-            if(number.contains(data.phoneNumber) && phoneContact.profileImage != null){
+            number = number.startsWith("+1") ? number.replaceAll("+1", ""): number;
+            String otherNumber = data.phoneNumber.startsWith("+1") 
+              ? data.phoneNumber.replaceAll("+1", "")
+              : data.phoneNumber; 
+            if(number == otherNumber && phoneContact.profileImage != null){
               return MemoryImage(phoneContact.profileImage);
             }
           } 
@@ -1700,11 +1708,15 @@ class Softphone implements SipUaHelperListener {
       CallpopInfo data = getCallpopInfo(call.id);
       List<PhoneContact> phoneContacts = _fusionConnection.phoneContacts.getRecords();
       if (data != null) {
-         if(phoneContacts.isNotEmpty){
+         if(phoneContacts.isNotEmpty && data.contacts.isEmpty){
           for (PhoneContact phoneContact in phoneContacts) {
             for(Map<String,dynamic>phoneNumber in phoneContact.phoneNumbers){
               String number = phoneNumber["number"];
-              if(number.contains(data.phoneNumber)){
+              number = number.startsWith("+1") ? number.replaceAll("+1", ""): number;
+              String otherNumber = data.phoneNumber.startsWith("+1") 
+                ? data.phoneNumber.replaceAll("+1", "")
+                : data.phoneNumber; 
+              if(number == otherNumber){
                 return phoneContact.company;
               }
             } 
