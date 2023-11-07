@@ -235,7 +235,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
           });
         });
       } else {
-        _fusionConnection!.contacts.search(_query, 100, _page * 100,
+        _fusionConnection.contacts.search(_query, 100, _page * 100,
           (List<Contact> contacts, bool fromServer) {
           if (thisLookup != _lookedUpQuery) return;
           if (!mounted) return;
@@ -273,7 +273,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       }
     } else if (_typeFilter == 'Integrated Contacts') {
       if (_page == -1) return;
-      _fusionConnection!.integratedContacts.search(_query, 100, _page * 100,
+      _fusionConnection.integratedContacts.search(_query, 100, _page * 100,
           (List<Contact> contacts, bool fromServer, bool? hasMore) {
         if (thisLookup != _lookedUpQuery) return;
         if (!mounted) return;
@@ -310,7 +310,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
         });
       });
     } else if (_typeFilter == 'Coworkers') {
-      _fusionConnection!.coworkers.search(_query, (List<Contact> contacts) {
+      _fusionConnection.coworkers.search(_query, (List<Contact> contacts) {
         if (thisLookup != _lookedUpQuery) return;
         if (!mounted) return;
         if (_typeFilter != 'Coworkers') return;
@@ -381,7 +381,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
  Future<PermissionStatus> _checkContactsPermission() async {
     PermissionStatus status = await Permission.contacts.status;
     try {
-      if (status.isDenied || status.isPermanentlyDenied) {
+      if (status.isDenied) {
         await Permission.contacts.request();
         status = await Permission.contacts.status;
         setState(() {  
@@ -565,7 +565,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     return lookupState < 2 &&
         _contacts.length == 0 &&
         (_typeFilter != 'Coworkers' ||
-            _fusionConnection!.coworkers.hasntLoaded());
+            _fusionConnection.coworkers.hasntLoaded());
   }
 
   @override
@@ -610,17 +610,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
             Expanded(
               child: _isSpinning()
                 ? _spinner()
-                : _contacts.isEmpty 
-                    ? Center(
-                        child: Text(
-                          _message, 
-                          textAlign: TextAlign.center, 
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            height: 1.5
-                          ),),
-                      )
-                    : ListView.builder(
+                : ListView.builder(
                     itemCount: _page == -1
                         ? _contacts.length
                         : _contacts.length + 1,
@@ -668,7 +658,17 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
               Container(
                   child: _isSpinning()
                       ? _spinner()
-                      : ListView.builder(
+                      : _contacts.isEmpty 
+                        ? Center(
+                            child: Text(
+                              _message, 
+                              textAlign: TextAlign.center, 
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                height: 1.5
+                              ),),
+                          )
+                        : ListView.builder(
                           itemCount: _page == -1
                               ? _contacts.length
                               : _contacts.length + 1,

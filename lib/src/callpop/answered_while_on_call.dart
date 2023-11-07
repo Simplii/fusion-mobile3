@@ -12,12 +12,12 @@ import 'package:sip_ua/sip_ua.dart';
 enum Views { Main, DialPad, Hold }
 
 class AnsweredWhileOnCall extends StatefulWidget {
-  AnsweredWhileOnCall({Key? key, this.activeCall, this.softphone, this.calls})
+  AnsweredWhileOnCall({Key? key,required this.activeCall, this.softphone, this.calls})
       : super(key: key);
 
   final Softphone? softphone;
   final List<Call>? calls;
-  final Call? activeCall;
+  final Call activeCall;
 
   @override
   State<StatefulWidget> createState() => _AnsweredWhileOnCallState();
@@ -26,7 +26,7 @@ class AnsweredWhileOnCall extends StatefulWidget {
 class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
   List<Call>? get calls => widget.calls;
 
-  Call? get activeCall => widget.activeCall;
+  Call get activeCall => widget.activeCall;
 
   Softphone? get softphone => widget.softphone;
 
@@ -116,23 +116,23 @@ class _AnsweredWhileOnCallState extends State<AnsweredWhileOnCall> {
                       .map((Call c) => _callRow(c))
                       .toList()
                       .cast<Widget>()))),
-      if(softphone!.assistedTransferInit)
+      if(softphone!.assistedTransferInit &&  activeCall.state == CallStateEnum.STREAM)
       Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Container(
-            margin: EdgeInsets.only(right: 15, top: 10),
-            alignment: Alignment.centerRight,
-            decoration: BoxDecoration(
-                color: bgBlend,
-                borderRadius: BorderRadius.all(Radius.circular(6))),
-            padding: EdgeInsets.all(10),
-            child: GestureDetector(
-              onTap: () {
-                Call newCall =
-                    calls!.where((call) => call.id != activeCall!.id).first;
-                softphone!.completeAssistedTransfer(activeCall,newCall);
-              },
+          GestureDetector(
+            onTap: () {
+              Call newCall =
+                  calls!.where((call) => call.id != activeCall!.id).first;
+              softphone!.completeAssistedTransfer(activeCall,newCall);
+            },
+            child: Container(
+              margin: EdgeInsets.only(right: 15, top: 10),
+              alignment: Alignment.centerRight,
+              decoration: BoxDecoration(
+                  color: bgBlend,
+                  borderRadius: BorderRadius.all(Radius.circular(6))),
+              padding: EdgeInsets.all(10),
               child: Column(children: [
                 Image.asset(
                   "assets/icons/call_view/merge.png",

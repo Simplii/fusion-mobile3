@@ -207,8 +207,8 @@ class CoworkerStore extends FusionStore<Coworker> {
             .compareTo(c2.firstName! + c2.lastName!);
       });
       for (Coworker c in records) {
-        if ((c.firstName! + " " + c.lastName!
-            + " " + c.email! + " " + c.uid!).contains(query)) {
+        if ((c.firstName!.toLowerCase() + " " + c.lastName!.toLowerCase()
+            + " " + c.email!.toLowerCase() + " " + c.uid!).contains(query.toLowerCase())) {
           list.add(c.toContact());
         }
       }

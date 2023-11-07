@@ -42,7 +42,7 @@ class CallView extends StatefulWidget {
 class _CallViewState extends State<CallView> {
   Softphone get _softphone => widget._softphone;
   FusionConnection get _fusionConnection => widget._fusionConnection;
-  Call? get _activeCall => _softphone!.activeCall;
+  Call? get _activeCall => _softphone.activeCall;
   List<Call> get _allCalls => _softphone!.calls;
 
   bool dialpadVisible = false;
@@ -759,11 +759,11 @@ class _CallViewState extends State<CallView> {
                               ],
                             ),
                           )),
-                      if (connectedCalls.length > 0)
+                      if (connectedCalls.length > 0 && _activeCall != null)
                         AnsweredWhileOnCall(
                             calls: connectedCalls,
                             softphone: _softphone,
-                            activeCall: _activeCall),
+                            activeCall: _activeCall!),
                       if (incomingCall != null)
                         IncomingWhileOnCall(
                             call: incomingCall, softphone: _softphone)
