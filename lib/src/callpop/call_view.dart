@@ -600,9 +600,9 @@ class _CallViewState extends State<CallView> {
     if (_activeCall == null) {
       return Container();
     }
-    var companyName = _softphone!.getCallerCompany(_activeCall);
-    var callerName = _softphone!.getCallerName(_activeCall);
-    String _linePrefix = _softphone!.linePrefix;
+    var companyName = _softphone.getCallerCompany(_activeCall);
+    var callerName = _softphone.getCallerName(_activeCall);
+    String _linePrefix = _softphone.linePrefix;
     var callerNumber =
         _softphone!.getCallerNumber(_activeCall!); // 'mobile' | 'work' ...etc
 

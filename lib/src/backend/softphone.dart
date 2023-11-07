@@ -1527,11 +1527,11 @@ class Softphone implements SipUaHelperListener {
         }
       }
 
-      _fusionConnection!.callpopInfos.lookupPhone(call.remote_identity,
+      _fusionConnection.callpopInfos.lookupPhone(call.remote_identity,
           (CallpopInfo? data) {
         if (Platform.isAndroid) {
           _callKeep.updateDisplay(_uuidFor(call),
-              displayName: data!.getName(defaul: call.remote_display_name)!,
+              displayName: data!.getName(defaul: call.remote_display_name!),
               handle: call.remote_identity!);
         }
         if (call.direction == "outbound" || call.direction == "OUTGOING" || call.direction == "INCOMING")
@@ -1580,7 +1580,7 @@ class Softphone implements SipUaHelperListener {
     return _getCallDataValue(id, "callPopInfo") as CallpopInfo?;
   }
 
-  getCallerName(Call? call) {
+  String getCallerName(Call? call) {
     if (call != null) {
       CallpopInfo? data = getCallpopInfo(call.id);
       List<Coworker> coworkers = _fusionConnection!.coworkers.getRecords();
@@ -1592,9 +1592,9 @@ class Softphone implements SipUaHelperListener {
         Coworker _coworker = coworker.first;
         return "${_coworker.firstName} ${_coworker.lastName}";
       } else if (data != null) {
-        if (data.getName()!.trim().length > 0 && data.contacts!.length > 0)
+        if (data.getName().trim().length > 0 && data.contacts.length > 0)
           return data.getName();
-        else if(phoneContacts.isNotEmpty && data != null)
+        else if(phoneContacts.isNotEmpty)
           for (PhoneContact phoneContact in phoneContacts) {
             for(Map<String,dynamic>phoneNumber in phoneContact.phoneNumbers){
               String number = phoneNumber["number"];
@@ -1606,7 +1606,7 @@ class Softphone implements SipUaHelperListener {
         else
           return call.remote_display_name != null && 
             !call.remote_display_name!.startsWith("sip:")
-              ? call.remote_display_name 
+              ? call.remote_display_name! 
               : "Unknown";
       } else {
         if (call.remote_display_name != null && 
@@ -1621,12 +1621,13 @@ class Softphone implements SipUaHelperListener {
                 }
               }); 
             }
-            return name != "" ? name : call.remote_display_name; 
+            return name != "" ? name : call.remote_display_name!; 
           }
         else
           return "Unknown";
       }
     }
+    throw "";
   }
 
   ImageProvider getCallerPic (Call? call, {String? callerName}){

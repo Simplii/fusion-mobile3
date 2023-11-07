@@ -70,18 +70,18 @@ class CallpopInfo extends FusionModel {
   }
 
 
-  String? getName({String? defaul}) {
-    for (Contact c in contacts!) {
-      if (c.name!.trim() != "") {
-        return c.name;
+  String getName({String? defaul}) {
+    for (Contact c in contacts) {
+      if (c.name != null && c.name!.trim() != "") {
+        return c.name!;
       }
     }
     for (CrmContact c in crmContacts) {
-      if (c.name!.trim() != '') {
-        return c.name;
+      if (c.name != null && c.name!.trim() != '') {
+        return c.name!;
       }
     }
-    return defaul != null ? defaul : "";
+    return defaul ?? "";
   }
 }
 

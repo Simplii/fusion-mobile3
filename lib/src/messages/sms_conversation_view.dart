@@ -1180,7 +1180,7 @@ class _ConvoMessagesListState extends State<ConvoMessagesList> {
             if(value!.conversationId != null){
               _lookedupNumber = value.number;
               _lookedupMyNumber = value.myNumber;
-              _changeConvo!(value);
+              _changeConvo(value);
               _lookupMessages();
             } 
           });

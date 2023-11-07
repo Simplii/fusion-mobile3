@@ -595,7 +595,7 @@ print(responseBody);
       Map<String,dynamic> nsAnsweringRules = await this.nsAnsweringRules();
       apiV2Call("get", "/user", {},callback: (Map<String,dynamic> data){
         if(data == null) return;
-        settings!.setMyUserInfo(
+        settings.setMyUserInfo(
             outboundCallerId: data.containsKey("dynamicDialingDepartment") && 
             data["dynamicDialingDepartment"] != '' && 
             settings!.isFeatureEnabled("Dynamic Dialing")
