@@ -167,14 +167,13 @@ class UserSettings {
   }
 
   void setMyUserInfo({
-    String? outboundCallerId, 
-    bool? isDepartment, 
-    bool? dynamicDialingEnabledForDomain,
-    String? cellPhoneNumber,
-    bool? useCarrier,
-    String? simParams,
-    bool? dndIsOn,
-    bool? forceDispositionEnabled,
+    required String outboundCallerId, 
+    required bool isDepartment, 
+    required String cellPhoneNumber,
+    required bool useCarrier,
+    required String simParams,
+    required bool dndIsOn,
+    required bool forceDispoEnabled,
     }) {
       usesCarrier = useCarrier;
       myCellPhoneNumber = cellPhoneNumber;
@@ -183,7 +182,7 @@ class UserSettings {
       devices = simParams;
       dynamicDialingIsActive = isFeatureEnabled("Dynamic Dialing");
       dnd = dndIsOn;
-      forceDispositionEnabled = forceDispositionEnabled;
+      forceDispositionEnabled = forceDispoEnabled;
   }
 
   bool updateUserSettings (List<SettingsPayload> settings) {

@@ -98,13 +98,11 @@ class DispositionCustomFieldOption {
   });
 
   DispositionCustomFieldOption.fromJson(Map<String,dynamic> data){
-    List? dropDownChoices = data['options']['dropdown_choices'];
+    List<dynamic> choices = data['options']['dropdown_choices'] ?? [];
     displayFor = data['options']['display_for'];
     requireFor = data['options']['require_for'];
     validationWebhook = data['options']['validation_webhook'];
-    dropdownChoices = data['type'] == "dropdown" 
-      ? dropDownChoices?.cast<String>() ?? []
-      : null;
+    dropdownChoices = data['type'] == "dropdown" ? choices.cast<String>() : [];
   }
 }
 
