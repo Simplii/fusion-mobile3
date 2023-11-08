@@ -748,6 +748,7 @@ class _CallViewState extends State<CallView> {
                                           dialpadVisible = isOpen;
                                         });
                                       },
+                                      currentAudioSource: _softphone.outputDevice,
                                       loading: TextBtnPressed,
                                       callIsRecording:
                                           _softphone.getRecordState(_activeCall),

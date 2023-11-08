@@ -126,8 +126,25 @@ class _VoicemailsState extends State<Voicemails> {
   }
 
   _openMessage(Voicemail vm) {
-    String number =
-        _fusionConnection.smsDepartments.getDepartment(DepartmentIds.AllMessages).numbers[0];
+    String number = _fusionConnection.smsDepartments.getDepartment(vm.phoneNumber.length > 6 
+      ? DepartmentIds.Personal
+      : DepartmentIds.FusionChats
+    ).numbers[0];
+
+    if(number == null){
+      return showModalBottomSheet(
+        context: context,
+        backgroundColor: coal,
+        shape: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        builder: (context)=> Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height / 3,
+          ),
+          child: Center(
+            child: Text("No personal sms number found", style: TextStyle(color: Colors.white),),
+          ),
+        ));
+    }
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -138,7 +155,8 @@ class _VoicemailsState extends State<Voicemails> {
             contacts: vm.contacts,
             crmContacts: [],
             myNumber: number,
-            number: vm.phoneNumber);
+            number: vm.phoneNumber,
+            isGroup: false);
           return SMSConversationView(
             fusionConnection: _fusionConnection, 
             softphone: _softphone, 

@@ -20,7 +20,8 @@ class CallActionButtons extends StatefulWidget {
         this.isOnConference,
         this.callOnHold,
         this.resumeDisabled,
-        this.loading})
+        this.loading,
+        this.currentAudioSource = "Phone"})
       : super(key: key);
 
   final Map<String, Function()> actions;
@@ -34,6 +35,7 @@ class CallActionButtons extends StatefulWidget {
   final bool resumeDisabled;
   final bool loading;
   Function(bool) setDialpad;
+  String currentAudioSource;
 
   @override
   State<StatefulWidget> createState() => _CallActionButtonsState();
@@ -42,7 +44,8 @@ class CallActionButtons extends StatefulWidget {
 class _CallActionButtonsState extends State<CallActionButtons> {
   bool get dialPadOpen => widget.dialPadOpen;
   bool get _loading => widget.loading;
-  
+  String get _currentAudioSource => widget.currentAudioSource;
+
   Widget _getMainView(bool onHold) {
     return Container(
         key: ValueKey<int>(2),
@@ -124,17 +127,28 @@ class _CallActionButtonsState extends State<CallActionButtons> {
             CallActionButton(
                 onPressed: widget.actions['onAudioBtnPress'],
                 title: 'Audio',
-                icon: Image.asset(
-                    widget.callIsMuted
-                    ? "assets/icons/call_view/audio_muted.png"
-                    : "assets/icons/call_view/audio.png",
-                    width: 24, height: 24)),
+                icon: _currentAudioOutput()
+            ),
           ],
         )
       ],
     ));
   }
 
+  Widget _currentAudioOutput (){
+    IconData icon = Icons.volume_down;
+    if(widget.callIsMuted){
+      icon = Icons.volume_off;
+    }
+    if(_currentAudioSource == "Bluetooth"){
+      icon = Icons.bluetooth;
+    }
+    if(_currentAudioSource == "Speaker"){
+      icon = Icons.volume_up;
+    }
+    return Icon(icon, size: 28, color: Colors.white);
+  }
+  
   _hangupButton() {
     return GestureDetector(
       onTap: widget.actions['onHangup'],

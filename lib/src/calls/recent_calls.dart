@@ -15,6 +15,7 @@ import 'package:fusion_mobile_revamped/src/models/contact.dart';
 import 'package:fusion_mobile_revamped/src/models/conversations.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
+import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:intl/intl.dart';
 
 import '../backend/fusion_connection.dart';
@@ -266,6 +267,19 @@ class _RecentCallsListState extends State<RecentCallsList> {
     return response;
   }
 
+  Contact _getItemContact(CallHistory item){
+    if(item.coworker != null){
+      return item.coworker.toContact();
+    }
+    if(item.contact != null){
+      return  item.contact;
+    } else if(item.phoneContact != null) {
+      return item.phoneContact.toContact();
+    } else {
+      return Contact.fake(item.toDid);
+    }
+  }
+
   _historyRow(CallHistory item, int index) {
       if (item.coworker != null && _coworkers[item.coworker.uid] != null) {
         item.coworker = _coworkers[item.coworker.uid];
@@ -273,9 +287,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
       Widget ret = _fromDialpad 
         ? DialpadRecentCalls(
           date: item.startTime,
-          contact: item.coworker == null 
-            ? item.contact != null ? item.contact : Contact.fake(item.toDid)
-            : item.coworker.toContact(),
+          contact: _getItemContact(item),
           crmContact: item.crmContact,
           softphone: _softphone,
           onSelect: widget.onSelect)
@@ -440,6 +452,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   List<Contact> _contacts() {
     if (_historyItem.contact != null) {
       return [_historyItem.contact];
+    } else if(_historyItem.phoneContact != null) {
+      return [_historyItem.phoneContact.toContact()];
     } else {
       return [];
     }
@@ -484,6 +498,11 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           : _historyItem.contact.name.toTitleCase();
     } else if (_historyItem.crmContact != null) {
       return _historyItem.crmContact.name;
+    } else if(_historyItem.phoneContact != null){
+      String linePrefix = _getLinePrefix(_historyItem.callerId);
+      return linePrefix != ""
+          ? linePrefix + "_" + _historyItem.phoneContact.name.toTitleCase()
+          : _historyItem.phoneContact.name.toTitleCase();
     } else if (_historyItem.callerId != '') {
       String linePrefix =  _getLinePrefix(_historyItem.callerId);
       return _historyItem.callerId.startsWith(linePrefix) && 
@@ -511,9 +530,38 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     }
   }
 
+  List<Contact> _messageContacts(CallHistory item){
+    List<Contact> contacts = [];
+    if(_historyItem.contact != null){
+      contacts.add(_historyItem.contact);
+    } else if(_historyItem.coworker != null){
+      contacts.add(_historyItem.coworker.toContact());
+    } else if(_historyItem.phoneContact != null){
+      contacts.add(_historyItem.phoneContact.toContact());
+    }
+    return contacts;
+  }
+
   _openMessage() {
-    String number =
-        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
+    bool isExt = _historyItem.fromDid.length < 6 || _historyItem.toDid.length < 6;
+    String number = _fusionConnection.smsDepartments.getDepartment(isExt 
+      ? DepartmentIds.FusionChats 
+      : DepartmentIds.Personal
+    ).numbers[0];
+    if(number == null){
+      return showModalBottomSheet(
+        context: context,
+        backgroundColor: coal,
+        shape: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        builder: (context)=> Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height / 3,
+          ),
+          child: Center(
+            child: Text("No personal sms number found", style: TextStyle(color: Colors.white),),
+          ),
+        ));
+    }
     showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -522,12 +570,12 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           builder: (BuildContext context, StateSetter setState) {
               SMSConversation displayingConvo = SMSConversation.build(
                 isGroup: false,
-                contacts:
-                    _historyItem.contact != null ? [_historyItem.contact] : [],
+                contacts: _messageContacts(_historyItem),
                 crmContacts: _historyItem.crmContact != null
                     ? [_historyItem.crmContact]
                     : [],
                 myNumber: number,
+                hash: number + ":" + _historyItem.getOtherNumber(_fusionConnection.getDomain()),
                 number: _historyItem.getOtherNumber(_fusionConnection.getDomain())
               );
               return SMSConversationView(
@@ -559,6 +607,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     Contact newContact = null;
     if (contact == null && _historyItem.coworker != null){
       contact = _historyItem.coworker.toContact();
+    } else if(contact == null && _historyItem.phoneContact != null) {
+      contact = _historyItem.phoneContact.toContact();
     }
     else if (contact == null && _historyItem.coworker == null && _historyItem.direction == "inbound"){
       newContact = Contact.fake(_historyItem.fromDid);
@@ -594,7 +644,8 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
   @override
   Widget build(BuildContext context) {
     List<Widget> children = [_topPart()];
-    bool haveProfile = _historyItem.contact != null || _historyItem.coworker != null ? true : false;
+    bool haveProfile = _historyItem.contact != null || 
+      _historyItem.coworker != null || _historyItem.phoneContact != null ? true : false;
     if (_expanded) {
       children.add(Container(
           child: Row(children: [horizontalLine(0)]),
@@ -656,12 +707,15 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
           Expanded(
               child: Container(
                   decoration: BoxDecoration(color: Colors.transparent),
-                  child: Column(children: [
-                    Align(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                     Align(
                         alignment: Alignment.centerLeft,
                         child: Text(_name() != null ? _name() : "Unknown",
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16))),
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
                     Align(
                         alignment: Alignment.centerLeft,
                         child: Row(children: [

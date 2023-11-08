@@ -38,10 +38,12 @@ class _SendToBoxState extends State<SendToBox> {
   String get _selectedDepartmentId => widget.selectedDepartmentId;
   
   
-  NetworkImage _chipAvatar (int index){
+  ImageProvider _chipAvatar (int index){
     Contact contact = contacts.elementAt(index);
     if(contact.pictures.length > 0){
       return NetworkImage(contact.pictures.last['url']);
+    } else if (contact.profileImage != null){
+      return MemoryImage(contact.profileImage);
     } else {
       return NetworkImage(avatarUrl(contact.firstName.toUpperCase(), contact.lastName));
     }

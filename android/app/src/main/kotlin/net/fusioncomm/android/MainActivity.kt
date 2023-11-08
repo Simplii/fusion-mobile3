@@ -358,7 +358,7 @@ class MainActivity : FlutterFragmentActivity() {
         factory.setDebugMode(true, "Hello fusion")
         core = factory.createCore(null, null, this)
         core.enableIpv6(false)
-        core.stunServer = "turn:mobile-proxy.fusioncomm.net"
+        core.stunServer = "turn:$server"
         core.natPolicy?.stunServerUsername = "fuser"
         core.addAuthInfo(
             factory.createAuthInfo(
@@ -378,7 +378,7 @@ class MainActivity : FlutterFragmentActivity() {
             core.enableEchoCancellation(true);
         }
 
-        core.natPolicy?.stunServer = "mobile-proxy.fusioncomm.net"
+        core.natPolicy?.stunServer = server
         core.remoteRingbackTone = "android.resource://net.fusioncomm.android/" + R.raw.outgoing
         core.ring = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE).toString();
         core.config.setBool("audio", "android_pause_calls_when_audio_focus_lost", false)
@@ -624,6 +624,13 @@ class MainActivity : FlutterFragmentActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             "net.fusioncomm.android/calling"
         );
+
+        // Contacts Provider Channel
+        ContactsProvider(MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "net.fusioncomm.ios/contacts"
+        ), this)
+
         channel.setMethodCallHandler { call, result ->
             print("gotflmethod")
             print(call.method);

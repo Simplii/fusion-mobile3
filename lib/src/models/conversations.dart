@@ -1,8 +1,10 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
+import 'package:fusion_mobile_revamped/src/models/phone_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/unreads.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
+import 'package:sqflite/sql.dart';
 import 'dart:convert' as convert;
 
 import '../backend/fusion_connection.dart';
@@ -205,7 +207,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       'unread': record.unread,
       'raw': record.serialize(),
       'conversationId': record.conversationId
-    });
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   getPersisted(String groupId, int limit, int offset,
@@ -267,7 +269,7 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
       'limit': limit,
       'offset': offset,
       // 'group_id': groupId
-    }, callback: (Map<String, dynamic> data) {
+    }, callback: (Map<String, dynamic> data) async {
       List<SMSConversation> convos = [];
       for (Map<String, dynamic> item in data['items']) {
         List<CrmContact> leads = [];
@@ -296,8 +298,6 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
                   ? coworkers.where((c) => c.uid.toLowerCase() == obj['number'].toString().toLowerCase()).first
                   : null;
                 if(_coworker != null){
-                  Contact c = _coworker.toContact();
-
                   contacts.add(_coworker.toContact());
                 } else {
                   contacts.add(Contact.fake(number));
@@ -305,7 +305,12 @@ class SMSConversationsStore extends FusionStore<SMSConversation> {
               }
 
             } else if(convoMembersContacts.length == 0 && convoMembersLeads.length == 0 && number != ''){
-              contacts.add(Contact.fake(number));
+              PhoneContact phoneContact = await fusionConnection.phoneContacts.searchDb(number);
+              if(phoneContact != null){
+                contacts.add(phoneContact.toContact());
+              } else {
+                contacts.add(Contact.fake(number));
+              }
             }
           }
         }

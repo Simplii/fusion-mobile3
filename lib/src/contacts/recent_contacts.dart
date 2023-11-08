@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fusion_mobile_revamped/src/backend/softphone.dart';
 import 'package:fusion_mobile_revamped/src/components/contact_circle.dart';
@@ -14,8 +17,10 @@ import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
 import 'package:fusion_mobile_revamped/src/models/crm_contact.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../backend/fusion_connection.dart';
+import '../models/phone_contact.dart';
 import '../styles.dart';
 import 'contact_profile_view.dart';
 
@@ -53,7 +58,7 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
     }[_selectedTab];
   }
 
-  _tabIcon(String name, String icon, double width, double height) {
+  _tabIcon(String name, String icon, double width, double height, {IconData iconData}) {
     return Expanded(
         child: GestureDetector(
             onTapUp: (e) {},
@@ -68,7 +73,11 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
                 child: Column(children: [
                   Container(
                       padding: EdgeInsets.only(top: 12, bottom: 12),
-                      child: Image.asset(
+                      child: iconData != null 
+                        ? Icon(
+                          iconData, 
+                          color: _selectedTab == name ? Colors.white : smoke,) 
+                        : Image.asset(
                           "assets/icons/" +
                               icon +
                               (_selectedTab == name ? '_selected' : '') +
@@ -87,6 +96,15 @@ class _RecentContactsTabState extends State<RecentContactsTab> {
           _tabIcon("coworkers", "briefcase", 23, 20.5),
           !v2Domain ? _tabIcon("integrated", "integrated", 23, 20.5) : null,
           _tabIcon("fusion", "personalcontact", 23, 20.5),
+          _tabIcon(
+            "addressBook", 
+            "Phone Contacts", 
+            23, 
+            20.5, 
+            iconData: _selectedTab == "addressBook" 
+              ? Icons.contact_phone 
+              : Icons.contact_phone_outlined
+          ),
         ].where((child) => child != null).toList().cast()));
   }
 
@@ -118,7 +136,11 @@ class ContactsSearchList extends StatefulWidget {
   bool embedded = false;
 
   ContactsSearchList(
-      this._fusionConnection, this._softphone, this._query, this.selectedTab, this.isV2Domain,
+      this._fusionConnection, 
+      this._softphone, 
+      this._query, 
+      this.selectedTab, 
+      this.isV2Domain, 
       {Key key, this.embedded, this.onSelect, this.fromDialpad = false})
       : super(key: key);
 
@@ -128,7 +150,6 @@ class ContactsSearchList extends StatefulWidget {
 
 class _ContactsSearchListState extends State<ContactsSearchList> {
   FusionConnection get _fusionConnection => widget._fusionConnection;
-
   Softphone get _softphone => widget._softphone;
 
   bool get _embedded => widget.embedded == null ? false : widget.embedded;
@@ -144,9 +165,12 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   String _subscriptionKey;
   int _page = 0;
   bool _hasPulledFromServer = false;
-
+  String _message = "No Match Was Found";
   initState() {
     super.initState();
+    _fusionConnection.phoneContacts.toUpdateView((){
+      _lookupQuery();
+    });
   }
 
   _subscribeCoworkers(List<String> uids, Function(List<Coworker>) callback) {
@@ -319,7 +343,58 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
           });
         });
       });
+    } else if (_typeFilter == "Phone Contacts"){
+        if (thisLookup != _lookedUpQuery) return;
+        if (!mounted) return;
+        if (!mounted || _typeFilter != 'Phone Contacts') return;
+        _checkContactsPermission().then((PermissionStatus status) {
+          if(status.isGranted){
+            _fusionConnection.phoneContacts.getAdderssBookContacts(_query).then((List<PhoneContact> contacts){
+              setState(() {
+
+                if(contacts.isEmpty && _fusionConnection.phoneContacts.initSync){
+                  lookupState = 2;
+                  _contacts = [];
+                  _message = "Contacts sync has started, this might take a while feel free to navigate away from this screen but don't close the app";
+                } else {
+                  _contacts = [];
+                  Map<String, Contact> list = {};
+                  _contacts.forEach((Contact c) {
+                    list[c.id] = c;
+                  });
+                  contacts.forEach((PhoneContact c) {
+                    list[c.id] = c.toContact();
+                  });
+                  _contacts = list.values.toList().cast<Contact>();
+                  _sortList(_contacts); 
+                }
+              });  
+            });
+          } else if(status.isPermanentlyDenied || status.isDenied){
+            setState(() {
+              _contacts = [];
+              lookupState = 2;
+              _message = "Please allow Fusion Mobile access to your contacts from settings for this feature to work";
+            });
+          }
+        });
     }
+  }
+  
+  Future<PermissionStatus> _checkContactsPermission() async {
+    PermissionStatus status = await Permission.contacts.status;
+    try {
+      if (status.isDenied || status.isPermanentlyDenied) {
+        await Permission.contacts.request();
+        status = await Permission.contacts.status;
+        setState(() {  
+          lookupState = 0;
+        });
+      }
+    } catch (e) {
+      print('e ${e.toString()}');
+    }
+    return status;
   }
 
   _openProfile(Contact contact) {
@@ -358,6 +433,10 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   _resultRow(String letter, Contact contact) {
     return GestureDetector(
         onTap: () {
+          FocusScopeNode currentFocus = FocusScope.of(context);
+          if (!currentFocus.hasPrimaryFocus) {
+            currentFocus.unfocus();
+          }
           if (widget.onSelect != null)
             widget.onSelect(contact, null);
           else
@@ -429,7 +508,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
 
   _sortList(List<Contact> list) {
     _contacts.sort((a, b) {
-      if (_typeFilter == 'Integrated Contacts')
+      if (_typeFilter == 'Integrated Contacts' || 
+        _typeFilter == 'Phone Contacts')
         return (a.name)
             .trim()
             .toLowerCase()
@@ -443,20 +523,20 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     });
   }
 
-  _searchList() {
-    String usingLetter = '';
-    List<Widget> rows = [];
-    _contacts.forEach((item) {
-      String letter = (item.firstName + item.lastName).trim()[0].toLowerCase();
-      if (usingLetter != letter) {
-        usingLetter = letter;
-      } else {
-        letter = "";
-      }
-      rows.add(_resultRow(letter, item));
-    });
-    return rows;
-  }
+  // _searchList() {
+  //   String usingLetter = '';
+  //   List<Widget> rows = [];
+  //   _contacts.forEach((item) {
+  //     String letter = (item.firstName + item.lastName).trim()[0].toLowerCase();
+  //     if (usingLetter != letter) {
+  //       usingLetter = letter;
+  //     } else {
+  //       letter = "";
+  //     }
+  //     rows.add(_resultRow(letter, item));
+  //   });
+  //   return rows;
+  // }
 
   _letterFor(Contact item) {
     if (_typeFilter == 'Integrated Contacts') {
@@ -502,7 +582,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
       _typeFilter = 'Integrated Contacts';
     else if (_selectedTab == 'fusion')
       _typeFilter = 'Fusion Contacts';
-
+    else if(_selectedTab == 'addressBook')
+      _typeFilter = 'Phone Contacts';
     if (_typeFilter != origType) {
       _contacts = [];
     }
@@ -578,11 +659,23 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
               Container(
                   child: _isSpinning()
                       ? _spinner()
-                      : ListView.builder(
+                      : _contacts.isEmpty 
+                        ? Center(
+                          child: Text(
+                            _message, 
+                            textAlign: TextAlign.center, 
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              height: 1.5
+                            ),),
+                        )
+                        : ListView.builder(
                           itemCount: _page == -1
                               ? _contacts.length
                               : _contacts.length + 1,
                           itemBuilder: (BuildContext context, int index) {
+                            if(_contacts.length == 0)
+                              return Container(height: 20);
                             if (index >= _contacts.length) {
                               _loadMore();
                               return Container(height: 20);
@@ -837,208 +930,6 @@ class _ContactsListState extends State<ContactsList> {
             ])));
   }
 }
-/*
-class CallHistorySummaryView extends StatefulWidget {
-  final FusionConnection _fusionConnection;
-  final CallHistory _historyItem;
-  final Softphone _softphone;
-  Function() onSelect;
-
-  CallHistorySummaryView(
-      this._fusionConnection, this._softphone, this._historyItem,
-      {Key key, this.onSelect})
-      : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() => _CallHistorySummaryViewState();
-}
-
-class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
-  FusionConnection get _fusionConnection => widget._fusionConnection;
-
-  Softphone get _softphone => widget._softphone;
-
-  CallHistory get _historyItem => widget._historyItem;
-  bool _expanded = false;
-
-  List<Contact> _contacts() {
-    if (_historyItem.contact != null) {
-      return [_historyItem.contact];
-    } else {
-      return [];
-    }
-  }
-
-  List<CrmContact> _crmContacts() {
-    if (_historyItem.crmContact != null) {
-      return [_historyItem.crmContact];
-    } else {
-      return [];
-    }
-  }
-
-  _expand() {
-    this.setState(() {
-      _expanded = !_expanded;
-    });
-  }
-
-  _name() {
-    if (_historyItem.contact != null) {
-      return _historyItem.contact.name;
-    } else if (_historyItem.crmContact != null) {
-      return _historyItem.crmContact.name;
-    } else if (_historyItem.coworker != null) {
-      return _historyItem.coworker.firstName +
-          ' ' +
-          _historyItem.coworker.lastName;
-    } else {
-      return _historyItem.toDid;
-    }
-  }
-
-  _isMissed() {
-    return _historyItem.missed && _historyItem.direction == "inbound";
-  }
-
-  _icon() {
-    if (_historyItem.direction == 'outbound') {
-      return "assets/icons/phone_outgoing.png";
-    } else if (_isMissed()) {
-      return "assets/icons/phone_missed_red.png";
-    } else {
-      return "assets/icons/phone_incoming.png";
-    }
-  }
-
-  _openMessage() {
-    String number =
-        _fusionConnection.smsDepartments.getDepartment("-2").numbers[0];
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => SMSConversationView(
-            _fusionConnection,
-            _softphone,
-            SMSConversation.build(
-                contacts:
-                    _historyItem.contact != null ? [_historyItem.contact] : [],
-                crmContacts: _historyItem.crmContact != null
-                    ? [_historyItem.crmContact]
-                    : [],
-                myNumber: number,
-                number: _historyItem.direction == "outbound"
-                    ? _historyItem.toDid
-                    : _historyItem.fromDid)));
-  }
-
-  _makeCall() {
-    _softphone.makeCall(_historyItem.direction == "inbound"
-        ? _historyItem.fromDid
-        : _historyItem.toDid);
-  }
-
-  _openProfile() {
-    showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => ContactProfileView(
-            _fusionConnection, _softphone, _historyItem.contact));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> children = [_topPart()];
-
-    if (_expanded) {
-      children.add(Container(
-          child: horizontalLine(0),
-          margin: EdgeInsets.only(top: 4, bottom: 4)));
-      children.add(Container(
-          height: 28,
-          margin: EdgeInsets.only(top: 12, bottom: 12),
-          child: Row(children: [
-            actionButton("Profile", "user_dark", 18, 18, _openProfile),
-            actionButton("Call", "phone_dark", 18, 18, _makeCall),
-            actionButton("Message", "message_dark", 18, 18, _openMessage)
-            // _actionButton("Video", "video_dark", 18, 18, () {}),
-          ])));
-    }
-
-    return Container(
-        height: _expanded ? 132 : 76,
-        padding: EdgeInsets.all(4),
-        margin: EdgeInsets.only(bottom: 0, left: 12, right: 12),
-        decoration: _expanded
-            ? BoxDecoration(
-                color: particle,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(36),
-                  topRight: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                ))
-            : null,
-        child: Column(children: children));
-  }
-
-  _topPart() {
-    return GestureDetector(
-        onTap: () {
-          if (widget.onSelect != null)
-            widget.onSelect();
-          else
-            _expand();
-        },
-        child: Row(children: [
-          ContactCircle.withCoworker(
-              _contacts(), _crmContacts(), _historyItem.coworker),
-          Expanded(
-              child: Container(
-                  decoration: BoxDecoration(color: Colors.transparent),
-                  child: Column(children: [
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(_name(),
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16))),
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: Row(children: [
-                          Container(
-                              margin: EdgeInsets.only(top: 4),
-                              decoration: BoxDecoration(
-                                color: _expanded
-                                    ? Colors.white
-                                    : Color.fromARGB(255, 243, 242, 242),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(4)),
-                              ),
-                              padding: EdgeInsets.only(
-                                  left: 6, right: 6, top: 2, bottom: 2),
-                              child: Row(children: [
-                                Image.asset(_icon(), width: 12, height: 12),
-                                Text(
-                                    " " +
-                                        mDash +
-                                        " " +
-                                        DateFormat.jm()
-                                            .format(_historyItem.startTime),
-                                    style: TextStyle(
-                                        color:
-                                            _isMissed() ? crimsonLight : coal,
-                                        fontSize: 12,
-                                        height: 1.4,
-                                        fontWeight: FontWeight.w400))
-                              ])),
-                          Expanded(child: Container())
-                        ]))
-                  ])))
-        ]));
-  }
-}*/
 
 class SearchContactsBar extends StatefulWidget {
   final FusionConnection _fusionConnection;
