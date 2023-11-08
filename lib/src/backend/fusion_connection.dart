@@ -14,6 +14,7 @@ import 'package:flutter_apns/src/connector.dart';
 import 'package:fusion_mobile_revamped/src/models/contact_fields.dart';
 import 'package:fusion_mobile_revamped/src/models/dids.dart';
 import 'package:fusion_mobile_revamped/src/models/park_lines.dart';
+import 'package:fusion_mobile_revamped/src/models/phone_contact.dart';
 import 'package:fusion_mobile_revamped/src/models/quick_response.dart';
 import 'package:fusion_mobile_revamped/src/models/timeline_items.dart';
 import 'package:fusion_mobile_revamped/src/models/unreads.dart';
@@ -35,6 +36,7 @@ import 'package:fusion_mobile_revamped/src/models/messages.dart';
 import 'package:fusion_mobile_revamped/src/models/sms_departments.dart';
 import 'package:fusion_mobile_revamped/src/models/user_settings.dart';
 import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -53,6 +55,7 @@ class FusionConnection {
   Map<String, bool> _heartbeats = {};
   CrmContactsStore crmContacts;
   ContactsStore contacts;
+  PhoneContactsStore phoneContacts;
   CallpopInfoStore callpopInfos;
   // WebsocketManager _socket;
   WebSocketChannel socketChannel;
@@ -84,6 +87,7 @@ class FusionConnection {
   String serverRoot = "http://fusioncomm.net";
   String mediaServer = "https://fusion-media.sfo2.digitaloceanspaces.com";
   String defaultAvatar = "https://fusioncomm.net/img/defaultuser.png";
+  static const MethodChannel contactsChannel = MethodChannel('net.fusioncomm.ios/contacts');
 
   FusionConnection() {
     _getCookies();
@@ -104,6 +108,8 @@ class FusionConnection {
     dids = DidStore(this);
     unreadMessages = UnreadsStore(this);
     quickResponses = QuickResponsesStore(this);
+    phoneContacts = PhoneContactsStore(fusionConnection: this, contactsChannel: contactsChannel);
+    phoneContacts.setup();
     getDatabase();
   }
 
@@ -168,6 +174,7 @@ class FusionConnection {
     dids.clearRecords();
     unreadMessages.clearRecords();
     quickResponses.clearRecords();
+    phoneContacts.clearRecords();
   }
 
   logOut() {
@@ -248,7 +255,8 @@ class FusionConnection {
           callerId TEXT,
           missed TEXT,
           contacts BLOB,
-          coworker BLOB
+          coworker BLOB,
+          phoneContact BLOB
           );'''));
 
         print(db.execute('''
@@ -262,11 +270,31 @@ class FusionConnection {
           raw BLOB
           );
           '''));
+        print(db.execute('''
+          CREATE TABLE IF NOT EXISTS phone_contacts(
+          id TEXT PRIMARY key,
+          company TEXT,
+          deleted int,
+          searchString TEXT,
+          phoneNumbers TEXT,
+          firstName TEXT,
+          lastName TEXT,
+          raw BLOB,
+          profileImage BLOB
+          );
+          '''));
       }).then((Database db) {
         db.rawQuery('SELECT conversationId FROM sms_conversation')
           .then((value) => null)
           .catchError((error)=>{
             db.rawQuery('ALTER TABLE sms_conversation ADD COLUMN conversationId')
+              .then((value) => null)
+              .catchError((onError)=> print("MyDebugMessage db couldn't create conversationId col"))
+          });
+        db.rawQuery('SELECT phoneContact FROM call_history')
+          .then((value) => null)
+          .catchError((error)=>{
+            db.rawQuery('ALTER TABLE call_history ADD COLUMN phoneContact')
               .then((value) => null)
               .catchError((onError)=> print("MyDebugMessage db couldn't create conversationId col"))
           });
@@ -549,6 +577,7 @@ print(responseBody);
     dids.getDids((p0, p1) => {});
     smsDepartments.getDepartments((List<SMSDepartment> lis) {});
     refreshUnreads();
+    phoneContacts.syncPhoneContacts();
     contactFields.getFields((List<ContactField> list, bool fromServer) {});
     setupSocket();
     if (callback != null) {
@@ -832,6 +861,7 @@ print(responseBody);
     }
 
     db.delete('contacts').then((value) => print("MyDebugMessage contacts rows effected ${value}"));
+    db.delete('phone_contacts').then((value) => print("MyDebugMessage phone_contacts rows effected ${value}"));
     db.delete('sms_conversation').then((value) => print("MyDebugMessage sms_conversation rows effected ${value}"));
     db.delete('sms_message').then((value) => print("MyDebugMessage sms_message rows effected ${value}"));
     db.delete('call_history').then((value) => print("MyDebugMessage call_history rows effected ${value}"));

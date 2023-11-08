@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/models/call_history.dart';
 import 'package:fusion_mobile_revamped/src/models/coworkers.dart';
+import 'package:fusion_mobile_revamped/src/models/phone_contact.dart';
 import 'package:fusion_mobile_revamped/src/utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:convert' as convert;
@@ -65,7 +67,7 @@ class Contact extends FusionModel {
   String crmId;
   int unread = 0;
   List<dynamic> fieldValues = [];
-
+  Uint8List profileImage;
   @override
   String getId() => this.id;
 
@@ -174,6 +176,7 @@ class Contact extends FusionModel {
     this.crmId = contactObject['crm_id'].runtimeType == int
         ? contactObject['crm_id'].toString()
         : contactObject['crm_id'];
+    this.profileImage = contactObject["profileImage"] ?? null;
   }
 
   Contact.fake(dynamic number){
@@ -321,7 +324,7 @@ class Contact extends FusionModel {
       'addresses': this.addresses,
       'company': this.company,
       'contacts': this.contacts,
-      'createdAt': this.createdAt.serialize(),
+      'createdAt': this.createdAt?.serialize(),
       'deleted': this.deleted,
       'domain': this.domain,
       'emails': this.emails,
@@ -342,11 +345,12 @@ class Contact extends FusionModel {
       'lastCommunication': this.lastCommunication,
       'type': this.type,
       'uid': this.uid,
-      'updatedAt': this.updatedAt.serialize(),
+      'updatedAt': this.updatedAt?.serialize(),
       'crmUrl': this.crmUrl,
       'crmName': this.crmName,
       'crmId': this.crmId,
       'unread': this.unread,
+      'profileImage': this.profileImage
     });
   }
 
@@ -355,7 +359,7 @@ class Contact extends FusionModel {
     this.addresses = obj['addresses'];
     this.company = obj['company'];
     this.contacts = obj['contacts'];
-    this.createdAt = CarbonDate.unserialize(obj['createdAt']);
+    this.createdAt = CarbonDate?.unserialize(obj['createdAt']);
     this.deleted = obj['deleted'];
     this.domain = obj['domain'];
     this.emails = obj['emails'];
@@ -378,11 +382,12 @@ class Contact extends FusionModel {
     this.lastCommunication = obj['lastCommunication'];
     this.type = obj['type'];
     this.uid = obj['uid'];
-    this.updatedAt = CarbonDate.unserialize(obj['updatedAt']);
+    this.updatedAt = CarbonDate?.unserialize(obj['updatedAt']);
     this.crmUrl = obj['crmUrl'];
     this.crmName = obj['crmName'];
     this.crmId = obj['crmId'];
     this.unread = obj['unread'];
+    this.profileImage = getImageBinary(obj['profileImage']);
   }
 
   Contact.copy(Contact contact) {
@@ -477,22 +482,39 @@ class ContactsStore extends FusionStore<Contact> {
 
   searchPersisted(String query, int limit, int offset,
       Function(List<Contact>, bool) callback) {
+        print("MDBM query $query");
         getDatabasesPath().then((path){
           openDatabase(join(path,"fusion.db")).then((db){
             db.query('contacts',
-                limit: limit,
-                offset: offset,
-                where: 'searchString Like ?',
-                orderBy: "lastName asc, firstName asc",
-                whereArgs: [
-                  "%" + query + "%"
-                ]).then((List<Map<String, dynamic>> results) {
-              List<Contact> list = [];
+              limit: limit,
+              offset: offset,
+              where: 'searchString Like ?',
+              orderBy: "lastName asc, firstName asc",
+              whereArgs: [
+                "%" + query + "%"
+              ]).then((List<Map<String, dynamic>> results) {
+              if(results.isEmpty){
+                db.query('phone_contacts',limit: limit,
+                  offset: offset,
+                  where: 'searchString Like ?',
+                  orderBy: "lastName asc, firstName asc",
+                  whereArgs: ["%" + query + "%"]
+                  ).then((List<Map<String, dynamic>>  res){
+                    
+                    List<Contact> list = [];
+                    for (Map<String, dynamic> result in res) {
+                      list.add(PhoneContact.unserialize(result['raw']).toContact());
+                    }
+                    callback(list, false);
+                  });
+              } else {
+                List<Contact> list = [];
 
-              for (Map<String, dynamic> result in results) {
-                list.add(Contact.unserialize(result['raw']));
+                for (Map<String, dynamic> result in results) {
+                  list.add(Contact.unserialize(result['raw']));
+                }
+                callback(list, false);
               }
-              callback(list, false);
             });
           });
         });
@@ -501,7 +523,6 @@ class ContactsStore extends FusionStore<Contact> {
   search(String query, int limit, int offset,
       Function(List<Contact>, bool) callback) {
     query = query.toLowerCase();
-
     searchPersisted(query, limit, offset, callback);
 
     fusionConnection.apiV1Call("get", "/clients/filtered_contacts", {
@@ -633,4 +654,10 @@ class ContactsStore extends FusionStore<Contact> {
         }
       );
   }
+}
+
+abstract class ContactType {
+  static const PrivateContact = "Private Contact";
+  static const Contact = "Contact";
+  static const Lead = "Lead";
 }

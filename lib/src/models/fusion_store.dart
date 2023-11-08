@@ -1,13 +1,15 @@
+import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 
 import 'fusion_model.dart';
 
 class FusionStore<T extends FusionModel> {
   FusionConnection _fusionConnection;
+  MethodChannel methodChannel;
   Map<String, T> _records = {};
   String _id_field = 'id';
 
-  FusionStore(this._fusionConnection);
+  FusionStore(this._fusionConnection,{this.methodChannel});
 
   FusionConnection get fusionConnection => _fusionConnection;
 
