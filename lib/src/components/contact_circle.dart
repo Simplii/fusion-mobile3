@@ -94,7 +94,7 @@ class _ContactCircleState extends State<ContactCircle> {
               borderRadius: BorderRadius.circular(50),
               image: DecorationImage(
                 fit: BoxFit.cover,
-                image: image 
+                image: image
               )
             ),
           ),
@@ -168,7 +168,7 @@ class _ContactCircleState extends State<ContactCircle> {
                 borderRadius: BorderRadius.circular(50),
                 image: DecorationImage(
                   fit: BoxFit.cover,
-                  image: image 
+                  image: image
                 )
               ),
             ),
@@ -239,7 +239,7 @@ class _ContactCircleState extends State<ContactCircle> {
         child: Container(
             width: _diameter - 4,
             height: _diameter - 4,
-            child: imageUrl != null 
+            child: imageUrl != null  
               ? CircleAvatar(
                   //backgroundImage here will be a fallback incase the image we're getting
                   //from imageUrl was deleted from the server

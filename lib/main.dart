@@ -121,6 +121,35 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) async {
       flutterLocalNotificationsPlugin.cancel(id);
     });
   }
+  /* for testing 
+  if ((data.containsKey("fusion_call") && data['fusion_call'] == "true") || 
+    (data.containsKey('alert') && data['alert'] == "call") ) {
+    var callerName = data['caller_id'] ?? data['callername'] as String;
+    var callerNumber = data['caller_number'] ?? data['phonenumber'] as String;
+    final callUUID = uuidFromString(data['call_id'] ?? data['callId']);
+    var id = intIdForString(data['call_id'] ?? data['callId']);
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        registerNotifications();
+    print("MDBM $callerName $callerNumber $callUUID");
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails('fusion', 'Fusion calls',
+            channelDescription: 'Fusion incoming calls',
+            importance: Importance.max,
+            fullScreenIntent: true,
+            priority: Priority.high,
+            ticker: 'ticker');
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    flutterLocalNotificationsPlugin.show(id, callerName,
+        callerNumber + ' incoming phone call', platformChannelSpecifics,
+        payload: callUUID.toString());
+
+    var timer = Timer(Duration(seconds: 40), () {
+      flutterLocalNotificationsPlugin.cancel(id);
+    });
+  }
+  */
 }
 
 Future<void> main() async {

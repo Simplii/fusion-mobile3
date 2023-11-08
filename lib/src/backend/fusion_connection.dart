@@ -863,6 +863,7 @@ print(responseBody);
 
     db.delete('phone_contacts').then((value) => print("MyDebugMessage phone_contacts rows effected ${value}"));
     db.delete('contacts').then((value) => print("MyDebugMessage contacts rows effected ${value}"));
+    db.delete('phone_contacts').then((value) => print("MyDebugMessage phone_contacts rows effected ${value}"));
     db.delete('sms_conversation').then((value) => print("MyDebugMessage sms_conversation rows effected ${value}"));
     db.delete('sms_message').then((value) => print("MyDebugMessage sms_message rows effected ${value}"));
     db.delete('call_history').then((value) => print("MyDebugMessage call_history rows effected ${value}"));

@@ -487,6 +487,7 @@ class ContactsStore extends FusionStore<Contact> {
 
   searchPersisted(String query, int limit, int offset,
       Function(List<Contact>, bool) callback) {
+        print("MDBM query $query");
         getDatabasesPath().then((path){
           openDatabase(join(path,"fusion.db")).then((db){
             db.query('contacts',
@@ -505,17 +506,19 @@ class ContactsStore extends FusionStore<Contact> {
                   orderBy: "lastName asc, firstName asc",
                   whereArgs: ["%" + query + "%"]
                   ).then((List<Map<String, dynamic>>  res){
+                    
                     for (Map<String, dynamic> result in res) {
                       list.add(PhoneContact.unserialize(result['raw']).toContact());
                     }
                     callback(list, false);
                   });
               } else {
+
                 for (Map<String, dynamic> result in results) {
                   list.add(Contact.unserialize(result['raw']));
                 }
+                callback(list, false);
               }
-              callback(list, false);
             });
           });
         });
@@ -524,7 +527,6 @@ class ContactsStore extends FusionStore<Contact> {
   search(String query, int limit, int offset,
       Function(List<Contact>, bool) callback) {
     query = query.toLowerCase();
-
     searchPersisted(query, limit, offset, callback);
 
     fusionConnection.apiV1Call("get", "/clients/filtered_contacts", {

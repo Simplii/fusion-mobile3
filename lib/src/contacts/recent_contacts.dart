@@ -381,7 +381,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     }
   }
 
- Future<PermissionStatus> _checkContactsPermission() async {
+  Future<PermissionStatus> _checkContactsPermission() async {
     PermissionStatus status = await Permission.contacts.status;
     try {
       if (status.isDenied) {
@@ -676,6 +676,8 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
                               ? _contacts.length
                               : _contacts.length + 1,
                           itemBuilder: (BuildContext context, int index) {
+                            if(_contacts.length == 0)
+                              return Container(height: 20);
                             if (index >= _contacts.length) {
                               _loadMore();
                               return Container(height: 20);
@@ -844,7 +846,7 @@ class _ContactsListState extends State<ContactsList> {
       }
     }).map((item) {
       if (item.coworker != null && _coworkers[item.coworker!.uid] != null) {
-        item.coworker = _coworkers[item.coworker!.uid];
+        item.coworker = _coworkers[item.coworker!.uid]!;
       }
       return CallHistorySummaryView(_fusionConnection, _softphone, item,
           expanded: _expandedId == item.id,

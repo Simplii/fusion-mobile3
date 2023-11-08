@@ -429,7 +429,7 @@ class _ContactProfileViewState extends State<ContactProfileView> {
                         }),
                         actionButton("Message", "message_dark", 18, 18, () {
                           _openMessage(value);
-                        }, isLoading: _loading)
+                        },isLoading: _loading)
                       ]))
                 ])));
       else

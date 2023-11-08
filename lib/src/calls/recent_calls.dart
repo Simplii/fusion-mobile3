@@ -256,7 +256,7 @@ class _RecentCallsListState extends State<RecentCallsList> {
       }
     }).map((item) {
       if (item.coworker != null && _coworkers[item.coworker!.uid] != null) {
-        item.coworker = _coworkers[item.coworker!.uid];
+        item.coworker = _coworkers[item.coworker!.uid]!;
       }
       return CallHistorySummaryView(_fusionConnection, _softphone, item,
           onExpand: () { expand(item); },
@@ -287,7 +287,6 @@ class _RecentCallsListState extends State<RecentCallsList> {
       return Contact.fake(item.toDid);
     }
   }
-
 
   _historyRow(CallHistory item, int index) {
       if (item.coworker != null && _coworkers[item.coworker!.uid] != null) {
@@ -639,8 +638,7 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
     Contact? newContact = null;
     if (contact == null && _historyItem.coworker != null){
       contact = _historyItem.coworker!.toContact();
-    }
-    else if(contact == null && _historyItem.phoneContact != null) {
+    } else if(contact == null && _historyItem.phoneContact != null) {
       contact = _historyItem.phoneContact!.toContact();
     }
     else if (contact == null && _historyItem.coworker == null && _historyItem.direction == "inbound"){
@@ -743,11 +741,12 @@ class _CallHistorySummaryViewState extends State<CallHistorySummaryView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                    Align(
+                     Align(
                         alignment: Alignment.centerLeft,
                         child: Text(_name() != null ? _name() : "Unknown",
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16))),
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
                     Align(
                         alignment: Alignment.centerLeft,
                         child: Row(children: [
