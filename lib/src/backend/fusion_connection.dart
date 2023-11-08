@@ -676,7 +676,7 @@ print(responseBody);
         _password = password;
         _domain = _username.split('@')[1];
         _extension = _username.split('@')[0];
-        settings!.setOptions(response);
+        settings.setOptions(response);
         _postLoginSetup(callback);
       } else {
         callback(false);

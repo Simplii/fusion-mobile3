@@ -126,7 +126,7 @@ class _MessageSearchResults extends State<MessageSearchResults> {
             _openConvo([c], []);
           },
           child: Container(
-              margin: EdgeInsets.only(top: 12),
+              margin: EdgeInsets.only(top: 10),
               width: 72,
               child: Column(children: [
                 ContactCircle.withDiameterAndMargin([c], [], 60, 0),
@@ -211,8 +211,8 @@ class _MessageSearchResults extends State<MessageSearchResults> {
   
     List<Map<String,dynamic>> newContactsList = [];
     _contacts.forEach((element) { 
-      if(element.phoneNumbers!.length > 1){
-        element.phoneNumbers!.forEach((number) {
+      if(element.phoneNumbers.length > 1){
+        element.phoneNumbers.forEach((number) {
           newContactsList.add({
           'contact' : element,
           'phone' : number['number'],
@@ -220,10 +220,10 @@ class _MessageSearchResults extends State<MessageSearchResults> {
         });
         });
       } 
-      else if(element.phoneNumbers!.length == 1) {
+      else if(element.phoneNumbers.length == 1) {
         newContactsList.add({
           'contact' : element,
-          'phone' : element.phoneNumbers![0]['number']
+          'phone' : element.phoneNumbers[0]['number']
         });
       }
 

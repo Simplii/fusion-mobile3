@@ -113,14 +113,15 @@ class Contact extends FusionModel {
   }
 
   String? pictureUrl() {
-    if (pictures != null && pictures!.length > 0) {
-      return pictures!.last['url'];
+    if (pictures.isNotEmpty) {
+      return pictures.last['url'];
     }
-    if (emails != null) {
-      for (Map<String, dynamic> email in emails!) {
+    if (emails.isNotEmpty) {
+      for (Map<String, dynamic> email in emails) {
         if (email['email'] != null && email['email'].trim() != '') {}
       }
     }
+    return null;
   }
 
   searchString() {
@@ -162,7 +163,7 @@ class Contact extends FusionModel {
     this.parentId = contactObject['parent_id'].toString();
     this.phoneNumbers = [];
     for (var number in contactObject['phone_numbers']) {
-          this.phoneNumbers!.add({
+          this.phoneNumbers.add({
         "number": number['number'].toString(),
         "sms_capable": number['sms_capable'],
         "type": number['type']
@@ -236,7 +237,7 @@ class Contact extends FusionModel {
     this.phoneNumbers = [];
     if(contactObject['phoneNumbers'] != null){
       for (var number in contactObject['phoneNumbers']) {
-      this.phoneNumbers!.add({
+      this.phoneNumbers.add({
         "number": number['number'].toString(),
         "smsCapable": number['smsCapable'],
         "type": number['type']
@@ -248,10 +249,10 @@ class Contact extends FusionModel {
     this.type = contactObject['type'];
     this.updatedAt = CarbonDate.fromDate(contactObject['updatedAt']);
 
-    if (this.externalReferences != null && this.externalReferences!.length > 0) {
-      this.crmUrl = externalReferences![0]['url'];
-      this.crmName = externalReferences![0]['network'];
-      this.crmId = externalReferences![0]['externalId'];
+    if (this.externalReferences.isNotEmpty) {
+      this.crmUrl = externalReferences[0]['url'];
+      this.crmName = externalReferences[0]['network'];
+      this.crmId = externalReferences[0]['externalId'];
     }
     this.fieldValues = contactObject['fieldValues'] != null ? contactObject['fieldValues'] : [];
   }
@@ -363,7 +364,7 @@ class Contact extends FusionModel {
     this.addresses = obj['addresses'];
     this.company = obj['company'];
     this.contacts = obj['contacts'];
-    this.createdAt = CarbonDate?.unserialize(obj['createdAt']);
+    this.createdAt = obj['createdAt'] != null ? CarbonDate?.unserialize(obj['createdAt']) : null;
     this.deleted = obj['deleted'];
     this.domain = obj['domain'];
     this.emails = obj['emails'];
@@ -386,7 +387,7 @@ class Contact extends FusionModel {
     this.lastCommunication = obj['lastCommunication'];
     this.type = obj['type'];
     this.uid = obj['uid'];
-    this.updatedAt = CarbonDate.unserialize(obj['updatedAt']);
+    this.updatedAt = obj['updatedAt'] != null ? CarbonDate.unserialize(obj['updatedAt']) : null;
     this.crmUrl = obj['crmUrl'];
     this.crmName = obj['crmName'];
     this.crmId = obj['crmId'];
@@ -532,7 +533,6 @@ class ContactsStore extends FusionStore<Contact> {
       'sort_by': 'last_name',
       'group_type_filter': 'any',
       'enterprise': false,
-      'enterprise': false,
     }, callback: (List<dynamic> datas) {
       List<Contact> response = [];
 
@@ -581,7 +581,7 @@ class ContactsStore extends FusionStore<Contact> {
   }
 
   void save(Contact? edited, Function updateUi) {
-    bool usesV2 = fusionConnection.settings!.isV2User();
+    bool usesV2 = fusionConnection.settings.isV2User();
     if(usesV2){
       fusionConnection.apiV2Call(
         "put",
@@ -611,10 +611,10 @@ class ContactsStore extends FusionStore<Contact> {
         callback(contact);
         List<CallHistory> history = fusionConnection.callHistory.getRecords();
         CallHistory? historyItem = 
-          history.where((element) => element.fromDid == contact.phoneNumbers![0]['number'] 
-            || element.toDid == contact.phoneNumbers![0]['number']).isNotEmpty 
-          ? history.where((element) => element.fromDid == contact.phoneNumbers![0]['number']
-            || element.toDid == contact.phoneNumbers![0]['number']).first
+          history.where((element) => element.fromDid == contact.phoneNumbers[0]['number'] 
+            || element.toDid == contact.phoneNumbers[0]['number']).isNotEmpty 
+          ? history.where((element) => element.fromDid == contact.phoneNumbers[0]['number']
+            || element.toDid == contact.phoneNumbers[0]['number']).first
           : null;
         if(historyItem != null){
           historyItem.contact = contact;
@@ -648,7 +648,7 @@ class ContactsStore extends FusionStore<Contact> {
             coworker.url = fusionConnection.mediaServer + data['path'];
             fusionConnection.coworkers.storeRecord(coworker);
           } else {
-              contact.pictures!.add({"url": data['url'],'fromSourceName': data['from'] });
+              contact.pictures.add({"url": data['url'],'fromSourceName': data['from'] });
               storeRecord(contact);
           }
           updateUi(contact);

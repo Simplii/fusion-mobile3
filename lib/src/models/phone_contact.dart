@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fusion_mobile_revamped/src/backend/fusion_connection.dart';
 import 'package:fusion_mobile_revamped/src/models/fusion_model.dart';
@@ -232,9 +233,10 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
   }) : super(fusionConnection, methodChannel: contactsChannel);
   bool syncing = false;
   bool initSync = false;
+  Function? updateView;
+
   persist(PhoneContact record, ) {
     List<String> numbers = record.phoneNumbers.map((phoneNumber) => phoneNumber['number']).toList().cast<String>();
-    print("MDBM numbers = ${numbers.toString()}");
     fusionConnection.db.insert('phone_contacts', {
       'id': record.id,
       'company': record.company,
@@ -247,9 +249,9 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
     }, conflictAlgorithm: ConflictAlgorithm.replace).then((value) => value);
   }
 
-  // Future<List<PhoneContact>> searchPhoneContact(query) {
-
-  // }
+  void toUpdateView (Function setStateFunc){
+    updateView = setStateFunc;
+  }
 
   Future<PhoneContact?> searchDb(String phoneNumber) async {
     PhoneContact? contact;
@@ -308,6 +310,8 @@ class PhoneContactsStore extends FusionStore<PhoneContact> {
         }
         syncing = false;
         initSync = false;
+        if(updateView != null)
+          updateView!();
         break;
       default:
          print("contacts default");

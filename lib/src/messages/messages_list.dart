@@ -232,8 +232,8 @@ class _MessagesListState extends State<MessagesList> {
         }
 
         _convos.sort((SMSConversation a, SMSConversation b) {
-          return DateTime.parse(a.lastContactTime!)
-                  .isAfter(DateTime.parse(b.lastContactTime!))
+          return DateTime.parse(a.lastContactTime)
+                  .isAfter(DateTime.parse(b.lastContactTime))
               ? -1
               : 1;
         });

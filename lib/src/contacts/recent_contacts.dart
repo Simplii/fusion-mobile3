@@ -168,21 +168,24 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
   String _message = "No Match Was Found";
   initState() {
     super.initState();
+    _fusionConnection.phoneContacts.toUpdateView((){
+      _lookupQuery();
+    });
   }
 
   _subscribeCoworkers(List<String> uids, Function(List<Coworker>) callback) {
     if (_subscriptionKey != null) {
-      _fusionConnection!.coworkers.clearSubscription(_subscriptionKey);
+      _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
     }
 
-    _subscriptionKey = _fusionConnection!.coworkers.subscribe(uids, callback);
+    _subscriptionKey = _fusionConnection.coworkers.subscribe(uids, callback);
   }
 
   @override
   dispose() {
     super.dispose();
     if (_subscriptionKey != null) {
-      _fusionConnection!.coworkers.clearSubscription(_subscriptionKey);
+      _fusionConnection.coworkers.clearSubscription(_subscriptionKey);
     }
   }
 
@@ -200,7 +203,7 @@ class _ContactsSearchListState extends State<ContactsSearchList> {
     if (_typeFilter == 'Fusion Contacts') {
       if (_page == -1) return;
       if(_isV2Domain){
-        _fusionConnection!.contacts.searchV2(_query, 100, _page * 100, _fromDialpad,
+        _fusionConnection.contacts.searchV2(_query, 100, _page * 100, _fromDialpad,
           (List<Contact> contacts, bool fromServer) {
           if (thisLookup != _lookedUpQuery) return;
           if (!mounted) return;

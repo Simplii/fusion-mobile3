@@ -332,31 +332,43 @@ class _ContactProfileViewState extends State<ContactProfileView> {
   }
 
   _openMessage(String theirNumber) async {
-     setState(() {
+    setState(() {
       _loading = true;
     });
     SMSDepartment dept = _fusionConnection!.smsDepartments.getDepartment(DepartmentIds.Personal);
 
     if(dept.numbers.isEmpty){
-      return showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        builder: (context) => 
-          Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height / 3
-            ),
-            color: coal,
-            child: Center(
-              child: Text("No personal number found", 
-                style: TextStyle(color: Colors.white),
+      _fusionConnection!.smsDepartments.getDepartments((List<SMSDepartment> dep) {
+        for (SMSDepartment d in dep) {
+          if(d.numbers.isNotEmpty){
+            dept = d;
+            break;
+          }
+        }
+      });
+
+      if(dept.numbers.isEmpty){
+        return showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          builder: (context) => 
+            Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height / 3
               ),
-            ),
-          )
-      ).whenComplete(() =>  setState(() {
-        _loading = false;
-      }));
+              color: coal,
+              child: Center(
+                child: Text("No personal/departmens SMS number found for this account", 
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            )
+        ).whenComplete(() =>  setState(() {
+          _loading = false;
+        }));
+      }
     }
+
     SMSConversation convo = await _fusionConnection!.messages.checkExistingConversation(
       DepartmentIds.Personal,
       dept.numbers[0],

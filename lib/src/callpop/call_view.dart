@@ -518,7 +518,7 @@ class _CallViewState extends State<CallView> {
   }
 
   _onHangup() {
-    _softphone!.hangUp(_activeCall!);
+    _softphone.hangUp(_activeCall!);
     widget.closeView!();
   }
 
