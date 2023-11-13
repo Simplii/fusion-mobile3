@@ -74,6 +74,7 @@ void _notificationResponse(NotificationResponse response) {
 
 @pragma('vm:entry-point')
 Future<dynamic> backgroundMessageHandler(RemoteMessage message) async {
+  print("MDBM bgMessage");
   SharedPreferences pres = await SharedPreferences.getInstance();
   var username = pres.getString('username');
   if(username == null)return;
@@ -121,35 +122,7 @@ Future<dynamic> backgroundMessageHandler(RemoteMessage message) async {
       flutterLocalNotificationsPlugin.cancel(id);
     });
   }
-  /* for testing 
-  if ((data.containsKey("fusion_call") && data['fusion_call'] == "true") || 
-    (data.containsKey('alert') && data['alert'] == "call") ) {
-    var callerName = data['caller_id'] ?? data['callername'] as String;
-    var callerNumber = data['caller_number'] ?? data['phonenumber'] as String;
-    final callUUID = uuidFromString(data['call_id'] ?? data['callId']);
-    var id = intIdForString(data['call_id'] ?? data['callId']);
-    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-        registerNotifications();
-    print("MDBM $callerName $callerNumber $callUUID");
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails('fusion', 'Fusion calls',
-            channelDescription: 'Fusion incoming calls',
-            importance: Importance.max,
-            fullScreenIntent: true,
-            priority: Priority.high,
-            ticker: 'ticker');
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
 
-    flutterLocalNotificationsPlugin.show(id, callerName,
-        callerNumber + ' incoming phone call', platformChannelSpecifics,
-        payload: callUUID.toString());
-
-    var timer = Timer(Duration(seconds: 40), () {
-      flutterLocalNotificationsPlugin.cancel(id);
-    });
-  }
-  */
 }
 
 Future<void> main() async {
@@ -276,10 +249,10 @@ class _MyHomePageState extends State<MyHomePage> {
       _callInProgress = false;
       _logged_in = false;
     });
-    if(Platform.isAndroid){
-      SystemNavigator.pop();
-    }
     softphone.unregisterLinphone();
+    // if(Platform.isAndroid){
+    //   SystemNavigator.pop();
+    // }
   }
 
   @override
@@ -522,12 +495,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   
   void _handleForgroundMessage(RemoteMessage message) {
+    print("MDBM forground message");
     if(message.notification != null){
       FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = registerNotifications();
       if(message.data.containsKey('remove_fusion_call')){
         var id = intIdForString(message.data['remove_fusion_call']);
         flutterLocalNotificationsPlugin.cancel(id);
       } else {
+        if(Platform.isIOS) return;
         const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
           'fusion1', 
           'Fusion chats',

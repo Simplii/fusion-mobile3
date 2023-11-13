@@ -98,9 +98,9 @@ class _CallViewState extends State<CallView> {
               Navigator.pop(context);
             }, (String xferTo, String xferType) {
               if (xferType == "blind") {
-                _softphone!.transfer(_activeCall!, _makeXferUrl(xferTo));
+                _softphone.transfer(_activeCall!, _makeXferUrl(xferTo));
               } else if (xferType == "assisted") {
-                _softphone!.assistedTransfer(_activeCall, _makeXferUrl(xferTo));
+                _softphone.assistedTransfer(_activeCall, _makeXferUrl(xferTo));
               }
               Navigator.pop(context);
             }));

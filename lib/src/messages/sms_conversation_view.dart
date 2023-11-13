@@ -168,6 +168,7 @@ class _SMSConversationViewState extends State<SMSConversationView> {
   @override
   void dispose() {
     _debounceMessageInput?.cancel();
+    connectivitySubscription?.cancel();
     super.dispose();
   }
 

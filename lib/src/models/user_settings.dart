@@ -7,14 +7,14 @@ class UserSettings {
   Map<String, dynamic> options = {"avatars": {}};
   Map<String, dynamic>? subscriber = {'callid_nmbr': '', 'user': ''};
   final FusionConnection _fusionConnection;
-  String? myOutboundCallerId = "";
-  bool? isDynamicDialingDept = false;
+  String myOutboundCallerId = "";
+  bool isDynamicDialingDept = false;
   bool dynamicDialingIsActive = false;
   UserSettings(this._fusionConnection);
-  String? myCellPhoneNumber = "";
-  bool? usesCarrier = false;
-  String? devices = "";
-  bool? dnd = false;
+  String myCellPhoneNumber = "";
+  bool usesCarrier = false;
+  String devices = "";
+  bool dnd = false;
   bool forceDispositionEnabled = false;
   
   myContact() {
@@ -198,7 +198,7 @@ class UserSettings {
               usesCarrier = setting.value!.isNotEmpty;
             }
             if(setting.setting == "cell_phone_number"){
-              myCellPhoneNumber = setting.value;
+              myCellPhoneNumber = setting.value ?? "";
             }
             if(setting.setting == "fm_on_dnd"){
               dnd = setting.value == "true" ? true : false;

@@ -713,7 +713,7 @@ class Softphone implements SipUaHelperListener {
       case 'holdButtonPressed':
         String? callUuid = methodCall.arguments[0] as String?;
         bool? isHold = methodCall.arguments[1] as bool?;
-        setHold(_getCallByUuid(callUuid), isHold, false);
+        setHold(_getCallByUuid(callUuid), isHold ?? false, false);
         return;
 
       case 'muteButtonPressed':
@@ -864,20 +864,20 @@ class Softphone implements SipUaHelperListener {
 
     if (!destination.contains("sip:")) destination = "sip:" + destination;
     if (!destination.contains("@"))
-      destination += "@" + _fusionConnection!.getDomain();
-    if(_fusionConnection!.settings!.isDynamicDialingDept! && 
-      _fusionConnection!.settings!.dynamicDialingIsActive){
-      _fusionConnection!.apiV2Call(
+      destination += "@" + _fusionConnection.getDomain();
+    if(_fusionConnection.settings.isDynamicDialingDept! && 
+      _fusionConnection.settings.dynamicDialingIsActive){
+      _fusionConnection.apiV2Call(
         "post",
         "/dynamicDialing/outbound/setOutboundId",
         { 
           "destination": _cleanToAddress(destination),
-          "groupId": _fusionConnection!.settings!.myOutboundCallerId
+          "groupId": _fusionConnection.settings.myOutboundCallerId
         },
         callback: (Map<String,dynamic> response){
           if(response.containsKey("success") && response["success"] == true){
-            if(_fusionConnection!.settings!.usesCarrier! && 
-              _fusionConnection!.settings!.myCellPhoneNumber!.isNotEmpty){
+            if(_fusionConnection.settings.usesCarrier && 
+              _fusionConnection.settings.myCellPhoneNumber.isNotEmpty){
               callInitiated = true;
               toast("Call has been sent to your cellphone", duration: Duration(seconds: 8));
               doClickToCall(destination);
@@ -890,8 +890,8 @@ class Softphone implements SipUaHelperListener {
         }
       );
     } else {
-      if(_fusionConnection!.settings!.usesCarrier! && 
-        _fusionConnection!.settings!.myCellPhoneNumber!.isNotEmpty){
+      if(_fusionConnection.settings.usesCarrier && 
+        _fusionConnection.settings.myCellPhoneNumber.isNotEmpty){
         callInitiated = true;
         toast("Call has been sent to your cellphone", duration: Duration(seconds: 8));
         doClickToCall(destination);
@@ -902,11 +902,11 @@ class Softphone implements SipUaHelperListener {
   }
 
   void doClickToCall(String destination){
-    _fusionConnection!.apiV2Call("get", "/calls/dial", 
+    _fusionConnection.apiV2Call("get", "/calls/dial", 
       {
         "destination" : destination, 
         "origin" : 
-          "sip:${_fusionConnection!.settings!.myCellPhoneNumber}@${_fusionConnection!.getDomain()}" 
+          "sip:${_fusionConnection.settings.myCellPhoneNumber}@${_fusionConnection.getDomain()}" 
       },
       callback: (data){
         String callId = data['callId'] ?? "";
@@ -928,6 +928,7 @@ class Softphone implements SipUaHelperListener {
     print(call.id);
     print(call.direction);
     print("making active callkit call:" + call.id! + ":" + call.direction);
+    print("making active calls ${calls.length}");
 
     if (_getCallDataValue(call.id, "isReported") != true &&
         call.direction == "OUTGOING") {
@@ -1027,11 +1028,11 @@ class Softphone implements SipUaHelperListener {
     return this.outputDevice == 'Speaker';
   }
 
-  setHold(Call call, bool? setOnHold, bool fromUi) async {
+  setHold(Call call, bool setOnHold, bool fromUi) async {
     _setCallDataValue(call.id, "onHold", setOnHold);
 
     if (fromUi) {
-      if (setOnHold!) {
+      if (setOnHold) {
         if (Platform.isAndroid) {
           _callKeep.setOnHold(_uuidFor(call), true);
           _getMethodChannel().invokeMethod("lpSetHold", [_uuidFor(call), true]);
@@ -1232,7 +1233,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   _callKeepDidToggleHold(CallKeepDidToggleHoldAction event) {
-    setHold(_getCallByUuid(event.callUUID), event.hold, false);
+    setHold(_getCallByUuid(event.callUUID), event.hold ?? false, false);
   }
 
   _callKeepPerformEndCall(CallKeepPerformEndCallAction event) {
@@ -1242,7 +1243,7 @@ class Softphone implements SipUaHelperListener {
   }
 
   _callKeepPushkitToken(CallKeepPushKitToken event) {
-    _fusionConnection!.setPushkitToken(event.token);
+    _fusionConnection.setPushkitToken(event.token);
   }
 
   _getCallByUuid(String? uuid) {
@@ -1291,6 +1292,7 @@ class Softphone implements SipUaHelperListener {
     } else if (Platform.isAndroid) {
       _getMethodChannel().invokeMethod("lpEndCall", [_uuidFor(call)]);
       _callKeep.endCall(_uuidFor(call));
+      calls.removeWhere((c) => call.id == c.id);
     }
 
     if (call == activeCall) {
@@ -1507,8 +1509,9 @@ class Softphone implements SipUaHelperListener {
       }
 
       if (Platform.isAndroid) {
+        print("MDBM callKeepPhoneAccount");
         final bool hasPhoneAccount = await _callKeep.hasPhoneAccount();
-
+        print("MDBM callKeepPhoneAccount $hasPhoneAccount");
         if (!hasPhoneAccount) {
           await _callKeep.hasDefaultPhoneAccount(_context!, <String, dynamic>{
             'alertTitle': 'Permissions required',
@@ -1583,7 +1586,7 @@ class Softphone implements SipUaHelperListener {
   String getCallerName(Call? call) {
     if (call != null) {
       CallpopInfo? data = getCallpopInfo(call.id);
-      List<Coworker> coworkers = _fusionConnection!.coworkers.getRecords();
+      List<Coworker> coworkers = _fusionConnection.coworkers.getRecords();
       String ext = call.remote_identity!.onlyNumbers();
       List<Coworker> coworker =
           coworkers.where((coworker) => coworker.extension == ext).toList();
@@ -1615,7 +1618,7 @@ class Softphone implements SipUaHelperListener {
       } else {
         if (call.remote_display_name != null && 
             call.remote_display_name!.trim().length > 0){
-            var domainPrefixes = _fusionConnection!.settings!.domainPrefixes();
+            var domainPrefixes = _fusionConnection.settings.domainPrefixes();
             String name = "";
             if (domainPrefixes != null) {
               domainPrefixes.forEach((prefix) {
@@ -1639,7 +1642,7 @@ class Softphone implements SipUaHelperListener {
       return AssetImage("assets/background.png");
     } else {
       CallpopInfo? data = getCallpopInfo(call.id);
-      List<Coworker> coworkers = _fusionConnection!.coworkers.getRecords();
+      List<Coworker> coworkers = _fusionConnection.coworkers.getRecords();
       String ext = call.remote_identity!.onlyNumbers();
       Coworker? coworker =
           coworkers.where((coworker) => coworker.extension == ext).isNotEmpty 
@@ -1841,15 +1844,15 @@ class Softphone implements SipUaHelperListener {
     Map<String, String?> ids = _getCallApiIds(call);
 
     _fusionConnection!.nsApiCall("call", "record_on",
-        {"callid": ids['orig'], "uid": _fusionConnection!.getUid()},
+        {"callid": ids['orig'], "uid": _fusionConnection.getUid()},
         callback: (Map<String, dynamic> result) {});
   }
 
   stopRecordCall(Call call) {
     _setCallDataValue(call.id, "isRecording", false);
     Map<String, String?> ids = _getCallApiIds(call);
-    _fusionConnection!.nsApiCall("call", "record_off",
-        {"callid": ids['orig'], "uid": _fusionConnection!.getUid()},
+    _fusionConnection.nsApiCall("call", "record_off",
+        {"callid": ids['orig'], "uid": _fusionConnection.getUid()},
         callback: (Map<String, dynamic> result) {});
   }
 
